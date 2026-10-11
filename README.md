@@ -36,6 +36,8 @@ keyboard layouts.
 | Alt+Backspace or Alt+Delete | Remove annotations in the selection |
 | Alt+Shift+Backspace or Alt+Shift+Delete | Remove every annotation on the page |
 | Alt+V | Hide or show all annotations |
+| Alt+O | Open or close the annotations panel |
+| Alt+J / Alt+K | Jump to the next / previous annotation |
 | Alt+Z | Undo |
 | Alt+Shift+Z or Alt+Y | Redo |
 
@@ -48,10 +50,28 @@ Removing annotations or a note shows a short message in the bottom-right corner 
 A note closed without saving (by clicking elsewhere or pressing Esc) can be brought back with the
 Restore button in the message that appears.
 
-An annotation with a note has a small red tick in its top-right corner. Hover over it to read the note.
+An annotation with a note has a small red tick in its top-right corner. Hover over it to read the note
+and the date it was added.
+
+### Reviewing annotations
+
+Alt+O opens a panel listing every annotation on the page, in reading order, with its note and the
+date it was added. Click one to scroll to it; the buttons beside it edit its note or delete it. The
+filter box searches text and notes, so `#tags` written in notes work as tags. Saved annotations whose
+text can't be found on the page are listed under "Not found on the page": forget them, or select the
+text they belong to and choose "Attach to selection".
+
+Alt+J and Alt+K jump to the next and previous annotation, flash it and show its note. Alt+N then edits
+the note of the annotation you jumped to.
+
+The panel's Copy button (or the menu's "Copy annotations as Markdown") copies the page's title and link,
+then each annotation as a quote with its note below it. Each quote links to its passage on the page
+(`#:~:text=...`), which browsers that support text fragments open scrolled to that text. With a filter
+in the panel, only the annotations it shows are copied.
 
 The userscript manager's menu can also:
 
+- open the annotations panel, or copy the page's annotations as Markdown,
 - clear the annotations on the current page,
 - forget saved annotations whose text no longer exists on the page,
 - turn the script off (or back on) for the current site,

@@ -9,6 +9,8 @@ is a userscript that lets you highlight, underline, strike through and leave not
 web page. The marks are hand-drawn by [rough-notation](https://roughnotation.com/), and they are saved,
 so they come back the next time you open the page.
 
+What shipped in each version and what is planned next is in [`rough-notation/ROADMAP.md`](rough-notation/ROADMAP.md).
+
 ### Install
 
 1. Install a userscript manager such as [Violentmonkey](https://violentmonkey.github.io/) or

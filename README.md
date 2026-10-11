@@ -24,7 +24,7 @@ installed copies on the manager's next update check.
 
 ### Use
 
-Select some text, then press a shortcut or use the small toolbar that appears beside the selection.
+Select some text, then press a shortcut or use the small toolbar that appears where the selection ends.
 Shortcuts use Alt plus a key. They match the physical key, so they also work on macOS and non-Latin
 keyboard layouts.
 
@@ -35,7 +35,7 @@ keyboard layouts.
 | Alt+U | Underline |
 | Alt+S | Strike through |
 | Alt+N | Add or edit a note |
-| Alt+Backspace or Alt+Delete | Remove annotations in the selection |
+| Alt+Backspace or Alt+Delete | Remove annotations from the selected text |
 | Alt+Shift+Backspace or Alt+Shift+Delete | Remove every annotation on the page |
 | Alt+V | Hide or show all annotations |
 | Alt+O | Open or close the annotations panel |
@@ -43,10 +43,15 @@ keyboard layouts.
 | Alt+Z | Undo |
 | Alt+Shift+Z or Alt+Y | Redo |
 
-Applying the same style to a selection inside an existing annotation removes that style. Applying it
-to a selection that overlaps an annotation of that style extends the annotation, and changing an
-annotation's style keeps its note. On Linux, browsers use Alt+digit to switch tabs, so use Alt+H there
-for highlighting.
+Applying the style the selected text already has removes that annotation, all of it; the toolbar shows
+that style pressed. Applying a style to a selection that overlaps an annotation of that style extends
+the annotation, and changing an annotation's style keeps its note. Alt+Backspace (or the toolbar's
+eraser) removes annotations from exactly the selected text: what is left of them stays, with its note.
+On Linux, browsers use Alt+digit to switch tabs, so use Alt+H there for highlighting.
+
+Spaces at the edges of a selection are left out, and a word the selection cuts in two is annotated
+whole, in languages written without spaces too. Triple-click selects the paragraph under the pointer
+as it is shown on the page.
 
 Removing annotations or a note shows a short message in the bottom-right corner with an Undo button.
 A note closed without saving (by clicking elsewhere or pressing Esc) can be brought back with the
@@ -96,7 +101,8 @@ Edit the **Configuration** section near the top of the script:
 - `STYLES` sets each style's color, shortcut and drawing options.
 - `DARK_OVERRIDES` replaces those values for annotations on a dark background (a dark page, or a dark
   box on a light one).
-- `ENABLE_SELECTION_TOOLBAR` and `ENABLE_TRIPLE_CLICK_BLOCK_SELECT` turn those features off.
+- `ENABLE_SELECTION_TOOLBAR` and `ENABLE_TRIPLE_CLICK_BLOCK_SELECT` turn those features off, and
+  `SNAP_SELECTION_TO_WORDS` turns off taking a cut-off word whole.
 
 Saved annotations remember the name of their style (`h`, `h2`, `u`, ...). Renaming or removing a style
 hides the annotations made with it. They stay saved and come back when the style does.

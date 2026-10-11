@@ -39,8 +39,14 @@ keyboard layouts.
 | Alt+Z | Undo |
 | Alt+Shift+Z or Alt+Y | Redo |
 
-Applying the same style to a selection inside an existing annotation removes that style. On Linux,
-browsers use Alt+digit to switch tabs, so use Alt+H there for highlighting.
+Applying the same style to a selection inside an existing annotation removes that style. Applying it
+to a selection that overlaps an annotation of that style extends the annotation, and changing an
+annotation's style keeps its note. On Linux, browsers use Alt+digit to switch tabs, so use Alt+H there
+for highlighting.
+
+Removing annotations or a note shows a short message in the bottom-right corner with an Undo button.
+A note closed without saving (by clicking elsewhere or pressing Esc) can be brought back with the
+Restore button in the message that appears.
 
 An annotation with a note has a small red tick in its top-right corner. Hover over it to read the note.
 
@@ -58,16 +64,20 @@ URL (`<link rel="canonical">`), that URL is the key, so one article reached thro
 (tracking parameters, mobile or AMP versions) shares its annotations. Pages that load their content
 late are retried for a while after the page opens.
 
+When a site redraws part of the page, the annotations there stay saved and come back once their text
+is back on the page. Two tabs showing the same page keep each other's new annotations.
+
 ### Customize
 
 Edit the **Configuration** section near the top of the script:
 
 - `STYLES` sets each style's color, shortcut and drawing options.
-- `DARK_OVERRIDES` replaces those values on pages detected as dark.
+- `DARK_OVERRIDES` replaces those values for annotations on a dark background (a dark page, or a dark
+  box on a light one).
 - `ENABLE_SELECTION_TOOLBAR` and `ENABLE_TRIPLE_CLICK_BLOCK_SELECT` turn those features off.
 
 Saved annotations remember the name of their style (`h`, `h2`, `u`, ...). Renaming or removing a style
-drops the annotations made with it.
+hides the annotations made with it. They stay saved and come back when the style does.
 
 ### Optional hardening
 

@@ -68,6 +68,10 @@ filter box searches text and notes, so `#tags` written in notes work as tags. Sa
 text can't be found on the page are listed under "Not found on the page": forget them, or select the
 text they belong to and choose "Attach to selection".
 
+If some of a page's annotations still can't be found 15 seconds after it opens, a message says how
+many ("3 of 12 annotations couldn't be found"), once per page. Its Show button opens the panel at
+"Not found on the page".
+
 Alt+J and Alt+K jump to the next and previous annotation, flash it and show its note. Alt+N then edits
 the note of the annotation you jumped to.
 
@@ -79,8 +83,9 @@ in the panel, only the annotations it shows are copied.
 The userscript manager's menu can also:
 
 - open the annotations panel, or copy the page's annotations as Markdown,
-- clear the annotations on the current page,
-- forget saved annotations whose text no longer exists on the page,
+- clear the annotations on the current page ("Clear 12 annotations on this page"),
+- forget saved annotations whose text no longer exists on the page ("Forget 3 annotations not
+  found", shown only when some are missing),
 - turn the script off (or back on) for the current site,
 - clear every saved annotation.
 
@@ -88,8 +93,14 @@ The userscript manager's menu can also:
 
 Annotations are stored per page in the userscript manager's storage. When a page declares a canonical
 URL (`<link rel="canonical">`), that URL is the key, so one article reached through different links
-(tracking parameters, mobile or AMP versions) shares its annotations. Pages that load their content
-late are retried for a while after the page opens.
+(tracking parameters, mobile or AMP versions) shares its annotations. Pages that share a canonical URL
+without being the same page (the pages of a forum thread, often) share the list, but each annotation
+remembers the page it was made on: elsewhere it isn't counted as missing, and the panel lists it
+under "Saved on other pages".
+
+An annotation is found again when the text around it changed a little: different capitals, spacing,
+or a word or two. Text that loads late, such as comments or "load more", gets its annotations whenever
+it appears while the page is open. Background tabs wait until you look at them.
 
 When a site redraws part of the page, the annotations there stay saved and come back once their text
 is back on the page. Two tabs showing the same page keep each other's new annotations.

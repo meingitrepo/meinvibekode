@@ -67,6 +67,10 @@ Spaces at the edges of a selection are left out, and a word the selection cuts i
 whole, in languages written without spaces too. Triple-click selects the paragraph under the pointer
 as it is shown on the page.
 
+The toolbar is a single Tab stop: once it has focus, the arrow keys (and Home and End) move between its
+buttons, and Enter or Space presses one. In the note editor, Tab and Shift+Tab go round its controls
+instead of leaving it.
+
 Removing annotations or a note shows a short message in the bottom-right corner with an Undo button.
 A note closed without saving (by clicking elsewhere or pressing Esc) can be brought back with the
 Restore button in the message that appears.
@@ -126,7 +130,10 @@ Edit the **Configuration** section near the top of the script (in the repository
 
 - `STYLES` sets each style's color, shortcut and drawing options.
 - `DARK_OVERRIDES` replaces those values for annotations on a dark background (a dark page, or a dark
-  box on a light one).
+  box on a light one). Its highlights (dark gold for yellow, deep orange, ...) are dark enough for
+  light text.
+- Where a highlight leaves the page's text hard to read (white text on yellow, say: under
+  `MIN_TEXT_CONTRAST`), the text turns dark or light by itself. A style's `textColor` overrides that.
 - `ENABLE_SELECTION_TOOLBAR` and `ENABLE_TRIPLE_CLICK_BLOCK_SELECT` turn those features off, and
   `SNAP_SELECTION_TO_WORDS` turns off taking a cut-off word whole.
 

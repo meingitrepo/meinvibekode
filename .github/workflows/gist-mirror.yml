@@ -14,7 +14,7 @@ jobs:
   mirror:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Update gist
         env:
           GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
@@ -26,13 +26,20 @@ jobs:
             echo "::error::Add the GIST_TOKEN and GIST_ID repo secrets first."
             exit 1
           fi
+          # Accept a pasted gist URL as well as the bare ID.
+          GIST_ID=$(printf '%s' "$GIST_ID" | tr -d '[:space:]' | sed -E 's/[#?].*//; s#/+$##; s#.*/##')
           url="https://gist.githubusercontent.com/$OWNER/$GIST_ID/raw/$FILE"
           sed -E "s#^(// @(update|download)URL[[:space:]]+).*#\1$url#" "rough-notation/$FILE" > "$RUNNER_TEMP/$FILE"
           grep -q "@updateURL.*$GIST_ID" "$RUNNER_TEMP/$FILE"
           jq -n --rawfile c "$RUNNER_TEMP/$FILE" --arg f "$FILE" '{files: {($f): {content: $c}}}' > "$RUNNER_TEMP/body.json"
-          curl -fsS -X PATCH \
+          status=$(curl -sS -o "$RUNNER_TEMP/resp.json" -w '%{http_code}' -X PATCH \
             -H "Authorization: Bearer $GIST_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             --data @"$RUNNER_TEMP/body.json" \
-            "https://api.github.com/gists/$GIST_ID" > /dev/null
+            "https://api.github.com/gists/$GIST_ID")
+          if [ "$status" != 200 ]; then
+            echo "::error::GitHub answered $status: $(jq -r '.message // empty' "$RUNNER_TEMP/resp.json")"
+            [ "$status" = 404 ] && echo "::error::404 means the gist ID is wrong, or the token cannot write gists (fine-grained: Account permissions > Gists > Read and write)."
+            exit 1
+          fi
           echo "Install or update from: $url"

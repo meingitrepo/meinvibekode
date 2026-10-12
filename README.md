@@ -35,7 +35,7 @@ keyboard layouts.
 | Alt+U | Underline |
 | Alt+S | Strike through |
 | Alt+N | Add or edit a note |
-| Alt+Backspace or Alt+Delete | Remove annotations from the selected text |
+| Alt+Backspace or Alt+Delete | Remove annotations from the selected text, or the annotation under the mouse |
 | Alt+Shift+Backspace or Alt+Shift+Delete | Remove every annotation on the page |
 | Alt+V | Hide or show all annotations |
 | Alt+O | Open or close the annotations panel |
@@ -48,6 +48,13 @@ that style pressed. Applying a style to a selection that overlaps an annotation 
 the annotation, and changing an annotation's style keeps its note. Alt+Backspace (or the toolbar's
 eraser) removes annotations from exactly the selected text: what is left of them stays, with its note.
 On Linux, browsers use Alt+digit to switch tabs, so use Alt+H there for highlighting.
+
+With nothing selected, the shortcuts act on the annotation under the mouse (or, failing that, the one
+you just jumped to with Alt+J or Alt+K). A style shortcut changes its style and keeps its note; its own
+style removes it, and so does Alt+Backspace.
+
+Alt+V hides every annotation, and a message says so, with a Show button. Alt+V again, or any change
+to the annotations, shows them.
 
 Spaces at the edges of a selection are left out, and a word the selection cuts in two is annotated
 whole, in languages written without spaces too. Triple-click selects the paragraph under the pointer

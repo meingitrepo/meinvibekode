@@ -40,6 +40,7 @@ keyboard layouts.
 | Alt+V | Hide or show all annotations |
 | Alt+P | Pen on or off |
 | Alt+O | Open or close the annotations panel |
+| Alt+Shift+O | Search the annotations saved on every page |
 | Alt+J / Alt+K | Jump to the next / previous annotation |
 | Alt+Z | Undo |
 | Alt+Shift+Z or Alt+Y | Redo |
@@ -77,7 +78,7 @@ Restore button in the message that appears.
 
 An annotation with a note has a small red tick in its top-right corner. Rest the pointer on it to read
 the note, under the line you are pointing at, with the date it was added and buttons to edit or delete
-the note.
+the note. Web addresses in a note are links there.
 
 ### Reviewing annotations
 
@@ -86,6 +87,11 @@ date it was added. Click one to scroll to it; the buttons beside it edit its not
 filter box searches text and notes, so `#tags` written in notes work as tags. Saved annotations whose
 text can't be found on the page are listed under "Not found on the page": forget them, or select the
 text they belong to and choose "Attach to selection".
+
+Alt+Shift+O (or "Search all saved annotations" in the userscript menu) shows the annotations saved on
+every page, pages with the newest annotations first. Click a page to see its quotes and notes; click a
+quote to open that page at the passage. The search box finds quotes, notes (and `#tags`) and site names
+across every page.
 
 If some of a page's annotations still can't be found 15 seconds after it opens, a message says how
 many ("3 of 12 annotations couldn't be found"), once per page. Its Show button opens the panel at

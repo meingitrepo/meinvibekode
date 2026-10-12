@@ -38,6 +38,7 @@ keyboard layouts.
 | Alt+Backspace or Alt+Delete | Remove annotations from the selected text, or the annotation under the mouse |
 | Alt+Shift+Backspace or Alt+Shift+Delete | Remove every annotation on the page |
 | Alt+V | Hide or show all annotations |
+| Alt+P | Pen on or off |
 | Alt+O | Open or close the annotations panel |
 | Alt+J / Alt+K | Jump to the next / previous annotation |
 | Alt+Z | Undo |
@@ -56,6 +57,12 @@ style removes it, and so does Alt+Backspace.
 Alt+V hides every annotation, and a message says so, with a Show button. Alt+V again, or any change
 to the annotations, shows them.
 
+Alt+P turns on the pen: every selection you make with the mouse gets the pen's style straight away,
+with no shortcut or toolbar. It starts with the style you used last; a style shortcut with nothing
+selected (and no annotation under the mouse) switches it. A pill at the top of the page shows the pen's
+style. Esc, Alt+P or the pill's button turns it off. Text that already has the pen's style is left as
+it is.
+
 Spaces at the edges of a selection are left out, and a word the selection cuts in two is annotated
 whole, in languages written without spaces too. Triple-click selects the paragraph under the pointer
 as it is shown on the page.
@@ -64,8 +71,9 @@ Removing annotations or a note shows a short message in the bottom-right corner 
 A note closed without saving (by clicking elsewhere or pressing Esc) can be brought back with the
 Restore button in the message that appears.
 
-An annotation with a note has a small red tick in its top-right corner. Hover over it to read the note
-and the date it was added.
+An annotation with a note has a small red tick in its top-right corner. Rest the pointer on it to read
+the note, under the line you are pointing at, with the date it was added and buttons to edit or delete
+the note.
 
 ### Reviewing annotations
 

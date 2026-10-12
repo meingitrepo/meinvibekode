@@ -114,7 +114,7 @@ is back on the page. Two tabs showing the same page keep each other's new annota
 
 ### Customize
 
-Edit the **Configuration** section near the top of the script:
+Edit the **Configuration** section near the top of the script (in the repository, `rough-notation/src/config.js`):
 
 - `STYLES` sets each style's color, shortcut and drawing options.
 - `DARK_OVERRIDES` replaces those values for annotations on a dark background (a dark page, or a dark
@@ -124,6 +124,13 @@ Edit the **Configuration** section near the top of the script:
 
 Saved annotations remember the name of their style (`h`, `h2`, `u`, ...). Renaming or removing a style
 hides the annotations made with it. They stay saved and come back when the style does.
+
+### Changing the code
+
+`RoughNotationHighlighter.user.js` is built from the files in `rough-notation/src/`, one per part of the
+script, joined in the order listed in `rough-notation/build.js`. Edit those files, run `node build.js` in
+`rough-notation/` (Node, no packages needed), and commit both. `node build.js --check` says whether the
+built file is up to date.
 
 ### Optional hardening
 

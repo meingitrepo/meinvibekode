@@ -58,7 +58,6 @@
     const NOTE_TICK_SIZE = 6;                   // px, at least; the corner triangle marking annotations with a note,
     const NOTE_TICK_EM = 0.35;                  // which grows with the font (0.35em: 6px at 16px, 11px on a 32px heading)
     const NOTE_TICK_COLOR = '#c50f1f';          // Fluent's red, like a spreadsheet comment marker
-    const SELECTION_TINT = 45;                  // % of the selection color in the tint over a selected highlight
     const FLASH_MS = 900;                       // an annotation jumped to blinks twice in this time
     const MARKDOWN_FRAGMENT_WORDS = 5;          // a long quote's link names its passage by this many words at each end
     const TRACKING_PARAM_RE = /^(utm_|fbclid$|gclid$|dclid$|msclkid$|mc_eid$|mc_cid$|igshid$|yclid$|_ga$|ref_src$)/i;

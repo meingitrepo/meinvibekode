@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      7.48
+// @version      7.49
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -158,7 +158,6 @@
     const NOTE_TICK_SIZE = 6;                   // px, at least; the corner triangle marking annotations with a note,
     const NOTE_TICK_EM = 0.35;                  // which grows with the font (0.35em: 6px at 16px, 11px on a 32px heading)
     const NOTE_TICK_COLOR = '#c50f1f';          // Fluent's red, like a spreadsheet comment marker
-    const SELECTION_TINT = 45;                  // % of the selection color in the tint over a selected highlight
     const FLASH_MS = 900;                       // an annotation jumped to blinks twice in this time
     const MARKDOWN_FRAGMENT_WORDS = 5;          // a long quote's link names its passage by this many words at each end
     const TRACKING_PARAM_RE = /^(utm_|fbclid$|gclid$|dclid$|msclkid$|mc_eid$|mc_cid$|igshid$|yclid$|_ga$|ref_src$)/i;
@@ -220,8 +219,6 @@
     // Page CSS (added by start(), removed by stop())
     // =====================================================================
 
-    const HIGHLIGHT_WRAPPERS = Object.keys(STYLES).filter(k => STYLES[k].type === 'highlight')
-        .map(k => `${WRAPPER_SELECTOR}[${STYLE_ATTR}="${CSS.escape(k)}"]`);
     const pageStyle = document.createElement('style');
     pageStyle.textContent = `
         ${WRAPPER_SELECTOR} {
@@ -234,15 +231,8 @@
             -moz-user-select: none !important;
             pointer-events: none !important;
         }
-        /* The selected part of an annotation (see markSelected). */
+        /* The selected part of an underline or strike-through (see markSelected). */
         svg[${SVG_ATTR}] g[${SELECTED_ATTR}] path { stroke: HighlightText !important; }
-        svg[${SELECTED_ATTR}="light"] { mix-blend-mode: multiply !important; }
-        svg[${SELECTED_ATTR}="light"] path { stroke: color-mix(in srgb, Highlight ${SELECTION_TINT}%, white) !important; }
-        svg[${SELECTED_ATTR}="dark"] { mix-blend-mode: screen !important; }
-        svg[${SELECTED_ATTR}="dark"] path { stroke: color-mix(in srgb, Highlight ${SELECTION_TINT}%, black) !important; }
-        ${HIGHLIGHT_WRAPPERS.map(w => `${w}::selection, ${w} *::selection`).join(', ')} {
-            background-color: transparent !important;
-        }
         /* Note tick: a small triangle in the top-right corner of an annotation that has a note,
            like a spreadsheet comment marker. Zero net width (its width is cancelled by an equal
            negative margin), so it never moves text. Drawn with a gradient rather than borders,
@@ -275,7 +265,7 @@
     // Alt+V: hides every annotation drawing. Switched on and off through its media attribute.
     const hideStyle = document.createElement('style');
     hideStyle.textContent = `
-        svg[${SVG_ATTR}], svg[${SELECTED_ATTR}], span[${NOTE_MARK_ATTR}]::after { visibility: hidden !important; }
+        svg[${SVG_ATTR}], span[${NOTE_MARK_ATTR}]::after { visibility: hidden !important; }
     `;
     hideStyle.media = 'not all';
 
@@ -1132,16 +1122,12 @@
         return ann && ann.svg && ann.svg.isConnected ? ann.svg : null;
     }
 
-    // Where a selection crosses an annotation, it shows through the selection, like in Edge's
-    // PDF viewer, while the selection itself keeps its color everywhere else.
-    // - An underline or strike-through turns the selected text's color (white, usually) there.
-    //   The line is masked out over the selected text (and the width of the line around it),
-    //   and a copy in that color is drawn clipped to the selection.
-    // - A highlight is drawn beneath its text, so the selection paints over it. A copy of it,
-    //   clipped to the selection, goes over the text in a second SVG and is multiplied with the
-    //   selection (screened, on a dark background), so the selected part mixes the two colors.
+    // Where a selection crosses an underline or strike-through, that part of the line turns the
+    // selected text's color (white, usually), like the text it belongs to. The line is masked
+    // out over the selected text (and the width of the line around it), and a copy in that
+    // color is drawn clipped to the selection. A highlight is drawn beneath its text, so the
+    // selection simply paints over it, the same as anywhere else.
     let selectionMarkCount = 0;
-    const selectionOverlays = new Set();
     function markSelected(svg, wrapper, range) {
         const part = document.createRange();
         part.selectNodeContents(wrapper);
@@ -1151,7 +1137,6 @@
         const paths = Array.from(svg.children).filter(el => el.tagName.toLowerCase() === 'path');
         if (!rects.length || !paths.length) return;
         const config = annotationMap.get(wrapper).config;
-        const highlight = config.type === 'highlight';
         const width = config.strokeWidth || 2;
         const o = svg.getBoundingClientRect();
         const n = ++selectionMarkCount;
@@ -1171,15 +1156,6 @@
             copies.appendChild(copy);
         });
         g.append(clip, copies);
-        if (highlight) {
-            // Same place and containing block as the drawing: the wrapper is positioned itself.
-            const overlay = svgEl('svg', { class: 'highlighter-annotation', [SELECTED_ATTR]: wrapper.hasAttribute(DARK_ATTR) ? 'dark' : 'light' });
-            overlay.style.cssText = svg.style.cssText;
-            overlay.appendChild(g);
-            wrapper.insertAdjacentElement('afterend', overlay);
-            selectionOverlays.add(overlay);
-            return;
-        }
         const mask = svgEl('mask', { id: `highlighter-unselected-${n}`, maskUnits: 'userSpaceOnUse', x: -1e5, y: -1e5, width: 2e5, height: 2e5 });
         mask.appendChild(svgEl('rect', { x: -1e5, y: -1e5, width: 2e5, height: 2e5, fill: '#fff' }));
         rects.forEach(r => mask.appendChild(svgEl('rect', { ...box(r, width + 1), fill: '#000' })));
@@ -1195,8 +1171,6 @@
             svg.querySelectorAll('path[mask]').forEach(p => p.removeAttribute('mask'));
         });
         selectedSVGs.clear();
-        selectionOverlays.forEach(overlay => overlay.remove());
-        selectionOverlays.clear();
     }
 
     // Wrappers that touch the range, including a wrapper that fully contains it.
@@ -1226,7 +1200,7 @@
             candidateWrappers(range).forEach(w => {
                 const ann = annotationMap.get(w);
                 const svg = getSvg(w);
-                if (svg) markSelected(svg, w, range);
+                if (svg && ann.config.type !== 'highlight') markSelected(svg, w, range);
             });
         });
     }

@@ -31,6 +31,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 7.46 | Annotations stay visible under a selection | Selecting annotated text no longer hides the annotation. An underline or strike-through is blended into the selection (darker on a light page, lighter on a dark one), and a highlight shows faintly through a slightly see-through selection, so you can see where it starts and ends while trimming or restyling |
 | 7.47 | Selected lines turn white | Instead of blending: the part of an underline or strike-through under a selection takes the selected text's color (white, usually), and an underline moves just inside the selection. A highlight gets the browser's normal selection again, and shows outside it |
 | 7.48 | Selected highlights like Edge's PDF viewer | A selected highlight mixes its color with a light tint of the selection color and keeps its text color, as in Edge's PDF viewer. Underlines now sit just inside the bottom of the text, so a selection covers them whole |
+| 7.49 | Plain selection over highlights again | 7.48's tint over selected highlights is gone: the selection looks the same everywhere. Underlines stay inside the text box, and selected lines still turn white |
 
 ## Next, roughly in order
 
@@ -61,7 +62,7 @@ And of 7.30's page tags: where pages share a canonical URL, an annotation belong
 - The compact 24px buttons and the Edge-style toolbar.
 - Straight strokes with square ends; round ends on a stroke this thick stick out over neighbouring words.
 - Opaque highlights behind the text. Multiply blending fixes some banners but turns yellow green on blue-tinted boxes.
-- Under a selection, lines take the selected text's color (7.47) and highlights mix with a light selection tint, Edge PDF style (7.48). 7.46's blend with the full selection color was disliked.
+- Under a selection, lines take the selected text's color (7.47) and highlights get the plain selection (7.49). Any change to the selection's own colors over highlights (7.46 tint, 7.48 Edge PDF style mix) was disliked.
 - The red tick as the only note marker.
 - "Only Save saves" in the note editor, with the Restore toast as a safety net.
 - The closed shadow root and the createElement-only UI.

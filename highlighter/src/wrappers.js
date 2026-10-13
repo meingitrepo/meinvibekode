@@ -11,16 +11,12 @@
         return ann && ann.svg && ann.svg.isConnected ? ann.svg : null;
     }
 
-    // Where a selection crosses an annotation, it shows through the selection, like in Edge's
-    // PDF viewer, while the selection itself keeps its color everywhere else.
-    // - An underline or strike-through turns the selected text's color (white, usually) there.
-    //   The line is masked out over the selected text (and the width of the line around it),
-    //   and a copy in that color is drawn clipped to the selection.
-    // - A highlight is drawn beneath its text, so the selection paints over it. A copy of it,
-    //   clipped to the selection, goes over the text in a second SVG and is multiplied with the
-    //   selection (screened, on a dark background), so the selected part mixes the two colors.
+    // Where a selection crosses an underline or strike-through, that part of the line turns the
+    // selected text's color (white, usually), like the text it belongs to. The line is masked
+    // out over the selected text (and the width of the line around it), and a copy in that
+    // color is drawn clipped to the selection. A highlight is drawn beneath its text, so the
+    // selection simply paints over it, the same as anywhere else.
     let selectionMarkCount = 0;
-    const selectionOverlays = new Set();
     function markSelected(svg, wrapper, range) {
         const part = document.createRange();
         part.selectNodeContents(wrapper);
@@ -30,7 +26,6 @@
         const paths = Array.from(svg.children).filter(el => el.tagName.toLowerCase() === 'path');
         if (!rects.length || !paths.length) return;
         const config = annotationMap.get(wrapper).config;
-        const highlight = config.type === 'highlight';
         const width = config.strokeWidth || 2;
         const o = svg.getBoundingClientRect();
         const n = ++selectionMarkCount;
@@ -50,15 +45,6 @@
             copies.appendChild(copy);
         });
         g.append(clip, copies);
-        if (highlight) {
-            // Same place and containing block as the drawing: the wrapper is positioned itself.
-            const overlay = svgEl('svg', { class: 'highlighter-annotation', [SELECTED_ATTR]: wrapper.hasAttribute(DARK_ATTR) ? 'dark' : 'light' });
-            overlay.style.cssText = svg.style.cssText;
-            overlay.appendChild(g);
-            wrapper.insertAdjacentElement('afterend', overlay);
-            selectionOverlays.add(overlay);
-            return;
-        }
         const mask = svgEl('mask', { id: `highlighter-unselected-${n}`, maskUnits: 'userSpaceOnUse', x: -1e5, y: -1e5, width: 2e5, height: 2e5 });
         mask.appendChild(svgEl('rect', { x: -1e5, y: -1e5, width: 2e5, height: 2e5, fill: '#fff' }));
         rects.forEach(r => mask.appendChild(svgEl('rect', { ...box(r, width + 1), fill: '#000' })));
@@ -74,8 +60,6 @@
             svg.querySelectorAll('path[mask]').forEach(p => p.removeAttribute('mask'));
         });
         selectedSVGs.clear();
-        selectionOverlays.forEach(overlay => overlay.remove());
-        selectionOverlays.clear();
     }
 
     // Wrappers that touch the range, including a wrapper that fully contains it.
@@ -105,7 +89,7 @@
             candidateWrappers(range).forEach(w => {
                 const ann = annotationMap.get(w);
                 const svg = getSvg(w);
-                if (svg) markSelected(svg, w, range);
+                if (svg && ann.config.type !== 'highlight') markSelected(svg, w, range);
             });
         });
     }

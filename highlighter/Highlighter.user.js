@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      7.49
+// @version      7.50
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -1263,12 +1263,26 @@
         }, { rootMargin: '200px', threshold: 0 })
         : { observe() {}, unobserve() {} };
 
+    // Redraws the annotations whose text moved. `nearView` limits it to those on or near the screen.
+    function redrawMoved(nearView) {
+        const margin = 200, bottom = window.innerHeight + margin;
+        reposition(allWrappers().filter(w => {
+            if (nearView) {
+                const r = w.getBoundingClientRect();
+                if (r.bottom < -margin || r.top > bottom) return false;
+            }
+            return w.getClientRects().length > 0 && rectChanged(w);
+        }));
+    }
+
+    // While the window is resized or zoomed, the annotations on screen follow their text in the
+    // same frame; the rest catch up once it has been still for 150 ms.
     let redrawTimer = null;
+    let redrawFrame = 0;
     function scheduleRedraw() {
+        if (!redrawFrame) redrawFrame = requestAnimationFrame(() => { redrawFrame = 0; redrawMoved(true); });
         clearTimeout(redrawTimer);
-        redrawTimer = setTimeout(() => {
-            reposition(allWrappers().filter(w => w.getClientRects().length > 0 && rectChanged(w)));
-        }, 150);
+        redrawTimer = setTimeout(() => redrawMoved(false), 150);
     }
 
     // =====================================================================
@@ -5413,6 +5427,7 @@
         if (nav) { clearTimeout(nav.timer); nav = null; }
         clearTimeout(restoreTimer);
         clearTimeout(redrawTimer);
+        cancelAnimationFrame(redrawFrame); redrawFrame = 0;
         resetUi();
         closePanel();
         closeEverything();

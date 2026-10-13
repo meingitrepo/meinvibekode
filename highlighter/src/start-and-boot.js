@@ -115,6 +115,7 @@
         if (nav) { clearTimeout(nav.timer); nav = null; }
         clearTimeout(restoreTimer);
         clearTimeout(redrawTimer);
+        cancelAnimationFrame(redrawFrame); redrawFrame = 0;
         resetUi();
         closePanel();
         closeEverything();

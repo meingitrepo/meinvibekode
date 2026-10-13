@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      7.51
+// @version      7.52
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -23,7 +23,7 @@
  * Shortcuts (Alt + key, matched by physical key so they work on macOS and
  * non-Latin layouts):
  *   H or 1                highlight (yellow)
- *   2 / 3 / 4 / 5         highlight in green / blue / pink / orange
+ *   2 / 4                 highlight in green / pink
  *                         (Linux browsers use Alt+digit to switch tabs; there, only H works)
  *   U / S                 underline / strike-through
  *                         (the style the selected text already has removes that annotation, all of it)
@@ -175,7 +175,8 @@
     // The selection toolbar shows the styles in this order.
     // The style's name (h, h2, u, ...) is what gets saved with each annotation, so renaming
     // or removing a style hides the annotations made with it. They stay saved and come back
-    // when the style does.
+    // when the style does. `retired: true` keeps a style's saved annotations drawing but takes
+    // it out of the toolbar (give it no shortcut either).
     // DARK_OVERRIDES replaces any of these values for annotations on a dark background (a dark
     // page, or a dark box on a light one). Its highlights are dark enough for light text (about
     // 4.5:1 against light gray). Where a highlight leaves the page's own text color hard to read
@@ -185,9 +186,9 @@
     const STYLES = {
         h:  { ...HIGHLIGHT, label: 'Yellow highlight', shortcut: ['KeyH', 'Digit1'], color: '#FFF176' },
         h2: { ...HIGHLIGHT, label: 'Green highlight', shortcut: 'Digit2', color: '#A5D6A7' },
-        h3: { ...HIGHLIGHT, label: 'Blue highlight', shortcut: 'Digit3', color: '#90CAF9' },
+        h3: { ...HIGHLIGHT, label: 'Blue highlight', retired: true, color: '#90CAF9' },
         h4: { ...HIGHLIGHT, label: 'Pink highlight', shortcut: 'Digit4', color: '#F48FB1' },
-        h5: { ...HIGHLIGHT, label: 'Orange highlight', shortcut: 'Digit5', color: '#FFCC80' },
+        h5: { ...HIGHLIGHT, label: 'Orange highlight', retired: true, color: '#FFCC80' },
         u:  { label: 'Underline', shortcut: 'KeyU', type: 'underline', color: '#EF5350', textColor: '', strokeWidth: 1, padding: 0 },
         s:  { label: 'Strikethrough', shortcut: 'KeyS', type: 'strike-through', color: '#EF5350', textColor: '', strokeWidth: 1, padding: 0 }
     };
@@ -204,7 +205,7 @@
     const INK = { dark: '#1b1b1b', light: '#ffffff' };   // the text colors it turns to
     // ------------------------------------------------------------------------
 
-    const OWN_STYLE_FIELDS = ['label', 'shortcut', 'textColor'];   // not drawing settings
+    const OWN_STYLE_FIELDS = ['label', 'shortcut', 'textColor', 'retired'];   // not drawing settings
 
     const CODE_TO_STYLE = new Map();
     Object.keys(STYLES).forEach(k => {
@@ -3380,12 +3381,12 @@
     // Labels and tooltips are added with addLabelTip() further down.
     const noteSave = fluentButton({ icon: fluentIcon('save_20_regular') });
     const noteDelete = fluentButton({ icon: fluentIcon('delete_20_regular') });
-    // Save (or Ctrl+Enter) saves, Delete deletes, and anything else (clicking outside, Esc)
+    // Save (or Enter) saves, Delete deletes, and anything else (clicking outside, Esc)
     // discards the changes.
     const editorEl = makeEl('div', { class: 'surface editor', role: 'dialog', 'aria-labelledby': 'highlighter-note-title', hidden: '' }, [
         makeEl('div', { class: 'editor-header' }, [editorTitle, makeEl('div', { class: 'editor-actions' }, [noteSave, noteDelete])]),
         makeEl('div', { class: 'field' }, [noteInput]),
-        makeEl('div', { class: 'field-hint', text: 'Ctrl+Enter to save, Esc to cancel' })
+        makeEl('div', { class: 'field-hint', text: 'Enter to save, Shift+Enter for a new line, Esc to cancel' })
     ]);
 
     let toastIcon = fluentIcon('info_20_regular');   // replaced per message
@@ -3579,7 +3580,7 @@
     }
 
     // The note editor's header buttons: tips above them, flipping below near the top of the view.
-    addLabelTip(noteSave, 'Save note', 'Ctrl+Enter', () => false);
+    addLabelTip(noteSave, 'Save note', 'Enter', () => false);
     addLabelTip(noteDelete, 'Delete note', '', () => false);
     // The note preview sits below its text, so its tip goes below too, off the text.
     addLabelTip(cardEdit, 'Edit note', 'Alt+N', () => true);
@@ -3601,6 +3602,7 @@
         const items = [];
         let lastGroup = null;
         Object.keys(STYLES).forEach(k => {
+            if (STYLES[k].retired) return;
             const group = STYLES[k].type === 'highlight' ? 'highlight' : 'line';
             if (lastGroup && group !== lastGroup) items.push(toolbarDivider());
             lastGroup = group;
@@ -4051,7 +4053,7 @@
         if (dirty === noteSave.classList.contains('dirty')) return;
         noteSave.classList.toggle('dirty', dirty);
         noteSave.dataset.label = dirty ? 'Save note (unsaved changes)' : 'Save note';
-        noteSave.setAttribute('aria-label', `${noteSave.dataset.label} (Ctrl+Enter)`);
+        noteSave.setAttribute('aria-label', `${noteSave.dataset.label} (Enter)`);
         hideLabelTip();   // a tip already showing has the old label
     }
 
@@ -4228,7 +4230,8 @@
         if (e.key === 'Escape') {
             e.preventDefault();
             cancelEditor();
-        } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        } else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+            // Enter saves; Shift+Enter starts a new line.
             e.preventDefault();
             saveEditor();
         } else if (e.key === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {

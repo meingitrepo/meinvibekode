@@ -34,6 +34,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 7.49 | Plain selection over highlights again | 7.48's tint over selected highlights is gone: the selection looks the same everywhere. Underlines stay inside the text box, and selected lines still turn white |
 | 7.50 | Annotations follow zoom and resize at once | While the window is resized or zoomed, annotations on screen are redrawn in the same frame instead of 150 ms after it stops, so they no longer trail behind their text |
 | 7.51 | Thinner lines, outlined selected highlights | Underline and strike-through are 1px. Under a selection a highlight's color is hidden (it mixed differently with see-through selections for each color) and the selected part gets a thin outline in the selected text's color instead, the same for every color |
+| 7.52 | Enter saves notes, fewer colors | In the note editor Enter saves and Shift+Enter starts a new line (was Ctrl+Enter). Blue and orange highlights are no longer offered (toolbar, Alt+3, Alt+5); annotations already saved in them still draw |
 
 ## Next, roughly in order
 

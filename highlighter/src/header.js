@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      7.51
+// @version      7.52
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -23,7 +23,7 @@
  * Shortcuts (Alt + key, matched by physical key so they work on macOS and
  * non-Latin layouts):
  *   H or 1                highlight (yellow)
- *   2 / 3 / 4 / 5         highlight in green / blue / pink / orange
+ *   2 / 4                 highlight in green / pink
  *                         (Linux browsers use Alt+digit to switch tabs; there, only H works)
  *   U / S                 underline / strike-through
  *                         (the style the selected text already has removes that annotation, all of it)

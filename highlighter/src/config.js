@@ -75,7 +75,8 @@
     // The selection toolbar shows the styles in this order.
     // The style's name (h, h2, u, ...) is what gets saved with each annotation, so renaming
     // or removing a style hides the annotations made with it. They stay saved and come back
-    // when the style does.
+    // when the style does. `retired: true` keeps a style's saved annotations drawing but takes
+    // it out of the toolbar (give it no shortcut either).
     // DARK_OVERRIDES replaces any of these values for annotations on a dark background (a dark
     // page, or a dark box on a light one). Its highlights are dark enough for light text (about
     // 4.5:1 against light gray). Where a highlight leaves the page's own text color hard to read
@@ -85,9 +86,9 @@
     const STYLES = {
         h:  { ...HIGHLIGHT, label: 'Yellow highlight', shortcut: ['KeyH', 'Digit1'], color: '#FFF176' },
         h2: { ...HIGHLIGHT, label: 'Green highlight', shortcut: 'Digit2', color: '#A5D6A7' },
-        h3: { ...HIGHLIGHT, label: 'Blue highlight', shortcut: 'Digit3', color: '#90CAF9' },
+        h3: { ...HIGHLIGHT, label: 'Blue highlight', retired: true, color: '#90CAF9' },
         h4: { ...HIGHLIGHT, label: 'Pink highlight', shortcut: 'Digit4', color: '#F48FB1' },
-        h5: { ...HIGHLIGHT, label: 'Orange highlight', shortcut: 'Digit5', color: '#FFCC80' },
+        h5: { ...HIGHLIGHT, label: 'Orange highlight', retired: true, color: '#FFCC80' },
         u:  { label: 'Underline', shortcut: 'KeyU', type: 'underline', color: '#EF5350', textColor: '', strokeWidth: 1, padding: 0 },
         s:  { label: 'Strikethrough', shortcut: 'KeyS', type: 'strike-through', color: '#EF5350', textColor: '', strokeWidth: 1, padding: 0 }
     };
@@ -104,7 +105,7 @@
     const INK = { dark: '#1b1b1b', light: '#ffffff' };   // the text colors it turns to
     // ------------------------------------------------------------------------
 
-    const OWN_STYLE_FIELDS = ['label', 'shortcut', 'textColor'];   // not drawing settings
+    const OWN_STYLE_FIELDS = ['label', 'shortcut', 'textColor', 'retired'];   // not drawing settings
 
     const CODE_TO_STYLE = new Map();
     Object.keys(STYLES).forEach(k => {

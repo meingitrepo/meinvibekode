@@ -85,7 +85,7 @@
     }
 
     // The note editor's header buttons: tips above them, flipping below near the top of the view.
-    addLabelTip(noteSave, 'Save note', 'Ctrl+Enter', () => false);
+    addLabelTip(noteSave, 'Save note', 'Enter', () => false);
     addLabelTip(noteDelete, 'Delete note', '', () => false);
     // The note preview sits below its text, so its tip goes below too, off the text.
     addLabelTip(cardEdit, 'Edit note', 'Alt+N', () => true);
@@ -107,6 +107,7 @@
         const items = [];
         let lastGroup = null;
         Object.keys(STYLES).forEach(k => {
+            if (STYLES[k].retired) return;
             const group = STYLES[k].type === 'highlight' ? 'highlight' : 'line';
             if (lastGroup && group !== lastGroup) items.push(toolbarDivider());
             lastGroup = group;

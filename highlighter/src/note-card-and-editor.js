@@ -200,7 +200,7 @@
         if (dirty === noteSave.classList.contains('dirty')) return;
         noteSave.classList.toggle('dirty', dirty);
         noteSave.dataset.label = dirty ? 'Save note (unsaved changes)' : 'Save note';
-        noteSave.setAttribute('aria-label', `${noteSave.dataset.label} (Ctrl+Enter)`);
+        noteSave.setAttribute('aria-label', `${noteSave.dataset.label} (Enter)`);
         hideLabelTip();   // a tip already showing has the old label
     }
 
@@ -377,7 +377,8 @@
         if (e.key === 'Escape') {
             e.preventDefault();
             cancelEditor();
-        } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        } else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+            // Enter saves; Shift+Enter starts a new line.
             e.preventDefault();
             saveEditor();
         } else if (e.key === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {

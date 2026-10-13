@@ -36,6 +36,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 7.51 | Thinner lines, outlined selected highlights | Underline and strike-through are 1px. Under a selection a highlight's color is hidden (it mixed differently with see-through selections for each color) and the selected part gets a thin outline in the selected text's color instead, the same for every color |
 | 7.52 | Enter saves notes, fewer colors | In the note editor Enter saves and Shift+Enter starts a new line (was Ctrl+Enter). Blue and orange highlights are no longer offered (toolbar, Alt+3, Alt+5); annotations already saved in them still draw |
 | 7.53 | Annotations share text | A new style on annotated text goes on top of what is there instead of replacing it: a highlight keeps an underline or strikethrough over it, and where highlights overlap the line is split into bands, one per colour (yellow on top). Its own style again still removes it, the eraser still clears everything, and changing a clicked annotation's style still recolours it |
+| 7.55 | Selection outline follows the text | The dashed outline around a clicked annotation follows its lines: it starts where the text starts on the first line and ends where it ends on the last, one shape with steps instead of a rectangle over whole lines. Lines that don't touch (a two-line annotation ending left of where it starts) get an outline each |
 
 ## Next, roughly in order
 

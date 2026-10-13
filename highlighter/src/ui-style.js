@@ -187,12 +187,12 @@
         /* The note editor's Save while the note has unsaved changes. */
         .btn-subtle.dirty:not(:active) .icon { color: var(--colorBrandForeground1); }
 
-        /* Annotations selected by clicking them: a dashed box, black, or white on a dark page. */
-        .select-box {
-            position: fixed; top: 0; left: 0; box-sizing: border-box; pointer-events: none;
-            border: 2px dashed #000000; border-radius: var(--borderRadiusMedium);
-        }
-        .select-box[data-theme="dark"] { border-color: #ffffff; }
+        /* Annotations selected by clicking them: a dashed outline around their lines' shape,
+           black, or white on a dark page. */
+        .select-box { position: fixed; top: 0; left: 0; pointer-events: none; color: #000000; }
+        .select-box[data-theme="dark"] { color: #ffffff; }
+        .select-box svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+        .select-box path { fill: none; stroke: currentColor; stroke-width: 2; stroke-dasharray: 6 4; }
 
         /* Toolbar */
         /* Matched to Edge's PDF selection toolbar: 8px corners, a lighter shadow, and longer,

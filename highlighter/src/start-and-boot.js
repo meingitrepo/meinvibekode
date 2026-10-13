@@ -123,7 +123,7 @@
         uiHost.remove();
         unwrapAll();
         resetPageTracking();
-        showAllHiddenSVGs();
+        unblendSelectedSVGs();
         pendingRecords = [];
         undoStack.length = 0;
         redoStack.length = 0;

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      7.45
+// @version      7.46
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -110,6 +110,7 @@
     const WRAPPER_ATTR = 'data-highlighter-wrapper';
     const STYLE_ATTR = 'data-style-key';
     const SVG_ATTR = 'data-highlighter-svg';
+    const SELECTED_ATTR = 'data-highlighter-under-selection';   // on an SVG the text selection crosses
     const GROUP_ATTR = 'data-highlighter-group';      // shared by the pieces of one annotation
     const NOTE_ATTR = 'data-highlighter-note';
     const NOTE_MARK_ATTR = 'data-highlighter-note-mark';  // the piece that shows the note tick
@@ -158,6 +159,7 @@
     const NOTE_TICK_EM = 0.35;                  // which grows with the font (0.35em: 6px at 16px, 11px on a 32px heading)
     const NOTE_TICK_COLOR = '#c50f1f';          // Fluent's red, like a spreadsheet comment marker
     const FLASH_MS = 900;                       // an annotation jumped to blinks twice in this time
+    const SELECTION_OVER_HIGHLIGHT = 80;         // % opacity of the text selection over a highlight
     const MARKDOWN_FRAGMENT_WORDS = 5;          // a long quote's link names its passage by this many words at each end
     const TRACKING_PARAM_RE = /^(utm_|fbclid$|gclid$|dclid$|msclkid$|mc_eid$|mc_cid$|igshid$|yclid$|_ga$|ref_src$)/i;
     const SITE_PREFIX_RE = /^(www|m|mobile|amp)\./i;  // host prefixes that still count as the same site
@@ -218,6 +220,8 @@
     // Page CSS (added by start(), removed by stop())
     // =====================================================================
 
+    const HIGHLIGHT_WRAPPERS = Object.keys(STYLES).filter(k => STYLES[k].type === 'highlight')
+        .map(k => `${WRAPPER_SELECTOR}[${STYLE_ATTR}="${CSS.escape(k)}"]`);
     const pageStyle = document.createElement('style');
     pageStyle.textContent = `
         ${WRAPPER_SELECTOR} {
@@ -229,6 +233,14 @@
             -webkit-user-select: none !important;
             -moz-user-select: none !important;
             pointer-events: none !important;
+        }
+        /* Under a text selection (see blendSVG). A highlight's color shows through the selection
+           in its usual system colors, made slightly see-through. */
+        svg[${SELECTED_ATTR}="light"] { mix-blend-mode: multiply !important; }
+        svg[${SELECTED_ATTR}="dark"] { mix-blend-mode: screen !important; }
+        ${HIGHLIGHT_WRAPPERS.map(w => `${w}::selection, ${w} *::selection`).join(', ')} {
+            background-color: color-mix(in srgb, Highlight ${SELECTION_OVER_HIGHLIGHT}%, transparent) !important;
+            color: HighlightText !important;
         }
         /* Note tick: a small triangle in the top-right corner of an annotation that has a note,
            like a spreadsheet comment marker. Zero net width (its width is cancelled by an equal
@@ -272,7 +284,7 @@
 
     const annotationMap = new WeakMap();   // wrapper -> its drawing (makeAnnotation)
     const rectCache = new WeakMap();       // wrapper -> last measured rects
-    const hiddenSVGs = new Set();          // SVGs hidden while text is selected
+    const selectedSVGs = new Set();          // SVGs blended while text is selected
     // About the page being shown (reset with currentKey, see resetPageTracking):
     const trackedRecords = new Map();      // wrapper -> its record when last placed or saved (see reclaimDetached)
     const knownOwners = new Set();         // annotations this tab has loaded or saved (see saveHighlights)
@@ -1105,7 +1117,7 @@
     }
 
     // =====================================================================
-    // Wrapper bookkeeping: SVG access, selection-aware hiding, layout tracking
+    // Wrapper bookkeeping: SVG access, selection-aware blending, layout tracking
     // =====================================================================
 
     function allWrappers() {
@@ -1117,15 +1129,19 @@
         return ann && ann.svg && ann.svg.isConnected ? ann.svg : null;
     }
 
-    function hideSVG(svg) {
-        if (hiddenSVGs.has(svg)) return;
-        svg.style.visibility = 'hidden';
-        hiddenSVGs.add(svg);
+    // An underline or strike-through under a selection is blended into the page (multiply on a
+    // light background, screen on a dark one, see pageStyle) rather than hidden: where it crosses
+    // the selection it takes on the selection's color, and elsewhere it looks as it always does.
+    // A highlight is drawn beneath its text, so the selection already paints over it.
+    function blendSVG(svg, dark) {
+        if (selectedSVGs.has(svg)) return;
+        svg.setAttribute(SELECTED_ATTR, dark ? 'dark' : 'light');
+        selectedSVGs.add(svg);
     }
 
-    function showAllHiddenSVGs() {
-        hiddenSVGs.forEach(svg => { if (svg.isConnected) svg.style.visibility = ''; });
-        hiddenSVGs.clear();
+    function unblendSelectedSVGs() {
+        selectedSVGs.forEach(svg => svg.removeAttribute(SELECTED_ATTR));
+        selectedSVGs.clear();
     }
 
     // Wrappers that touch the range, including a wrapper that fully contains it.
@@ -1147,14 +1163,15 @@
         selectionFramePending = true;
         requestAnimationFrame(() => {
             selectionFramePending = false;
-            showAllHiddenSVGs();
+            unblendSelectedSVGs();
             const sel = window.getSelection();
             if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
             let range;
             try { range = sel.getRangeAt(0); } catch (e) { return; }
             candidateWrappers(range).forEach(w => {
+                const ann = annotationMap.get(w);
                 const svg = getSvg(w);
-                if (svg) hideSVG(svg);
+                if (svg && ann.config.type !== 'highlight') blendSVG(svg, w.hasAttribute(DARK_ATTR));
             });
         });
     }
@@ -1182,7 +1199,7 @@
             Math.abs(r.width - before[i].width) > TOL || Math.abs(r.height - before[i].height) > TOL);
     }
 
-    // Redraws in place: keeps the SVG elements (so hide-on-select survives) and never animates.
+    // Redraws in place: keeps the SVG elements (so blending under a selection survives) and never animates.
     // All are measured before any is drawn (see drawAnnotations).
     function reposition(wrappers) {
         const ws = wrappers.filter(w => annotationMap.has(w));
@@ -1201,7 +1218,7 @@
         updateInk(wrapper);
         const old = annotationMap.get(wrapper);
         const oldSvg = getSvg(wrapper);
-        if (oldSvg) hiddenSVGs.delete(oldSvg);
+        if (oldSvg) selectedSVGs.delete(oldSvg);
         if (old) old.remove();
         const ann = makeAnnotation(wrapper, config);
         annotationMap.set(wrapper, ann);
@@ -1239,7 +1256,7 @@
         const svg = getSvg(wrapper);
         const ann = annotationMap.get(wrapper);
         if (ann) ann.remove();
-        if (svg) { hiddenSVGs.delete(svg); if (svg.isConnected) svg.remove(); }
+        if (svg) { selectedSVGs.delete(svg); if (svg.isConnected) svg.remove(); }
         annotationMap.delete(wrapper);
         rectCache.delete(wrapper);
         trackedRecords.delete(wrapper);
@@ -5373,7 +5390,7 @@
         uiHost.remove();
         unwrapAll();
         resetPageTracking();
-        showAllHiddenSVGs();
+        unblendSelectedSVGs();
         pendingRecords = [];
         undoStack.length = 0;
         redoStack.length = 0;

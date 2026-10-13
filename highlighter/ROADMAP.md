@@ -28,6 +28,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 7.43 | Live sync between tabs | Another open tab's change to the same page shows at once: new annotations appear, removed ones go, restyles and notes update, and Clear empties every tab. Undo history in the other tabs is dropped then, so Undo can't bring back what another tab changed. An annotation whose note is being written keeps its local version until saved. Turning the script off or on for a site applies to that site's open tabs too |
 | 7.44 | Own drawing, no library | Annotations are drawn by the script itself as straight SVG strokes; rough-notation is no longer loaded (no `@require`). It looks the same, with one stroke per line instead of two for highlights. Drawing is batched (every annotation measured, then all drawn), so restoring 300 annotations takes about 120 ms instead of 180 ms and a window resize lays the page out 20 times instead of about 900 |
 | 7.45 | New name | The script is called Highlighter now that it no longer uses rough-notation: folder `highlighter/`, file `Highlighter.user.js`, and `data-highlighter-*` attributes on the page. Saved annotations and settings are kept, and installed copies update in place |
+| 7.46 | Annotations stay visible under a selection | Selecting annotated text no longer hides the annotation. An underline or strike-through is blended into the selection (darker on a light page, lighter on a dark one), and a highlight shows faintly through a slightly see-through selection, so you can see where it starts and ends while trimming or restyling |
 
 ## Next, roughly in order
 
@@ -58,7 +59,7 @@ And of 7.30's page tags: where pages share a canonical URL, an annotation belong
 - The compact 24px buttons and the Edge-style toolbar.
 - Straight strokes with square ends; round ends on a stroke this thick stick out over neighbouring words.
 - Opaque highlights behind the text. Multiply blending fixes some banners but turns yellow green on blue-tinted boxes.
-- Hiding an annotation while its text is selected (the pressed style button, since 7.29, makes up for it).
+- Blending, not hiding, an annotation under a selection (7.46); a highlight under 80% selection reads as selected but still shows its edges.
 - The red tick as the only note marker.
 - "Only Save saves" in the note editor, with the Restore toast as a safety net.
 - The closed shadow root and the createElement-only UI.

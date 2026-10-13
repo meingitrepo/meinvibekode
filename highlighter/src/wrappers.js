@@ -1,5 +1,5 @@
     // =====================================================================
-    // Wrapper bookkeeping: SVG access, selection-aware hiding, layout tracking
+    // Wrapper bookkeeping: SVG access, selection-aware blending, layout tracking
     // =====================================================================
 
     function allWrappers() {
@@ -11,15 +11,19 @@
         return ann && ann.svg && ann.svg.isConnected ? ann.svg : null;
     }
 
-    function hideSVG(svg) {
-        if (hiddenSVGs.has(svg)) return;
-        svg.style.visibility = 'hidden';
-        hiddenSVGs.add(svg);
+    // An underline or strike-through under a selection is blended into the page (multiply on a
+    // light background, screen on a dark one, see pageStyle) rather than hidden: where it crosses
+    // the selection it takes on the selection's color, and elsewhere it looks as it always does.
+    // A highlight is drawn beneath its text, so the selection already paints over it.
+    function blendSVG(svg, dark) {
+        if (selectedSVGs.has(svg)) return;
+        svg.setAttribute(SELECTED_ATTR, dark ? 'dark' : 'light');
+        selectedSVGs.add(svg);
     }
 
-    function showAllHiddenSVGs() {
-        hiddenSVGs.forEach(svg => { if (svg.isConnected) svg.style.visibility = ''; });
-        hiddenSVGs.clear();
+    function unblendSelectedSVGs() {
+        selectedSVGs.forEach(svg => svg.removeAttribute(SELECTED_ATTR));
+        selectedSVGs.clear();
     }
 
     // Wrappers that touch the range, including a wrapper that fully contains it.
@@ -41,14 +45,15 @@
         selectionFramePending = true;
         requestAnimationFrame(() => {
             selectionFramePending = false;
-            showAllHiddenSVGs();
+            unblendSelectedSVGs();
             const sel = window.getSelection();
             if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
             let range;
             try { range = sel.getRangeAt(0); } catch (e) { return; }
             candidateWrappers(range).forEach(w => {
+                const ann = annotationMap.get(w);
                 const svg = getSvg(w);
-                if (svg) hideSVG(svg);
+                if (svg && ann.config.type !== 'highlight') blendSVG(svg, w.hasAttribute(DARK_ATTR));
             });
         });
     }
@@ -76,7 +81,7 @@
             Math.abs(r.width - before[i].width) > TOL || Math.abs(r.height - before[i].height) > TOL);
     }
 
-    // Redraws in place: keeps the SVG elements (so hide-on-select survives) and never animates.
+    // Redraws in place: keeps the SVG elements (so blending under a selection survives) and never animates.
     // All are measured before any is drawn (see drawAnnotations).
     function reposition(wrappers) {
         const ws = wrappers.filter(w => annotationMap.has(w));
@@ -95,7 +100,7 @@
         updateInk(wrapper);
         const old = annotationMap.get(wrapper);
         const oldSvg = getSvg(wrapper);
-        if (oldSvg) hiddenSVGs.delete(oldSvg);
+        if (oldSvg) selectedSVGs.delete(oldSvg);
         if (old) old.remove();
         const ann = makeAnnotation(wrapper, config);
         annotationMap.set(wrapper, ann);
@@ -133,7 +138,7 @@
         const svg = getSvg(wrapper);
         const ann = annotationMap.get(wrapper);
         if (ann) ann.remove();
-        if (svg) { hiddenSVGs.delete(svg); if (svg.isConnected) svg.remove(); }
+        if (svg) { selectedSVGs.delete(svg); if (svg.isConnected) svg.remove(); }
         annotationMap.delete(wrapper);
         rectCache.delete(wrapper);
         trackedRecords.delete(wrapper);

@@ -10,6 +10,7 @@
     const WRAPPER_ATTR = 'data-highlighter-wrapper';
     const STYLE_ATTR = 'data-style-key';
     const SVG_ATTR = 'data-highlighter-svg';
+    const SELECTED_ATTR = 'data-highlighter-under-selection';   // on an SVG the text selection crosses
     const GROUP_ATTR = 'data-highlighter-group';      // shared by the pieces of one annotation
     const NOTE_ATTR = 'data-highlighter-note';
     const NOTE_MARK_ATTR = 'data-highlighter-note-mark';  // the piece that shows the note tick
@@ -58,6 +59,7 @@
     const NOTE_TICK_EM = 0.35;                  // which grows with the font (0.35em: 6px at 16px, 11px on a 32px heading)
     const NOTE_TICK_COLOR = '#c50f1f';          // Fluent's red, like a spreadsheet comment marker
     const FLASH_MS = 900;                       // an annotation jumped to blinks twice in this time
+    const SELECTION_OVER_HIGHLIGHT = 80;         // % opacity of the text selection over a highlight
     const MARKDOWN_FRAGMENT_WORDS = 5;          // a long quote's link names its passage by this many words at each end
     const TRACKING_PARAM_RE = /^(utm_|fbclid$|gclid$|dclid$|msclkid$|mc_eid$|mc_cid$|igshid$|yclid$|_ga$|ref_src$)/i;
     const SITE_PREFIX_RE = /^(www|m|mobile|amp)\./i;  // host prefixes that still count as the same site

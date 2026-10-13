@@ -188,8 +188,8 @@
         h3: { ...HIGHLIGHT, label: 'Blue highlight', shortcut: 'Digit3', color: '#90CAF9' },
         h4: { ...HIGHLIGHT, label: 'Pink highlight', shortcut: 'Digit4', color: '#F48FB1' },
         h5: { ...HIGHLIGHT, label: 'Orange highlight', shortcut: 'Digit5', color: '#FFCC80' },
-        u:  { label: 'Underline', shortcut: 'KeyU', type: 'underline', color: '#EF5350', textColor: '', strokeWidth: 2, padding: 0 },
-        s:  { label: 'Strikethrough', shortcut: 'KeyS', type: 'strike-through', color: '#EF5350', textColor: '', strokeWidth: 2, padding: 0 }
+        u:  { label: 'Underline', shortcut: 'KeyU', type: 'underline', color: '#EF5350', textColor: '', strokeWidth: 1, padding: 0 },
+        s:  { label: 'Strikethrough', shortcut: 'KeyS', type: 'strike-through', color: '#EF5350', textColor: '', strokeWidth: 1, padding: 0 }
     };
     const DARK_OVERRIDES = {
         h:  { color: '#806000' },   // dark gold
@@ -231,8 +231,10 @@
             -moz-user-select: none !important;
             pointer-events: none !important;
         }
-        /* The selected part of an underline or strike-through (see markSelected). */
+        /* The selected part of an annotation: a line in the selected text's color, a highlight
+           outlined in it (see markSelected). */
         svg[${SVG_ATTR}] g[${SELECTED_ATTR}] path { stroke: HighlightText !important; }
+        svg[${SELECTED_ATTR}] rect { stroke: HighlightText !important; stroke-width: 1px !important; }
         /* Note tick: a small triangle in the top-right corner of an annotation that has a note,
            like a spreadsheet comment marker. Zero net width (its width is cancelled by an equal
            negative margin), so it never moves text. Drawn with a gradient rather than borders,
@@ -265,7 +267,7 @@
     // Alt+V: hides every annotation drawing. Switched on and off through its media attribute.
     const hideStyle = document.createElement('style');
     hideStyle.textContent = `
-        svg[${SVG_ATTR}], span[${NOTE_MARK_ATTR}]::after { visibility: hidden !important; }
+        svg[${SVG_ATTR}], svg[${SELECTED_ATTR}], span[${NOTE_MARK_ATTR}]::after { visibility: hidden !important; }
     `;
     hideStyle.media = 'not all';
 
@@ -1125,9 +1127,12 @@
     // Where a selection crosses an underline or strike-through, that part of the line turns the
     // selected text's color (white, usually), like the text it belongs to. The line is masked
     // out over the selected text (and the width of the line around it), and a copy in that
-    // color is drawn clipped to the selection. A highlight is drawn beneath its text, so the
-    // selection simply paints over it, the same as anywhere else.
+    // color is drawn clipped to the selection.
+    // A highlight's color would show through a see-through selection, mixed differently for each
+    // color. So it is masked out there too, and instead the selected part gets the same mark in
+    // every color: a thin outline in the selected text's color, in a second SVG over the text.
     let selectionMarkCount = 0;
+    const selectionOverlays = new Set();
     function markSelected(svg, wrapper, range) {
         const part = document.createRange();
         part.selectNodeContents(wrapper);
@@ -1149,20 +1154,34 @@
         const g = svgEl('g', { [SELECTED_ATTR]: '' });
         const clip = svgEl('clipPath', { id: `highlighter-selected-${n}`, clipPathUnits: 'userSpaceOnUse' });
         rects.forEach(r => clip.appendChild(svgEl('rect', box(r, 0))));
-        const copies = svgEl('g', { 'clip-path': `url(#highlighter-selected-${n})` });
+        const copies = svgEl('g', { 'clip-path': `url(#highlighter-selected-${n})` });   // lines only
         paths.forEach(p => {
             const copy = p.cloneNode(false);
             copy.removeAttribute('style');   // no draw-in animation
             copies.appendChild(copy);
         });
         g.append(clip, copies);
+        const highlight = config.type === 'highlight';
         const mask = svgEl('mask', { id: `highlighter-unselected-${n}`, maskUnits: 'userSpaceOnUse', x: -1e5, y: -1e5, width: 2e5, height: 2e5 });
         mask.appendChild(svgEl('rect', { x: -1e5, y: -1e5, width: 2e5, height: 2e5, fill: '#fff' }));
-        rects.forEach(r => mask.appendChild(svgEl('rect', { ...box(r, width + 1), fill: '#000' })));
-        g.insertBefore(mask, g.firstChild);
+        rects.forEach(r => mask.appendChild(svgEl('rect', { ...box(r, highlight ? 0 : width + 1), fill: '#000' })));
         paths.forEach(p => p.setAttribute('mask', `url(#highlighter-unselected-${n})`));
-        svg.appendChild(g);
         selectedSVGs.add(svg);
+        if (!highlight) {
+            g.insertBefore(mask, g.firstChild);
+            svg.appendChild(g);
+            return;
+        }
+        svg.appendChild(svgEl('g', { [SELECTED_ATTR]: '' })).appendChild(mask);
+        // Same place and containing block as the drawing: the wrapper is positioned itself.
+        const overlay = svgEl('svg', { class: 'highlighter-annotation', [SELECTED_ATTR]: '' });
+        overlay.style.cssText = svg.style.cssText;
+        rects.forEach(r => {
+            const b = box(r, -0.5);
+            overlay.appendChild(svgEl('rect', { x: b.x + 0.5, y: b.y, width: Math.max(0, b.width - 1), height: Math.max(0, b.height), fill: 'none' }));
+        });
+        wrapper.insertAdjacentElement('afterend', overlay);
+        selectionOverlays.add(overlay);
     }
 
     function unmarkSelected() {
@@ -1171,6 +1190,8 @@
             svg.querySelectorAll('path[mask]').forEach(p => p.removeAttribute('mask'));
         });
         selectedSVGs.clear();
+        selectionOverlays.forEach(overlay => overlay.remove());
+        selectionOverlays.clear();
     }
 
     // Wrappers that touch the range, including a wrapper that fully contains it.
@@ -1200,7 +1221,7 @@
             candidateWrappers(range).forEach(w => {
                 const ann = annotationMap.get(w);
                 const svg = getSvg(w);
-                if (svg && ann.config.type !== 'highlight') markSelected(svg, w, range);
+                if (svg) markSelected(svg, w, range);
             });
         });
     }

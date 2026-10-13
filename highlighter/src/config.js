@@ -88,8 +88,8 @@
         h3: { ...HIGHLIGHT, label: 'Blue highlight', shortcut: 'Digit3', color: '#90CAF9' },
         h4: { ...HIGHLIGHT, label: 'Pink highlight', shortcut: 'Digit4', color: '#F48FB1' },
         h5: { ...HIGHLIGHT, label: 'Orange highlight', shortcut: 'Digit5', color: '#FFCC80' },
-        u:  { label: 'Underline', shortcut: 'KeyU', type: 'underline', color: '#EF5350', textColor: '', strokeWidth: 2, padding: 0 },
-        s:  { label: 'Strikethrough', shortcut: 'KeyS', type: 'strike-through', color: '#EF5350', textColor: '', strokeWidth: 2, padding: 0 }
+        u:  { label: 'Underline', shortcut: 'KeyU', type: 'underline', color: '#EF5350', textColor: '', strokeWidth: 1, padding: 0 },
+        s:  { label: 'Strikethrough', shortcut: 'KeyS', type: 'strike-through', color: '#EF5350', textColor: '', strokeWidth: 1, padding: 0 }
     };
     const DARK_OVERRIDES = {
         h:  { color: '#806000' },   // dark gold

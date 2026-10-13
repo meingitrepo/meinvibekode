@@ -212,7 +212,8 @@
 
     // Rebuild with the colors for the background behind it (and for its style, after a change of
     // style, which `animate` draws in like a new annotation).
-    function restyle(wrapper, { animate = false } = {}) {
+    // With `draw` false it is only rebuilt: the caller draws it (see restyleGroups).
+    function restyle(wrapper, { animate = false, draw = true } = {}) {
         const dark = darkBehind(wrapper);
         const config = getStyleConfig(wrapper.getAttribute(STYLE_ATTR), { animate, dark });
         if (!config) return;
@@ -224,10 +225,12 @@
         if (old) old.remove();
         const ann = makeAnnotation(wrapper, config);
         annotationMap.set(wrapper, ann);
+        redrawInner(wrapper);
+        if (!draw) return ann;
         drawAnnotations([ann]);
         snapshotRect(wrapper);
-        redrawInner(wrapper);
         updateSelectionVisibility();
+        return ann;
     }
 
     const visibilityObserver = (typeof IntersectionObserver === 'function')

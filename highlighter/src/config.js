@@ -25,7 +25,7 @@
     const SETTINGS_KEY = 'rnh:settings';       // per-site on/off, toolbar on/off; every other stored key is a page
                                                // ('rnh' is the old name, RoughNotation Highlighter: kept so saved settings stay)
 
-    const GLOBAL_ANIMATION_DURATION = 300;
+    const GLOBAL_ANIMATION_DURATION = 200;
     const ANIMATE_ON_RESTORE = false;          // restored annotations appear instantly
     const CONTEXT_LENGTH = 24;                 // prefix/suffix characters stored per record
     const UNDO_STACK_LIMIT = 20;

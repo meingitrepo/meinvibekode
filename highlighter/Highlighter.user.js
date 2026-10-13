@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      7.56
+// @version      7.57
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -125,7 +125,7 @@
     const SETTINGS_KEY = 'rnh:settings';       // per-site on/off, toolbar on/off; every other stored key is a page
                                                // ('rnh' is the old name, RoughNotation Highlighter: kept so saved settings stay)
 
-    const GLOBAL_ANIMATION_DURATION = 300;
+    const GLOBAL_ANIMATION_DURATION = 200;
     const ANIMATE_ON_RESTORE = false;          // restored annotations appear instantly
     const CONTEXT_LENGTH = 24;                 // prefix/suffix characters stored per record
     const UNDO_STACK_LIMIT = 20;
@@ -739,13 +739,12 @@
 
     // Replaces the drawing's strokes. With `animate` they draw in from the left after `delay` ms,
     // each line taking its share of the duration by length.
-    function drawStrokes(ann, measured, animate, delay) {
+    function drawStrokes(ann, measured, animate, delay, duration) {
         const svg = ann.svg;
         const config = ann.config;
         while (svg.lastChild) svg.removeChild(svg.lastChild);
         const strokes = strokesFor(config, measured);
         const total = strokes.reduce((sum, s) => sum + s[2], 0);
-        const duration = config.animationDuration || 0;
         let at = delay;
         strokes.forEach(([d, width, len]) => {
             const path = document.createElementNS(SVG_NS, 'path');
@@ -793,16 +792,36 @@
     }
 
     // Draws, or redraws in place, annotations: all are measured first, then all drawn. A first
-    // drawing animates when its `animate` is set; with `stagger` each starts when the one
-    // before it has finished, like a pen going through them in turn.
+    // drawing animates when its `animate` is set. The pieces of one annotation (its group) draw
+    // in one after another, like one stroke: together they take the animation's duration, each
+    // its share by length. With `stagger` each annotation starts when the one before it has
+    // finished, like a pen going through them in turn; without, they all start at once.
     function drawAnnotations(anns, { stagger = false } = {}) {
         const measured = anns.map(measureAnnotation);
+        const groupOf = a => a.element.getAttribute(GROUP_ATTR) || a;
+        const lengthOf = m => m.rects.reduce((sum, r) => sum + r.w, 0);
+        const lengths = new Map();   // group -> length of its pieces that draw in
+        anns.forEach((a, i) => {
+            if (!measured[i] || a.drawn || !a.animate) return;
+            lengths.set(groupOf(a), (lengths.get(groupOf(a)) || 0) + lengthOf(measured[i]));
+        });
+        const starts = new Map();    // group -> when its next piece starts
         let delay = 0;
         anns.forEach((a, i) => {
+            if (innerToRedraw.has(a.element)) innerToRedraw.delete(a.element);   // drawn now (see redrawInner)
             if (!measured[i]) return;
             const animate = !a.drawn && a.animate;
-            drawStrokes(a, measured[i], animate, stagger ? delay : 0);
-            if (animate && stagger) delay += a.config.animationDuration || 0;
+            const group = groupOf(a);
+            const full = a.config.animationDuration || 0;
+            const total = lengths.get(group);
+            const duration = animate ? (total ? full * lengthOf(measured[i]) / total : full) : 0;
+            if (animate && !starts.has(group)) {
+                starts.set(group, stagger ? delay : 0);
+                if (stagger) delay += full;
+            }
+            const at = animate ? starts.get(group) : 0;
+            drawStrokes(a, measured[i], animate, at, duration);
+            if (animate) starts.set(group, at + duration);
             a.drawn = true;
         });
     }
@@ -1344,7 +1363,8 @@
 
     // Rebuild with the colors for the background behind it (and for its style, after a change of
     // style, which `animate` draws in like a new annotation).
-    function restyle(wrapper, { animate = false } = {}) {
+    // With `draw` false it is only rebuilt: the caller draws it (see restyleGroups).
+    function restyle(wrapper, { animate = false, draw = true } = {}) {
         const dark = darkBehind(wrapper);
         const config = getStyleConfig(wrapper.getAttribute(STYLE_ATTR), { animate, dark });
         if (!config) return;
@@ -1356,10 +1376,12 @@
         if (old) old.remove();
         const ann = makeAnnotation(wrapper, config);
         annotationMap.set(wrapper, ann);
+        redrawInner(wrapper);
+        if (!draw) return ann;
         drawAnnotations([ann]);
         snapshotRect(wrapper);
-        redrawInner(wrapper);
         updateSelectionVisibility();
+        return ann;
     }
 
     const visibilityObserver = (typeof IntersectionObserver === 'function')
@@ -2846,11 +2868,13 @@
                 r.group = group;   // a record saved before groups existed is named by its style
                 r.key = key;
             });
-            wrappers.forEach(w => {
-                w.setAttribute(STYLE_ATTR, key);
-                restyle(w, { animate: true });
-            });
+            wrappers.forEach(w => w.setAttribute(STYLE_ATTR, key));
             dropNestedSameStyle(wrappers);
+            // Each draws in as one stroke, all of it (also what it merged with), all at once.
+            const now = allWrappers().filter(w => groups.includes(w.getAttribute(GROUP_ATTR)));
+            drawAnnotations(now.map(w => restyle(w, { animate: true, draw: false })).filter(Boolean));
+            now.forEach(snapshotRect);
+            updateSelectionVisibility();
         });
     }
 

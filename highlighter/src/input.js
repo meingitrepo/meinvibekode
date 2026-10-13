@@ -92,11 +92,13 @@
                 r.group = group;   // a record saved before groups existed is named by its style
                 r.key = key;
             });
-            wrappers.forEach(w => {
-                w.setAttribute(STYLE_ATTR, key);
-                restyle(w, { animate: true });
-            });
+            wrappers.forEach(w => w.setAttribute(STYLE_ATTR, key));
             dropNestedSameStyle(wrappers);
+            // Each draws in as one stroke, all of it (also what it merged with), all at once.
+            const now = allWrappers().filter(w => groups.includes(w.getAttribute(GROUP_ATTR)));
+            drawAnnotations(now.map(w => restyle(w, { animate: true, draw: false })).filter(Boolean));
+            now.forEach(snapshotRect);
+            updateSelectionVisibility();
         });
     }
 

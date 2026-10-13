@@ -118,13 +118,12 @@
 
     // Replaces the drawing's strokes. With `animate` they draw in from the left after `delay` ms,
     // each line taking its share of the duration by length.
-    function drawStrokes(ann, measured, animate, delay) {
+    function drawStrokes(ann, measured, animate, delay, duration) {
         const svg = ann.svg;
         const config = ann.config;
         while (svg.lastChild) svg.removeChild(svg.lastChild);
         const strokes = strokesFor(config, measured);
         const total = strokes.reduce((sum, s) => sum + s[2], 0);
-        const duration = config.animationDuration || 0;
         let at = delay;
         strokes.forEach(([d, width, len]) => {
             const path = document.createElementNS(SVG_NS, 'path');
@@ -172,16 +171,36 @@
     }
 
     // Draws, or redraws in place, annotations: all are measured first, then all drawn. A first
-    // drawing animates when its `animate` is set; with `stagger` each starts when the one
-    // before it has finished, like a pen going through them in turn.
+    // drawing animates when its `animate` is set. The pieces of one annotation (its group) draw
+    // in one after another, like one stroke: together they take the animation's duration, each
+    // its share by length. With `stagger` each annotation starts when the one before it has
+    // finished, like a pen going through them in turn; without, they all start at once.
     function drawAnnotations(anns, { stagger = false } = {}) {
         const measured = anns.map(measureAnnotation);
+        const groupOf = a => a.element.getAttribute(GROUP_ATTR) || a;
+        const lengthOf = m => m.rects.reduce((sum, r) => sum + r.w, 0);
+        const lengths = new Map();   // group -> length of its pieces that draw in
+        anns.forEach((a, i) => {
+            if (!measured[i] || a.drawn || !a.animate) return;
+            lengths.set(groupOf(a), (lengths.get(groupOf(a)) || 0) + lengthOf(measured[i]));
+        });
+        const starts = new Map();    // group -> when its next piece starts
         let delay = 0;
         anns.forEach((a, i) => {
+            if (innerToRedraw.has(a.element)) innerToRedraw.delete(a.element);   // drawn now (see redrawInner)
             if (!measured[i]) return;
             const animate = !a.drawn && a.animate;
-            drawStrokes(a, measured[i], animate, stagger ? delay : 0);
-            if (animate && stagger) delay += a.config.animationDuration || 0;
+            const group = groupOf(a);
+            const full = a.config.animationDuration || 0;
+            const total = lengths.get(group);
+            const duration = animate ? (total ? full * lengthOf(measured[i]) / total : full) : 0;
+            if (animate && !starts.has(group)) {
+                starts.set(group, stagger ? delay : 0);
+                if (stagger) delay += full;
+            }
+            const at = animate ? starts.get(group) : 0;
+            drawStrokes(a, measured[i], animate, at, duration);
+            if (animate) starts.set(group, at + duration);
             a.drawn = true;
         });
     }

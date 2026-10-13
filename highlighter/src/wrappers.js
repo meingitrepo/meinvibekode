@@ -11,13 +11,16 @@
         return ann && ann.svg && ann.svg.isConnected ? ann.svg : null;
     }
 
-    // Where a selection crosses an underline or strike-through, that part of the line turns the
-    // selected text's color (white, usually), like the text it belongs to. The line itself is
-    // masked out over the selected text (and the width of the line around it), and a copy in
-    // that color is drawn clipped to the selection. An underline sits on the bottom edge of the
-    // text, half outside the selection, so its copy moves up just inside it.
-    // A highlight is drawn beneath its text, so the selection simply paints over it.
+    // Where a selection crosses an annotation, it shows through the selection, like in Edge's
+    // PDF viewer, while the selection itself keeps its color everywhere else.
+    // - An underline or strike-through turns the selected text's color (white, usually) there.
+    //   The line is masked out over the selected text (and the width of the line around it),
+    //   and a copy in that color is drawn clipped to the selection.
+    // - A highlight is drawn beneath its text, so the selection paints over it. A copy of it,
+    //   clipped to the selection, goes over the text in a second SVG and is multiplied with the
+    //   selection (screened, on a dark background), so the selected part mixes the two colors.
     let selectionMarkCount = 0;
+    const selectionOverlays = new Set();
     function markSelected(svg, wrapper, range) {
         const part = document.createRange();
         part.selectNodeContents(wrapper);
@@ -27,8 +30,8 @@
         const paths = Array.from(svg.children).filter(el => el.tagName.toLowerCase() === 'path');
         if (!rects.length || !paths.length) return;
         const config = annotationMap.get(wrapper).config;
+        const highlight = config.type === 'highlight';
         const width = config.strokeWidth || 2;
-        const lift = config.type === 'underline' ? width / 2 + 1 : 0;
         const o = svg.getBoundingClientRect();
         const n = ++selectionMarkCount;
         const svgEl = (tag, attrs) => {
@@ -38,21 +41,29 @@
         };
         const box = (r, grow) => ({ x: r.left - o.left, y: r.top - o.top - grow, width: r.width, height: r.height + 2 * grow });
         const g = svgEl('g', { [SELECTED_ATTR]: '' });
-        const mask = svgEl('mask', { id: `highlighter-unselected-${n}`, maskUnits: 'userSpaceOnUse', x: -1e5, y: -1e5, width: 2e5, height: 2e5 });
-        mask.appendChild(svgEl('rect', { x: -1e5, y: -1e5, width: 2e5, height: 2e5, fill: '#fff' }));
-        rects.forEach(r => mask.appendChild(svgEl('rect', { ...box(r, width + 1), fill: '#000' })));
         const clip = svgEl('clipPath', { id: `highlighter-selected-${n}`, clipPathUnits: 'userSpaceOnUse' });
         rects.forEach(r => clip.appendChild(svgEl('rect', box(r, 0))));
         const copies = svgEl('g', { 'clip-path': `url(#highlighter-selected-${n})` });
-        const lifted = svgEl('g', { transform: `translate(0 ${-lift})` });
         paths.forEach(p => {
             const copy = p.cloneNode(false);
             copy.removeAttribute('style');   // no draw-in animation
-            lifted.appendChild(copy);
-            p.setAttribute('mask', `url(#highlighter-unselected-${n})`);
+            copies.appendChild(copy);
         });
-        copies.appendChild(lifted);
-        g.append(mask, clip, copies);
+        g.append(clip, copies);
+        if (highlight) {
+            // Same place and containing block as the drawing: the wrapper is positioned itself.
+            const overlay = svgEl('svg', { class: 'highlighter-annotation', [SELECTED_ATTR]: wrapper.hasAttribute(DARK_ATTR) ? 'dark' : 'light' });
+            overlay.style.cssText = svg.style.cssText;
+            overlay.appendChild(g);
+            wrapper.insertAdjacentElement('afterend', overlay);
+            selectionOverlays.add(overlay);
+            return;
+        }
+        const mask = svgEl('mask', { id: `highlighter-unselected-${n}`, maskUnits: 'userSpaceOnUse', x: -1e5, y: -1e5, width: 2e5, height: 2e5 });
+        mask.appendChild(svgEl('rect', { x: -1e5, y: -1e5, width: 2e5, height: 2e5, fill: '#fff' }));
+        rects.forEach(r => mask.appendChild(svgEl('rect', { ...box(r, width + 1), fill: '#000' })));
+        g.insertBefore(mask, g.firstChild);
+        paths.forEach(p => p.setAttribute('mask', `url(#highlighter-unselected-${n})`));
         svg.appendChild(g);
         selectedSVGs.add(svg);
     }
@@ -63,6 +74,8 @@
             svg.querySelectorAll('path[mask]').forEach(p => p.removeAttribute('mask'));
         });
         selectedSVGs.clear();
+        selectionOverlays.forEach(overlay => overlay.remove());
+        selectionOverlays.clear();
     }
 
     // Wrappers that touch the range, including a wrapper that fully contains it.
@@ -92,7 +105,7 @@
             candidateWrappers(range).forEach(w => {
                 const ann = annotationMap.get(w);
                 const svg = getSvg(w);
-                if (svg && ann.config.type !== 'highlight') markSelected(svg, w, range);
+                if (svg) markSelected(svg, w, range);
             });
         });
     }

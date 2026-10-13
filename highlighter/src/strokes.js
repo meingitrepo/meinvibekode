@@ -88,7 +88,9 @@
                 const y = r.y + r.h / 2;
                 out.push([line(r.x, y, r.x + r.w, y), 0.95 * r.h, r.w]);
             } else {
-                const y = config.type === 'underline' ? r.y + r.h + pad[2] : strike[i];
+                // An underline sits just inside the bottom of the line box, where a selection
+                // still covers it (see markSelected).
+                const y = config.type === 'underline' ? r.y + r.h - width / 2 - 1 + pad[2] : strike[i];
                 out.push([line(r.x, y, r.x + r.w, y), width, r.w]);
             }
         });

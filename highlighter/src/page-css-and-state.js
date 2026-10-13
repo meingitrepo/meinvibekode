@@ -2,6 +2,8 @@
     // Page CSS (added by start(), removed by stop())
     // =====================================================================
 
+    const HIGHLIGHT_WRAPPERS = Object.keys(STYLES).filter(k => STYLES[k].type === 'highlight')
+        .map(k => `${WRAPPER_SELECTOR}[${STYLE_ATTR}="${CSS.escape(k)}"]`);
     const pageStyle = document.createElement('style');
     pageStyle.textContent = `
         ${WRAPPER_SELECTOR} {
@@ -14,8 +16,15 @@
             -moz-user-select: none !important;
             pointer-events: none !important;
         }
-        /* The selected part of an underline or strike-through (see markSelected). */
-        g[${SELECTED_ATTR}] path { stroke: HighlightText !important; }
+        /* The selected part of an annotation (see markSelected). */
+        svg[${SVG_ATTR}] g[${SELECTED_ATTR}] path { stroke: HighlightText !important; }
+        svg[${SELECTED_ATTR}="light"] { mix-blend-mode: multiply !important; }
+        svg[${SELECTED_ATTR}="light"] path { stroke: color-mix(in srgb, Highlight ${SELECTION_TINT}%, white) !important; }
+        svg[${SELECTED_ATTR}="dark"] { mix-blend-mode: screen !important; }
+        svg[${SELECTED_ATTR}="dark"] path { stroke: color-mix(in srgb, Highlight ${SELECTION_TINT}%, black) !important; }
+        ${HIGHLIGHT_WRAPPERS.map(w => `${w}::selection, ${w} *::selection`).join(', ')} {
+            background-color: transparent !important;
+        }
         /* Note tick: a small triangle in the top-right corner of an annotation that has a note,
            like a spreadsheet comment marker. Zero net width (its width is cancelled by an equal
            negative margin), so it never moves text. Drawn with a gradient rather than borders,
@@ -48,7 +57,7 @@
     // Alt+V: hides every annotation drawing. Switched on and off through its media attribute.
     const hideStyle = document.createElement('style');
     hideStyle.textContent = `
-        svg[${SVG_ATTR}], span[${NOTE_MARK_ATTR}]::after { visibility: hidden !important; }
+        svg[${SVG_ATTR}], svg[${SELECTED_ATTR}], span[${NOTE_MARK_ATTR}]::after { visibility: hidden !important; }
     `;
     hideStyle.media = 'not all';
 

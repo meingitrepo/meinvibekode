@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      7.53
+// @version      7.54
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3737,17 +3737,19 @@
         const current = wrappers.every(w => w.getAttribute(STYLE_ATTR) === key) ? [key] : [];
         const note = groupWrappers(groups[0]).map(w => w.getAttribute(NOTE_ATTR)).find(Boolean) || '';   // N edits the first's
         const dark = wrappers[0].hasAttribute(DARK_ATTR);
-        const after = fn => (...args) => {
-            hideToolbar();
+        // A restyle keeps the toolbar where it is and updates it at once; the others hide it.
+        const after = (fn, keep = false) => (...args) => {
+            if (!keep) hideToolbar();
             if (!running) return;
             syncLocation();
             fn(...args);
-            if (selectedGroups.length && !editor) scheduleToolbar();
+            if (keep) refreshGroupToolbar();
+            else if (selectedGroups.length && !editor) scheduleToolbar();
         };
         ensureUi(dark);
         hideLabelTip();
         buildToolbar({ overlaps: [{ group: groups[0], note }], current }, dark, {
-            style: after(k => restyleGroups(groups, k)),
+            style: after(k => restyleGroups(groups, k), true),
             note: after(() => openNoteEditor(groups[0])),
             remove: after(() => deleteGroups(groups)),
             removeLabel: groups.length > 1 ? `Remove ${groups.length} annotations` : 'Remove annotation'
@@ -3759,6 +3761,14 @@
         placeToolbar();
         startToolbarIdle();
         return true;
+    }
+
+    // After the selected annotations change (restyled by the toolbar or a key), their toolbar is
+    // rebuilt in the same moment, so it never blinks away while they redraw; it goes only when
+    // they do (the style all of them had removes them).
+    function refreshGroupToolbar() {
+        if (!toolbarGroups) return;   // not shown for them (text selected, faded, switched off)
+        if (!running || editor || toolbarSwitchedOff() || !selectedGroups.length || !showGroupToolbar(selectedInOrder())) hideToolbar();
     }
 
     // The toolbar goes centered over the selection, above its first line (below its last on a
@@ -4638,6 +4648,7 @@
         } else if (CODE_TO_STYLE.has(e.code)) {
             syncLocation();
             restyleGroups(groups, CODE_TO_STYLE.get(e.code));
+            refreshGroupToolbar();
         } else {
             return false;
         }

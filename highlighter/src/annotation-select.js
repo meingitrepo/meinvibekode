@@ -158,6 +158,7 @@
         } else if (CODE_TO_STYLE.has(e.code)) {
             syncLocation();
             restyleGroups(groups, CODE_TO_STYLE.get(e.code));
+            refreshGroupToolbar();
         } else {
             return false;
         }

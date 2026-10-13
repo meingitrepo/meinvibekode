@@ -18,6 +18,28 @@
     // A highlight's color would show through a see-through selection, mixed differently for each
     // color. So it is masked out there too, and instead the selected part gets the same mark in
     // every color: a thin outline in the selected text's color, in a second SVG over the text.
+    // The boxes of the text in a range. Not the range's own getClientRects: that also gives the
+    // box of every element wholly inside it, such as the drawing (100 x 100) of a highlight that
+    // shares the text (see bandOf), which would leave a square hole in the mark.
+    function textRects(range) {
+        const root = range.commonAncestorContainer;
+        const out = [];
+        const add = node => {
+            const r = document.createRange();
+            r.selectNodeContents(node);
+            if (node === range.startContainer) r.setStart(node, range.startOffset);
+            if (node === range.endContainer) r.setEnd(node, range.endOffset);
+            Array.from(r.getClientRects()).forEach(b => { if (b.width && b.height) out.push(b); });
+        };
+        if (root.nodeType === Node.TEXT_NODE) { add(root); return out; }
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        let n;
+        while ((n = walker.nextNode())) {
+            if (range.intersectsNode(n) && n.nodeValue) add(n);
+        }
+        return out;
+    }
+
     let selectionMarkCount = 0;
     const selectionOverlays = new Set();
     function markSelected(svg, wrapper, range) {
@@ -25,7 +47,7 @@
         part.selectNodeContents(wrapper);
         if (range.compareBoundaryPoints(Range.START_TO_START, part) > 0) part.setStart(range.startContainer, range.startOffset);
         if (range.compareBoundaryPoints(Range.END_TO_END, part) < 0) part.setEnd(range.endContainer, range.endOffset);
-        const rects = Array.from(part.getClientRects()).filter(r => r.width && r.height);
+        const rects = textRects(part);
         const paths = Array.from(svg.children).filter(el => el.tagName.toLowerCase() === 'path');
         if (!rects.length || !paths.length) return;
         const config = annotationMap.get(wrapper).config;

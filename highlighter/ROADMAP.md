@@ -39,6 +39,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 7.55 | Selection outline follows the text | The dashed outline around a clicked annotation follows its lines: it starts where the text starts on the first line and ends where it ends on the last, one shape with steps instead of a rectangle over whole lines. Lines that don't touch (a two-line annotation ending left of where it starts) get an outline each |
 | 7.56 | Recolor fix | Giving an overlapping highlight the color of the highlight it overlaps no longer cuts off the shared part: the two become one annotation in that color, keeping both notes |
 | 7.57 | One stroke, faster | An annotation in several pieces (a merge, a recolor, text crossing a link) draws in as one stroke, piece after piece, instead of each piece on its own; the draw-in takes 200 ms (was 300) |
+| 7.58 | Selection gap fix | Selecting text across overlapping highlights no longer cuts a square hole out of the outer highlight while the selection lasts |
 
 ## Next, roughly in order
 

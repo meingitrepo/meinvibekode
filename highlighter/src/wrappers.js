@@ -169,18 +169,45 @@
     }
 
     // A wrapper inside another of the same style (after a change of style) adds nothing: it goes.
+    // Its annotation and the one around it then make one annotation, as when a selection merges
+    // with an annotation of its style: the restyled one keeps its identity and the other joins
+    // it, all of it, notes joined, so neither loses the text they share.
     function dropNestedSameStyle(wrappers) {
         const blocks = new Set();
+        const joins = new Map();   // group that joins -> restyled group it joins
         wrappers.forEach(w => {
             if (!w.isConnected) return;
             const key = w.getAttribute(STYLE_ATTR);
-            const doomed = Array.from(w.querySelectorAll(WRAPPER_SELECTOR)).filter(i => i.getAttribute(STYLE_ATTR) === key);
+            const group = w.getAttribute(GROUP_ATTR);
+            const doomed = [];
+            const join = other => {
+                const g = other.getAttribute(GROUP_ATTR);
+                if (g && g !== group && !joins.has(group)) joins.set(g, group);
+            };
+            w.querySelectorAll(WRAPPER_SELECTOR).forEach(i => {
+                if (i.getAttribute(STYLE_ATTR) === key) { doomed.push(i); join(i); }
+            });
             for (let o = outerWrapper(w); o; o = outerWrapper(o)) {
-                if (o.getAttribute(STYLE_ATTR) === key) { doomed.push(w); break; }
+                if (o.getAttribute(STYLE_ATTR) === key) { doomed.push(w); join(o); break; }
             }
             doomed.forEach(d => { blocks.add(getBlockParent(d)); unwrapWrapper(d); });
         });
         blocks.forEach(normalizeBlock);
+        joins.forEach((into, from) => {
+            const own = groupWrappers(into)[0];
+            if (!own) return;
+            const noteOf = g => (groupWrappers(g).find(w => w.hasAttribute(NOTE_ATTR)) || own).getAttribute(NOTE_ATTR) || '';
+            const notes = Array.from(new Set([noteOf(into), noteOf(from)].filter(Boolean)));
+            groupWrappers(from).forEach(w => {
+                w.setAttribute(GROUP_ATTR, into);
+                [ADDED_ATTR, PAGE_ATTR].forEach(attr => {
+                    if (own.hasAttribute(attr)) w.setAttribute(attr, own.getAttribute(attr));
+                    else w.removeAttribute(attr);
+                });
+            });
+            pendingRecords.forEach(r => { if (recordOwner(r) === from) r.group = into; });
+            setGroupNote(into, notes.join('\n\n').slice(0, NOTE_MAX_LENGTH).replace(/[\uD800-\uDBFF]$/, '').trim());
+        });
     }
 
     // Rebuild with the colors for the background behind it (and for its style, after a change of

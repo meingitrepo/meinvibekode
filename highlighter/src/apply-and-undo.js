@@ -51,20 +51,17 @@
 
         // Annotations of the same style merge with the new one: it grows to cover them. One that
         // starts before the selection contains the selection's start, so it is in startBlock
-        // (and likewise at the end).
-        overlaps.forEach(o => {
-            if (o.key !== key) return;
+        // (and likewise at the end). Those of other styles stay as they are, sharing the text.
+        const same = overlaps.filter(o => o.key === key);
+        same.forEach(o => {
             if (o.start < o.s) startOff = Math.min(startOff, o.start);
             if (o.end > o.e) endOff = Math.max(endOff, o.end);
         });
 
-        // Parts of other annotations that fall outside the selection survive as-is.
-        const remainders = outsideParts(overlaps.filter(o => o.key !== key));
-
-        const meta = inheritedMeta(key, overlaps, remainders, own);
+        const meta = inheritedMeta(same, own);
 
         const blocks = new Set([startBlock, endBlock]);
-        overlaps.forEach(o => { blocks.add(o.block); unwrapWrapper(o.wrapper); });
+        same.forEach(o => { blocks.add(o.block); unwrapWrapper(o.wrapper); });
         blocks.forEach(normalizeBlock);
 
         const sp = findNodeAtOffset(startBlock, startOff, 'start');
@@ -102,10 +99,7 @@
             });
         }
 
-        const restored = rewrap(remainders);
-
         showWrappers(created, true);
-        showWrappers(restored, false);
         return created;
     }
 
@@ -141,27 +135,19 @@
         return wrappers;
     }
 
-    // The new annotation takes over the identity and note of what it absorbs: the same-style
-    // annotations it merges with, and annotations it covers completely, so a color change
-    // keeps the note. Notes of several absorbed annotations are joined in text order.
-    function inheritedMeta(key, overlaps, remainders, own) {
-        const touched = new Set(overlaps.map(o => o.wrapper));
-        const surviving = new Set(remainders.map(r => r.meta.group));   // groups keeping a piece
-        allWrappers().forEach(w => { if (!touched.has(w)) surviving.add(w.getAttribute(GROUP_ATTR)); });
-        pendingRecords.forEach(r => surviving.add(r.group));   // a piece waiting to come back counts too
+    // The new annotation takes over the identity and note of the same-style annotations it
+    // merges with (`same`). Notes of several are joined in text order.
+    function inheritedMeta(same, own) {
         const absorbed = [];
         const notes = [];
-        let sameStyle = null;
-        overlaps.forEach(o => {   // in document order
-            if (!o.group || (o.key !== key && surviving.has(o.group))) return;
-            if (o.key === key && !sameStyle) sameStyle = o.group;
-            if (absorbed.includes(o.group)) return;
+        same.forEach(o => {   // in document order
+            if (!o.group || absorbed.includes(o.group)) return;
             absorbed.push(o.group);
             if (o.note && !notes.includes(o.note)) notes.push(o.note);
         });
         if (own && own.note && !notes.includes(own.note)) notes.unshift(own.note);
-        const group = own ? own.group : sameStyle || absorbed[0] || newGroupId();
-        const from = overlaps.find(o => o.group === group);
+        const group = own ? own.group : absorbed[0] || newGroupId();
+        const from = same.find(o => o.group === group);
         return {
             group,
             note: notes.join('\n\n').slice(0, NOTE_MAX_LENGTH).replace(/[\uD800-\uDBFF]$/, '').trim() || undefined,
@@ -171,17 +157,15 @@
         };
     }
 
-    // The style of the selected text when all of it is annotated in that one style: choosing that
-    // style again removes those annotations, and its toolbar button shows pressed. Null when some
-    // of it isn't annotated, or has another style. `range` is a cleaned selection (cleanRange).
-    function selectionStyle(range, overlaps) {
-        if (!overlaps.length || overlaps.some(o => o.key !== overlaps[0].key)) return null;
-        const bare = collectTextNodes(range).nodes.some(n => {
+    // The styles all of the selected text has (it can have several: see collectTextNodes):
+    // choosing one of them again removes those annotations, and its toolbar button shows
+    // pressed. `range` is a cleaned selection (cleanRange).
+    function selectionStyles(range, overlaps) {
+        return Array.from(new Set(overlaps.map(o => o.key))).filter(key => !collectTextNodes(range, key).nodes.some(n => {
             const from = n === range.startContainer ? range.startOffset : 0;
             const to = n === range.endContainer ? range.endOffset : n.nodeValue.length;
             return !!n.nodeValue.slice(from, to).trim();
-        });
-        return bare ? null : overlaps[0].key;
+        }));
     }
 
     // Removes whole annotations: every piece of them, also pieces waiting to come back.

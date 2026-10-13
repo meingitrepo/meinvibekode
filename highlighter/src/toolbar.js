@@ -98,8 +98,8 @@
 
     // Style icons show the colors the annotation will get where the selection is (`dark`).
     // `overlaps` are the annotations the selection touches (findOverlaps): while text is selected
-    // its annotation is hidden, so the toolbar shows what is there instead. The style all of it
-    // has (`current`, see selectionStyle) shows pressed, and choosing it removes it; the note
+    // its annotation is hidden, so the toolbar shows what is there instead. The styles all of it
+    // has (`current`, see selectionStyles) show pressed, and choosing it removes it; the note
     // button says whether the note it opens exists; the eraser shows when there is anything to erase.
     // For an annotation selected by clicking it, `act` holds what the buttons do instead (see
     // showGroupToolbar).
@@ -111,7 +111,7 @@
             const group = STYLES[k].type === 'highlight' ? 'highlight' : 'line';
             if (lastGroup && group !== lastGroup) items.push(toolbarDivider());
             lastGroup = group;
-            const pressed = k === current;
+            const pressed = current.includes(k);
             const label = pressed ? `Remove ${styleLabel(k).toLowerCase()}` : styleLabel(k);
             items.push(toolButton(styleIcon(k, dark), label, shortcutText(k), act ? () => act.style(k) : () => runToolbarAction(active => annotateSelection(k, active)), pressed));
         });
@@ -169,7 +169,7 @@
         ensureUi(dark);
         hideLabelTip();
         const overlaps = findOverlaps(range);
-        buildToolbar({ overlaps, current: selectionStyle(range, overlaps) }, dark);
+        buildToolbar({ overlaps, current: selectionStyles(range, overlaps) }, dark);
         toolbarEl.hidden = false;
         placeToolbar();
         startToolbarIdle();
@@ -182,7 +182,7 @@
         const wrappers = groups.flatMap(groupWrappers);
         if (!wrappers.length || !groupRect(groups)) return false;
         const key = wrappers[0].getAttribute(STYLE_ATTR);
-        const current = wrappers.every(w => w.getAttribute(STYLE_ATTR) === key) ? key : null;
+        const current = wrappers.every(w => w.getAttribute(STYLE_ATTR) === key) ? [key] : [];
         const note = groupWrappers(groups[0]).map(w => w.getAttribute(NOTE_ATTR)).find(Boolean) || '';   // N edits the first's
         const dark = wrappers[0].hasAttribute(DARK_ATTR);
         const after = fn => (...args) => {

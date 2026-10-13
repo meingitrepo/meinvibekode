@@ -14,9 +14,9 @@
         try { return { sel, range: sel.getRangeAt(0) }; } catch (e) { return null; }
     }
 
-    // Shared by the shortcuts and the selection toolbar. `active` is { sel, range }. The style the
+    // Shared by the shortcuts and the selection toolbar. `active` is { sel, range }. A style the
     // selected text already has (all of it) removes those annotations, whole; any other style
-    // annotates it (see applyAnnotation).
+    // annotates it, on top of the styles it has (see applyAnnotation).
     function annotateSelection(key, { sel, range: selected }) {
         if (!sel.toString().trim()) return;
         const range = cleanRange(selected);
@@ -24,8 +24,8 @@
         let removed = 0;
         const step = runUndoable(() => {
             const overlaps = findOverlaps(range);
-            if (selectionStyle(range, overlaps) === key) {
-                const groups = new Set(overlaps.map(o => o.group));
+            if (selectionStyles(range, overlaps).includes(key)) {
+                const groups = new Set(overlaps.filter(o => o.key === key).map(o => o.group));
                 removeGroups(groups);
                 removed = groups.size;
             } else {
@@ -96,6 +96,7 @@
                 w.setAttribute(STYLE_ATTR, key);
                 restyle(w, { animate: true });
             });
+            dropNestedSameStyle(wrappers);
         });
     }
 

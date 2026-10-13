@@ -81,13 +81,18 @@
         selectionOverlays.clear();
     }
 
-    // Wrappers that touch the range, including a wrapper that fully contains it.
+    // The annotation wrapping this one, if any: annotations of different styles can share text
+    // (a highlight and an underline, or two highlights), one wrapper inside the other.
+    function outerWrapper(wrapper) {
+        return wrapper.parentElement ? wrapper.parentElement.closest(WRAPPER_SELECTOR) : null;
+    }
+
+    // Wrappers that touch the range, including those that fully contain it.
     function candidateWrappers(range) {
         const set = new Set();
         const root = elementOf(range.commonAncestorContainer);
         if (!root) return [];
-        const outer = root.closest(WRAPPER_SELECTOR);
-        if (outer) set.add(outer);
+        for (let w = root.closest(WRAPPER_SELECTOR); w; w = outerWrapper(w)) set.add(w);
         root.querySelectorAll(WRAPPER_SELECTOR).forEach(w => set.add(w));
         return Array.from(set).filter(w => {
             try { return range.intersectsNode(w); } catch (e) { return false; }
@@ -146,6 +151,38 @@
         if (selectedSVGs.size) updateSelectionVisibility();
     }
 
+    // Annotations inside one that was just wrapped around them, unwrapped or restyled: their
+    // drawings are placed by its box and share its lines (see bandOf), so they are drawn again
+    // once the change is done.
+    const innerToRedraw = new Set();
+    function redrawInner(wrapper) {
+        const inner = wrapper.querySelectorAll(WRAPPER_SELECTOR);
+        if (!inner.length) return;
+        if (!innerToRedraw.size) {
+            queueMicrotask(() => {
+                const ws = Array.from(innerToRedraw).filter(w => w.isConnected);
+                innerToRedraw.clear();
+                reposition(ws);
+            });
+        }
+        inner.forEach(w => innerToRedraw.add(w));
+    }
+
+    // A wrapper inside another of the same style (after a change of style) adds nothing: it goes.
+    function dropNestedSameStyle(wrappers) {
+        const blocks = new Set();
+        wrappers.forEach(w => {
+            if (!w.isConnected) return;
+            const key = w.getAttribute(STYLE_ATTR);
+            const doomed = Array.from(w.querySelectorAll(WRAPPER_SELECTOR)).filter(i => i.getAttribute(STYLE_ATTR) === key);
+            for (let o = outerWrapper(w); o; o = outerWrapper(o)) {
+                if (o.getAttribute(STYLE_ATTR) === key) { doomed.push(w); break; }
+            }
+            doomed.forEach(d => { blocks.add(getBlockParent(d)); unwrapWrapper(d); });
+        });
+        blocks.forEach(normalizeBlock);
+    }
+
     // Rebuild with the colors for the background behind it (and for its style, after a change of
     // style, which `animate` draws in like a new annotation).
     function restyle(wrapper, { animate = false } = {}) {
@@ -162,6 +199,7 @@
         annotationMap.set(wrapper, ann);
         drawAnnotations([ann]);
         snapshotRect(wrapper);
+        redrawInner(wrapper);
         updateSelectionVisibility();
     }
 
@@ -214,6 +252,7 @@
         rectCache.delete(wrapper);
         trackedRecords.delete(wrapper);
         visibilityObserver.unobserve(wrapper);
+        redrawInner(wrapper);
         return unwrapDom(wrapper);
     }
 
@@ -263,6 +302,7 @@
             if (dark) wrapper.setAttribute(DARK_ATTR, '');
             updateInk(wrapper);
             annotationMap.set(wrapper, makeAnnotation(wrapper, getStyleConfig(key, { dark })));
+            redrawInner(wrapper);
             return wrapper;
         } catch (err) {
             console.warn(`${LOG} failed to wrap text`, err);
@@ -272,11 +312,11 @@
         }
     }
 
-    const SKIPPED_TEXT_SELECTOR = `${IGNORED_TEXT_SELECTOR}, ${WRAPPER_SELECTOR}`;
-
-    // The range's text nodes that can be wrapped, and `breaks`: those that come right after an
-    // existing annotation, which a new wrapper must not swallow (see wrapSegment).
-    function collectTextNodes(range) {
+    // The range's text nodes that can be wrapped in style `key`, and `breaks`: those that come
+    // right after an annotation of that style, which a new wrapper must not swallow (see
+    // wrapSegment). Text annotated in other styles can be: the two wrappers nest.
+    function collectTextNodes(range, key) {
+        const sameStyle = `${WRAPPER_SELECTOR}[${STYLE_ATTR}="${key}"]`;
         const rootNode = range.commonAncestorContainer;
         const root = rootNode.nodeType === Node.TEXT_NODE ? rootNode.parentNode : rootNode;
         const nodes = [];
@@ -288,9 +328,11 @@
                 if (node === range.startContainer && range.startOffset >= node.nodeValue.length) return NodeFilter.FILTER_REJECT;
                 if (node === range.endContainer && range.endOffset <= 0) return NodeFilter.FILTER_REJECT;
                 if (!range.intersectsNode(node)) return NodeFilter.FILTER_REJECT;
-                // Text already inside an annotation is never wrapped again (see renderRecords).
-                if (node.parentElement && node.parentElement.closest(SKIPPED_TEXT_SELECTOR)) {
-                    if (node.parentElement.closest(WRAPPER_SELECTOR)) skippedAnnotation = true;
+                // Text that has this style already is never wrapped in it again (see renderRecords).
+                const parent = node.parentElement;
+                if (parent && parent.closest(IGNORED_TEXT_SELECTOR)) return NodeFilter.FILTER_REJECT;
+                if (parent && parent.closest(sameStyle)) {
+                    skippedAnnotation = true;
                     return NodeFilter.FILTER_REJECT;
                 }
                 return NodeFilter.FILTER_ACCEPT;
@@ -307,10 +349,10 @@
 
     // Splits a range into per-block segments, computed up front as plain numbers so
     // wrapping one segment cannot disturb the offsets of the next.
-    function planSegments(range) {
+    function planSegments(range, key) {
         const groups = [];
         let currentBlock = null;
-        const { nodes: textNodes, breaks } = collectTextNodes(range);
+        const { nodes: textNodes, breaks } = collectTextNodes(range, key);
         textNodes.forEach(node => {
             const block = getBlockParent(node);
             if (!groups.length || block !== currentBlock) groups.push([]);
@@ -365,7 +407,7 @@
 
     function wrapRange(range, key, meta = { group: newGroupId() }) {
         const wrappers = [];
-        planSegments(range).forEach(seg => wrappers.push(...wrapSegment(seg, key, meta)));
+        planSegments(range, key).forEach(seg => wrappers.push(...wrapSegment(seg, key, meta)));
         return wrappers;
     }
 

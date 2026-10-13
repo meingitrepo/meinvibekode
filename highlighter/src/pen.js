@@ -37,7 +37,7 @@
         const range = selected && cleanRange(selected);
         if (!range) return;
         const sel = window.getSelection();
-        if (selectionStyle(range, findOverlaps(range)) === penKey) { sel.removeAllRanges(); return; }
+        if (selectionStyles(range, findOverlaps(range)).includes(penKey)) { sel.removeAllRanges(); return; }
         annotateSelection(penKey, { sel, range: selected });
     }
 

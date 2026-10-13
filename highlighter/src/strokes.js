@@ -60,6 +60,23 @@
         return r.y + (m.ascent - m.xHeight / 2) * scale;
     }
 
+    // Where highlights share text, the wrapper of one nests in the other's. The outer one is
+    // drawn whole and each inner one as a band across part of it: of the n highlights on the
+    // text, each gets 1/n of the height, in the order of STYLES (yellow at the top). { slot, of }
+    // for an inner highlight, null for one with no highlight around it.
+    function bandOf(element) {
+        const key = element.getAttribute(STYLE_ATTR);
+        const keys = [key];
+        for (let w = outerWrapper(element); w; w = outerWrapper(w)) {   // see wrappers.js
+            const k = w.getAttribute(STYLE_ATTR);
+            if (hasOwn(STYLES, k) && STYLES[k].type === 'highlight' && !keys.includes(k)) keys.push(k);
+        }
+        if (keys.length < 2) return null;
+        const order = Object.keys(STYLES);
+        keys.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+        return { slot: keys.indexOf(key), of: keys.length };
+    }
+
     // Line boxes of an annotation's text, relative to its drawing. Read-only: every annotation
     // is measured first and then all are drawn, so the page is laid out once, not once each.
     function measureAnnotation(ann) {
@@ -74,19 +91,21 @@
         }
         // The strike-through's font metrics read computed styles, so they are measured here too.
         const strike = ann.config.type === 'strike-through' ? rects.map(r => strikeY(r, ann.element)) : null;
-        return { rects, strike };
+        const band = ann.config.type === 'highlight' ? bandOf(ann.element) : null;
+        return { rects, strike, band };
     }
 
     // One straight stroke per line box: [path data, stroke width, length].
-    function strokesFor(config, { rects, strike }) {
+    function strokesFor(config, { rects, strike, band }) {
         const pad = normalizePadding(config.padding);
         const width = config.strokeWidth || 2;
         const out = [];
         rects.forEach((r, i) => {
             if (config.type === 'highlight') {
-                // As thick as 95% of the line box, through its middle.
-                const y = r.y + r.h / 2;
-                out.push([line(r.x, y, r.x + r.w, y), 0.95 * r.h, r.w]);
+                // As thick as 95% of the line box, through its middle; or its band of that.
+                const h = 0.95 * r.h / (band ? band.of : 1);
+                const y = band ? r.y + 0.025 * r.h + h * (band.slot + 0.5) : r.y + r.h / 2;
+                out.push([line(r.x, y, r.x + r.w, y), h, r.w]);
             } else {
                 // An underline sits just inside the bottom of the line box, where a selection
                 // still covers it (see markSelected).

@@ -49,8 +49,10 @@
         const block = getBlockParent(range.startContainer);
         if (getElementByXPath(record.xpath) !== block ||
             computeOffsetWithinBlock(block, range.startContainer, range.startOffset) !== record.startOffset) return false;
-        const wrappers = candidateWrappers(range);
-        if (!wrappers.length || !wrappers.every(w => w.getAttribute(STYLE_ATTR) === record.key)) return false;
+        // Nothing was wrapped, so the text has this style all over, maybe with others (see
+        // collectTextNodes).
+        const wrappers = candidateWrappers(range).filter(w => w.getAttribute(STYLE_ATTR) === record.key);
+        if (!wrappers.length) return false;
         const notes = new Set(wrappers.map(w => w.getAttribute(NOTE_ATTR) || ''));
         if (!record.note || (notes.size === 1 && notes.has(record.note))) return true;
         const groups = new Set(wrappers.map(w => w.getAttribute(GROUP_ATTR)));
@@ -81,16 +83,26 @@
         targets.forEach(({ located }) => {
             if (located) { darkBehind(located.range.startContainer); darkBehind(located.range.endContainer); }
         });
+        // Records can share text (in different styles), and wrapping one moves the live ranges
+        // of the others that overlap it. Offsets in the block's text don't move.
+        targets.forEach(t => {
+            if (!t.located) return;
+            const r = t.located.range;
+            const block = getBlockParent(r.startContainer);
+            if (block !== getBlockParent(r.endContainer)) return;
+            t.spot = { block, start: computeOffsetWithinBlock(block, r.startContainer, r.startOffset), end: computeOffsetWithinBlock(block, r.endContainer, r.endOffset) };
+        });
 
-        targets.forEach(({ record, located }) => {
+        targets.forEach(({ record, located, spot }) => {
             if (!located) { failed.push(record); return; }
+            const range = (spot && rangeFromOffsets(spot.block, spot.start, spot.end)) || located.range;
             const group = typeof record.group === 'string' && record.group ? record.group : legacyGroup(record);
             // An annotation whose group carries no date is dated by its first restore.
             const added = record.added || (groupTime(group) ? undefined : Date.now());
-            const wrappers = wrapRange(located.range, record.key, { group, note: record.note, added, page: record.page });
+            const wrappers = wrapRange(range, record.key, { group, note: record.note, added, page: record.page });
             if (!wrappers.length) {
                 // A duplicate of what is already there goes (`dropped` asks the caller to save).
-                if (absorbDuplicate(located.range, record)) { dropped++; releaseReclaimed(record); }
+                if (absorbDuplicate(range, record)) { dropped++; releaseReclaimed(record); }
                 else failed.push(record);
                 return;
             }

@@ -89,8 +89,7 @@
     let darkCache = null;
     function darkBehind(node) {
         let from = node && elementOf(node);
-        const wrapper = from && from.closest(WRAPPER_SELECTOR);
-        if (wrapper) from = wrapper.parentElement;
+        for (let w = from && from.closest(WRAPPER_SELECTOR); w; w = from && from.closest(WRAPPER_SELECTOR)) from = w.parentElement;
         if (!from) return false;
         if (!darkCache) {
             darkCache = new WeakMap();

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      7.52
+// @version      7.53
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -398,8 +398,7 @@
     let darkCache = null;
     function darkBehind(node) {
         let from = node && elementOf(node);
-        const wrapper = from && from.closest(WRAPPER_SELECTOR);
-        if (wrapper) from = wrapper.parentElement;
+        for (let w = from && from.closest(WRAPPER_SELECTOR); w; w = from && from.closest(WRAPPER_SELECTOR)) from = w.parentElement;
         if (!from) return false;
         if (!darkCache) {
             darkCache = new WeakMap();
@@ -682,6 +681,23 @@
         return r.y + (m.ascent - m.xHeight / 2) * scale;
     }
 
+    // Where highlights share text, the wrapper of one nests in the other's. The outer one is
+    // drawn whole and each inner one as a band across part of it: of the n highlights on the
+    // text, each gets 1/n of the height, in the order of STYLES (yellow at the top). { slot, of }
+    // for an inner highlight, null for one with no highlight around it.
+    function bandOf(element) {
+        const key = element.getAttribute(STYLE_ATTR);
+        const keys = [key];
+        for (let w = outerWrapper(element); w; w = outerWrapper(w)) {   // see wrappers.js
+            const k = w.getAttribute(STYLE_ATTR);
+            if (hasOwn(STYLES, k) && STYLES[k].type === 'highlight' && !keys.includes(k)) keys.push(k);
+        }
+        if (keys.length < 2) return null;
+        const order = Object.keys(STYLES);
+        keys.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+        return { slot: keys.indexOf(key), of: keys.length };
+    }
+
     // Line boxes of an annotation's text, relative to its drawing. Read-only: every annotation
     // is measured first and then all are drawn, so the page is laid out once, not once each.
     function measureAnnotation(ann) {
@@ -696,19 +712,21 @@
         }
         // The strike-through's font metrics read computed styles, so they are measured here too.
         const strike = ann.config.type === 'strike-through' ? rects.map(r => strikeY(r, ann.element)) : null;
-        return { rects, strike };
+        const band = ann.config.type === 'highlight' ? bandOf(ann.element) : null;
+        return { rects, strike, band };
     }
 
     // One straight stroke per line box: [path data, stroke width, length].
-    function strokesFor(config, { rects, strike }) {
+    function strokesFor(config, { rects, strike, band }) {
         const pad = normalizePadding(config.padding);
         const width = config.strokeWidth || 2;
         const out = [];
         rects.forEach((r, i) => {
             if (config.type === 'highlight') {
-                // As thick as 95% of the line box, through its middle.
-                const y = r.y + r.h / 2;
-                out.push([line(r.x, y, r.x + r.w, y), 0.95 * r.h, r.w]);
+                // As thick as 95% of the line box, through its middle; or its band of that.
+                const h = 0.95 * r.h / (band ? band.of : 1);
+                const y = band ? r.y + 0.025 * r.h + h * (band.slot + 0.5) : r.y + r.h / 2;
+                out.push([line(r.x, y, r.x + r.w, y), h, r.w]);
             } else {
                 // An underline sits just inside the bottom of the line box, where a selection
                 // still covers it (see markSelected).
@@ -1195,13 +1213,18 @@
         selectionOverlays.clear();
     }
 
-    // Wrappers that touch the range, including a wrapper that fully contains it.
+    // The annotation wrapping this one, if any: annotations of different styles can share text
+    // (a highlight and an underline, or two highlights), one wrapper inside the other.
+    function outerWrapper(wrapper) {
+        return wrapper.parentElement ? wrapper.parentElement.closest(WRAPPER_SELECTOR) : null;
+    }
+
+    // Wrappers that touch the range, including those that fully contain it.
     function candidateWrappers(range) {
         const set = new Set();
         const root = elementOf(range.commonAncestorContainer);
         if (!root) return [];
-        const outer = root.closest(WRAPPER_SELECTOR);
-        if (outer) set.add(outer);
+        for (let w = root.closest(WRAPPER_SELECTOR); w; w = outerWrapper(w)) set.add(w);
         root.querySelectorAll(WRAPPER_SELECTOR).forEach(w => set.add(w));
         return Array.from(set).filter(w => {
             try { return range.intersectsNode(w); } catch (e) { return false; }
@@ -1260,6 +1283,38 @@
         if (selectedSVGs.size) updateSelectionVisibility();
     }
 
+    // Annotations inside one that was just wrapped around them, unwrapped or restyled: their
+    // drawings are placed by its box and share its lines (see bandOf), so they are drawn again
+    // once the change is done.
+    const innerToRedraw = new Set();
+    function redrawInner(wrapper) {
+        const inner = wrapper.querySelectorAll(WRAPPER_SELECTOR);
+        if (!inner.length) return;
+        if (!innerToRedraw.size) {
+            queueMicrotask(() => {
+                const ws = Array.from(innerToRedraw).filter(w => w.isConnected);
+                innerToRedraw.clear();
+                reposition(ws);
+            });
+        }
+        inner.forEach(w => innerToRedraw.add(w));
+    }
+
+    // A wrapper inside another of the same style (after a change of style) adds nothing: it goes.
+    function dropNestedSameStyle(wrappers) {
+        const blocks = new Set();
+        wrappers.forEach(w => {
+            if (!w.isConnected) return;
+            const key = w.getAttribute(STYLE_ATTR);
+            const doomed = Array.from(w.querySelectorAll(WRAPPER_SELECTOR)).filter(i => i.getAttribute(STYLE_ATTR) === key);
+            for (let o = outerWrapper(w); o; o = outerWrapper(o)) {
+                if (o.getAttribute(STYLE_ATTR) === key) { doomed.push(w); break; }
+            }
+            doomed.forEach(d => { blocks.add(getBlockParent(d)); unwrapWrapper(d); });
+        });
+        blocks.forEach(normalizeBlock);
+    }
+
     // Rebuild with the colors for the background behind it (and for its style, after a change of
     // style, which `animate` draws in like a new annotation).
     function restyle(wrapper, { animate = false } = {}) {
@@ -1276,6 +1331,7 @@
         annotationMap.set(wrapper, ann);
         drawAnnotations([ann]);
         snapshotRect(wrapper);
+        redrawInner(wrapper);
         updateSelectionVisibility();
     }
 
@@ -1328,6 +1384,7 @@
         rectCache.delete(wrapper);
         trackedRecords.delete(wrapper);
         visibilityObserver.unobserve(wrapper);
+        redrawInner(wrapper);
         return unwrapDom(wrapper);
     }
 
@@ -1377,6 +1434,7 @@
             if (dark) wrapper.setAttribute(DARK_ATTR, '');
             updateInk(wrapper);
             annotationMap.set(wrapper, makeAnnotation(wrapper, getStyleConfig(key, { dark })));
+            redrawInner(wrapper);
             return wrapper;
         } catch (err) {
             console.warn(`${LOG} failed to wrap text`, err);
@@ -1386,11 +1444,11 @@
         }
     }
 
-    const SKIPPED_TEXT_SELECTOR = `${IGNORED_TEXT_SELECTOR}, ${WRAPPER_SELECTOR}`;
-
-    // The range's text nodes that can be wrapped, and `breaks`: those that come right after an
-    // existing annotation, which a new wrapper must not swallow (see wrapSegment).
-    function collectTextNodes(range) {
+    // The range's text nodes that can be wrapped in style `key`, and `breaks`: those that come
+    // right after an annotation of that style, which a new wrapper must not swallow (see
+    // wrapSegment). Text annotated in other styles can be: the two wrappers nest.
+    function collectTextNodes(range, key) {
+        const sameStyle = `${WRAPPER_SELECTOR}[${STYLE_ATTR}="${key}"]`;
         const rootNode = range.commonAncestorContainer;
         const root = rootNode.nodeType === Node.TEXT_NODE ? rootNode.parentNode : rootNode;
         const nodes = [];
@@ -1402,9 +1460,11 @@
                 if (node === range.startContainer && range.startOffset >= node.nodeValue.length) return NodeFilter.FILTER_REJECT;
                 if (node === range.endContainer && range.endOffset <= 0) return NodeFilter.FILTER_REJECT;
                 if (!range.intersectsNode(node)) return NodeFilter.FILTER_REJECT;
-                // Text already inside an annotation is never wrapped again (see renderRecords).
-                if (node.parentElement && node.parentElement.closest(SKIPPED_TEXT_SELECTOR)) {
-                    if (node.parentElement.closest(WRAPPER_SELECTOR)) skippedAnnotation = true;
+                // Text that has this style already is never wrapped in it again (see renderRecords).
+                const parent = node.parentElement;
+                if (parent && parent.closest(IGNORED_TEXT_SELECTOR)) return NodeFilter.FILTER_REJECT;
+                if (parent && parent.closest(sameStyle)) {
+                    skippedAnnotation = true;
                     return NodeFilter.FILTER_REJECT;
                 }
                 return NodeFilter.FILTER_ACCEPT;
@@ -1421,10 +1481,10 @@
 
     // Splits a range into per-block segments, computed up front as plain numbers so
     // wrapping one segment cannot disturb the offsets of the next.
-    function planSegments(range) {
+    function planSegments(range, key) {
         const groups = [];
         let currentBlock = null;
-        const { nodes: textNodes, breaks } = collectTextNodes(range);
+        const { nodes: textNodes, breaks } = collectTextNodes(range, key);
         textNodes.forEach(node => {
             const block = getBlockParent(node);
             if (!groups.length || block !== currentBlock) groups.push([]);
@@ -1479,7 +1539,7 @@
 
     function wrapRange(range, key, meta = { group: newGroupId() }) {
         const wrappers = [];
-        planSegments(range).forEach(seg => wrappers.push(...wrapSegment(seg, key, meta)));
+        planSegments(range, key).forEach(seg => wrappers.push(...wrapSegment(seg, key, meta)));
         return wrappers;
     }
 
@@ -1881,8 +1941,10 @@
         const block = getBlockParent(range.startContainer);
         if (getElementByXPath(record.xpath) !== block ||
             computeOffsetWithinBlock(block, range.startContainer, range.startOffset) !== record.startOffset) return false;
-        const wrappers = candidateWrappers(range);
-        if (!wrappers.length || !wrappers.every(w => w.getAttribute(STYLE_ATTR) === record.key)) return false;
+        // Nothing was wrapped, so the text has this style all over, maybe with others (see
+        // collectTextNodes).
+        const wrappers = candidateWrappers(range).filter(w => w.getAttribute(STYLE_ATTR) === record.key);
+        if (!wrappers.length) return false;
         const notes = new Set(wrappers.map(w => w.getAttribute(NOTE_ATTR) || ''));
         if (!record.note || (notes.size === 1 && notes.has(record.note))) return true;
         const groups = new Set(wrappers.map(w => w.getAttribute(GROUP_ATTR)));
@@ -1913,16 +1975,26 @@
         targets.forEach(({ located }) => {
             if (located) { darkBehind(located.range.startContainer); darkBehind(located.range.endContainer); }
         });
+        // Records can share text (in different styles), and wrapping one moves the live ranges
+        // of the others that overlap it. Offsets in the block's text don't move.
+        targets.forEach(t => {
+            if (!t.located) return;
+            const r = t.located.range;
+            const block = getBlockParent(r.startContainer);
+            if (block !== getBlockParent(r.endContainer)) return;
+            t.spot = { block, start: computeOffsetWithinBlock(block, r.startContainer, r.startOffset), end: computeOffsetWithinBlock(block, r.endContainer, r.endOffset) };
+        });
 
-        targets.forEach(({ record, located }) => {
+        targets.forEach(({ record, located, spot }) => {
             if (!located) { failed.push(record); return; }
+            const range = (spot && rangeFromOffsets(spot.block, spot.start, spot.end)) || located.range;
             const group = typeof record.group === 'string' && record.group ? record.group : legacyGroup(record);
             // An annotation whose group carries no date is dated by its first restore.
             const added = record.added || (groupTime(group) ? undefined : Date.now());
-            const wrappers = wrapRange(located.range, record.key, { group, note: record.note, added, page: record.page });
+            const wrappers = wrapRange(range, record.key, { group, note: record.note, added, page: record.page });
             if (!wrappers.length) {
                 // A duplicate of what is already there goes (`dropped` asks the caller to save).
-                if (absorbDuplicate(located.range, record)) { dropped++; releaseReclaimed(record); }
+                if (absorbDuplicate(range, record)) { dropped++; releaseReclaimed(record); }
                 else failed.push(record);
                 return;
             }
@@ -2394,20 +2466,17 @@
 
         // Annotations of the same style merge with the new one: it grows to cover them. One that
         // starts before the selection contains the selection's start, so it is in startBlock
-        // (and likewise at the end).
-        overlaps.forEach(o => {
-            if (o.key !== key) return;
+        // (and likewise at the end). Those of other styles stay as they are, sharing the text.
+        const same = overlaps.filter(o => o.key === key);
+        same.forEach(o => {
             if (o.start < o.s) startOff = Math.min(startOff, o.start);
             if (o.end > o.e) endOff = Math.max(endOff, o.end);
         });
 
-        // Parts of other annotations that fall outside the selection survive as-is.
-        const remainders = outsideParts(overlaps.filter(o => o.key !== key));
-
-        const meta = inheritedMeta(key, overlaps, remainders, own);
+        const meta = inheritedMeta(same, own);
 
         const blocks = new Set([startBlock, endBlock]);
-        overlaps.forEach(o => { blocks.add(o.block); unwrapWrapper(o.wrapper); });
+        same.forEach(o => { blocks.add(o.block); unwrapWrapper(o.wrapper); });
         blocks.forEach(normalizeBlock);
 
         const sp = findNodeAtOffset(startBlock, startOff, 'start');
@@ -2445,10 +2514,7 @@
             });
         }
 
-        const restored = rewrap(remainders);
-
         showWrappers(created, true);
-        showWrappers(restored, false);
         return created;
     }
 
@@ -2484,27 +2550,19 @@
         return wrappers;
     }
 
-    // The new annotation takes over the identity and note of what it absorbs: the same-style
-    // annotations it merges with, and annotations it covers completely, so a color change
-    // keeps the note. Notes of several absorbed annotations are joined in text order.
-    function inheritedMeta(key, overlaps, remainders, own) {
-        const touched = new Set(overlaps.map(o => o.wrapper));
-        const surviving = new Set(remainders.map(r => r.meta.group));   // groups keeping a piece
-        allWrappers().forEach(w => { if (!touched.has(w)) surviving.add(w.getAttribute(GROUP_ATTR)); });
-        pendingRecords.forEach(r => surviving.add(r.group));   // a piece waiting to come back counts too
+    // The new annotation takes over the identity and note of the same-style annotations it
+    // merges with (`same`). Notes of several are joined in text order.
+    function inheritedMeta(same, own) {
         const absorbed = [];
         const notes = [];
-        let sameStyle = null;
-        overlaps.forEach(o => {   // in document order
-            if (!o.group || (o.key !== key && surviving.has(o.group))) return;
-            if (o.key === key && !sameStyle) sameStyle = o.group;
-            if (absorbed.includes(o.group)) return;
+        same.forEach(o => {   // in document order
+            if (!o.group || absorbed.includes(o.group)) return;
             absorbed.push(o.group);
             if (o.note && !notes.includes(o.note)) notes.push(o.note);
         });
         if (own && own.note && !notes.includes(own.note)) notes.unshift(own.note);
-        const group = own ? own.group : sameStyle || absorbed[0] || newGroupId();
-        const from = overlaps.find(o => o.group === group);
+        const group = own ? own.group : absorbed[0] || newGroupId();
+        const from = same.find(o => o.group === group);
         return {
             group,
             note: notes.join('\n\n').slice(0, NOTE_MAX_LENGTH).replace(/[\uD800-\uDBFF]$/, '').trim() || undefined,
@@ -2514,17 +2572,15 @@
         };
     }
 
-    // The style of the selected text when all of it is annotated in that one style: choosing that
-    // style again removes those annotations, and its toolbar button shows pressed. Null when some
-    // of it isn't annotated, or has another style. `range` is a cleaned selection (cleanRange).
-    function selectionStyle(range, overlaps) {
-        if (!overlaps.length || overlaps.some(o => o.key !== overlaps[0].key)) return null;
-        const bare = collectTextNodes(range).nodes.some(n => {
+    // The styles all of the selected text has (it can have several: see collectTextNodes):
+    // choosing one of them again removes those annotations, and its toolbar button shows
+    // pressed. `range` is a cleaned selection (cleanRange).
+    function selectionStyles(range, overlaps) {
+        return Array.from(new Set(overlaps.map(o => o.key))).filter(key => !collectTextNodes(range, key).nodes.some(n => {
             const from = n === range.startContainer ? range.startOffset : 0;
             const to = n === range.endContainer ? range.endOffset : n.nodeValue.length;
             return !!n.nodeValue.slice(from, to).trim();
-        });
-        return bare ? null : overlaps[0].key;
+        }));
     }
 
     // Removes whole annotations: every piece of them, also pieces waiting to come back.
@@ -2685,9 +2741,9 @@
         try { return { sel, range: sel.getRangeAt(0) }; } catch (e) { return null; }
     }
 
-    // Shared by the shortcuts and the selection toolbar. `active` is { sel, range }. The style the
+    // Shared by the shortcuts and the selection toolbar. `active` is { sel, range }. A style the
     // selected text already has (all of it) removes those annotations, whole; any other style
-    // annotates it (see applyAnnotation).
+    // annotates it, on top of the styles it has (see applyAnnotation).
     function annotateSelection(key, { sel, range: selected }) {
         if (!sel.toString().trim()) return;
         const range = cleanRange(selected);
@@ -2695,8 +2751,8 @@
         let removed = 0;
         const step = runUndoable(() => {
             const overlaps = findOverlaps(range);
-            if (selectionStyle(range, overlaps) === key) {
-                const groups = new Set(overlaps.map(o => o.group));
+            if (selectionStyles(range, overlaps).includes(key)) {
+                const groups = new Set(overlaps.filter(o => o.key === key).map(o => o.group));
                 removeGroups(groups);
                 removed = groups.size;
             } else {
@@ -2767,6 +2823,7 @@
                 w.setAttribute(STYLE_ATTR, key);
                 restyle(w, { animate: true });
             });
+            dropNestedSameStyle(wrappers);
         });
     }
 
@@ -3593,8 +3650,8 @@
 
     // Style icons show the colors the annotation will get where the selection is (`dark`).
     // `overlaps` are the annotations the selection touches (findOverlaps): while text is selected
-    // its annotation is hidden, so the toolbar shows what is there instead. The style all of it
-    // has (`current`, see selectionStyle) shows pressed, and choosing it removes it; the note
+    // its annotation is hidden, so the toolbar shows what is there instead. The styles all of it
+    // has (`current`, see selectionStyles) show pressed, and choosing it removes it; the note
     // button says whether the note it opens exists; the eraser shows when there is anything to erase.
     // For an annotation selected by clicking it, `act` holds what the buttons do instead (see
     // showGroupToolbar).
@@ -3606,7 +3663,7 @@
             const group = STYLES[k].type === 'highlight' ? 'highlight' : 'line';
             if (lastGroup && group !== lastGroup) items.push(toolbarDivider());
             lastGroup = group;
-            const pressed = k === current;
+            const pressed = current.includes(k);
             const label = pressed ? `Remove ${styleLabel(k).toLowerCase()}` : styleLabel(k);
             items.push(toolButton(styleIcon(k, dark), label, shortcutText(k), act ? () => act.style(k) : () => runToolbarAction(active => annotateSelection(k, active)), pressed));
         });
@@ -3664,7 +3721,7 @@
         ensureUi(dark);
         hideLabelTip();
         const overlaps = findOverlaps(range);
-        buildToolbar({ overlaps, current: selectionStyle(range, overlaps) }, dark);
+        buildToolbar({ overlaps, current: selectionStyles(range, overlaps) }, dark);
         toolbarEl.hidden = false;
         placeToolbar();
         startToolbarIdle();
@@ -3677,7 +3734,7 @@
         const wrappers = groups.flatMap(groupWrappers);
         if (!wrappers.length || !groupRect(groups)) return false;
         const key = wrappers[0].getAttribute(STYLE_ATTR);
-        const current = wrappers.every(w => w.getAttribute(STYLE_ATTR) === key) ? key : null;
+        const current = wrappers.every(w => w.getAttribute(STYLE_ATTR) === key) ? [key] : [];
         const note = groupWrappers(groups[0]).map(w => w.getAttribute(NOTE_ATTR)).find(Boolean) || '';   // N edits the first's
         const dark = wrappers[0].hasAttribute(DARK_ATTR);
         const after = fn => (...args) => {
@@ -3846,7 +3903,7 @@
         const range = selected && cleanRange(selected);
         if (!range) return;
         const sel = window.getSelection();
-        if (selectionStyle(range, findOverlaps(range)) === penKey) { sel.removeAllRanges(); return; }
+        if (selectionStyles(range, findOverlaps(range)).includes(penKey)) { sel.removeAllRanges(); return; }
         annotateSelection(penKey, { sel, range: selected });
     }
 

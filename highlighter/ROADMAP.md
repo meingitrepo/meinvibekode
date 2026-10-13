@@ -29,6 +29,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 7.44 | Own drawing, no library | Annotations are drawn by the script itself as straight SVG strokes; rough-notation is no longer loaded (no `@require`). It looks the same, with one stroke per line instead of two for highlights. Drawing is batched (every annotation measured, then all drawn), so restoring 300 annotations takes about 120 ms instead of 180 ms and a window resize lays the page out 20 times instead of about 900 |
 | 7.45 | New name | The script is called Highlighter now that it no longer uses rough-notation: folder `highlighter/`, file `Highlighter.user.js`, and `data-highlighter-*` attributes on the page. Saved annotations and settings are kept, and installed copies update in place |
 | 7.46 | Annotations stay visible under a selection | Selecting annotated text no longer hides the annotation. An underline or strike-through is blended into the selection (darker on a light page, lighter on a dark one), and a highlight shows faintly through a slightly see-through selection, so you can see where it starts and ends while trimming or restyling |
+| 7.47 | Selected lines turn white | Instead of blending: the part of an underline or strike-through under a selection takes the selected text's color (white, usually), and an underline moves just inside the selection. A highlight gets the browser's normal selection again, and shows outside it |
 
 ## Next, roughly in order
 
@@ -59,7 +60,7 @@ And of 7.30's page tags: where pages share a canonical URL, an annotation belong
 - The compact 24px buttons and the Edge-style toolbar.
 - Straight strokes with square ends; round ends on a stroke this thick stick out over neighbouring words.
 - Opaque highlights behind the text. Multiply blending fixes some banners but turns yellow green on blue-tinted boxes.
-- Blending, not hiding, an annotation under a selection (7.46); a highlight under 80% selection reads as selected but still shows its edges.
+- Under a selection, lines take the selected text's color and highlights get the plain selection (7.47). Tinting the selection over highlights (7.46) was disliked.
 - The red tick as the only note marker.
 - "Only Save saves" in the note editor, with the Restore toast as a safety net.
 - The closed shadow root and the createElement-only UI.

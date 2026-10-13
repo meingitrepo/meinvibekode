@@ -1,5 +1,5 @@
     // =====================================================================
-    // Wrapper bookkeeping: SVG access, selection-aware blending, layout tracking
+    // Wrapper bookkeeping: SVG access, selection-aware coloring, layout tracking
     // =====================================================================
 
     function allWrappers() {
@@ -11,18 +11,57 @@
         return ann && ann.svg && ann.svg.isConnected ? ann.svg : null;
     }
 
-    // An underline or strike-through under a selection is blended into the page (multiply on a
-    // light background, screen on a dark one, see pageStyle) rather than hidden: where it crosses
-    // the selection it takes on the selection's color, and elsewhere it looks as it always does.
-    // A highlight is drawn beneath its text, so the selection already paints over it.
-    function blendSVG(svg, dark) {
-        if (selectedSVGs.has(svg)) return;
-        svg.setAttribute(SELECTED_ATTR, dark ? 'dark' : 'light');
+    // Where a selection crosses an underline or strike-through, that part of the line turns the
+    // selected text's color (white, usually), like the text it belongs to. The line itself is
+    // masked out over the selected text (and the width of the line around it), and a copy in
+    // that color is drawn clipped to the selection. An underline sits on the bottom edge of the
+    // text, half outside the selection, so its copy moves up just inside it.
+    // A highlight is drawn beneath its text, so the selection simply paints over it.
+    let selectionMarkCount = 0;
+    function markSelected(svg, wrapper, range) {
+        const part = document.createRange();
+        part.selectNodeContents(wrapper);
+        if (range.compareBoundaryPoints(Range.START_TO_START, part) > 0) part.setStart(range.startContainer, range.startOffset);
+        if (range.compareBoundaryPoints(Range.END_TO_END, part) < 0) part.setEnd(range.endContainer, range.endOffset);
+        const rects = Array.from(part.getClientRects()).filter(r => r.width && r.height);
+        const paths = Array.from(svg.children).filter(el => el.tagName.toLowerCase() === 'path');
+        if (!rects.length || !paths.length) return;
+        const config = annotationMap.get(wrapper).config;
+        const width = config.strokeWidth || 2;
+        const lift = config.type === 'underline' ? width / 2 + 1 : 0;
+        const o = svg.getBoundingClientRect();
+        const n = ++selectionMarkCount;
+        const svgEl = (tag, attrs) => {
+            const el = document.createElementNS(SVG_NS, tag);
+            Object.keys(attrs).forEach(k => el.setAttribute(k, String(attrs[k])));
+            return el;
+        };
+        const box = (r, grow) => ({ x: r.left - o.left, y: r.top - o.top - grow, width: r.width, height: r.height + 2 * grow });
+        const g = svgEl('g', { [SELECTED_ATTR]: '' });
+        const mask = svgEl('mask', { id: `highlighter-unselected-${n}`, maskUnits: 'userSpaceOnUse', x: -1e5, y: -1e5, width: 2e5, height: 2e5 });
+        mask.appendChild(svgEl('rect', { x: -1e5, y: -1e5, width: 2e5, height: 2e5, fill: '#fff' }));
+        rects.forEach(r => mask.appendChild(svgEl('rect', { ...box(r, width + 1), fill: '#000' })));
+        const clip = svgEl('clipPath', { id: `highlighter-selected-${n}`, clipPathUnits: 'userSpaceOnUse' });
+        rects.forEach(r => clip.appendChild(svgEl('rect', box(r, 0))));
+        const copies = svgEl('g', { 'clip-path': `url(#highlighter-selected-${n})` });
+        const lifted = svgEl('g', { transform: `translate(0 ${-lift})` });
+        paths.forEach(p => {
+            const copy = p.cloneNode(false);
+            copy.removeAttribute('style');   // no draw-in animation
+            lifted.appendChild(copy);
+            p.setAttribute('mask', `url(#highlighter-unselected-${n})`);
+        });
+        copies.appendChild(lifted);
+        g.append(mask, clip, copies);
+        svg.appendChild(g);
         selectedSVGs.add(svg);
     }
 
-    function unblendSelectedSVGs() {
-        selectedSVGs.forEach(svg => svg.removeAttribute(SELECTED_ATTR));
+    function unmarkSelected() {
+        selectedSVGs.forEach(svg => {
+            svg.querySelectorAll(`g[${SELECTED_ATTR}]`).forEach(g => g.remove());
+            svg.querySelectorAll('path[mask]').forEach(p => p.removeAttribute('mask'));
+        });
         selectedSVGs.clear();
     }
 
@@ -45,7 +84,7 @@
         selectionFramePending = true;
         requestAnimationFrame(() => {
             selectionFramePending = false;
-            unblendSelectedSVGs();
+            unmarkSelected();
             const sel = window.getSelection();
             if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
             let range;
@@ -53,7 +92,7 @@
             candidateWrappers(range).forEach(w => {
                 const ann = annotationMap.get(w);
                 const svg = getSvg(w);
-                if (svg && ann.config.type !== 'highlight') blendSVG(svg, w.hasAttribute(DARK_ATTR));
+                if (svg && ann.config.type !== 'highlight') markSelected(svg, w, range);
             });
         });
     }
@@ -81,13 +120,14 @@
             Math.abs(r.width - before[i].width) > TOL || Math.abs(r.height - before[i].height) > TOL);
     }
 
-    // Redraws in place: keeps the SVG elements (so blending under a selection survives) and never animates.
+    // Redraws in place: keeps the SVG elements (the selected part is marked again after) and never animates.
     // All are measured before any is drawn (see drawAnnotations).
     function reposition(wrappers) {
         const ws = wrappers.filter(w => annotationMap.has(w));
         if (!ws.length) return;
         drawAnnotations(ws.map(w => annotationMap.get(w)));
         ws.forEach(snapshotRect);
+        if (selectedSVGs.size) updateSelectionVisibility();
     }
 
     // Rebuild with the colors for the background behind it (and for its style, after a change of
@@ -106,6 +146,7 @@
         annotationMap.set(wrapper, ann);
         drawAnnotations([ann]);
         snapshotRect(wrapper);
+        updateSelectionVisibility();
     }
 
     const visibilityObserver = (typeof IntersectionObserver === 'function')

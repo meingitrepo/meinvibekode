@@ -2,8 +2,6 @@
     // Page CSS (added by start(), removed by stop())
     // =====================================================================
 
-    const HIGHLIGHT_WRAPPERS = Object.keys(STYLES).filter(k => STYLES[k].type === 'highlight')
-        .map(k => `${WRAPPER_SELECTOR}[${STYLE_ATTR}="${CSS.escape(k)}"]`);
     const pageStyle = document.createElement('style');
     pageStyle.textContent = `
         ${WRAPPER_SELECTOR} {
@@ -16,14 +14,8 @@
             -moz-user-select: none !important;
             pointer-events: none !important;
         }
-        /* Under a text selection (see blendSVG). A highlight's color shows through the selection
-           in its usual system colors, made slightly see-through. */
-        svg[${SELECTED_ATTR}="light"] { mix-blend-mode: multiply !important; }
-        svg[${SELECTED_ATTR}="dark"] { mix-blend-mode: screen !important; }
-        ${HIGHLIGHT_WRAPPERS.map(w => `${w}::selection, ${w} *::selection`).join(', ')} {
-            background-color: color-mix(in srgb, Highlight ${SELECTION_OVER_HIGHLIGHT}%, transparent) !important;
-            color: HighlightText !important;
-        }
+        /* The selected part of an underline or strike-through (see markSelected). */
+        g[${SELECTED_ATTR}] path { stroke: HighlightText !important; }
         /* Note tick: a small triangle in the top-right corner of an annotation that has a note,
            like a spreadsheet comment marker. Zero net width (its width is cancelled by an equal
            negative margin), so it never moves text. Drawn with a gradient rather than borders,
@@ -66,7 +58,7 @@
 
     const annotationMap = new WeakMap();   // wrapper -> its drawing (makeAnnotation)
     const rectCache = new WeakMap();       // wrapper -> last measured rects
-    const selectedSVGs = new Set();          // SVGs blended while text is selected
+    const selectedSVGs = new Set();          // SVGs with a selected part marked
     // About the page being shown (reset with currentKey, see resetPageTracking):
     const trackedRecords = new Map();      // wrapper -> its record when last placed or saved (see reclaimDetached)
     const knownOwners = new Set();         // annotations this tab has loaded or saved (see saveHighlights)

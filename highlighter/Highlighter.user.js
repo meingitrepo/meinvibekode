@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      7.46
+// @version      7.47
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -110,7 +110,7 @@
     const WRAPPER_ATTR = 'data-highlighter-wrapper';
     const STYLE_ATTR = 'data-style-key';
     const SVG_ATTR = 'data-highlighter-svg';
-    const SELECTED_ATTR = 'data-highlighter-under-selection';   // on an SVG the text selection crosses
+    const SELECTED_ATTR = 'data-highlighter-selected-part';     // on the selected part of a line (see markSelected)
     const GROUP_ATTR = 'data-highlighter-group';      // shared by the pieces of one annotation
     const NOTE_ATTR = 'data-highlighter-note';
     const NOTE_MARK_ATTR = 'data-highlighter-note-mark';  // the piece that shows the note tick
@@ -159,7 +159,6 @@
     const NOTE_TICK_EM = 0.35;                  // which grows with the font (0.35em: 6px at 16px, 11px on a 32px heading)
     const NOTE_TICK_COLOR = '#c50f1f';          // Fluent's red, like a spreadsheet comment marker
     const FLASH_MS = 900;                       // an annotation jumped to blinks twice in this time
-    const SELECTION_OVER_HIGHLIGHT = 80;         // % opacity of the text selection over a highlight
     const MARKDOWN_FRAGMENT_WORDS = 5;          // a long quote's link names its passage by this many words at each end
     const TRACKING_PARAM_RE = /^(utm_|fbclid$|gclid$|dclid$|msclkid$|mc_eid$|mc_cid$|igshid$|yclid$|_ga$|ref_src$)/i;
     const SITE_PREFIX_RE = /^(www|m|mobile|amp)\./i;  // host prefixes that still count as the same site
@@ -220,8 +219,6 @@
     // Page CSS (added by start(), removed by stop())
     // =====================================================================
 
-    const HIGHLIGHT_WRAPPERS = Object.keys(STYLES).filter(k => STYLES[k].type === 'highlight')
-        .map(k => `${WRAPPER_SELECTOR}[${STYLE_ATTR}="${CSS.escape(k)}"]`);
     const pageStyle = document.createElement('style');
     pageStyle.textContent = `
         ${WRAPPER_SELECTOR} {
@@ -234,14 +231,8 @@
             -moz-user-select: none !important;
             pointer-events: none !important;
         }
-        /* Under a text selection (see blendSVG). A highlight's color shows through the selection
-           in its usual system colors, made slightly see-through. */
-        svg[${SELECTED_ATTR}="light"] { mix-blend-mode: multiply !important; }
-        svg[${SELECTED_ATTR}="dark"] { mix-blend-mode: screen !important; }
-        ${HIGHLIGHT_WRAPPERS.map(w => `${w}::selection, ${w} *::selection`).join(', ')} {
-            background-color: color-mix(in srgb, Highlight ${SELECTION_OVER_HIGHLIGHT}%, transparent) !important;
-            color: HighlightText !important;
-        }
+        /* The selected part of an underline or strike-through (see markSelected). */
+        g[${SELECTED_ATTR}] path { stroke: HighlightText !important; }
         /* Note tick: a small triangle in the top-right corner of an annotation that has a note,
            like a spreadsheet comment marker. Zero net width (its width is cancelled by an equal
            negative margin), so it never moves text. Drawn with a gradient rather than borders,
@@ -284,7 +275,7 @@
 
     const annotationMap = new WeakMap();   // wrapper -> its drawing (makeAnnotation)
     const rectCache = new WeakMap();       // wrapper -> last measured rects
-    const selectedSVGs = new Set();          // SVGs blended while text is selected
+    const selectedSVGs = new Set();          // SVGs with a selected part marked
     // About the page being shown (reset with currentKey, see resetPageTracking):
     const trackedRecords = new Map();      // wrapper -> its record when last placed or saved (see reclaimDetached)
     const knownOwners = new Set();         // annotations this tab has loaded or saved (see saveHighlights)
@@ -1117,7 +1108,7 @@
     }
 
     // =====================================================================
-    // Wrapper bookkeeping: SVG access, selection-aware blending, layout tracking
+    // Wrapper bookkeeping: SVG access, selection-aware coloring, layout tracking
     // =====================================================================
 
     function allWrappers() {
@@ -1129,18 +1120,57 @@
         return ann && ann.svg && ann.svg.isConnected ? ann.svg : null;
     }
 
-    // An underline or strike-through under a selection is blended into the page (multiply on a
-    // light background, screen on a dark one, see pageStyle) rather than hidden: where it crosses
-    // the selection it takes on the selection's color, and elsewhere it looks as it always does.
-    // A highlight is drawn beneath its text, so the selection already paints over it.
-    function blendSVG(svg, dark) {
-        if (selectedSVGs.has(svg)) return;
-        svg.setAttribute(SELECTED_ATTR, dark ? 'dark' : 'light');
+    // Where a selection crosses an underline or strike-through, that part of the line turns the
+    // selected text's color (white, usually), like the text it belongs to. The line itself is
+    // masked out over the selected text (and the width of the line around it), and a copy in
+    // that color is drawn clipped to the selection. An underline sits on the bottom edge of the
+    // text, half outside the selection, so its copy moves up just inside it.
+    // A highlight is drawn beneath its text, so the selection simply paints over it.
+    let selectionMarkCount = 0;
+    function markSelected(svg, wrapper, range) {
+        const part = document.createRange();
+        part.selectNodeContents(wrapper);
+        if (range.compareBoundaryPoints(Range.START_TO_START, part) > 0) part.setStart(range.startContainer, range.startOffset);
+        if (range.compareBoundaryPoints(Range.END_TO_END, part) < 0) part.setEnd(range.endContainer, range.endOffset);
+        const rects = Array.from(part.getClientRects()).filter(r => r.width && r.height);
+        const paths = Array.from(svg.children).filter(el => el.tagName.toLowerCase() === 'path');
+        if (!rects.length || !paths.length) return;
+        const config = annotationMap.get(wrapper).config;
+        const width = config.strokeWidth || 2;
+        const lift = config.type === 'underline' ? width / 2 + 1 : 0;
+        const o = svg.getBoundingClientRect();
+        const n = ++selectionMarkCount;
+        const svgEl = (tag, attrs) => {
+            const el = document.createElementNS(SVG_NS, tag);
+            Object.keys(attrs).forEach(k => el.setAttribute(k, String(attrs[k])));
+            return el;
+        };
+        const box = (r, grow) => ({ x: r.left - o.left, y: r.top - o.top - grow, width: r.width, height: r.height + 2 * grow });
+        const g = svgEl('g', { [SELECTED_ATTR]: '' });
+        const mask = svgEl('mask', { id: `highlighter-unselected-${n}`, maskUnits: 'userSpaceOnUse', x: -1e5, y: -1e5, width: 2e5, height: 2e5 });
+        mask.appendChild(svgEl('rect', { x: -1e5, y: -1e5, width: 2e5, height: 2e5, fill: '#fff' }));
+        rects.forEach(r => mask.appendChild(svgEl('rect', { ...box(r, width + 1), fill: '#000' })));
+        const clip = svgEl('clipPath', { id: `highlighter-selected-${n}`, clipPathUnits: 'userSpaceOnUse' });
+        rects.forEach(r => clip.appendChild(svgEl('rect', box(r, 0))));
+        const copies = svgEl('g', { 'clip-path': `url(#highlighter-selected-${n})` });
+        const lifted = svgEl('g', { transform: `translate(0 ${-lift})` });
+        paths.forEach(p => {
+            const copy = p.cloneNode(false);
+            copy.removeAttribute('style');   // no draw-in animation
+            lifted.appendChild(copy);
+            p.setAttribute('mask', `url(#highlighter-unselected-${n})`);
+        });
+        copies.appendChild(lifted);
+        g.append(mask, clip, copies);
+        svg.appendChild(g);
         selectedSVGs.add(svg);
     }
 
-    function unblendSelectedSVGs() {
-        selectedSVGs.forEach(svg => svg.removeAttribute(SELECTED_ATTR));
+    function unmarkSelected() {
+        selectedSVGs.forEach(svg => {
+            svg.querySelectorAll(`g[${SELECTED_ATTR}]`).forEach(g => g.remove());
+            svg.querySelectorAll('path[mask]').forEach(p => p.removeAttribute('mask'));
+        });
         selectedSVGs.clear();
     }
 
@@ -1163,7 +1193,7 @@
         selectionFramePending = true;
         requestAnimationFrame(() => {
             selectionFramePending = false;
-            unblendSelectedSVGs();
+            unmarkSelected();
             const sel = window.getSelection();
             if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
             let range;
@@ -1171,7 +1201,7 @@
             candidateWrappers(range).forEach(w => {
                 const ann = annotationMap.get(w);
                 const svg = getSvg(w);
-                if (svg && ann.config.type !== 'highlight') blendSVG(svg, w.hasAttribute(DARK_ATTR));
+                if (svg && ann.config.type !== 'highlight') markSelected(svg, w, range);
             });
         });
     }
@@ -1199,13 +1229,14 @@
             Math.abs(r.width - before[i].width) > TOL || Math.abs(r.height - before[i].height) > TOL);
     }
 
-    // Redraws in place: keeps the SVG elements (so blending under a selection survives) and never animates.
+    // Redraws in place: keeps the SVG elements (the selected part is marked again after) and never animates.
     // All are measured before any is drawn (see drawAnnotations).
     function reposition(wrappers) {
         const ws = wrappers.filter(w => annotationMap.has(w));
         if (!ws.length) return;
         drawAnnotations(ws.map(w => annotationMap.get(w)));
         ws.forEach(snapshotRect);
+        if (selectedSVGs.size) updateSelectionVisibility();
     }
 
     // Rebuild with the colors for the background behind it (and for its style, after a change of
@@ -1224,6 +1255,7 @@
         annotationMap.set(wrapper, ann);
         drawAnnotations([ann]);
         snapshotRect(wrapper);
+        updateSelectionVisibility();
     }
 
     const visibilityObserver = (typeof IntersectionObserver === 'function')
@@ -5390,7 +5422,7 @@
         uiHost.remove();
         unwrapAll();
         resetPageTracking();
-        unblendSelectedSVGs();
+        unmarkSelected();
         pendingRecords = [];
         undoStack.length = 0;
         redoStack.length = 0;

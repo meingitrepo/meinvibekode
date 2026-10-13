@@ -1,0 +1,258 @@
+    // =====================================================================
+    // Input
+    // =====================================================================
+
+    function isEditableTarget(e) {
+        const t = (typeof e.composedPath === 'function' && e.composedPath()[0]) || e.target;
+        if (!(t instanceof Element)) return false;
+        return !!t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName);
+    }
+
+    function getActiveRange() {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || sel.rangeCount === 0) return null;
+        try { return { sel, range: sel.getRangeAt(0) }; } catch (e) { return null; }
+    }
+
+    // Shared by the shortcuts and the selection toolbar. `active` is { sel, range }. The style the
+    // selected text already has (all of it) removes those annotations, whole; any other style
+    // annotates it (see applyAnnotation).
+    function annotateSelection(key, { sel, range: selected }) {
+        if (!sel.toString().trim()) return;
+        const range = cleanRange(selected);
+        if (!range) return;
+        let removed = 0;
+        const step = runUndoable(() => {
+            const overlaps = findOverlaps(range);
+            if (selectionStyle(range, overlaps) === key) {
+                const groups = new Set(overlaps.map(o => o.group));
+                removeGroups(groups);
+                removed = groups.size;
+            } else {
+                applyAnnotation(range, key, overlaps);
+                lastStyleKey = key;
+            }
+        });
+        sel.removeAllRanges();
+        if (removed) offerUndo(removed === 1 ? `Removed ${styleLabel(key).toLowerCase()}` : `Removed ${annotationsText(removed)}`, step);
+    }
+
+    function removeInSelection({ sel, range: selected }) {
+        const range = cleanRange(selected);
+        const overlaps = range ? findOverlaps(range) : [];
+        const step = overlaps.length ? runUndoable(() => eraseOverlaps(overlaps)) : null;
+        sel.removeAllRanges();
+        // Annotations the selection covered only in part are still there.
+        const groups = Array.from(new Set(overlaps.map(o => o.group)));
+        const gone = groups.filter(g => !groupExists(g)).length;
+        const kept = groups.length - gone;
+        offerUndo(!kept ? `Removed ${annotationsText(gone)}`
+            : !gone ? `Removed part of ${annotationsText(kept)}`
+            : `Removed ${annotationsText(gone)} and part of ${kept === 1 ? 'another' : `${kept} others`}`, step);
+    }
+
+    // What the keys act on when no text is selected: the annotation selected by clicking it, else
+    // the one under the mouse (or under the note card the mouse is on), else the one jumped to
+    // last while it is in view. Null if none.
+    function pointedGroup() {
+        if (selectedGroups.length) return selectedInOrder()[0];   // clicked (see setSelectedGroups)
+        let w = hoveredWrapper;
+        if (w && !w.isConnected && pointer) {
+            // Drawn again under a still mouse (by undo, or by the site): whatever is there now.
+            const el = document.elementFromPoint(pointer.x, pointer.y);
+            w = hoveredWrapper = el && el !== uiHost ? el.closest(WRAPPER_SELECTOR) : null;
+        }
+        if (w && w.isConnected) return w.getAttribute(GROUP_ATTR);
+        return jumpGroup && groupWrappers(jumpGroup).some(isInView) ? jumpGroup : null;
+    }
+
+    // A style chosen with nothing selected, for the annotation pointed at: all of it takes that
+    // style (pieces waiting to come back too), keeping its note and date, or goes when it has that
+    // style already, as with a selection.
+    function restylePointed(group, key) {
+        restyleGroups([group], key);
+    }
+
+    // The same for several annotations (clicked ones, see setSelectedGroups), as one step for
+    // Undo: they all go when all of them have that style already.
+    function restyleGroups(groups, key) {
+        if (editor && !groups.includes(editor.group)) cancelEditor();   // one note at a time, as when opening another
+        groups = groups.filter(g => groupWrappers(g).length);
+        const wrappers = groups.flatMap(groupWrappers);
+        if (!wrappers.length) return;
+        if (wrappers.every(w => w.getAttribute(STYLE_ATTR) === key)) {
+            deleteGroups(groups, groups.length === 1 ? `Removed ${styleLabel(key).toLowerCase()}` : `Removed ${annotationsText(groups.length)}`);
+            return;
+        }
+        lastStyleKey = key;
+        runUndoable(() => {
+            pendingRecords.forEach(r => {
+                const group = recordOwner(r);
+                if (!groups.includes(group)) return;
+                r.group = group;   // a record saved before groups existed is named by its style
+                r.key = key;
+            });
+            wrappers.forEach(w => {
+                w.setAttribute(STYLE_ATTR, key);
+                restyle(w, { animate: true });
+            });
+        });
+    }
+
+    // Opens the note of the first annotation the selection touches; plain text first gets a
+    // highlight, which is dropped again if the note is cancelled or left empty.
+    function noteSelection({ sel, range: selected }) {
+        if (!sel.toString().trim()) return;
+        const range = cleanRange(selected);
+        if (!range) return;
+        const overlaps = findOverlaps(range);
+        if (overlaps.length) {
+            sel.removeAllRanges();
+            openNoteEditor(overlaps[0].group);
+            return;
+        }
+        let created = [];
+        runUndoable(() => { created = applyAnnotation(range, NOTE_STYLE_KEY, []); });
+        sel.removeAllRanges();
+        if (!created.length) return;
+        openNoteEditor(created[0].getAttribute(GROUP_ATTR), { step: undoStack[undoStack.length - 1] });
+    }
+
+    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'Backspace', 'Delete']);
+
+    function onKeyDown(e) {
+        // Esc closes everything saved (Alt+Shift+O) wherever focus is.
+        if (e.key === 'Escape' && !everythingEl.hidden) {
+            e.preventDefault();
+            closeEverything();
+            return;
+        }
+        if (selectedGroupKey(e)) return;
+        // Esc turns the pen off, unless it is meant for a panel or a field.
+        if (e.key === 'Escape' && penKey && !editor && !isUiEvent(e) && !isEditableTarget(e)) {
+            setPen(null);
+            return;
+        }
+        if (!e.altKey || e.ctrlKey || e.metaKey || e.isComposing) return;
+        if (isEditableTarget(e)) return;
+        if (editor && isUiEvent(e)) return;   // focus is on the open note editor's buttons
+        // Typing in the panel's filter box: only the panel and jump keys act, and not where Alt
+        // with them types a character (Option+O types ø on a Mac).
+        if (isUiEvent(e) && uiRoot.activeElement === panelFilter &&
+            (!/^Key[OJK]$/.test(e.code) || (e.key.length === 1 && e.key.toLowerCase() !== e.code.slice(3).toLowerCase()))) return;
+        const code = e.code;
+        if (!COMMAND_CODES.has(code) && (e.shiftKey || !CODE_TO_STYLE.has(code))) return;
+        syncLocation();
+
+        if (code === 'KeyZ' || code === 'KeyY') {
+            const redo = code === 'KeyY' || e.shiftKey;
+            if (!(redo ? redoStack : undoStack).length) return;
+            e.preventDefault();
+            if (redo) redoLastAction();
+            else undoLastAction();
+            return;
+        }
+
+        if (code === 'KeyV') {
+            if (e.shiftKey || (!annotationsHidden && !document.querySelector(WRAPPER_SELECTOR))) return;
+            e.preventDefault();
+            toggleAnnotationsHidden();
+            return;
+        }
+
+        if (code === 'KeyP') {
+            if (e.shiftKey) return;
+            e.preventDefault();
+            togglePen();
+            return;
+        }
+
+        if (code === 'KeyT') {
+            if (e.shiftKey || !ENABLE_SELECTION_TOOLBAR) return;
+            e.preventDefault();
+            toggleToolbarSwitch();
+            return;
+        }
+
+        const active = getActiveRange();
+        const selected = !!active && !!active.sel.toString().trim();
+        // With nothing selected, the keys act on the annotation pointed at (see pointedGroup).
+        // Annotations hidden by Alt+V can't be seen to be pointed at: only Alt+N, which changes
+        // nothing by itself, still reaches them.
+        const pointed = () => (annotationsHidden ? null : pointedGroup());
+
+        if (code === 'KeyN') {
+            if (e.shiftKey) return;
+            e.preventDefault();
+            const group = selected ? null : pointedGroup();
+            if (selected) noteSelection(active);
+            else if (group) openNoteEditor(group);
+            else showToast('To add a note, select some text or point at an annotation, then press Alt+N.');
+            return;
+        }
+
+        if (code === 'KeyO') {
+            e.preventDefault();
+            if (e.shiftKey) toggleEverything();
+            else togglePanel();
+            return;
+        }
+
+        if (code === 'KeyJ' || code === 'KeyK') {
+            if (e.shiftKey) return;
+            // Without annotations the keys stay the page's.
+            if (jumpRelative(code === 'KeyJ' ? 1 : -1)) e.preventDefault();
+            return;
+        }
+
+        if (code === 'Backspace' || code === 'Delete') {
+            if (e.shiftKey) {
+                e.preventDefault();
+                clearPageAnnotations();
+                return;
+            }
+            const group = selected ? null : pointed();
+            if (!selected && !group) return;
+            e.preventDefault();
+            if (selected) removeInSelection(active);
+            else deleteAnnotation(group);
+            return;
+        }
+
+        const key = CODE_TO_STYLE.get(code);
+        const group = selected ? null : pointed();
+        if (!selected && !group) {
+            // With the pen on, a style with nothing to act on becomes the pen's.
+            if (penKey) { e.preventDefault(); setPen(key); }
+            return;
+        }
+        e.preventDefault();
+        if (selected) annotateSelection(key, active);
+        else restylePointed(group, key);
+    }
+
+    // Triple-click selects the paragraph under the pointer as it is shown (see visualParagraph),
+    // rather than the browser's selection, which often runs into the start of the next block.
+    function onMouseDown(e) {
+        if (!ENABLE_TRIPLE_CLICK_BLOCK_SELECT) return;
+        if (e.button !== 0 || e.detail < 3 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        if (!(e.target instanceof Element) || e.target === uiHost) return;
+        if (e.target.closest('input, textarea, select, [contenteditable="true"], [contenteditable=""]')) return;
+        const caret = caretAt(e.clientX, e.clientY);
+        const text = caret && caret.node.nodeType === Node.TEXT_NODE && e.target.contains(caret.node) ? caret.node : null;
+        const block = text ? paragraphBox(text) : getBlockParent(e.target);
+        if (!block || block === document.body || block === document.documentElement) return;
+        const sel = window.getSelection();
+        if (!sel) return;
+        let range = text && visualParagraph(block, text);
+        if (!range) {
+            const whole = document.createRange();
+            whole.selectNodeContents(block);
+            range = cleanRange(whole, { snap: false });
+        }
+        if (!range) return;
+        e.preventDefault();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+

@@ -2,21 +2,21 @@
 
 Small tools built for personal use.
 
-## RoughNotation Highlighter
+## Highlighter
 
-[`rough-notation/RoughNotationHighlighter.user.js`](rough-notation/RoughNotationHighlighter.user.js)
+[`highlighter/Highlighter.user.js`](highlighter/Highlighter.user.js)
 is a userscript that lets you highlight, underline, strike through and leave notes on the text of any
 web page. The marks are drawn by the script itself (it started out on [rough-notation](https://roughnotation.com/)), and they are saved,
 so they come back the next time you open the page.
 
-What shipped in each version and what is planned next is in [`rough-notation/ROADMAP.md`](rough-notation/ROADMAP.md).
+What shipped in each version and what is planned next is in [`highlighter/ROADMAP.md`](highlighter/ROADMAP.md).
 
 ### Install
 
 1. Install a userscript manager such as [Violentmonkey](https://violentmonkey.github.io/) or
    [Tampermonkey](https://www.tampermonkey.net/).
 2. Open the
-   [raw script](https://raw.githubusercontent.com/meingitrepo/meinvibecode/main/rough-notation/RoughNotationHighlighter.user.js)
+   [raw script](https://raw.githubusercontent.com/meingitrepo/meinvibecode/main/highlighter/Highlighter.user.js)
    and confirm the install.
 
 The script updates itself from this repository's `main` branch, so anything merged there reaches
@@ -132,7 +132,7 @@ is back on the page. Two tabs showing the same page keep each other's new annota
 
 ### Customize
 
-Edit the **Configuration** section near the top of the script (in the repository, `rough-notation/src/config.js`):
+Edit the **Configuration** section near the top of the script (in the repository, `highlighter/src/config.js`):
 
 - `STYLES` sets each style's color, shortcut and drawing options.
 - `DARK_OVERRIDES` replaces those values for annotations on a dark background (a dark page, or a dark
@@ -148,7 +148,7 @@ hides the annotations made with it. They stay saved and come back when the style
 
 ### Changing the code
 
-`RoughNotationHighlighter.user.js` is built from the files in `rough-notation/src/`, one per part of the
-script, joined in the order listed in `rough-notation/build.js`. Edit those files, run `node build.js` in
-`rough-notation/` (Node, no packages needed), and commit both. `node build.js --check` says whether the
+`Highlighter.user.js` is built from the files in `highlighter/src/`, one per part of the
+script, joined in the order listed in `highlighter/build.js`. Edit those files, run `node build.js` in
+`highlighter/` (Node, no packages needed), and commit both. `node build.js --check` says whether the
 built file is up to date.

@@ -1,0 +1,54 @@
+    // =====================================================================
+    // Notes
+    // =====================================================================
+
+    function newGroupId() {
+        return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    }
+
+    // When an annotation was made, read from its group id, which starts with Date.now() in base
+    // 36 (eight digits until 2059). Null for groups without one: annotations saved before groups
+    // existed ("old-..."), which are dated by their first restore instead (ADDED_ATTR).
+    function groupTime(group) {
+        if (typeof group !== 'string' || !/^[0-9a-z]{8}/.test(group)) return null;
+        const t = parseInt(group.slice(0, 8), 36);
+        return t > 1262304000000 && t < Date.now() + 864e5 ? t : null;   // 2010 to tomorrow
+    }
+
+    function annotationTime(wrapper) {
+        return groupTime(wrapper.getAttribute(GROUP_ATTR)) || +wrapper.getAttribute(ADDED_ATTR) || null;
+    }
+
+    function formatDate(time) {
+        try {
+            return new Date(time).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+        } catch (e) {
+            return new Date(time).toDateString();
+        }
+    }
+
+    function groupWrappers(group) {
+        return group ? allWrappers().filter(w => w.getAttribute(GROUP_ATTR) === group) : [];
+    }
+
+    // The note tick goes on the last piece of each annotation that has a note, so an annotation
+    // split across lines or links shows a single tick, at its end.
+    function refreshNoteMarks() {
+        const wrappers = allWrappers();
+        const lastOfGroup = new Map();
+        wrappers.forEach(w => { if (w.hasAttribute(NOTE_ATTR)) lastOfGroup.set(w.getAttribute(GROUP_ATTR), w); });
+        wrappers.forEach(w => {
+            const marked = lastOfGroup.get(w.getAttribute(GROUP_ATTR)) === w;
+            if (marked !== w.hasAttribute(NOTE_MARK_ATTR)) w.toggleAttribute(NOTE_MARK_ATTR, marked);
+        });
+        schedulePanelRefresh();
+    }
+
+    function setGroupNote(group, text) {
+        groupWrappers(group).forEach(w => {
+            if (text) w.setAttribute(NOTE_ATTR, text);
+            else w.removeAttribute(NOTE_ATTR);
+        });
+        refreshNoteMarks();
+    }
+

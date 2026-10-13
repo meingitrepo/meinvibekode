@@ -1,0 +1,87 @@
+    // =====================================================================
+    // Page CSS (added by start(), removed by stop())
+    // =====================================================================
+
+    const pageStyle = document.createElement('style');
+    pageStyle.textContent = `
+        ${WRAPPER_SELECTOR} {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
+        svg.highlighter-annotation {
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            pointer-events: none !important;
+        }
+        /* Note tick: a small triangle in the top-right corner of an annotation that has a note,
+           like a spreadsheet comment marker. Zero net width (its width is cancelled by an equal
+           negative margin), so it never moves text. Drawn with a gradient rather than borders,
+           because browsers round border widths to device pixels but not the margin. Generated
+           content isn't part of textContent or the selection, so saved offsets are unaffected.
+           It grows with the font, and a 1px edge in the text's color along its diagonal keeps it
+           visible on highlights close to its red (the dark blue, pink and orange). */
+        span[${NOTE_MARK_ATTR}]::after {
+            --highlighter-tick: max(${NOTE_TICK_SIZE}px, ${NOTE_TICK_EM}em);
+            content: "" !important;
+            display: inline-block !important;
+            width: var(--highlighter-tick) !important; height: var(--highlighter-tick) !important;
+            margin: 0 0 0 calc(-1 * var(--highlighter-tick)) !important; padding: 0 !important; border: 0 !important;
+            background: linear-gradient(to bottom left, ${NOTE_TICK_COLOR} calc(50% - 1px), currentColor calc(50% - 1px) 50%, transparent 50%) !important;
+            vertical-align: text-top !important;
+            pointer-events: none !important;
+        }
+        /* An annotation jumped to (Alt+J / Alt+K, or from the panel) blinks twice. */
+        svg[${FLASH_ATTR}] {
+            animation: highlighter-flash ${FLASH_MS / 2}ms ease-in-out 2 !important;
+        }
+        @keyframes highlighter-flash { 50% { opacity: 0.15; } }
+        /* A new annotation's strokes draw in from the left (see drawStrokes). */
+        @keyframes highlighter-dash { to { stroke-dashoffset: 0; } }
+        @media (prefers-reduced-motion: reduce) {
+            svg[${FLASH_ATTR}] { animation: highlighter-flash ${FLASH_MS}ms ease-in-out 1 !important; }
+        }
+    `;
+
+    // Alt+V: hides every annotation drawing. Switched on and off through its media attribute.
+    const hideStyle = document.createElement('style');
+    hideStyle.textContent = `
+        svg[${SVG_ATTR}], span[${NOTE_MARK_ATTR}]::after { visibility: hidden !important; }
+    `;
+    hideStyle.media = 'not all';
+
+    // =====================================================================
+    // State
+    // =====================================================================
+
+    const annotationMap = new WeakMap();   // wrapper -> its drawing (makeAnnotation)
+    const rectCache = new WeakMap();       // wrapper -> last measured rects
+    const hiddenSVGs = new Set();          // SVGs hidden while text is selected
+    // About the page being shown (reset with currentKey, see resetPageTracking):
+    const trackedRecords = new Map();      // wrapper -> its record when last placed or saved (see reclaimDetached)
+    const knownOwners = new Set();         // annotations this tab has loaded or saved (see saveHighlights)
+    const reclaimedIds = new Map();        // recordId -> how many of its records wait since the site took them off the page
+    const missedIds = new Set();           // records already counted as missing on this visit
+    const putBackAt = new Map();           // recordId -> when a redrawn annotation was last put back
+    const fights = new Map();              // recordId -> how often it was taken off again right after that
+    const stubbornIds = new Set();         // records the page keeps taking off: not put back again this visit
+    const noticedKeys = new Set();         // pages this tab has said it couldn't find annotations on (see noticeMissing)
+    const undoStack = [];
+    const redoStack = [];
+    const teardown = [];                   // undoes what start() set up
+    let running = false;                   // false while the script is turned off for this site
+    let pendingRecords = [];               // saved records not yet placed in the DOM
+    let annotationsHidden = false;
+    let darkMode = null;
+    let lastHref = location.href;
+    let currentKey = null;                 // storage key of the page being shown
+    let settledCanonical = null;           // the canonical URL seen when currentKey was decided
+    let lastSeenCanonical = null;          // the canonical URL at the last check before any URL change
+    let nav = null;                        // an in-page URL change not settled yet
+    let restoreTimer = null;
+
+    function listen(target, type, fn, options) {
+        target.addEventListener(type, fn, options);
+        teardown.push(() => target.removeEventListener(type, fn, options));
+    }
+

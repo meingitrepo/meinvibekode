@@ -1,0 +1,367 @@
+    // =====================================================================
+    // On-page UI: selection toolbar, note card, note editor and toast.
+    //
+    // Styled after Fluent 2, Microsoft's current Fluent UI design language (the look of Fluent UI
+    // React v9 and Fluent UI Web Components v3): its web light and dark theme tokens, type ramp,
+    // corner radii, shadows and motion, and the anatomy of its Button, Toolbar, Tooltip, Popover,
+    // Textarea and Toast. The Fluent libraries themselves aren't loaded: they need React or the
+    // page's custom-element registry, which a userscript can't rely on. Icons are Fluent UI
+    // System Icons.
+    //
+    // Everything lives in a closed shadow root, so page CSS can't restyle it and its CSS can't
+    // leak into the page. Built with createElement (never innerHTML) so pages that enforce
+    // Trusted Types don't block it.
+    // =====================================================================
+
+    function makeEl(tag, props = {}, children = []) {
+        const node = document.createElement(tag);
+        Object.keys(props).forEach(k => {
+            if (k === 'class') node.className = props[k];
+            else if (k === 'text') node.textContent = props[k];
+            else node.setAttribute(k, props[k]);
+        });
+        children.forEach(c => node.appendChild(c));
+        return node;
+    }
+
+
+    function svgEl(tag, attrs) {
+        const node = document.createElementNS(SVG_NS, tag);
+        Object.keys(attrs).forEach(k => node.setAttribute(k, String(attrs[k])));
+        return node;
+    }
+
+    // Fluent UI System Icons (@fluentui/svg-icons 1.1.343), path data as published.
+    // Copyright (c) Microsoft Corporation. MIT License: https://github.com/microsoft/fluentui-system-icons
+    const FLUENT_ICONS = {
+        highlight_20_regular: 'M3.5 2c.28 0 .5.22.5.5v4c0 .28.22.5.5.5h11a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 1 0v4c0 .65-.42 1.2-1 1.41V9a2 2 0 0 1-2 2v2.07a2 2 0 0 1-1.1 1.8l-6.18 3.08A.5.5 0 0 1 6 17.5V11a2 2 0 0 1-2-2V7.91c-.58-.2-1-.76-1-1.41v-4c0-.28.22-.5.5-.5M5 8v1a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8zm2 3v5.7l5.45-2.73a1 1 0 0 0 .55-.9V11z',
+        highlight_accent_20_filled: 'M16.5 3v4a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5V3zm-10 7.5v7l6.45-3.1a1 1 0 0 0 .55-.9v-3z',
+        text_underline_20_regular: 'M6 3.5a.5.5 0 0 0-1 0v6.45A5 5 0 0 0 10 15c2.77 0 5-2.26 5-5.05V3.5a.5.5 0 0 0-1 0v6.45C14 12.2 12.2 14 10 14s-4-1.8-4-4.05zm-1 13c0-.28.22-.5.5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5',
+        text_strikethrough_20_regular: 'M6.53 4.03A6 6 0 0 1 10 3a6.2 6.2 0 0 1 4.9 2.2.5.5 0 0 1-.8.6A5.2 5.2 0 0 0 10 4c-1.15 0-2.18.35-2.9.85C6.36 5.35 6 5.98 6 6.5c0 .9.43 1.48 1.17 1.93q.54.32 1.25.57H6.23A3 3 0 0 1 5 6.5c0-.98.64-1.86 1.53-2.47M16.5 10a.5.5 0 0 1 0 1h-2.73A3 3 0 0 1 15 13.5c0 1.23-.72 2.12-1.68 2.68-.94.56-2.16.82-3.32.82a7 7 0 0 1-2.9-.48 4.6 4.6 0 0 1-2.02-1.74.5.5 0 0 1 .84-.56c.45.68.96 1.11 1.58 1.38.64.28 1.44.4 2.5.4 1.03 0 2.06-.24 2.82-.68.74-.44 1.18-1.05 1.18-1.82 0-.9-.43-1.48-1.17-1.93q-.54-.32-1.25-.57H3.5a.5.5 0 0 1 0-1z',
+        note_edit_20_regular: 'M3 14.18A3 3 0 0 0 6 17h2l.06-.35.16-.65H5.85A2 2 0 0 1 4 14v-4h3.18A3 3 0 0 0 10 7V4h4.15A2 2 0 0 1 16 6v2q.52-.02 1 .13V5.82A3 3 0 0 0 14 3H9.45a2 2 0 0 0-1.24.59L3.59 8.2l-.12.13A2 2 0 0 0 3 9.62v4.56M7 9H4.22l.07-.09L8.91 4.3 9 4.22v2.93A2 2 0 0 1 7 9m2.98 5.38 4.83-4.83a1.87 1.87 0 1 1 2.64 2.64l-4.83 4.83a2 2 0 0 1-1.02.58l-1.5.37a.9.9 0 0 1-1.07-1.07l.37-1.5q.15-.6.58-1.02',
+        save_20_regular: 'M3 5c0-1.1.9-2 2-2h8.38a2 2 0 0 1 1.41.59l1.62 1.62A2 2 0 0 1 17 6.62V15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1v-4.5c0-.83.67-1.5 1.5-1.5h7c.83 0 1.5.67 1.5 1.5V16a1 1 0 0 0 1-1V6.62a1 1 0 0 0-.3-.7L14.1 4.28a1 1 0 0 0-.71-.29H13v2.5c0 .83-.67 1.5-1.5 1.5h-4A1.5 1.5 0 0 1 6 6.5V4zm2 0v2.5c0 .28.22.5.5.5h4a.5.5 0 0 0 .5-.5V4zm7 12v-4.5a.5.5 0 0 0-.5-.5h-7a.5.5 0 0 0-.5.5V16z',
+        edit_16_regular: 'M14.24 1.76a2.6 2.6 0 0 0-3.71 0L2.66 9.64q-.57.57-.78 1.35l-.86 3.39a.5.5 0 0 0 .6.6l3.39-.86q.78-.21 1.35-.78l7.88-7.87a2.6 2.6 0 0 0 0-3.7m-3 .71a1.62 1.62 0 1 1 2.29 2.3l-.78.77-2.3-2.29zM9.75 3.96l2.3 2.29-6.4 6.39q-.37.37-.89.5l-2.57.67.66-2.57q.14-.52.51-.9z',
+        eraser_20_regular: 'M11.2 2.44a1.5 1.5 0 0 1 2.12 0l4.24 4.24a1.5 1.5 0 0 1 0 2.12L9.36 17h5.14a.5.5 0 1 1 0 1H7.82a1.5 1.5 0 0 1-1.14-.44l-4.24-4.24a1.5 1.5 0 0 1 0-2.12zm1.41.7a.5.5 0 0 0-.7 0L5.53 9.52l4.95 4.95 6.36-6.36a.5.5 0 0 0 0-.71zM9.78 15.18l-4.95-4.95-1.69 1.69a.5.5 0 0 0 0 .7l4.25 4.25c.2.2.5.2.7 0z',
+        delete_20_regular: 'M8.5 4h3a1.5 1.5 0 0 0-3 0m-1 0a2.5 2.5 0 0 1 5 0h5a.5.5 0 0 1 0 1h-1.05l-1.2 10.34A3 3 0 0 1 12.27 18H7.73a3 3 0 0 1-2.98-2.66L3.55 5H2.5a.5.5 0 0 1 0-1zM5.74 15.23A2 2 0 0 0 7.73 17h4.54a2 2 0 0 0 1.99-1.77L15.44 5H4.56zM8.5 7.5c.28 0 .5.22.5.5v6a.5.5 0 0 1-1 0V8c0-.28.22-.5.5-.5M12 8a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z',
+        delete_16_regular: 'M7 3h2a1 1 0 0 0-2 0M6 3a2 2 0 1 1 4 0h4a.5.5 0 0 1 0 1h-.56l-1.2 8.84A2.5 2.5 0 0 1 9.74 15h-3.5a2.5 2.5 0 0 1-2.48-2.16L2.57 4H2a.5.5 0 0 1 0-1zm1 3.5a.5.5 0 0 0-1 0v5a.5.5 0 0 0 1 0zM9.5 6c.28 0 .5.22.5.5v5a.5.5 0 0 1-1 0v-5c0-.28.22-.5.5-.5m-4.74 6.7c.1.75.74 1.3 1.49 1.3h3.5a1.5 1.5 0 0 0 1.5-1.3L12.42 4H3.57z',
+        copy_20_regular: 'M7 7H5.5C4.67 7 4 7.67 4 8.5v6c0 .83.67 1.5 1.5 1.5h4c.65 0 1.2-.42 1.41-1h1.04a2.5 2.5 0 0 1-2.45 2h-4A2.5 2.5 0 0 1 3 14.5v-6A2.5 2.5 0 0 1 5.5 6H7zm7.5-4A2.5 2.5 0 0 1 17 5.5v6a2.5 2.5 0 0 1-2.5 2.5h-4A2.5 2.5 0 0 1 8 11.5v-6A2.5 2.5 0 0 1 10.5 3zm-4 1C9.67 4 9 4.67 9 5.5v6c0 .83.67 1.5 1.5 1.5h4c.83 0 1.5-.67 1.5-1.5v-6c0-.83-.67-1.5-1.5-1.5z',
+        dismiss_20_regular: 'm4.09 4.22.06-.07a.5.5 0 0 1 .63-.06l.07.06L10 9.29l5.15-5.14a.5.5 0 0 1 .63-.06l.07.06c.18.17.2.44.06.63l-.06.07L10.71 10l5.14 5.15c.18.17.2.44.06.63l-.06.07a.5.5 0 0 1-.63.06l-.07-.06L10 10.71l-5.15 5.14a.5.5 0 0 1-.63.06l-.07-.06a.5.5 0 0 1-.06-.63l.06-.07L9.29 10 4.15 4.85a.5.5 0 0 1-.06-.63l.06-.07z',
+        dismiss_16_regular: 'm2.59 2.72.06-.07a.5.5 0 0 1 .63-.06l.07.06L8 7.29l4.65-4.64a.5.5 0 0 1 .7.7L8.71 8l4.64 4.65c.18.17.2.44.06.63l-.06.07a.5.5 0 0 1-.63.06l-.07-.06L8 8.71l-4.65 4.64a.5.5 0 0 1-.7-.7L7.29 8 2.65 3.35a.5.5 0 0 1-.06-.63l.06-.07z',
+        chevron_down_16_regular: 'M3.15 5.65c.2-.2.5-.2.7 0L8 9.79l4.15-4.14a.5.5 0 0 1 .7.7l-4.5 4.5a.5.5 0 0 1-.7 0l-4.5-4.5a.5.5 0 0 1 0-.7',
+        chevron_right_16_regular: 'M5.65 3.15a.5.5 0 0 0 0 .7L9.79 8l-4.14 4.15a.5.5 0 0 0 .7.7l4.5-4.5a.5.5 0 0 0 0-.7l-4.5-4.5a.5.5 0 0 0-.7 0',
+        search_20_regular: 'M13.73 14.44a6.5 6.5 0 1 1 .7-.7l3.42 3.4a.5.5 0 0 1-.63.77l-.07-.06zm-.71-.71A5.5 5.5 0 0 0 15 9.5a5.5 5.5 0 1 0-1.98 4.23',
+        eye_off_20_regular: 'M2.85 2.15a.5.5 0 1 0-.7.7l3.5 3.5a8 8 0 0 0-3.37 5.05.5.5 0 1 0 .98.2 7 7 0 0 1 3.1-4.53l1.6 1.59a3.5 3.5 0 1 0 4.88 4.89l4.3 4.3a.5.5 0 0 0 .71-.7zm9.27 10.68a2.5 2.5 0 1 1-3.45-3.45zm-2-4.83 3.38 3.38A3.5 3.5 0 0 0 10.12 8M10 6q-.86 0-1.67.21l-.8-.8A8 8 0 0 1 10 5c3.7 0 6.94 2.67 7.72 6.4a.5.5 0 0 1-.98.2A7 7 0 0 0 10 6',
+        info_20_regular: 'M10.5 8.91a.5.5 0 0 0-1 .09v4.6a.5.5 0 0 0 1-.1V8.91m.3-2.16a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0M18 10a8 8 0 1 0-16 0 8 8 0 0 0 16 0M3 10a7 7 0 1 1 14 0 7 7 0 0 1-14 0'
+    };
+
+    // A Fluent icon, always drawn at the size it was designed for (the _16_ / _20_ in its name).
+    // Never scale one to another size: Fluent keeps line weight constant by drawing each size
+    // separately, and a scaled icon's lines come out thinner or thicker than its neighbours'.
+    // When an icon needs to look smaller, use its smaller Fluent size instead (the note
+    // preview's pencil is edit_16 for that reason). `under` and `over` are extra shapes drawn
+    // beneath or on top of it, used to paint parts of an icon in an annotation's color.
+    function fluentIcon(name, { under = [], over = [] } = {}) {
+        const size = /_16_/.test(name) ? 16 : 20;
+        const svg = svgEl('svg', { class: `icon icon-${size}`, viewBox: `0 0 ${size} ${size}`, 'aria-hidden': 'true', focusable: 'false' });
+        under.forEach(s => svg.appendChild(s));
+        svg.appendChild(svgEl('path', { d: FLUENT_ICONS[name] }));
+        over.forEach(s => svg.appendChild(s));
+        return svg;
+    }
+
+    const FLUENT_FONT = '"Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif';
+
+    // Token names and values are Fluent 2's webLightTheme / webDarkTheme. The annotations panel
+    // and the toast follow the page's theme, which can differ from that of the other panels
+    // (see openPanel and showToast).
+    const LIGHT_TOKENS = `
+        --colorNeutralForeground1: #242424;
+        --colorNeutralForeground2: #424242;
+        --colorNeutralForeground2Hover: #242424;
+        --colorNeutralForeground2BrandHover: #0f6cbd;
+        --colorNeutralForeground2BrandPressed: #115ea3;
+        --colorNeutralForeground2BrandSelected: #0f6cbd;
+        --colorNeutralForeground3: #616161;
+        --colorNeutralForeground4: #707070;
+        --colorNeutralBackground1: #ffffff;
+        --colorSubtleBackgroundHover: #f5f5f5;
+        --colorSubtleBackgroundPressed: #e0e0e0;
+        --colorSubtleBackgroundSelected: #ebebeb;
+        --colorNeutralStroke1: #d1d1d1;
+        --colorNeutralStroke1Hover: #c7c7c7;
+        --colorNeutralStrokeAccessible: #616161;
+        --colorNeutralStrokeAccessibleHover: #575757;
+        --colorCompoundBrandStroke: #0f6cbd;
+        --colorBrandForeground1: #0f6cbd;
+        --colorBrandForegroundLink: #115ea3;
+        --colorBrandForegroundLinkHover: #0f548c;
+        --colorBrandForegroundLinkPressed: #0c3b5e;
+        --colorStrokeFocus1: #ffffff;
+        --colorStrokeFocus2: #000000;
+        --colorTransparentStroke: transparent;
+        --shadow8: 0 0 2px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.14);
+        --borderRadiusMedium: 4px;
+        --borderRadiusXLarge: 8px;
+        /* Not a Fluent token: the separator color measured from Edge's PDF selection toolbar. */
+        --toolbarDivider: #c6c6c6;
+        --durationFaster: 100ms;
+        --durationNormal: 200ms;
+        --durationSlow: 300ms;
+        --curveEasyEase: cubic-bezier(0.33, 0, 0.67, 1);
+        --curveDecelerateMid: cubic-bezier(0.1, 0.9, 0.2, 1);
+    `;
+    const DARK_TOKENS = `
+        --colorNeutralForeground1: #ffffff;
+        --colorNeutralForeground2: #d6d6d6;
+        --colorNeutralForeground2Hover: #ffffff;
+        --colorNeutralForeground2BrandHover: #479ef5;
+        --colorNeutralForeground2BrandPressed: #2886de;
+        --colorNeutralForeground2BrandSelected: #479ef5;
+        --colorNeutralForeground3: #adadad;
+        --colorNeutralForeground4: #999999;
+        --colorNeutralBackground1: #292929;
+        --colorSubtleBackgroundHover: #383838;
+        --colorSubtleBackgroundPressed: #2e2e2e;
+        --colorSubtleBackgroundSelected: #383838;
+        --colorNeutralStroke1: #666666;
+        --colorNeutralStroke1Hover: #757575;
+        --colorNeutralStrokeAccessible: #adadad;
+        --colorNeutralStrokeAccessibleHover: #bdbdbd;
+        --colorCompoundBrandStroke: #479ef5;
+        --colorBrandForeground1: #479ef5;
+        --colorBrandForegroundLink: #479ef5;
+        --colorBrandForegroundLinkHover: #62abf5;
+        --colorBrandForegroundLinkPressed: #2886de;
+        --colorStrokeFocus1: #000000;
+        --colorStrokeFocus2: #ffffff;
+        --shadow8: 0 0 2px rgba(0, 0, 0, 0.24), 0 4px 8px rgba(0, 0, 0, 0.28);
+        --toolbarDivider: #666666;
+    `;
+    const UI_CSS = `
+        :host { all: initial; ${LIGHT_TOKENS} }
+        :host([data-theme="dark"]) { ${DARK_TOKENS} }
+        .panel[data-theme="light"], .toast[data-theme="light"], .pen[data-theme="light"], .everything[data-theme="light"] { ${LIGHT_TOKENS} }
+        .panel[data-theme="dark"], .toast[data-theme="dark"], .pen[data-theme="dark"], .everything[data-theme="dark"] { ${DARK_TOKENS} }
+        [hidden] { display: none !important; }
+
+        /* Every floating panel (toolbar, note preview, note editor, toast, tooltip) shares this
+           surface: 8px corners and shadow8, matched to Edge's PDF selection toolbar. Tooltips
+           alone keep Fluent's 4px corners. */
+        .surface {
+            position: fixed; top: 0; left: 0; box-sizing: border-box;
+            font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; font-weight: 400;
+            color: var(--colorNeutralForeground1); background: var(--colorNeutralBackground1);
+            border: 1px solid var(--colorTransparentStroke); border-radius: var(--borderRadiusXLarge);
+            box-shadow: var(--shadow8);
+            animation: highlighter-enter var(--durationNormal) var(--curveDecelerateMid);
+        }
+        @keyframes highlighter-enter { from { opacity: 0; transform: translateY(4px); } }
+
+        .icon { display: block; flex: none; fill: currentColor; }
+        .icon-20 { width: 20px; height: 20px; }
+        .icon-16 { width: 16px; height: 16px; }
+
+        /* Button: Fluent's subtle appearance, size small (24px), the same in the toolbar and the
+           panels, so every icon has the same padding (2px), hover square and spacing (icons 6px
+           apart). The user prefers this tighter spacing to the 32px medium size. */
+        .btn {
+            box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
+            gap: 4px; min-width: 64px; height: 24px; margin: 0; padding: 0 8px;
+            border: 1px solid transparent; border-radius: var(--borderRadiusMedium);
+            font-family: inherit; font-size: 12px; line-height: 16px; font-weight: 400;
+            cursor: pointer; outline: none; user-select: none; -webkit-tap-highlight-color: transparent;
+            transition: background-color var(--durationFaster) var(--curveEasyEase),
+                        border-color var(--durationFaster) var(--curveEasyEase),
+                        color var(--durationFaster) var(--curveEasyEase);
+        }
+        .btn-icon { min-width: 0; width: 24px; padding: 0; }
+        .btn-subtle { background: transparent; color: var(--colorNeutralForeground2); }
+        /* A style the selected text already has: Fluent's subtle ToggleButton, checked. */
+        .btn-subtle[aria-pressed="true"] { background: var(--colorSubtleBackgroundSelected); color: var(--colorNeutralForeground2Hover); }
+        .btn-subtle[aria-pressed="true"] .icon { color: var(--colorNeutralForeground2BrandSelected); }
+        .btn-subtle:hover { background: var(--colorSubtleBackgroundHover); color: var(--colorNeutralForeground2Hover); }
+        .btn-subtle:active { background: var(--colorSubtleBackgroundPressed); }
+        .btn-subtle:hover .icon { color: var(--colorNeutralForeground2BrandHover); }
+        .btn-subtle:active .icon { color: var(--colorNeutralForeground2BrandPressed); }
+        .btn:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 0; box-shadow: inset 0 0 0 1px var(--colorStrokeFocus1); }
+        /* The note editor's Save while the note has unsaved changes. */
+        .btn-subtle.dirty:not(:active) .icon { color: var(--colorBrandForeground1); }
+
+        /* Annotations selected by clicking them: a dashed box, black, or white on a dark page. */
+        .select-box {
+            position: fixed; top: 0; left: 0; box-sizing: border-box; pointer-events: none;
+            border: 2px dashed #000000; border-radius: var(--borderRadiusMedium);
+        }
+        .select-box[data-theme="dark"] { border-color: #ffffff; }
+
+        /* Toolbar */
+        /* Matched to Edge's PDF selection toolbar: 8px corners, a lighter shadow, and longer,
+           darker separators. */
+        /* 8px padding: buttons 8px and icons 10px from the edges, as in the panels; with 24px
+           buttons that keeps the toolbar Edge's height (about 42px). */
+        .toolbar { display: flex; align-items: center; gap: 2px; padding: 8px; }
+        /* Idle fade-out (see TOOLBAR_IDLE_MS). Pointing at the toolbar brings it back at once. */
+        .toolbar.fading { opacity: 0; transition: opacity var(--durationSlow) var(--curveEasyEase); }
+        .divider { flex: none; width: 1px; height: 24px; margin: 0 4px; background: var(--toolbarDivider); }
+        @media (pointer: coarse) { .toolbar .btn-icon { width: 40px; height: 40px; } }
+
+        /* Tooltip */
+        .tip { max-width: 240px; padding: 4px 11px 6px; font-size: 12px; line-height: 16px; border-radius: var(--borderRadiusMedium); pointer-events: none; }
+        .tip .kbd { margin-left: 8px; color: var(--colorNeutralForeground3); }
+
+        /* Panels (note preview, note editor, toast) all have 12px padding. Their 24px icon buttons
+           are pulled out by 4px with negative margins, so, as on the toolbar (8px padding), every
+           button sits 8px from the panel's edges, every icon 10px, and neighbouring buttons are
+           2px apart. */
+
+        /* Note preview */
+        .card { width: max-content; min-width: 160px; max-width: min(320px, calc(100vw - 16px)); padding: 12px; }
+        .card-text { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 240px; overflow: auto; }
+        .card-text a { color: var(--colorBrandForegroundLink); text-decoration: underline; border-radius: var(--borderRadiusMedium); outline: none; }
+        .card-text a:hover { color: var(--colorBrandForegroundLinkHover); }
+        .card-text a:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
+        .card-footer { display: flex; align-items: center; gap: 12px; margin: 8px -4px -4px 0; }
+        .card-hint { flex: 1; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
+        .card-actions { display: flex; gap: 4px; }
+
+        /* Note editor, with an outline Textarea */
+        /* As wide as its note box, which starts 252px wide (a 280px panel) and can be dragged larger. */
+        .editor { max-width: calc(100vw - 16px); padding: 12px; }
+        .editor-header { display: flex; align-items: center; justify-content: space-between; min-height: 24px; margin: -4px -4px 8px 0; }
+        /* Save and Delete, icon only, at the top right. */
+        .editor-actions { display: flex; align-items: center; gap: 2px; }
+        .editor-title { font-weight: 600; }
+        .field {
+            position: relative; box-sizing: border-box; background: var(--colorNeutralBackground1);
+            /* No bottom border: browsers round border widths to device pixels (1px becomes 0.8px at
+               125% scaling), so a line positioned to cover a border always misses it by a fraction
+               and looks doubled. The bottom edge is drawn by ::before and ::after instead, both
+               anchored to the same edge (bottom: 0), so they can't drift apart. */
+            border: 1px solid var(--colorNeutralStroke1); border-bottom: 0;
+            /* Square bottom corners, so the bottom lines are plain straight lines. */
+            border-radius: var(--borderRadiusMedium) var(--borderRadiusMedium) 0 0;
+            /* Clips the textarea (and its scrollbar) to the rounded top corners. */
+            overflow: hidden;
+            /* A 2px strip under the textarea for the bottom lines, so the focus bar never covers
+               the textarea's resize grip. */
+            padding-bottom: 2px;
+        }
+        .field:hover { border-color: var(--colorNeutralStroke1Hover); }
+        .field::before, .field::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; pointer-events: none; }
+        /* The box's bottom edge (what the bottom border used to be). */
+        .field::before { height: 1px; background: var(--colorNeutralStrokeAccessible); }
+        .field:hover::before { background: var(--colorNeutralStrokeAccessibleHover); }
+        /* Focus line: one solid 2px bar that grows from the center on focus, as in Fluent. */
+        .field::after {
+            height: 2px; background: var(--colorCompoundBrandStroke);
+            transform: scaleX(0); transition: transform 50ms var(--curveEasyEase);
+        }
+        .field:focus-within::after { transform: scaleX(1); transition: transform var(--durationNormal) var(--curveDecelerateMid); }
+        textarea {
+            /* Height is set by sizeNoteInput(): NOTE_MIN_LINES to NOTE_MAX_LINES, then it scrolls.
+               The corner handle resizes it (and the panel) for the current edit only. */
+            display: block; box-sizing: border-box; width: 252px; min-width: 252px; margin: 0; padding: 5px 11px;
+            min-height: 30px; max-width: min(640px, calc(100vw - 50px)); max-height: 60vh;   /* 30px: one line */
+            border: 0; outline: 0; resize: both; overflow-y: auto; background: transparent;
+            color: var(--colorNeutralForeground1); font: inherit;
+        }
+        textarea::placeholder { color: var(--colorNeutralForeground4); opacity: 1; }
+        /* width 0 + min-width 100%: the hint wraps to the note box's width instead of widening the
+           panel, which would leave the box's border wider than the textarea and its scrollbar. */
+        .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
+        /* Toast */
+        .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; max-width: min(360px, calc(100vw - 32px)); padding: 12px; }
+        .toast .icon { color: var(--colorNeutralForeground3); }
+        .toast-text { flex: 1; min-width: 0; }
+        /* The toast's action (Undo, Restore): a Fluent Link, as in Fluent's Toast. */
+        .link {
+            flex: none; margin: 0 0 0 4px; padding: 0; border: 0; border-radius: var(--borderRadiusMedium);
+            background: none; font: inherit; color: var(--colorBrandForegroundLink);
+            cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent;
+        }
+        .link:hover { color: var(--colorBrandForegroundLinkHover); text-decoration: underline; }
+        .link:active { color: var(--colorBrandForegroundLinkPressed); text-decoration: underline; }
+        .link:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 1px; }
+        /* The pen's pill, centred at the top of the view. */
+        .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 12px; border-radius: 999px; }
+        .pen-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
+        .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: rgba(0, 0, 0, 0.4); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
+        .everything-box { position: relative; display: flex; flex-direction: column; width: min(720px, 100%); max-height: 100%; padding: 16px 0 0; }
+        .everything-box .panel-header { margin: -4px 12px 8px 16px; }
+        .everything-box .field { flex: none; margin: 0 16px 8px; }
+        .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 12px 12px; overscroll-behavior: contain; }
+        .page-head {
+            display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 6px 4px; border: 0;
+            border-radius: var(--borderRadiusMedium); background: none; font: inherit; color: inherit; text-align: left;
+            cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent;
+        }
+        .page-head:hover { background: var(--colorSubtleBackgroundHover); }
+        .page-head:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: -2px; }
+        .page-name { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        .page-host { font-weight: 600; }
+        .page-path { margin-left: 6px; color: var(--colorNeutralForeground3); }
+        .page-meta { flex: none; font-size: 12px; color: var(--colorNeutralForeground3); }
+        .page-items { padding-left: 20px; }
+        a.item-main { text-decoration: none; }
+        /* A message while the annotations panel is open sits beside it, not on it. */
+        @media (min-width: 720px) { .toast.beside-panel { right: 364px; } }
+
+        /* Annotations panel: a Fluent Drawer-like panel along the right edge, above the page. */
+        .panel {
+            top: 8px; left: auto; right: 8px; display: flex; flex-direction: column;
+            width: min(340px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
+        }
+        .panel-header { display: flex; align-items: center; gap: 8px; min-height: 24px; margin: -4px 8px 8px 12px; }
+        .panel-title { font-weight: 600; }
+        .panel-count { flex: 1; color: var(--colorNeutralForeground3); }
+        .panel-actions { display: flex; align-items: center; gap: 2px; }
+        .panel .field { flex: none; margin: 0 12px 8px; padding-bottom: 0; }
+        .search-icon { position: absolute; left: 8px; top: 6px; color: var(--colorNeutralForeground3); pointer-events: none; }
+        .field input {
+            display: block; box-sizing: border-box; width: 100%; height: 31px; margin: 0; padding: 0 10px 0 32px;
+            border: 0; outline: 0; background: transparent; color: var(--colorNeutralForeground1); font: inherit;
+        }
+        .field input::placeholder { color: var(--colorNeutralForeground4); opacity: 1; }
+        .field input::-webkit-search-cancel-button { display: none; }
+        .panel-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
+        .section-title { margin: 8px 4px 4px; font-size: 12px; line-height: 16px; font-weight: 600; color: var(--colorNeutralForeground3); }
+        .empty { margin: 4px 4px 8px; color: var(--colorNeutralForeground3); }
+        .item { display: flex; align-items: flex-start; border-radius: var(--borderRadiusMedium); }
+        .item:hover { background: var(--colorSubtleBackgroundHover); }
+        /* The annotation itself: a button that scrolls to it. The bar at its left is its color. */
+        .item-main {
+            position: relative; flex: 1; min-width: 0; display: block; margin: 0; padding: 6px 4px 6px 14px;
+            border: 0; border-radius: var(--borderRadiusMedium); background: none; text-align: left;
+            font: inherit; color: inherit; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent;
+        }
+        .item-main:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: -2px; }
+        .item-main::before { content: ""; position: absolute; left: 4px; top: 8px; bottom: 8px; width: 4px; border-radius: 2px; background: var(--swatch); }
+        .item-text, .item-note { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+        .item-text { -webkit-line-clamp: 3; }
+        .item-note { -webkit-line-clamp: 4; white-space: pre-wrap; margin-top: 2px; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground2); }
+        .item-meta { margin-top: 2px; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
+        .item-actions { display: flex; align-items: center; gap: 2px; padding: 4px 4px 0 0; opacity: 0; }
+        .item:hover .item-actions, .item:focus-within .item-actions { opacity: 1; }
+        @media (hover: none) { .item-actions { opacity: 1; } }
+        .item-actions .btn:not(.btn-icon) { min-width: 0; }
+        /* Not found: its actions sit below its text, always shown. */
+        .missing { flex-direction: column; align-items: stretch; }
+        .missing .item-main { cursor: default; padding-bottom: 2px; }
+        .missing .item-main::before { opacity: 0.5; }
+        .missing .item-actions { opacity: 1; padding: 0 4px 6px 6px; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .surface { animation: none; }
+            .btn, .field::after, .toolbar.fading { transition: none; }
+        }
+        @media (forced-colors: active) {
+            .surface { border-color: CanvasText; }
+            .btn { border-color: ButtonText; }
+            .btn[aria-pressed="true"] { background: Highlight; }
+            .btn[aria-pressed="true"] .icon { color: HighlightText; }
+            .field::after { background: Highlight; }
+            .link, .link:hover, .link:active { color: LinkText; }
+        }
+    `;
+

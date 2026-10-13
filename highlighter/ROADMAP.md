@@ -32,8 +32,8 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 7.47 | Selected lines turn white | Instead of blending: the part of an underline or strike-through under a selection takes the selected text's color (white, usually), and an underline moves just inside the selection. A highlight gets the browser's normal selection again, and shows outside it |
 | 7.48 | Selected highlights like Edge's PDF viewer | A selected highlight mixes its color with a light tint of the selection color and keeps its text color, as in Edge's PDF viewer. Underlines now sit just inside the bottom of the text, so a selection covers them whole |
 | 7.49 | Plain selection over highlights again | 7.48's tint over selected highlights is gone: the selection looks the same everywhere. Underlines stay inside the text box, and selected lines still turn white |
-| 7.50 | Thinner lines, outlined selected highlights | Underline and strike-through are 1px. Under a selection a highlight's color is hidden (it mixed differently with see-through selections for each color) and the selected part gets a thin outline in the selected text's color instead, the same for every color |
 | 7.50 | Annotations follow zoom and resize at once | While the window is resized or zoomed, annotations on screen are redrawn in the same frame instead of 150 ms after it stops, so they no longer trail behind their text |
+| 7.51 | Thinner lines, outlined selected highlights | Underline and strike-through are 1px. Under a selection a highlight's color is hidden (it mixed differently with see-through selections for each color) and the selected part gets a thin outline in the selected text's color instead, the same for every color |
 
 ## Next, roughly in order
 

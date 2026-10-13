@@ -6,7 +6,7 @@ Small tools built for personal use.
 
 [`rough-notation/RoughNotationHighlighter.user.js`](rough-notation/RoughNotationHighlighter.user.js)
 is a userscript that lets you highlight, underline, strike through and leave notes on the text of any
-web page. The marks are hand-drawn by [rough-notation](https://roughnotation.com/), and they are saved,
+web page. The marks are drawn by the script itself (it started out on [rough-notation](https://roughnotation.com/)), and they are saved,
 so they come back the next time you open the page.
 
 What shipped in each version and what is planned next is in [`rough-notation/ROADMAP.md`](rough-notation/ROADMAP.md).
@@ -152,12 +152,3 @@ hides the annotations made with it. They stay saved and come back when the style
 script, joined in the order listed in `rough-notation/build.js`. Edit those files, run `node build.js` in
 `rough-notation/` (Node, no packages needed), and commit both. `node build.js --check` says whether the
 built file is up to date.
-
-### Optional hardening
-
-The script loads rough-notation 0.5.1 from unpkg. If your userscript manager supports integrity hashes
-(Tampermonkey does), you can append this hash to the `@require` URL:
-
-```
-#sha256-+QqgCQ42H/SGlLdOAxnhCYVt7LPnV8KA3+JeNgfzX6w=
-```

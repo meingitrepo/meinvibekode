@@ -69,7 +69,7 @@ ${filler(40)}
   L.check('markdown escapes', md.includes('> \\*star\\* and \\_under\\_'), md);
   L.check('markdown context for repeated', /text=Here%2E?|text=[^)]*Repeated%20words[^)]*/.test(md) && md.includes('-,Repeated%20words') === false, md);
   const tst = await L.toast(page);
-  L.check('copy toast', tst === 'Copied 5 annotations as Markdown', tst);
+  L.check('copy toast', tst === '5x annotations copied', tst);
   // edit note from panel
   await page.evaluate(() => { const el = Array.from(window.__hl.panelList.querySelectorAll('[data-group]')).find(e => e.querySelector('.item-text').textContent === 'three four'); el.querySelector('[data-act="note"]').click(); });
   await page.waitForTimeout(200);

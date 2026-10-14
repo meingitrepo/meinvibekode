@@ -22,7 +22,7 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
   await page.waitForTimeout(400);
   let tb = await L.toolbar(page);
   const yb = tb && tb.buttons.find(b => /yellow/i.test(b.label));
-  L.check('toolbar shows yellow pressed', yb && yb.pressed === 'true' && yb.label === 'Remove yellow highlight' && tb.buttons.filter(b => b.pressed === 'true').length === 1, tb);
+  L.check('toolbar shows yellow pressed', yb && yb.pressed === 'true' && yb.label === 'Erase yellow highlight' && tb.buttons.filter(b => b.pressed === 'true').length === 1, tb);
   L.check('pressed button has a background', yb && yb.bg !== 'rgba(0, 0, 0, 0)', yb);
   L.check('note button says Add note', tb && tb.buttons.some(b => b.label === 'Add note'), tb && tb.buttons.map(b => b.label));
   await L.altKey(page, 'h');

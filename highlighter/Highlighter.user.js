@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.13
+// @version      8.14
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -2280,16 +2280,12 @@
     function noticeMissing() {
         noticeDue = false;
         if (!running || !currentKey || noticedKeys.has(currentKey)) return;
-        const { present, missing } = pageCounts();
+        const { missing } = pageCounts();
         if (!missing) return;
         if (document.hidden) { noticeDue = true; return; }
         noticedKeys.add(currentKey);
         if (!toastEl.hidden && toastRun) return;
-        const total = present + missing;
-        const message = missing === total
-            ? `${missing === 1 ? 'The annotation saved' : `The ${total} annotations saved`} for this page couldn't be found`
-            : `${missing} of ${annotationsText(total)} couldn't be found`;
-        showToast(message, { icon: 'search_20_regular', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
+        showToast(doneText('not found', missing), { icon: 'search_20_regular', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
     }
 
     function restoreHighlights() {
@@ -2738,10 +2734,10 @@
 
     // Tells the user what an action removed, with an Undo that reverts exactly that step, as
     // long as it is still the latest one.
-    function offerUndo(message, step) {
+    function offerUndo(message, step, icon = 'eraser_20_regular') {
         if (!step) return;
         showToast(message, {
-            icon: 'delete_20_regular',
+            icon,
             action: { label: 'Undo', run: () => { if (undoStack[undoStack.length - 1] === step) undoLastAction(); } }
         });
     }
@@ -2827,7 +2823,7 @@
             pendingRecords = pendingRecords.filter(r => !missing.includes(r));
         });
         startLateWatcher();
-        offerUndo(doneText('forgotten', n), step);
+        offerUndo(doneText('forgotten', n), step, 'delete_20_regular');
         if (unsaved) offerDraft(unsaved);
     }
 
@@ -3763,14 +3759,14 @@
             if (lastGroup && group !== lastGroup) items.push(toolbarDivider());
             lastGroup = group;
             const pressed = current.includes(k);
-            const label = pressed ? `Remove ${styleLabel(k).toLowerCase()}` : styleLabel(k);
+            const label = pressed ? `Erase ${styleLabel(k).toLowerCase()}` : styleLabel(k);
             items.push(toolButton(styleIcon(k, dark), label, shortcutText(k), act ? () => act.style(k) : () => runToolbarAction(active => annotateSelection(k, active)), pressed));
         });
         items.push(toolbarDivider());
         const noteLabel = overlaps.length && overlaps[0].note ? 'Edit note' : 'Add note';
         items.push(toolButton(fluentIcon('note_edit_20_regular'), noteLabel, 'Alt+N', act ? act.note : () => runToolbarAction(noteSelection)));
         if (overlaps.length) {
-            items.push(toolButton(fluentIcon('eraser_20_regular'), act ? act.removeLabel : 'Remove annotation', 'Alt+Backspace', act ? act.remove : () => runToolbarAction(removeInSelection)));
+            items.push(toolButton(fluentIcon('eraser_20_regular'), act ? act.removeLabel : 'Erase', 'Alt+Backspace', act ? act.remove : () => runToolbarAction(removeInSelection)));
         }
         toolbarEl.replaceChildren(...items);
         // One Tab stop for the whole toolbar, on its first button; the arrow keys move along it.
@@ -3851,7 +3847,7 @@
             style: after(k => restyleGroups(groups, k), true),
             note: after(() => openNoteEditor(groups[0])),
             remove: after(() => deleteGroups(groups)),
-            removeLabel: groups.length > 1 ? `Remove ${groups.length} annotations` : 'Remove annotation'
+            removeLabel: groups.length > 1 ? `Erase ${groups.length}x annotations` : 'Erase annotation'
         });
         toolbarGroups = groups;
         toolbarRange = null;
@@ -4139,7 +4135,7 @@
         const group = w.getAttribute(GROUP_ATTR);
         if (editor) cancelEditor();
         const changed = runUndoable(() => setGroupNote(group, ''));
-        offerUndo('Note deleted', changed);
+        offerUndo('Note deleted', changed, 'delete_20_regular');
     });
 
     // --- Note editor ---
@@ -4315,7 +4311,7 @@
         }
         if (text !== original) {
             const changed = runUndoable(() => setGroupNote(group, text));
-            if (!text) offerUndo('Note deleted', changed);
+            if (!text) offerUndo('Note deleted', changed, 'delete_20_regular');
         }
     }
 
@@ -4330,7 +4326,7 @@
             return;
         }
         const changed = runUndoable(() => waiting.forEach(r => { r.note = text || undefined; }));
-        if (!text) offerUndo('Note deleted', changed);
+        if (!text) offerUndo('Note deleted', changed, 'delete_20_regular');
     }
 
     // Returns the unsaved text, if any, as { group, draft, records } (see offerDraft), which
@@ -5020,7 +5016,7 @@
             return;
         }
         writeClipboard(markdown).then(
-            () => showToast(`Copied ${annotationsText(list.length)} as Markdown`, { icon: 'copy_20_regular' }),
+            () => showToast(doneText('copied', list.length), { icon: 'copy_20_regular' }),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy to the clipboard.'); });
     }
 
@@ -5050,7 +5046,7 @@
         closeNoteForPanel(group);
         if (!pendingRecords.some(r => recordOwner(r) === group)) return;
         const step = runUndoable(() => { pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group); });
-        offerUndo(doneText('forgotten', 1), step);
+        offerUndo(doneText('forgotten', 1), step, 'delete_20_regular');
     }
 
     // Re-anchors a saved annotation that can't be found to the text selected now. It keeps its
@@ -5270,8 +5266,8 @@
             actions.append(attach, panelButton('delete_20_regular', 'Forget annotation', 'forget'));
         } else {
             actions.append(
-                panelButton('edit_16_regular', a.note ? 'Edit note' : 'Add note', 'note'),
-                panelButton('delete_20_regular', 'Delete annotation', 'delete'));
+                panelButton('note_edit_20_regular', a.note ? 'Edit note' : 'Add note', 'note'),
+                panelButton('eraser_20_regular', 'Erase annotation', 'delete'));
         }
         const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, [main, actions]);
         item.dataset.group = a.group;

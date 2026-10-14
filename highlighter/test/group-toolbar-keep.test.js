@@ -21,7 +21,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   await watch(); await press('Cyan highlight'); await page.waitForTimeout(500);
   let hid = await stop();
   L.check('button restyle: toolbar never hidden', hid === 0, hid);
-  L.check('button restyle: green pressed', ((await labels()) || []).includes('Remove cyan highlight*'), await labels());
+  L.check('button restyle: green pressed', ((await labels()) || []).includes('Erase cyan highlight*'), await labels());
   await watch(); await page.keyboard.press('KeyU'); await page.waitForTimeout(500);   // underline, no Alt
   hid = await stop();
   let w = await L.wr(page);

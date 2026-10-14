@@ -283,16 +283,12 @@
     function noticeMissing() {
         noticeDue = false;
         if (!running || !currentKey || noticedKeys.has(currentKey)) return;
-        const { present, missing } = pageCounts();
+        const { missing } = pageCounts();
         if (!missing) return;
         if (document.hidden) { noticeDue = true; return; }
         noticedKeys.add(currentKey);
         if (!toastEl.hidden && toastRun) return;
-        const total = present + missing;
-        const message = missing === total
-            ? `${missing === 1 ? 'The annotation saved' : `The ${total} annotations saved`} for this page couldn't be found`
-            : `${missing} of ${annotationsText(total)} couldn't be found`;
-        showToast(message, { icon: 'search_20_regular', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
+        showToast(doneText('not found', missing), { icon: 'search_20_regular', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
     }
 
     function restoreHighlights() {

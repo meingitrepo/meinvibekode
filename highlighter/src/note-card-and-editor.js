@@ -120,7 +120,7 @@
         const group = w.getAttribute(GROUP_ATTR);
         if (editor) cancelEditor();
         const changed = runUndoable(() => setGroupNote(group, ''));
-        offerUndo('Note deleted', changed);
+        offerUndo('Note deleted', changed, 'delete_20_regular');
     });
 
     // --- Note editor ---
@@ -296,7 +296,7 @@
         }
         if (text !== original) {
             const changed = runUndoable(() => setGroupNote(group, text));
-            if (!text) offerUndo('Note deleted', changed);
+            if (!text) offerUndo('Note deleted', changed, 'delete_20_regular');
         }
     }
 
@@ -311,7 +311,7 @@
             return;
         }
         const changed = runUndoable(() => waiting.forEach(r => { r.note = text || undefined; }));
-        if (!text) offerUndo('Note deleted', changed);
+        if (!text) offerUndo('Note deleted', changed, 'delete_20_regular');
     }
 
     // Returns the unsaved text, if any, as { group, draft, records } (see offerDraft), which

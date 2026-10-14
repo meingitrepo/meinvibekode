@@ -24,7 +24,7 @@
         closeNoteForPanel(group);
         if (!pendingRecords.some(r => recordOwner(r) === group)) return;
         const step = runUndoable(() => { pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group); });
-        offerUndo(doneText('forgotten', 1), step);
+        offerUndo(doneText('forgotten', 1), step, 'delete_20_regular');
     }
 
     // Re-anchors a saved annotation that can't be found to the text selected now. It keeps its
@@ -244,8 +244,8 @@
             actions.append(attach, panelButton('delete_20_regular', 'Forget annotation', 'forget'));
         } else {
             actions.append(
-                panelButton('edit_16_regular', a.note ? 'Edit note' : 'Add note', 'note'),
-                panelButton('delete_20_regular', 'Delete annotation', 'delete'));
+                panelButton('note_edit_20_regular', a.note ? 'Edit note' : 'Add note', 'note'),
+                panelButton('eraser_20_regular', 'Erase annotation', 'delete'));
         }
         const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, [main, actions]);
         item.dataset.group = a.group;

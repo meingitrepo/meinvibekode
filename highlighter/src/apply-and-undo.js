@@ -218,10 +218,10 @@
 
     // Tells the user what an action removed, with an Undo that reverts exactly that step, as
     // long as it is still the latest one.
-    function offerUndo(message, step) {
+    function offerUndo(message, step, icon = 'eraser_20_regular') {
         if (!step) return;
         showToast(message, {
-            icon: 'delete_20_regular',
+            icon,
             action: { label: 'Undo', run: () => { if (undoStack[undoStack.length - 1] === step) undoLastAction(); } }
         });
     }
@@ -307,7 +307,7 @@
             pendingRecords = pendingRecords.filter(r => !missing.includes(r));
         });
         startLateWatcher();
-        offerUndo(doneText('forgotten', n), step);
+        offerUndo(doneText('forgotten', n), step, 'delete_20_regular');
         if (unsaved) offerDraft(unsaved);
     }
 

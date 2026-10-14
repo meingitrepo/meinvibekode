@@ -47,7 +47,7 @@ async function scenarioNotice(browser) {
   check('menu: not registered again while nothing changes', (await p.evaluate(() => window.__menuLog)) === regs, regs);
   check('no notice during the first window', (await L.toast(p)) === null, await L.toast(p));
   const seen = await watchToast(p, 13000);   // until ~18.5 s after load
-  check('notice after the first window', seen.includes('1 of 3 annotations couldn\'t be found · Show'), seen);
+  check('notice after the first window', seen.includes('1x annotation not found · Show'), seen);
   check('miss counted once', (await storedOf(p, KEY, 'gC'))[0].misses === 1, await storedOf(p, KEY, 'gC'));
   // Show: the panel, at "Not found"
   const shown = await p.evaluate(() => {
@@ -78,7 +78,7 @@ async function scenarioNotice(browser) {
 async function scenarioAllMissing(browser) {
   const { ctx, page: p } = await L.open(browser, { html: base, store: { [KEY]: JSON.stringify([recGone(), recGone2()]) } });
   const seen = await watchToast(p, 18000);
-  check('all missing: wording', seen.includes('The 2 annotations saved for this page couldn\'t be found · Show'), seen);
+  check('all missing: wording', seen.includes('2x annotations not found · Show'), seen);
   const menu = await L.menu(p);
   check('all missing: menu', menu.includes('Clear 2 annotations on this page') && menu.includes('Forget 2 annotations not found'), menu);
   await ctx.close();
@@ -90,7 +90,7 @@ async function scenarioEditor(browser) {
   await L.selStr(p, '#p1', 'alpha one'); await L.altKey(p, 'KeyN'); await p.waitForTimeout(200);
   await p.keyboard.type('a draft');
   const seen = await watchToast(p, 6500);
-  check('editor: notice shown while writing a note', seen.includes('1 of 2 annotations couldn\'t be found · Show'), seen);
+  check('editor: notice shown while writing a note', seen.includes('1x annotation not found · Show'), seen);
   const st = await p.evaluate(() => { const r = window.__hl; r.toastAction.click(); return { editor: !!r.editor, draft: r.noteInput.value, panel: !r.panelEl.hidden }; });
   check('editor: Show leaves the note being written open', st.editor && st.draft === 'a draft' && st.panel, st);
   await ctx.close();
@@ -130,7 +130,7 @@ async function scenarioHidden(browser) {
   await p.waitForTimeout(13000);
   check('hidden: no notice before the window ends', (await L.toast(p)) === null, await L.toast(p));
   const seen = await watchToast(p, 4500);
-  check('hidden: window runs once shown, then the notice', seen.includes('1 of 3 annotations couldn\'t be found · Show'), seen);
+  check('hidden: window runs once shown, then the notice', seen.includes('1x annotation not found · Show'), seen);
   check('hidden: miss counted after the window', (await storedOf(p, KEY, 'gC'))[0].misses === 1, await storedOf(p, KEY, 'gC'));
   await ctx.close();
 }
@@ -169,7 +169,7 @@ async function scenarioPages(browser) {
   let menu = await L.menu(p);
   check('pages: menu counts this page only', menu.includes('Clear 2 annotations on this page') && menu.includes('Forget 1 annotation not found'), menu);
   const seen = await watchToast(p, 17000);
-  check('pages: notice counts this page only', seen.includes('1 of 2 annotations couldn\'t be found · Show'), seen);
+  check('pages: notice counts this page only', seen.includes('1x annotation not found · Show'), seen);
   st = await L.stored(p, CANON);
   check('pages: no miss for the other page\'s record', !st.find(r => r.group === 'gP1').misses && st.find(r => r.group === 'gLeg').misses === 1, st);
   const panel = await p.evaluate(() => { const r = window.__hl; r.openPanel({ focus: false }); r.renderPanel(); return Array.from(r.panelList.querySelectorAll('.section-title, .item-meta')).map(e => e.textContent); });

@@ -111,14 +111,14 @@
             if (lastGroup && group !== lastGroup) items.push(toolbarDivider());
             lastGroup = group;
             const pressed = current.includes(k);
-            const label = pressed ? `Remove ${styleLabel(k).toLowerCase()}` : styleLabel(k);
+            const label = pressed ? `Erase ${styleLabel(k).toLowerCase()}` : styleLabel(k);
             items.push(toolButton(styleIcon(k, dark), label, shortcutText(k), act ? () => act.style(k) : () => runToolbarAction(active => annotateSelection(k, active)), pressed));
         });
         items.push(toolbarDivider());
         const noteLabel = overlaps.length && overlaps[0].note ? 'Edit note' : 'Add note';
         items.push(toolButton(fluentIcon('note_edit_20_regular'), noteLabel, 'Alt+N', act ? act.note : () => runToolbarAction(noteSelection)));
         if (overlaps.length) {
-            items.push(toolButton(fluentIcon('eraser_20_regular'), act ? act.removeLabel : 'Remove annotation', 'Alt+Backspace', act ? act.remove : () => runToolbarAction(removeInSelection)));
+            items.push(toolButton(fluentIcon('eraser_20_regular'), act ? act.removeLabel : 'Erase', 'Alt+Backspace', act ? act.remove : () => runToolbarAction(removeInSelection)));
         }
         toolbarEl.replaceChildren(...items);
         // One Tab stop for the whole toolbar, on its first button; the arrow keys move along it.
@@ -199,7 +199,7 @@
             style: after(k => restyleGroups(groups, k), true),
             note: after(() => openNoteEditor(groups[0])),
             remove: after(() => deleteGroups(groups)),
-            removeLabel: groups.length > 1 ? `Remove ${groups.length} annotations` : 'Remove annotation'
+            removeLabel: groups.length > 1 ? `Erase ${groups.length}x annotations` : 'Erase annotation'
         });
         toolbarGroups = groups;
         toolbarRange = null;

@@ -24,7 +24,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   await click('echo', 'Shift');
   L.check('shift+click again from the anchor (hotel), just that span', JSON.stringify(await sel()) === '["echo","hotel"]', await sel());
   let t = await L.toolbar(page);
-  L.check('toolbar for several', t && t.buttons.some(x => x.label === 'Remove 2 annotations'), t && t.buttons.map(x => x.label));
+  L.check('toolbar for several', t && t.buttons.some(x => x.label === 'Erase 2x annotations'), t && t.buttons.map(x => x.label));
   await page.keyboard.press('Digit1'); await page.waitForTimeout(200);
   let w = await L.wr(page);
   L.check('2 restyles all selected', ['echo', 'hotel'].every(s => w.find(x => x.t === s).k === 'h2') && w.find(x => x.t === 'kilo').k === 'h', w);
@@ -34,7 +34,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   // reselect and delete via toolbar
   await click('echo'); await click('kilo', 'Control');
   t = await L.toolbar(page);
-  const i = await page.evaluate(() => Array.from(window.__hl.toolbarEl.querySelectorAll('button')).findIndex(b => b.dataset.label === 'Remove 2 annotations'));
+  const i = await page.evaluate(() => Array.from(window.__hl.toolbarEl.querySelectorAll('button')).findIndex(b => b.dataset.label === 'Erase 2x annotations'));
   L.check('toolbar remove label', i >= 0, t && t.buttons.map(x => x.label));
   await page.evaluate(i => window.__hl.toolbarEl.querySelectorAll('button')[i].click(), i); await page.waitForTimeout(300);
   w = await L.wr(page);
@@ -61,7 +61,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   // own style pressed when all same: select bravo+kilo (both yellow), press 1 -> removes both
   await click('bravo'); await click('kilo', 'Control');
   t = await L.toolbar(page);
-  L.check('common style pressed', t && t.buttons.some(x => x.label === 'Remove yellow highlight' && x.pressed === 'true'), t && t.buttons);
+  L.check('common style pressed', t && t.buttons.some(x => x.label === 'Erase yellow highlight' && x.pressed === 'true'), t && t.buttons);
   await page.keyboard.press('Digit3'); await page.waitForTimeout(200);
   L.check('own style removes both', (await L.wr(page)).length === 3, await L.wr(page));
   await L.altKey(page, 'KeyZ');

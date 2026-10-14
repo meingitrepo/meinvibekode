@@ -5,14 +5,18 @@
 //   node run.js                 every file
 //   node run.js panel note      only files whose name contains one of these words
 //   HL_SCRIPT=other.user.js     test another build
+//   HL_JOBS=3                   files run at once (default 6)
 // Needs Playwright with Chromium (npm install playwright && npx playwright install chromium).
 'use strict';
 const { spawn, execFileSync } = require('child_process');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
 const TIMEOUT_MS = 240000;
+// Most of a file's time is waiting on timers, not CPU, so run more files than there are cores.
+const JOBS = +process.env.HL_JOBS || 6;
+// Started first so the longest file is not the last one left running.
+const SLOW = ['missing.test.js'];
 const dir = __dirname;
 const filters = process.argv.slice(2);
 const files = fs.readdirSync(dir).filter(f => f.endsWith('.test.js'))
@@ -45,9 +49,9 @@ function runFile(file) {
 }
 
 (async () => {
-    const queue = files.slice();
+    const queue = files.filter(f => SLOW.includes(f)).concat(files.filter(f => !SLOW.includes(f)));
     const results = [];
-    const workers = Array.from({ length: Math.max(2, Math.min(6, os.cpus().length)) }, async () => {
+    const workers = Array.from({ length: JOBS }, async () => {
         while (queue.length) {
             const r = await runFile(queue.shift());
             results.push(r);

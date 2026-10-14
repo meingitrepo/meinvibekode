@@ -3,6 +3,7 @@ const L = require('./lib');
 const html = `<html><body style="font:18px/1.5 Georgia,serif;margin:40px;width:700px">
 <p id="p">Alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima.</p>
 <p id="q">Second paragraph mike november oscar papa quebec romeo sierra.</p>
+<p id="s">Two layers only here, magenta under cyan, nothing else.</p>
 <p id="r">The quick brown fox jumps over the lazy dog.</p></body></html>`;
 const sw = page => page.evaluate(() => window.__hl.allWrappers().map(w => {
   const svg = window.__hl.getSvg(w); const p = svg && svg.querySelector('path');
@@ -66,8 +67,8 @@ const recs = s => s.map(r => `${r.key}:${r.text}`).sort();
     await L.selStr(p2, '#q', 'oscar', { endStr: 'quebec' }); await L.altKey(p2, 'KeyH');
     const w5 = (await L.wr(p2)).filter(x => x.k === 'h' && x.t.includes('mike'));
     L.check(`${scheme} same style merges`, w5.length === 1 && w5[0].t === 'mike november oscar papa quebec', w5);
-    // layers: magenta under all, cyan on most, yellow on the start. Magenta is the background,
-    // cyan the bottom half (also where yellow leaves off), yellow the top half.
+    // layers: magenta under all, cyan on most, yellow on the start. Where all three share text
+    // each is a third: yellow at the top, magenta in the middle, cyan at the bottom.
     await L.selStr(p2, '#r', 'The', { endStr: 'dog' }); await L.altKey(p2, 'Digit2');
     await L.selStr(p2, '#r', 'The', { endStr: 'lazy' }); await L.altKey(p2, 'Digit1');
     await L.selStr(p2, '#r', 'The', { endStr: 'jumps' }); await L.altKey(p2, 'Digit3');
@@ -79,8 +80,20 @@ const recs = s => s.map(r => `${r.key}:${r.text}`).sort();
     const band = k => bands.find(x => x.k === k) || {};
     const [m, c, yl] = ['h4', 'h2', 'h'].map(band);
     L.check(`${scheme} magenta is the whole background`, Math.abs(m.mid - 0.5) < 0.05, bands);
-    L.check(`${scheme} cyan is the bottom half`, c.mid > 0.6 && Math.abs(c.sw * 2 - m.sw) < 1.5, bands);
-    L.check(`${scheme} yellow is the top half`, yl.mid < 0.4 && Math.abs(yl.sw * 2 - m.sw) < 1.5, bands);
+    L.check(`${scheme} cyan is the bottom third`, c.mid > 0.75 && Math.abs(c.sw * 3 - m.sw) < 1.5, bands);
+    L.check(`${scheme} yellow is the top third`, yl.mid < 0.25 && Math.abs(yl.sw * 3 - m.sw) < 1.5, bands);
+    // magenta's middle third shows between them
+    const gap = await p2.evaluate(() => { const ws = window.__hl.allWrappers().filter(w => w.closest('#r'));
+      const top = k => { const p = window.__hl.getSvg(ws.find(w => w.getAttribute('data-style-key') === k)).querySelector('path'); const b = p.getBoundingClientRect(); return [b.top - +p.getAttribute('stroke-width') / 2, b.top + +p.getAttribute('stroke-width') / 2]; };
+      return { y: top('h'), c: top('h2') }; });
+    L.check(`${scheme} magenta shows between yellow and cyan`, gap.c[0] - gap.y[1] > 3, gap);
+    // cyan and magenta alone: magenta the top half, cyan the bottom half
+    await L.selStr(p2, '#s', 'Two', { endStr: 'else.' }); await L.altKey(p2, 'Digit2');
+    await L.selStr(p2, '#s', 'Two', { endStr: 'cyan' }); await L.altKey(p2, 'Digit1');
+    await p2.waitForTimeout(300);
+    const two = await p2.evaluate(() => { const w = window.__hl.allWrappers().find(w => w.closest('#s') && w.getAttribute('data-style-key') === 'h2');
+      const p = window.__hl.getSvg(w).querySelector('path'); const r = w.getClientRects()[0]; return (p.getBoundingClientRect().top - r.top) / r.height; });
+    L.check(`${scheme} two layers: cyan the bottom half`, two > 0.6, two);
     L.check(`${scheme} no errors`, page.__errors.length === 0 && p2.__errors.length === 0, [page.__errors, p2.__errors]);
   }
   await b.close();

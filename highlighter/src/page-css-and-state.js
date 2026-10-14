@@ -18,22 +18,38 @@
            outlined in it (see markSelected). */
         svg[${SVG_ATTR}] g[${SELECTED_ATTR}] path { stroke: HighlightText !important; }
         svg[${SELECTED_ATTR}] rect { stroke: HighlightText !important; stroke-width: 1px !important; }
-        /* Note tick: a small triangle in the top-right corner of an annotation that has a note,
-           like a spreadsheet comment marker. Zero net width (its width is cancelled by an equal
-           negative margin), so it never moves text. Drawn with a gradient rather than borders,
-           because browsers round border widths to device pixels but not the margin. Generated
-           content isn't part of textContent or the selection, so saved offsets are unaffected.
-           It grows with the font, and a 1px edge in the text's color along its diagonal keeps it
-           visible on highlights close to its red (the dark blue, magenta and orange). */
+        /* Note badge: a small speech bubble (round, with one sharp corner at the bottom left)
+           holding three dots, sitting on the top-right corner of an annotation that has a note.
+           Zero net width (its width is cancelled by an equal negative margin), so it never moves
+           text; a transform lifts it half out of the line, so it covers little of the text. Its
+           rim and dots are in the background's color (light or dark, per DARK_ATTR), which keeps
+           it apart from highlights and lines of any color, stacked or not. Drawn with gradients,
+           not an image, so pages that limit images (CSP) still show it. Generated content isn't
+           part of textContent or the selection, so saved offsets are unaffected. It grows with
+           the font. */
         span[${NOTE_MARK_ATTR}]::after {
-            --highlighter-tick: max(${NOTE_TICK_SIZE}px, ${NOTE_TICK_EM}em);
+            --highlighter-badge: max(${NOTE_BADGE_SIZE}px, ${NOTE_BADGE_EM}em);
+            --highlighter-badge-fill: ${NOTE_BADGE_COLOR};
+            --highlighter-badge-rim: #ffffff;
             content: "" !important;
             display: inline-block !important;
-            width: var(--highlighter-tick) !important; height: var(--highlighter-tick) !important;
-            margin: 0 0 0 calc(-1 * var(--highlighter-tick)) !important; padding: 0 !important; border: 0 !important;
-            background: linear-gradient(to bottom left, ${NOTE_TICK_COLOR} calc(50% - 1px), currentColor calc(50% - 1px) 50%, transparent 50%) !important;
+            box-sizing: border-box !important;
+            width: var(--highlighter-badge) !important; height: calc(var(--highlighter-badge) * 0.85) !important;
+            margin: 0 0 0 calc(-1 * var(--highlighter-badge)) !important; padding: 0 !important; border: 0 !important;
+            border-radius: 50% 50% 50% 8% !important;
+            background:
+                radial-gradient(circle, var(--highlighter-badge-rim) 0 45%, transparent 55%) 18% 50% / 22% 26% no-repeat,
+                radial-gradient(circle, var(--highlighter-badge-rim) 0 45%, transparent 55%) 50% 50% / 22% 26% no-repeat,
+                radial-gradient(circle, var(--highlighter-badge-rim) 0 45%, transparent 55%) 82% 50% / 22% 26% no-repeat,
+                var(--highlighter-badge-fill) !important;
+            box-shadow: 0 0 0 max(1.5px, 0.08em) var(--highlighter-badge-rim) !important;
             vertical-align: text-top !important;
+            transform: translate(45%, -55%) !important;
             pointer-events: none !important;
+        }
+        span[${NOTE_MARK_ATTR}][${DARK_ATTR}]::after {
+            --highlighter-badge-fill: ${NOTE_BADGE_DARK_COLOR};
+            --highlighter-badge-rim: #1b1b1b;
         }
         /* An annotation jumped to (Alt+J / Alt+K, or from the panel) blinks twice. */
         svg[${FLASH_ATTR}] {

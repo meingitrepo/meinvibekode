@@ -13,7 +13,7 @@
     const SELECTED_ATTR = 'data-highlighter-selected-part';     // on the selected part of a line (see markSelected)
     const GROUP_ATTR = 'data-highlighter-group';      // shared by the pieces of one annotation
     const NOTE_ATTR = 'data-highlighter-note';
-    const NOTE_MARK_ATTR = 'data-highlighter-note-mark';  // the piece that shows the note tick
+    const NOTE_MARK_ATTR = 'data-highlighter-note-mark';  // the piece that shows the note badge
     const INK_ATTR = 'data-highlighter-ink';          // 'dark' / 'light': text recolored to read on its highlight
     const DARK_ATTR = 'data-highlighter-dark';        // on a dark background: drawn with DARK_OVERRIDES
     const ADDED_ATTR = 'data-highlighter-added';      // when it was first seen, for annotations whose group has no date
@@ -55,9 +55,10 @@
     const NOTE_MAX_LENGTH = 2000;
     const NOTE_MIN_LINES = 2;                   // the note box starts this tall,
     const NOTE_MAX_LINES = 6;                   // grows with the text up to this, then scrolls
-    const NOTE_TICK_SIZE = 6;                   // px, at least; the corner triangle marking annotations with a note,
-    const NOTE_TICK_EM = 0.35;                  // which grows with the font (0.35em: 6px at 16px, 11px on a 32px heading)
-    const NOTE_TICK_COLOR = '#c50f1f';          // Fluent's red, like a spreadsheet comment marker
+    const NOTE_BADGE_SIZE = 10;                 // px, at least; the speech-bubble badge on annotations with a note,
+    const NOTE_BADGE_EM = 0.6;                  // which grows with the font (0.6em: 10px at 16px, 19px on a 32px heading)
+    const NOTE_BADGE_COLOR = '#0F6CBD';         // Fluent's blue, apart from every highlight and line color,
+    const NOTE_BADGE_DARK_COLOR = '#479EF5';    // and its lighter tint on dark backgrounds
     const FLASH_MS = 900;                       // an annotation jumped to blinks twice in this time
     const MARKDOWN_FRAGMENT_WORDS = 5;          // a long quote's link names its passage by this many words at each end
     const TRACKING_PARAM_RE = /^(utm_|fbclid$|gclid$|dclid$|msclkid$|mc_eid$|mc_cid$|igshid$|yclid$|_ga$|ref_src$)/i;

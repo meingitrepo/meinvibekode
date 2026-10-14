@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.12
+// @version      8.13
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -54,8 +54,8 @@
  * Selecting text also shows a small toolbar with the same actions, for mouse and touch use
  * (Alt+T switches it off and on for every site; ENABLE_SELECTION_TOOLBAR removes it), centered above the selection. The style the
  * selected text already has shows pressed. It is one Tab stop: the arrow keys, Home and End
- * move between its buttons. In the note editor, Tab goes round its controls. Annotations with a note have a small red tick in
- * their top-right corner; resting the pointer on one shows the note under that line, with the
+ * move between its buttons. In the note editor, Tab goes round its controls. Annotations with a note have a small blue speech
+ * bubble on their top-right corner; resting the pointer on one shows the note under that line, with the
  * date it was added and buttons to edit or delete it. Web addresses in a note are links there.
  *
  * Spaces at the edges of a selection are left out, and a word it cuts in two is annotated
@@ -112,7 +112,7 @@
     const SELECTED_ATTR = 'data-highlighter-selected-part';     // on the selected part of a line (see markSelected)
     const GROUP_ATTR = 'data-highlighter-group';      // shared by the pieces of one annotation
     const NOTE_ATTR = 'data-highlighter-note';
-    const NOTE_MARK_ATTR = 'data-highlighter-note-mark';  // the piece that shows the note tick
+    const NOTE_MARK_ATTR = 'data-highlighter-note-mark';  // the piece that shows the note badge
     const INK_ATTR = 'data-highlighter-ink';          // 'dark' / 'light': text recolored to read on its highlight
     const DARK_ATTR = 'data-highlighter-dark';        // on a dark background: drawn with DARK_OVERRIDES
     const ADDED_ATTR = 'data-highlighter-added';      // when it was first seen, for annotations whose group has no date
@@ -154,9 +154,10 @@
     const NOTE_MAX_LENGTH = 2000;
     const NOTE_MIN_LINES = 2;                   // the note box starts this tall,
     const NOTE_MAX_LINES = 6;                   // grows with the text up to this, then scrolls
-    const NOTE_TICK_SIZE = 6;                   // px, at least; the corner triangle marking annotations with a note,
-    const NOTE_TICK_EM = 0.35;                  // which grows with the font (0.35em: 6px at 16px, 11px on a 32px heading)
-    const NOTE_TICK_COLOR = '#c50f1f';          // Fluent's red, like a spreadsheet comment marker
+    const NOTE_BADGE_SIZE = 10;                 // px, at least; the speech-bubble badge on annotations with a note,
+    const NOTE_BADGE_EM = 0.6;                  // which grows with the font (0.6em: 10px at 16px, 19px on a 32px heading)
+    const NOTE_BADGE_COLOR = '#0F6CBD';         // Fluent's blue, apart from every highlight and line color,
+    const NOTE_BADGE_DARK_COLOR = '#479EF5';    // and its lighter tint on dark backgrounds
     const FLASH_MS = 900;                       // an annotation jumped to blinks twice in this time
     const MARKDOWN_FRAGMENT_WORDS = 5;          // a long quote's link names its passage by this many words at each end
     const TRACKING_PARAM_RE = /^(utm_|fbclid$|gclid$|dclid$|msclkid$|mc_eid$|mc_cid$|igshid$|yclid$|_ga$|ref_src$)/i;
@@ -232,22 +233,38 @@
            outlined in it (see markSelected). */
         svg[${SVG_ATTR}] g[${SELECTED_ATTR}] path { stroke: HighlightText !important; }
         svg[${SELECTED_ATTR}] rect { stroke: HighlightText !important; stroke-width: 1px !important; }
-        /* Note tick: a small triangle in the top-right corner of an annotation that has a note,
-           like a spreadsheet comment marker. Zero net width (its width is cancelled by an equal
-           negative margin), so it never moves text. Drawn with a gradient rather than borders,
-           because browsers round border widths to device pixels but not the margin. Generated
-           content isn't part of textContent or the selection, so saved offsets are unaffected.
-           It grows with the font, and a 1px edge in the text's color along its diagonal keeps it
-           visible on highlights close to its red (the dark blue, magenta and orange). */
+        /* Note badge: a small speech bubble (round, with one sharp corner at the bottom left)
+           holding three dots, sitting on the top-right corner of an annotation that has a note.
+           Zero net width (its width is cancelled by an equal negative margin), so it never moves
+           text; a transform lifts it half out of the line, so it covers little of the text. Its
+           rim and dots are in the background's color (light or dark, per DARK_ATTR), which keeps
+           it apart from highlights and lines of any color, stacked or not. Drawn with gradients,
+           not an image, so pages that limit images (CSP) still show it. Generated content isn't
+           part of textContent or the selection, so saved offsets are unaffected. It grows with
+           the font. */
         span[${NOTE_MARK_ATTR}]::after {
-            --highlighter-tick: max(${NOTE_TICK_SIZE}px, ${NOTE_TICK_EM}em);
+            --highlighter-badge: max(${NOTE_BADGE_SIZE}px, ${NOTE_BADGE_EM}em);
+            --highlighter-badge-fill: ${NOTE_BADGE_COLOR};
+            --highlighter-badge-rim: #ffffff;
             content: "" !important;
             display: inline-block !important;
-            width: var(--highlighter-tick) !important; height: var(--highlighter-tick) !important;
-            margin: 0 0 0 calc(-1 * var(--highlighter-tick)) !important; padding: 0 !important; border: 0 !important;
-            background: linear-gradient(to bottom left, ${NOTE_TICK_COLOR} calc(50% - 1px), currentColor calc(50% - 1px) 50%, transparent 50%) !important;
+            box-sizing: border-box !important;
+            width: var(--highlighter-badge) !important; height: calc(var(--highlighter-badge) * 0.85) !important;
+            margin: 0 0 0 calc(-1 * var(--highlighter-badge)) !important; padding: 0 !important; border: 0 !important;
+            border-radius: 50% 50% 50% 8% !important;
+            background:
+                radial-gradient(circle, var(--highlighter-badge-rim) 0 45%, transparent 55%) 18% 50% / 22% 26% no-repeat,
+                radial-gradient(circle, var(--highlighter-badge-rim) 0 45%, transparent 55%) 50% 50% / 22% 26% no-repeat,
+                radial-gradient(circle, var(--highlighter-badge-rim) 0 45%, transparent 55%) 82% 50% / 22% 26% no-repeat,
+                var(--highlighter-badge-fill) !important;
+            box-shadow: 0 0 0 max(1.5px, 0.08em) var(--highlighter-badge-rim) !important;
             vertical-align: text-top !important;
+            transform: translate(45%, -55%) !important;
             pointer-events: none !important;
+        }
+        span[${NOTE_MARK_ATTR}][${DARK_ATTR}]::after {
+            --highlighter-badge-fill: ${NOTE_BADGE_DARK_COLOR};
+            --highlighter-badge-rim: #1b1b1b;
         }
         /* An annotation jumped to (Alt+J / Alt+K, or from the panel) blinks twice. */
         svg[${FLASH_ATTR}] {
@@ -3100,8 +3117,8 @@
         return group ? Array.from(document.querySelectorAll(`${WRAPPER_SELECTOR}[${GROUP_ATTR}="${CSS.escape(group)}"]`)) : [];
     }
 
-    // The note tick goes on the last piece of each annotation that has a note, so an annotation
-    // split across lines or links shows a single tick, at its end.
+    // The note badge goes on the last piece of each annotation that has a note, so an annotation
+    // split across lines or links shows a single badge, at its end.
     function refreshNoteMarks() {
         const wrappers = allWrappers();
         const lastOfGroup = new Map();

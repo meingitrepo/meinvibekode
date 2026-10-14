@@ -1,4 +1,4 @@
-// 7.29: note tick size and edge, toast theme and focus, gradient backgrounds,
+// 7.29: note badge (8.13; was a tick), toast theme and focus, gradient backgrounds,
 // a new note's highlight on SPA navigation / turn off / menu commands.
 const L = require('./lib');
 const long = Array.from({ length: 60 }, (_, i) => `Sentence ${i} of a very long paragraph that keeps going for a while.`).join(' ');
@@ -46,13 +46,17 @@ const tbRect = page => L.toolbar(page).then(t => t && t.rect);
     L.check('after scrolling: still on screen', !t || (t.top >= 0 && t.bottom <= 700), t);
     await page.evaluate(() => { getSelection().removeAllRanges(); window.scrollTo(0, 0); });
     await page.waitForTimeout(300);
-    // note tick: grows with the font, has a text-colored edge
+    // note badge: zero net width, grows with the font, rim in the background's color
     await L.selStr(page, '#h', 'heading'); await L.altKey(page, 'n'); await page.keyboard.type('n'); await page.keyboard.press('Enter'); await page.waitForTimeout(150);
     await L.selStr(page, '#p1', 'words'); await L.altKey(page, 'n'); await page.keyboard.type('n'); await page.keyboard.press('Enter'); await page.waitForTimeout(150);
-    const ticks = await page.evaluate(() => Array.from(document.querySelectorAll('span[data-highlighter-note-mark]')).map(w => { const s = getComputedStyle(w, '::after'); return { t: w.textContent, w: s.width, ml: s.marginLeft, bg: s.backgroundImage }; }));
-    L.check('tick 6px at 16px', ticks.find(x => x.t === 'words').w === '6px' && ticks.find(x => x.t === 'words').ml === '-6px', ticks);
-    L.check('tick grows on a heading', parseFloat(ticks.find(x => x.t === 'heading').w) > 10, ticks);
-    L.check('tick edge in the text color', /rgb\(17, 17, 17\)/.test(ticks.find(x => x.t === 'words').bg), ticks);
+    await L.selStr(page, '#pre1', 'darkCode'); await L.altKey(page, 'n'); await page.keyboard.type('n'); await page.keyboard.press('Enter'); await page.waitForTimeout(150);
+    const badges = await page.evaluate(() => Array.from(document.querySelectorAll('span[data-highlighter-note-mark]')).map(w => { const s = getComputedStyle(w, '::after'); return { t: w.textContent, w: s.width, ml: s.marginLeft, bg: s.backgroundColor, ring: s.boxShadow }; }));
+    const badge = t => badges.find(x => x.t === t);
+    L.check('badge 10px at 16px, zero net width', badge('words').w === '10px' && badge('words').ml === '-10px', badges);
+    L.check('badge grows on a heading', parseFloat(badge('heading').w) > 18, badges);
+    L.check('badge blue with a white rim on light', badge('words').bg === 'rgb(15, 108, 189)' && /rgb\(255, 255, 255\)/.test(badge('words').ring), badges);
+    L.check('badge lighter with a dark rim on dark', badge('darkCode').bg === 'rgb(71, 158, 245)' && /rgb\(27, 27, 27\)/.test(badge('darkCode').ring), badges);
+    L.check('badge adds no text', !/n$/.test(badge('words').t), badges);
     // toast theme stays when the toolbar opens on a dark block
     await page.evaluate(() => window.__menu[Object.keys(window.__menu).find(k => /^Clear/.test(k))]());
     await page.waitForTimeout(200);

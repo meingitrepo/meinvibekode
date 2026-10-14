@@ -55,6 +55,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.10 | Short Undo toasts | Removal toasts say only what happened: "Deleted" ("3 deleted" for several), "Erased" when part of one stays, "Cleared" and "Forgotten" from the menu, each with Undo (was: "Removed yellow highlight", "Removed part of 1 annotation", "Forgot 1 annotation that couldn't be found") |
 | 8.11 | Background shows through | Where three highlights overlap each takes a third: the top one at the top, the first (the background) in the middle, the second at the bottom, so all three show. With more, the ones in between go upward from the bottom. Two still split in halves, background on top |
 | 8.12 | Counted Undo toasts | Removal toasts read "1x annotation erased" / "3x annotations erased" (also for a partial erase, and with notes), "2x annotations cleared", "4x annotations forgotten"; "Note deleted" stays (was 8.10's "Deleted", "3 deleted", "Erased") |
+| 8.13 | Note badge | Annotations with a note show a small blue speech bubble with three dots on their top-right corner, half above the line and rimmed in the background's color so it stands out on any highlight or line, stacked or not; lighter blue with a dark rim on dark backgrounds. Grows with the font, never moves text (was a small red corner tick) |
 
 ## Next, roughly in order
 
@@ -87,6 +88,6 @@ And of 7.30's page tags: where pages share a canonical URL, an annotation belong
 - Straight strokes with square ends; round ends on a stroke this thick stick out over neighbouring words.
 - Opaque highlights behind the text. Multiply blending fixes some banners but turns yellow green on blue-tinted boxes.
 - Under a selection, lines take the selected text's color (7.47) and selected highlights are outlined, their color hidden (7.50). Any change to the selection's own colors over highlights (7.46 tint, 7.48 Edge PDF style mix) was disliked.
-- The red tick as the only note marker.
+- The note badge (8.13) as the only note marker.
 - "Only Save saves" in the note editor, with the Restore toast as a safety net.
 - The closed shadow root and the createElement-only UI.

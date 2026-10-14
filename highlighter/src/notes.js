@@ -36,8 +36,8 @@
         return group ? Array.from(document.querySelectorAll(`${WRAPPER_SELECTOR}[${GROUP_ATTR}="${CSS.escape(group)}"]`)) : [];
     }
 
-    // The note tick goes on the last piece of each annotation that has a note, so an annotation
-    // split across lines or links shows a single tick, at its end.
+    // The note badge goes on the last piece of each annotation that has a note, so an annotation
+    // split across lines or links shows a single badge, at its end.
     function refreshNoteMarks() {
         const wrappers = allWrappers();
         const lastOfGroup = new Map();

@@ -93,6 +93,13 @@
         selectionOverlays.add(overlay);
     }
 
+    // A click on the page usually clears the selection, but the browser may paint that before
+    // selectionchange arrives: unmarked on the press, marked again on release if it stayed.
+    function onSelectionPress(e) {
+        if (e.button !== 0 || !selectedSVGs.size || e.target === uiHost) return;
+        unmarkSelected();
+    }
+
     function unmarkSelected() {
         selectedSVGs.forEach(svg => {
             svg.querySelectorAll(`g[${SELECTED_ATTR}]`).forEach(g => g.remove());
@@ -121,8 +128,12 @@
         });
     }
 
+    // A cleared selection is unmarked at once, so the colors come back in the frame the
+    // selection disappears from; marking a growing selection waits for the next frame.
     let selectionFramePending = false;
     function updateSelectionVisibility() {
+        const now = window.getSelection();
+        if (!now || now.isCollapsed || now.rangeCount === 0) { if (selectedSVGs.size) unmarkSelected(); }
         if (selectionFramePending) return;
         selectionFramePending = true;
         requestAnimationFrame(() => {

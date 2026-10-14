@@ -18,17 +18,17 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   const p = await pt('#p');
   await page.mouse.click(p.x, p.y); await page.waitForTimeout(350);
   L.check('toolbar shown', !!(await L.toolbar(page)), null);
-  await watch(); await press('Green highlight'); await page.waitForTimeout(500);
+  await watch(); await press('Cyan highlight'); await page.waitForTimeout(500);
   let hid = await stop();
   L.check('button restyle: toolbar never hidden', hid === 0, hid);
-  L.check('button restyle: green pressed', ((await labels()) || []).includes('Remove green highlight*'), await labels());
+  L.check('button restyle: green pressed', ((await labels()) || []).includes('Remove cyan highlight*'), await labels());
   await watch(); await page.keyboard.press('KeyU'); await page.waitForTimeout(500);   // underline, no Alt
   hid = await stop();
   let w = await L.wr(page);
   L.check('key restyle applied', w.filter(x => x.k !== 'h').length > 0, w);
   L.check('key restyle: toolbar never hidden', hid === 0, hid);
   const lab = await labels();
-  L.check('key restyle: toolbar shows the new style pressed', lab && lab.some(x => x.endsWith('*') && !/green/.test(x)), lab);
+  L.check('key restyle: toolbar shows the new style pressed', lab && lab.some(x => x.endsWith('*') && !/cyan/.test(x)), lab);
   // multi: Ctrl+click the second, restyle both by key
   const q = await pt('#q');
   await page.keyboard.down('Control'); await page.mouse.click(q.x, q.y); await page.keyboard.up('Control'); await page.waitForTimeout(350);

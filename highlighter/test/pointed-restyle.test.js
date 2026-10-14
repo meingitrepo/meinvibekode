@@ -59,7 +59,7 @@ async function basic(browser) {
   check('stored with the new style, same group, note and date', a && a.key === 'h2' && a.note === 'my note' && st.length === 2, st);
   check('key was taken (preventDefault)', (await lastPrevented(p)) === true, null);
   check('no toast for a restyle', (await L.toast(p)) === null, await L.toast(p));
-  check('drawn with the green color', s.find(w => w.g === 'gA').stroke === '#A5D6A7', s);
+  check('drawn with the green color', s.find(w => w.g === 'gA').stroke === '#8CE6F2', s);
   check('the other annotation is untouched', keysOf(s, 'gB').join() === 'u', s);
   await L.altKey(p, 'z');
   s = await state(p);
@@ -72,7 +72,7 @@ async function basic(browser) {
   s = await state(p);
   st = await L.stored(p);
   check('its own style removes it (after undo/redo redrew it under a still mouse)', !s.some(w => w.g === 'gA') && !st.some(r => r.group === 'gA'), { s, st });
-  check('removal offers Undo', (await L.toast(p)) === 'Removed green highlight · Undo', await L.toast(p));
+  check('removal offers Undo', (await L.toast(p)) === 'Removed cyan highlight · Undo', await L.toast(p));
   await p.evaluate(() => window.__hl.toastAction.click()); await p.waitForTimeout(150);
   s = await state(p);
   check('Undo brings it back with its note', keysOf(s, 'gA').join() === 'h2' && s.find(w => w.g === 'gA').n === 'my note', s);
@@ -218,7 +218,7 @@ async function dark(browser) {
   await hover(p, 'gD');
   await L.altKey(p, '2');
   const s = await state(p);
-  check('on a dark box the new style uses its dark color', s[0].k === 'h2' && s[0].dark && s[0].stroke === '#2E7D32', s);
+  check('on a dark box the new style uses its dark color', s[0].k === 'h2' && s[0].dark && s[0].stroke === '#006D7A', s);
   await ctx.close();
 }
 

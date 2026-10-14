@@ -24,7 +24,7 @@
            because browsers round border widths to device pixels but not the margin. Generated
            content isn't part of textContent or the selection, so saved offsets are unaffected.
            It grows with the font, and a 1px edge in the text's color along its diagonal keeps it
-           visible on highlights close to its red (the dark blue, pink and orange). */
+           visible on highlights close to its red (the dark blue, magenta and orange). */
         span[${NOTE_MARK_ATTR}]::after {
             --highlighter-tick: max(${NOTE_TICK_SIZE}px, ${NOTE_TICK_EM}em);
             content: "" !important;

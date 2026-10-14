@@ -48,7 +48,7 @@ async function startsWithLast(browser) {
   await L.selStr(p, '#p1', 'plain words');
   await L.altKey(p, '2');
   await L.altKey(p, 'p');
-  check('the pen starts with the style used last', (await pill(p)) === 'Pen: green highlight', await pill(p));
+  check('the pen starts with the style used last', (await pill(p)) === 'Pen: cyan highlight', await pill(p));
   await L.altKey(p, 'p');
   check('Alt+P again turns it off', (await pill(p)) === null, await pill(p));
   await ctx.close();

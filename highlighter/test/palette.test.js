@@ -32,10 +32,10 @@ async function light(browser) {
   await L.altKey(p, 'z'); await L.altKey(p, 'z'); await p.waitForTimeout(100);
   b = await info(p, 'White words');
   check('undo brings the dark text back with the highlight', b && b.ink === 'dark', b);
-  // light theme: yellow is still #FFF176
+  // light theme: yellow is still #FFEF6E
   await L.selStr(p, '#p3', 'underline'); await L.altKey(p, 'u'); await p.waitForTimeout(100);
   check('underline is red on light pages', (await info(p, 'underline')).stroke === '#D32F2F', await info(p, 'underline'));
-  check('yellow stays yellow on light pages', (await info(p, 'Plain words')).stroke === '#FFF176', await info(p, 'Plain words'));
+  check('yellow stays yellow on light pages', (await info(p, 'Plain words')).stroke === '#FFEF6E', await info(p, 'Plain words'));
   check('no page errors', p.__errors.length === 0, p.__errors);
   await ctx.close();
 }
@@ -47,7 +47,7 @@ async function dark(browser) {
   await L.selStr(p, '#p3', 'underline'); await L.altKey(p, 's');
   await p.waitForTimeout(100);
   const a = await info(p, 'Plain words');
-  check('dark yellow is dark gold, and light text stays', a && a.dark && a.stroke === '#806000' && !a.ink, a);
+  check('dark yellow is dark gold, and light text stays', a && a.dark && a.stroke === '#7A6200' && !a.ink, a);
   check('dark underline is soft red', (await info(p, 'plain words')).stroke === '#FF5F57', await info(p, 'plain words'));
   check('dark strike-through is a light red', (await info(p, 'underline')).stroke === '#FF5F57', await info(p, 'underline'));
   check('no page errors', p.__errors.length === 0, p.__errors);

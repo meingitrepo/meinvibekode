@@ -10,7 +10,7 @@ const groups = w => { const m = {}; w.forEach(x => { (m[x.g] = m[x.g] || []).pus
     await L.selStr(page, '#p', 'Alpha', { endStr: 'charlie' }); await L.altKey(page, 'KeyH');
     await L.selStr(page, '#p', 'bravo', { endStr: 'echo' }); await L.altKey(page, 'Digit4');
     await page.evaluate(() => { const g = window.__hl.allWrappers().find(w => w.getAttribute('data-style-key') === 'h'); g.setAttribute('data-highlighter-note', 'yellow note'); });
-    // click the pink (outside the yellow) or the yellow, and give it the other's color
+    // click the magenta (outside the yellow) or the yellow, and give it the other's color
     const key = which === 'inner' ? 'h4' : 'h';
     const pt = await page.evaluate(k => { const ws = window.__hl.allWrappers().filter(w => w.getAttribute('data-style-key') === k); const w = ws[ws.length - 1]; const r = w.getClientRects()[0]; return k === 'h' ? { x: r.left + 4, y: r.top + r.height / 2 } : { x: r.right - 4, y: r.top + r.height / 2 }; }, key);
     await page.mouse.click(pt.x, pt.y); await page.waitForTimeout(150);

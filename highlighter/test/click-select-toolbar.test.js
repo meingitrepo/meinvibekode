@@ -20,11 +20,11 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   L.check('toolbar above the box, centered', t && t.rect.bottom <= bx.top && Math.abs((t.rect.left + t.rect.width / 2) - (bx.left + bx.right) / 2) < 2, { t: t && t.rect, bx });
   L.check('own style pressed', t && t.buttons.some(x => x.label === 'Remove yellow highlight' && x.pressed === 'true'), t && t.buttons);
   L.check('eraser and Add note present', t && t.buttons.some(x => x.label === 'Remove annotation') && t.buttons.some(x => x.label === 'Add note'), null);
-  await press('Green highlight');
+  await press('Cyan highlight');
   let w = await L.wr(page);
   L.check('toolbar restyles', w.length && w.every(x => x.k === 'h2'), w);
   t = await L.toolbar(page);
-  L.check('toolbar back with green pressed, still selected', t && t.buttons.some(x => x.label === 'Remove green highlight') && !!(await box()), t && t.buttons.map(x => x.label));
+  L.check('toolbar back with green pressed, still selected', t && t.buttons.some(x => x.label === 'Remove cyan highlight') && !!(await box()), t && t.buttons.map(x => x.label));
   await press('Add note');
   L.check('note button opens editor', await page.evaluate(() => !!window.__hl.editor), null);
   await page.keyboard.press('Escape'); await page.waitForTimeout(400);

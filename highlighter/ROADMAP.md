@@ -2,7 +2,7 @@
 
 What has shipped, and what is planned next, in order. Sizes are estimates: S is under 80 lines, M is 80 to 250, L is over 250. The plan comes from a review of v7.26 (new features, behaviour changes, visual design), with each claim checked against the code; points marked **verified** were reproduced in headless Chromium.
 
-The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see the README). Since 7.31 the files are split by part of the script, so a change usually means reading one or two of them.
+The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see the README). Since 7.31 the files are split by part of the script, so a change usually means reading one or two of them. The tests are in `test/` (see the README).
 
 ## Shipped
 
@@ -36,11 +36,13 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 7.51 | Thinner lines, outlined selected highlights | Underline and strike-through are 1px. Under a selection a highlight's color is hidden (it mixed differently with see-through selections for each color) and the selected part gets a thin outline in the selected text's color instead, the same for every color |
 | 7.52 | Enter saves notes, fewer colors | In the note editor Enter saves and Shift+Enter starts a new line (was Ctrl+Enter). Blue and orange highlights are no longer offered (toolbar, Alt+3, Alt+5); annotations already saved in them still draw |
 | 7.53 | Annotations share text | A new style on annotated text goes on top of what is there instead of replacing it: a highlight keeps an underline or strikethrough over it, and where highlights overlap the line is split into bands, one per colour (yellow on top). Its own style again still removes it, the eraser still clears everything, and changing a clicked annotation's style still recolours it |
+| 7.54 | Toolbar stays while restyling | Restyling selected annotations from the toolbar keeps it shown and updates its pressed button in place, instead of closing it after each click |
 | 7.55 | Selection outline follows the text | The dashed outline around a clicked annotation follows its lines: it starts where the text starts on the first line and ends where it ends on the last, one shape with steps instead of a rectangle over whole lines. Lines that don't touch (a two-line annotation ending left of where it starts) get an outline each |
 | 7.56 | Recolor fix | Giving an overlapping highlight the color of the highlight it overlaps no longer cuts off the shared part: the two become one annotation in that color, keeping both notes |
 | 7.57 | One stroke, faster | An annotation in several pieces (a merge, a recolor, text crossing a link) draws in as one stroke, piece after piece, instead of each piece on its own; the draw-in takes 200 ms (was 300) |
 | 7.58 | Selection gap fix | Selecting text across overlapping highlights no longer cuts a square hole out of the outer highlight while the selection lasts |
 | 7.59 | No flicker after deselecting | A highlight's color comes back in the same frame the selection clears (on the mouse press, or as soon as the selection collapses), not a frame later |
+| 8.0 | Clean base | Fixes: the click-select outline works on sites that enforce Trusted Types (it threw before); drawings no longer add empty scrolling past the page's end; Enter on the note editor's Delete or Cancel button presses that button instead of saving. Faster with many annotations (300 measured): selecting across them 290 ms to 25 ms, a theme switch 380 ms to 50 ms, outlines of selected annotations 115 ms to 40 ms a frame. Leftovers from rough-notation (padding, unused options) removed. The tests moved into `test/` (`node test/run.js`), and the gist mirror Action runs them first and only publishes when they pass. Saved annotations and settings are unchanged |
 
 ## Next, roughly in order
 

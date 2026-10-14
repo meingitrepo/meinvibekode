@@ -15,29 +15,31 @@ What shipped in each version and what is planned next is in [`highlighter/ROADMA
 
 1. Install a userscript manager such as [Violentmonkey](https://violentmonkey.github.io/) or
    [Tampermonkey](https://www.tampermonkey.net/).
-2. Open the
-   [raw script](https://raw.githubusercontent.com/meingitrepo/meinvibecode/main/highlighter/Highlighter.user.js)
-   and confirm the install.
+2. Open `Highlighter.user.js` in the private gist this repository publishes to (the gist's "Raw"
+   link) and confirm the install.
 
-The script updates itself from this repository's `main` branch, so anything merged there reaches
-installed copies on the manager's next update check.
+The repository is private, so the manager can't read updates from it. Instead, each push to `main`
+runs the tests and, once they pass, the [gist mirror Action](.github/workflows/gist-mirror.yml)
+copies the built script to the gist with its update URL pointing there. Installed copies get it on
+the manager's next update check.
 
 ### Use
 
-Select some text, then press a shortcut or use the small toolbar that appears where the selection ends.
+Select some text, then press a shortcut or use the small toolbar that appears centered above the selection.
 Shortcuts use Alt plus a key. They match the physical key, so they also work on macOS and non-Latin
 keyboard layouts.
 
 | Shortcut | Action |
 | --- | --- |
 | Alt+H or Alt+1 | Yellow highlight |
-| Alt+2 / 3 / 4 / 5 | Green / blue / pink / orange highlight |
+| Alt+2 / Alt+4 | Green / pink highlight |
 | Alt+U | Underline |
 | Alt+S | Strike through |
 | Alt+N | Add or edit a note |
 | Alt+Backspace or Alt+Delete | Remove annotations from the selected text, or the annotation under the mouse |
 | Alt+Shift+Backspace or Alt+Shift+Delete | Remove every annotation on the page |
 | Alt+V | Hide or show all annotations |
+| Alt+T | Selection toolbar off or on, for every site |
 | Alt+P | Pen on or off |
 | Alt+O | Open or close the annotations panel |
 | Alt+Shift+O | Search the annotations saved on every page |
@@ -47,13 +49,22 @@ keyboard layouts.
 
 Applying the style the selected text already has removes that annotation, all of it; the toolbar shows
 that style pressed. Applying a style to a selection that overlaps an annotation of that style extends
-the annotation, and changing an annotation's style keeps its note. Alt+Backspace (or the toolbar's
+the annotation. A different style goes on top of what is there: a highlight keeps an underline over
+it, and overlapping highlights share the line in bands, one per color. Alt+Backspace (or the toolbar's
 eraser) removes annotations from exactly the selected text: what is left of them stays, with its note.
 On Linux, browsers use Alt+digit to switch tabs, so use Alt+H there for highlighting.
 
 With nothing selected, the shortcuts act on the annotation under the mouse (or, failing that, the one
 you just jumped to with Alt+J or Alt+K). A style shortcut changes its style and keeps its note; its own
 style removes it, and so does Alt+Backspace.
+
+Clicking an annotation selects it, with a dashed outline that follows its text, and shows the toolbar
+over it. Ctrl+click (Cmd+click) adds another one or takes it out; Shift+click selects every annotation
+from the last one selected to the one clicked. While annotations are selected, the style keys restyle
+them, N edits the first one's note and Backspace or Delete removes them, with or without Alt. Esc,
+clicking elsewhere or selecting text lets them go. A link inside annotated text still just opens.
+
+Annotations saved in blue or orange, which the toolbar and keys no longer offer, still draw.
 
 Alt+V hides every annotation, and a message says so, with a Show button. Alt+V again, or any change
 to the annotations, shows them.
@@ -128,7 +139,8 @@ or a word or two. Text that loads late, such as comments or "load more", gets it
 it appears while the page is open. Background tabs wait until you look at them.
 
 When a site redraws part of the page, the annotations there stay saved and come back once their text
-is back on the page. Two tabs showing the same page keep each other's new annotations.
+is back on the page. Two tabs showing the same page show each other's changes at once: new
+annotations, removals, restyles and notes.
 
 ### Customize
 
@@ -152,3 +164,9 @@ hides the annotations made with it. They stay saved and come back when the style
 script, joined in the order listed in `highlighter/build.js`. Edit those files, run `node build.js` in
 `highlighter/` (Node, no packages needed), and commit both. `node build.js --check` says whether the
 built file is up to date.
+
+The tests are in `highlighter/test/`, one `*.test.js` file per feature, each driving the built script
+in headless Chromium. `node highlighter/test/run.js` runs all of them (`run.js panel note` runs only the
+files whose names contain those words) and also fails when the built file is out of date. They need
+Playwright with Chromium: `npm install --no-save playwright@1.56.1 && npx playwright install chromium`
+in `highlighter/test/`. The same command runs in the Action on every push and pull request.

@@ -44,21 +44,30 @@
         return r.y + (m.ascent - m.xHeight / 2) * scale;
     }
 
-    // Where highlights share text, the wrapper of one nests in the other's. The outer one is
-    // drawn whole and each inner one as a band across part of it: of the n highlights on the
-    // text, each gets 1/n of the height, in the order of STYLES (yellow at the top). { slot, of }
-    // for an inner highlight, null for one with no highlight around it.
+    // Where highlights share text, the wrapper of one nests in the other's, and they stack as
+    // layers, the outermost at the bottom. It is drawn whole, as the background; the layers on
+    // it split the height, the next one at the bottom and the topmost at the top. One layer
+    // alone takes the bottom half, so the background still shows above it. A layer counts the
+    // highlights inside it too, so it keeps its band where they leave off. { slot, of } with
+    // slot 0 at the top, or null for the background (a highlight with none around it).
     function bandOf(element) {
+        const isHighlight = k => hasOwn(STYLES, k) && STYLES[k].type === 'highlight';
         const key = element.getAttribute(STYLE_ATTR);
-        const keys = [key];
+        const below = [];
         for (let w = outerWrapper(element); w; w = outerWrapper(w)) {   // see wrappers.js
             const k = w.getAttribute(STYLE_ATTR);
-            if (hasOwn(STYLES, k) && STYLES[k].type === 'highlight' && !keys.includes(k)) keys.push(k);
+            if (isHighlight(k) && k !== key && !below.includes(k)) below.unshift(k);
         }
-        if (keys.length < 2) return null;
-        const order = Object.keys(STYLES);
-        keys.sort((a, b) => order.indexOf(a) - order.indexOf(b));
-        return { slot: keys.indexOf(key), of: keys.length };
+        if (!below.length) return null;
+        const layers = [...below, key];
+        const depth = w => { let d = 0; for (let o = outerWrapper(w); o && o !== element; o = outerWrapper(o)) d++; return d; };
+        Array.from(element.querySelectorAll(WRAPPER_SELECTOR))
+            .map(w => ({ k: w.getAttribute(STYLE_ATTR), d: depth(w) }))
+            .sort((a, b) => a.d - b.d)
+            .forEach(({ k }) => { if (isHighlight(k) && !layers.includes(k)) layers.push(k); });
+        const on = layers.length - 1;                 // layers on the background
+        const of = Math.max(on, 2);
+        return { slot: of - layers.indexOf(key), of };
     }
 
     // Line boxes of an annotation's text, relative to its drawing. Read-only: every annotation

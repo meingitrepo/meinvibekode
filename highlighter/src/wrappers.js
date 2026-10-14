@@ -192,13 +192,14 @@
         if (selectedSVGs.size) updateSelectionVisibility();
     }
 
-    // Annotations inside one that was just wrapped around them, unwrapped or restyled: their
-    // drawings are placed by its box and share its lines (see bandOf), so they are drawn again
-    // once the change is done.
+    // Annotations inside or around one that was just wrapped, unwrapped or restyled: the inner
+    // ones are placed by its box and share its lines, and highlights inside and around it pick
+    // their bands by it (see bandOf), so they are drawn again once the change is done.
     const innerToRedraw = new Set();
     function redrawInner(wrapper) {
-        const inner = wrapper.querySelectorAll(WRAPPER_SELECTOR);
-        if (!inner.length) return;
+        const near = Array.from(wrapper.querySelectorAll(WRAPPER_SELECTOR));
+        for (let o = outerWrapper(wrapper); o; o = outerWrapper(o)) near.push(o);
+        if (!near.length) return;
         if (!innerToRedraw.size) {
             queueMicrotask(() => {
                 const ws = Array.from(innerToRedraw).filter(w => w.isConnected);
@@ -206,7 +207,7 @@
                 reposition(ws);
             });
         }
-        inner.forEach(w => innerToRedraw.add(w));
+        near.forEach(w => innerToRedraw.add(w));
     }
 
     // A wrapper inside another of the same style (after a change of style) adds nothing: it goes.

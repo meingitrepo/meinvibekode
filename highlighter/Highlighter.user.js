@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.7
+// @version      8.8
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3519,7 +3519,7 @@
     const editorEl = makeEl('div', { class: 'surface editor', role: 'dialog', 'aria-labelledby': 'highlighter-note-title', hidden: '' }, [
         makeEl('div', { class: 'editor-header' }, [editorTitle, makeEl('div', { class: 'editor-actions' }, [noteSave, noteDelete])]),
         makeEl('div', { class: 'field' }, [noteInput]),
-        makeEl('div', { class: 'field-hint', text: 'Enter to save, Shift+Enter for a new line, Esc to cancel' })
+        makeEl('div', { class: 'field-hint', text: 'Enter to save, Esc to cancel' })
     ]);
 
     let toastIcon = fluentIcon('info_20_regular');   // replaced per message

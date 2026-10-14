@@ -19,8 +19,8 @@
     // color. So it is masked out there too, and instead the selected part gets the same mark in
     // every color: a thin outline in the selected text's color, in a second SVG over the text.
     // The boxes of the text in a range. Not the range's own getClientRects: that also gives the
-    // box of every element wholly inside it, such as the drawing (100 x 100) of a highlight that
-    // shares the text (see bandOf), which would leave a square hole in the mark.
+    // box of every element wholly inside it, such as the drawing of a highlight that shares the
+    // text (see bandOf, makeAnnotation), which would leave a hole in the mark.
     function textRects(range) {
         const root = range.commonAncestorContainer;
         const out = [];

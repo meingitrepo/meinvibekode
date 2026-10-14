@@ -146,13 +146,16 @@
     // wrapper's positioned ancestor (overflow visible), holding one stroke per line of text. It
     // goes before a highlight, so the text paints over it, and after an underline or
     // strike-through. A highlight's wrapper is made that positioned ancestor itself.
+    // The svg's own box is 1px: the strokes show outside it, but the box counts as page content,
+    // and a bigger one adds scrolling where it sticks out (from a highlight near the edge of a
+    // scrolling box, say). At 0px the browser wouldn't draw it at all.
     function makeAnnotation(element, config) {
         const svg = document.createElementNS(SVG_NS, 'svg');
         svg.setAttribute('class', 'highlighter-annotation');
         svg.setAttribute(SVG_ATTR, '');
         const s = svg.style;
         s.position = 'absolute'; s.top = '0'; s.left = '0'; s.overflow = 'visible';
-        s.pointerEvents = 'none'; s.width = '100px'; s.height = '100px';
+        s.pointerEvents = 'none'; s.width = '1px'; s.height = '1px';
         const highlight = config.type === 'highlight';
         element.insertAdjacentElement(highlight ? 'beforebegin' : 'afterend', svg);
         if (highlight) {

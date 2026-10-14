@@ -34,8 +34,10 @@
         selectedGroups.forEach(g => {
             if (selectBoxes.has(g)) return;
             const first = groupWrappers(g)[0];
+            const outline = svgEl('svg', { 'aria-hidden': 'true' });
+            outline.appendChild(svgEl('path', {}));
             const el = makeEl('div', { class: 'select-box', 'data-theme': first && first.hasAttribute(DARK_ATTR) ? 'dark' : 'light', hidden: '' },
-                [svgEl('svg', { 'aria-hidden': 'true' })]);
+                [outline]);
             selectBoxesEl.appendChild(el);
             selectBoxes.set(g, { el, at: '' });
         });
@@ -157,7 +159,7 @@
             if (at !== box.at) {
                 box.at = at;
                 Object.assign(box.el.style, { top: `${rect.top}px`, left: `${rect.left}px`, width: `${rect.width}px`, height: `${rect.height}px` });
-                box.el.firstChild.innerHTML = `<path d="${d}"/>`;
+                box.el.firstChild.firstChild.setAttribute('d', d);   // not innerHTML: see makeEl
             }
             box.el.hidden = false;
         });

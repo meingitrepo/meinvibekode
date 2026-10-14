@@ -767,13 +767,16 @@
     // wrapper's positioned ancestor (overflow visible), holding one stroke per line of text. It
     // goes before a highlight, so the text paints over it, and after an underline or
     // strike-through. A highlight's wrapper is made that positioned ancestor itself.
+    // The svg's own box is 1px: the strokes show outside it, but the box counts as page content,
+    // and a bigger one adds scrolling where it sticks out (from a highlight near the edge of a
+    // scrolling box, say). At 0px the browser wouldn't draw it at all.
     function makeAnnotation(element, config) {
         const svg = document.createElementNS(SVG_NS, 'svg');
         svg.setAttribute('class', 'highlighter-annotation');
         svg.setAttribute(SVG_ATTR, '');
         const s = svg.style;
         s.position = 'absolute'; s.top = '0'; s.left = '0'; s.overflow = 'visible';
-        s.pointerEvents = 'none'; s.width = '100px'; s.height = '100px';
+        s.pointerEvents = 'none'; s.width = '1px'; s.height = '1px';
         const highlight = config.type === 'highlight';
         element.insertAdjacentElement(highlight ? 'beforebegin' : 'afterend', svg);
         if (highlight) {
@@ -1170,8 +1173,8 @@
     // color. So it is masked out there too, and instead the selected part gets the same mark in
     // every color: a thin outline in the selected text's color, in a second SVG over the text.
     // The boxes of the text in a range. Not the range's own getClientRects: that also gives the
-    // box of every element wholly inside it, such as the drawing (100 x 100) of a highlight that
-    // shares the text (see bandOf), which would leave a square hole in the mark.
+    // box of every element wholly inside it, such as the drawing of a highlight that shares the
+    // text (see bandOf, makeAnnotation), which would leave a hole in the mark.
     function textRects(range) {
         const root = range.commonAncestorContainer;
         const out = [];
@@ -4381,8 +4384,8 @@
         if (e.key === 'Escape') {
             e.preventDefault();
             cancelEditor();
-        } else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
-            // Enter saves; Shift+Enter starts a new line.
+        } else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.target === noteInput) {
+            // Enter saves; Shift+Enter starts a new line. On a button, Enter presses that button.
             e.preventDefault();
             saveEditor();
         } else if (e.key === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {
@@ -4608,8 +4611,10 @@
         selectedGroups.forEach(g => {
             if (selectBoxes.has(g)) return;
             const first = groupWrappers(g)[0];
+            const outline = svgEl('svg', { 'aria-hidden': 'true' });
+            outline.appendChild(svgEl('path', {}));
             const el = makeEl('div', { class: 'select-box', 'data-theme': first && first.hasAttribute(DARK_ATTR) ? 'dark' : 'light', hidden: '' },
-                [svgEl('svg', { 'aria-hidden': 'true' })]);
+                [outline]);
             selectBoxesEl.appendChild(el);
             selectBoxes.set(g, { el, at: '' });
         });
@@ -4731,7 +4736,7 @@
             if (at !== box.at) {
                 box.at = at;
                 Object.assign(box.el.style, { top: `${rect.top}px`, left: `${rect.left}px`, width: `${rect.width}px`, height: `${rect.height}px` });
-                box.el.firstChild.innerHTML = `<path d="${d}"/>`;
+                box.el.firstChild.firstChild.setAttribute('d', d);   // not innerHTML: see makeEl
             }
             box.el.hidden = false;
         });

@@ -377,8 +377,8 @@
         if (e.key === 'Escape') {
             e.preventDefault();
             cancelEditor();
-        } else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
-            // Enter saves; Shift+Enter starts a new line.
+        } else if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.target === noteInput) {
+            // Enter saves; Shift+Enter starts a new line. On a button, Enter presses that button.
             e.preventDefault();
             saveEditor();
         } else if (e.key === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {

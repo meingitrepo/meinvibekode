@@ -46,17 +46,19 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.1 | Smooth selecting over big annotations | Dragging a selection over a large annotation (a highlight across many paragraphs) lagged behind the mouse: the mask that hides the drawing under the selection covered a 200,000 px square, which the browser painted on every move. It now covers only the drawing. Frames of up to 110 ms while dragging are now 17 ms |
 | 8.2 | Highlights whole under a partial selection | 8.1's smaller mask left out the highlight's thickness, so the top or bottom half of a highlight's first or last line vanished while a selection covered only part of it. The mask now takes in each stroke's full width |
 | 8.3 | Test page, local files | `test/playground.html`: one page with numbered sections (short and very long text, overlaps and nesting, links, dark and light boxes and a dark-page button, long lines for zoom, a scrolling box, late text, repeated text, odd characters) to try things on and point at by number in screenshots. The script now also runs on `file:///` pages, so the page works opened from disk (Chrome needs Violentmonkey's "Allow access to file URLs") |
+| 8.4 | Windows only | The script is written for Windows (Chrome, Edge, Firefox): Mac and Linux handling is gone (Cmd+click, the Option-key check in the panel's filter box) and so are the plans that only served them (a Linux Alt+Shift+digit alias, the phone toolbar). Alt+O, J and K in the filter box now also work with non-Latin keyboard layouts; the Option-key check blocked them there |
 
 ## Next, roughly in order
+
+Only Windows (Chrome, Edge, Firefox) is in scope since 8.4: no Mac, Linux or phone-only work.
 
 Item numbers stay the same when other items ship.
 
 | # | Idea | What you'd see | Size |
 |---|---|---|---|
-| 3 | **Site switch and shortcuts** | "Pause shortcuts and toolbar on this site" (annotations still show); `www.x.com` and `x.com` as one site; Alt+Shift+digit as an alias for Linux. | S |
+| 3 | **Site switch and shortcuts** | "Pause shortcuts and toolbar on this site" (annotations still show); `www.x.com` and `x.com` as one site. | S |
 | 6 | **Undo that lasts longer** | History kept per page while the tab is open; Alt+Shift+Backspace gets the Undo toast and a "Restore cleared annotations" menu item that works after a reload. | M |
 | 9 | **High contrast and reduced motion** | System colours in forced-colors mode, no animation with reduced motion, one 300 ms highlight stroke. | S |
-| 13 | **Toolbar on a phone** | **Verified:** at 360px the touch toolbar runs off the edge. The five colours collapse into one split button on touch screens. Only matters on a phone. | M |
 | 14 | **Backup and restore** | Export all annotations to JSON; import with Merge or Replace. Violentmonkey's own backup already covers script data. | M |
 
 Ranked lower: a scrollbar minimap of annotations (M); box and margin-bracket marks (M); a settings panel for colours and shortcuts (L).

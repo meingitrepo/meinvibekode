@@ -133,10 +133,8 @@
         if (!e.altKey || e.ctrlKey || e.metaKey || e.isComposing) return;
         if (isEditableTarget(e)) return;
         if (editor && isUiEvent(e)) return;   // focus is on the open note editor's buttons
-        // Typing in the panel's filter box: only the panel and jump keys act, and not where Alt
-        // with them types a character (Option+O types ø on a Mac).
-        if (isUiEvent(e) && uiRoot.activeElement === panelFilter &&
-            (!/^Key[OJK]$/.test(e.code) || (e.key.length === 1 && e.key.toLowerCase() !== e.code.slice(3).toLowerCase()))) return;
+        // Typing in the panel's filter box: only the panel and jump keys act.
+        if (isUiEvent(e) && uiRoot.activeElement === panelFilter && !/^Key[OJK]$/.test(e.code)) return;
         const code = e.code;
         if (!COMMAND_CODES.has(code) && (e.shiftKey || !CODE_TO_STYLE.has(code))) return;
         syncLocation();

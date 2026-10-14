@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.3
+// @version      8.4
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -21,11 +21,10 @@
 // ==/UserScript==
 
 /*
- * Shortcuts (Alt + key, matched by physical key so they work on macOS and
- * non-Latin layouts):
+ * Shortcuts (Alt + key, matched by physical key so they work on non-Latin layouts;
+ * written for Windows):
  *   H or 1                highlight (yellow)
  *   2 / 4                 highlight in green / pink
- *                         (Linux browsers use Alt+digit to switch tabs; there, only H works)
  *   U / S                 underline / strike-through
  *                         (the style the selected text already has removes that annotation, all of it)
  *                         With nothing selected, these restyle the annotation under the mouse, or
@@ -46,7 +45,7 @@
  *   Z                     undo
  *   Shift+Z or Y          redo
  *
- * Clicking an annotation selects it: a dashed box goes around all of it. Ctrl+click (Cmd+click)
+ * Clicking an annotation selects it: a dashed box goes around all of it. Ctrl+click
  * adds one or takes it out again; Shift+click selects all of them from the last one selected to
  * the one clicked. While annotations are selected, the style keys, N (the first one's note) and
  * Backspace / Delete act on all of them, with or without Alt; Esc, clicking elsewhere

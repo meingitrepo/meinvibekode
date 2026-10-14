@@ -119,6 +119,12 @@ ${filler(40)}
   // close with Alt+O
   await L.altKey(page, 'o');
   L.check('Alt+O closes', await page.evaluate(() => window.__hl.panelEl.hidden));
+  // Alt+O in the filter box closes it on a non-Latin layout too (key is the layout's letter)
+  L.check('Alt+O from filter, Arabic layout', await page.evaluate(() => {
+    const r = window.__hl; r.openPanel(); r.panelFilter.focus();
+    r.panelFilter.dispatchEvent(new KeyboardEvent('keydown', { key: 'خ', code: 'KeyO', altKey: true, bubbles: true, composed: true, cancelable: true }));
+    return r.panelEl.hidden;
+  }));
   // jump
   await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(100);
   const seq = [];

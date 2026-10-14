@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.3
+// @version      8.4
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -21,11 +21,10 @@
 // ==/UserScript==
 
 /*
- * Shortcuts (Alt + key, matched by physical key so they work on macOS and
- * non-Latin layouts):
+ * Shortcuts (Alt + key, matched by physical key so they work on non-Latin layouts;
+ * written for Windows):
  *   H or 1                highlight (yellow)
  *   2 / 4                 highlight in green / pink
- *                         (Linux browsers use Alt+digit to switch tabs; there, only H works)
  *   U / S                 underline / strike-through
  *                         (the style the selected text already has removes that annotation, all of it)
  *                         With nothing selected, these restyle the annotation under the mouse, or
@@ -46,7 +45,7 @@
  *   Z                     undo
  *   Shift+Z or Y          redo
  *
- * Clicking an annotation selects it: a dashed box goes around all of it. Ctrl+click (Cmd+click)
+ * Clicking an annotation selects it: a dashed box goes around all of it. Ctrl+click
  * adds one or takes it out again; Shift+click selects all of them from the last one selected to
  * the one clicked. While annotations are selected, the style keys, N (the first one's note) and
  * Backspace / Delete act on all of them, with or without Alt; Esc, clicking elsewhere
@@ -2939,10 +2938,8 @@
         if (!e.altKey || e.ctrlKey || e.metaKey || e.isComposing) return;
         if (isEditableTarget(e)) return;
         if (editor && isUiEvent(e)) return;   // focus is on the open note editor's buttons
-        // Typing in the panel's filter box: only the panel and jump keys act, and not where Alt
-        // with them types a character (Option+O types ø on a Mac).
-        if (isUiEvent(e) && uiRoot.activeElement === panelFilter &&
-            (!/^Key[OJK]$/.test(e.code) || (e.key.length === 1 && e.key.toLowerCase() !== e.code.slice(3).toLowerCase()))) return;
+        // Typing in the panel's filter box: only the panel and jump keys act.
+        if (isUiEvent(e) && uiRoot.activeElement === panelFilter && !/^Key[OJK]$/.test(e.code)) return;
         const code = e.code;
         if (!COMMAND_CODES.has(code) && (e.shiftKey || !CODE_TO_STYLE.has(code))) return;
         syncLocation();
@@ -4570,7 +4567,7 @@
     // --- Selecting annotations by clicking them ---
 
     // A plain click on an annotation (not a drag, not on a link or a control inside it) selects
-    // it and draws a dashed outline around its lines; Ctrl+click (Cmd+click on a Mac) adds one to the
+    // it and draws a dashed outline around its lines; Ctrl+click adds one to the
     // selection or takes it out, and Shift+click selects the annotations from the one selected
     // last to the one clicked, in reading order, and no others. While annotations are selected
     // the keys act on all of them, with or without Alt: a style key restyles them (the style all
@@ -4748,7 +4745,7 @@
     // Shift+click would extend the page's text selection from the caret: with annotations
     // selected (or no text selected), it selects annotations instead.
     function onSelectMouseDown(e) {
-        if (isUiEvent(e) || !(e.shiftKey || e.ctrlKey || e.metaKey) || !clickedGroup(e)) return;
+        if (isUiEvent(e) || !(e.shiftKey || e.ctrlKey) || !clickedGroup(e)) return;
         if (e.shiftKey && !selectedGroups.length && getActiveRange()) return;
         e.preventDefault();
     }
@@ -4757,7 +4754,7 @@
         if (isUiEvent(e)) return;   // the note card, the toast's Undo: the selection stays
         const group = clickedGroup(e);
         if (!group || getActiveRange()) { clearSelectedGroups(); return; }
-        if (e.ctrlKey || e.metaKey) {
+        if (e.ctrlKey) {
             setSelectedGroups(selectedGroups.includes(group) ? selectedGroups.filter(g => g !== group) : selectedGroups.concat(group));
         } else if (e.shiftKey && selectedGroups.length) {
             const order = groupsInOrder();

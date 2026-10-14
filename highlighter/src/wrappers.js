@@ -76,10 +76,10 @@
         });
         g.append(clip, copies);
         const highlight = config.type === 'highlight';
-        // The mask covers only the drawing (with its stroke): the browser paints a mask over its
-        // whole region, and a page-sized one made every move of a selection over a big
-        // annotation slow.
-        const pad = width + 2;
+        // The mask covers only the drawing (with its strokes, which getBBox leaves out: a
+        // highlight's is as thick as its line): the browser paints a mask over its whole region,
+        // and a page-sized one made every move of a selection over a big annotation slow.
+        const pad = Math.max(width, ...paths.map(p => +p.getAttribute('stroke-width') || 0)) + 2;
         const region = area && area.width + area.height > 0
             ? { x: area.x - pad, y: area.y - pad, width: area.width + 2 * pad, height: area.height + 2 * pad }
             : { x: -1e5, y: -1e5, width: 2e5, height: 2e5 };

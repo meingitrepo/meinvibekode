@@ -16,14 +16,14 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     defaults:
       run:
         working-directory: highlighter/test
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
       - name: Install Playwright and Chromium
@@ -37,7 +37,7 @@ jobs:
   mirror:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
         with:

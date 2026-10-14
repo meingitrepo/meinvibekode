@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Highlighter playground</title>
+<style>
+  :root { --bg: #ffffff; --fg: #1d1d1f; --muted: #666; --line: #ddd; --box: #f6f6f8; --link: #0b57d0; }
+  html.dark { --bg: #16171a; --fg: #e6e6e6; --muted: #9a9a9a; --line: #333; --box: #202226; --link: #8ab4f8; }
+  html { background: var(--bg); color: var(--fg); }
+  body { font: 17px/1.6 Georgia, "Times New Roman", serif; max-width: 760px; margin: 0 auto; padding: 24px 16px 120px; }
+  h1 { font: 600 26px system-ui, sans-serif; margin: 0 0 4px; }
+  h2 { font: 600 19px system-ui, sans-serif; margin: 48px 0 8px; padding-top: 12px; border-top: 2px solid var(--line); scroll-margin-top: 48px; }
+  h2 .n { display: inline-block; min-width: 2.2em; padding: 0 6px; margin-right: 8px; border-radius: 6px; background: var(--fg); color: var(--bg); text-align: center; }
+  h3 { font: 600 15px system-ui, sans-serif; margin: 20px 0 4px; color: var(--muted); }
+  .hint { font: 13px/1.45 system-ui, sans-serif; color: var(--muted); margin: 0 0 10px; }
+  a { color: var(--link); }
+  .bar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 0; background: var(--bg); border-bottom: 1px solid var(--line); font: 13px system-ui, sans-serif; }
+  .bar button { font: inherit; padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--box); color: var(--fg); cursor: pointer; }
+  .bar nav a { margin-right: 6px; }
+  .box { background: var(--box); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; }
+  .darkbox { background: #1b1d22; color: #e8e8e8; border-radius: 8px; padding: 8px 14px; }
+  .darkbox a { color: #8ab4f8; }
+  .lightbox { background: #fffdf5; color: #222; border-radius: 8px; padding: 8px 14px; }
+  .wide { white-space: nowrap; overflow-x: auto; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .cols { grid-template-columns: 1fr; } }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; }
+  td, th { border: 1px solid var(--line); padding: 4px 8px; text-align: left; }
+  code { font: 14px ui-monospace, Menlo, Consolas, monospace; background: var(--box); padding: 1px 4px; border-radius: 4px; }
+  .scroller { height: 160px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; padding: 0 14px; }
+</style>
+</head>
+<body>
+<h1>Highlighter playground</h1>
+<p class="hint">Each section has a number. When you send a screenshot, say the section number and what you did (for example: "S5, Alt+H on the first two lines, then Alt+U on the word <em>harvest</em>"). Annotations are saved for this file's address, so they come back after a reload; Alt+Shift+Backspace clears them all.</p>
+
+<div class="bar">
+  <button id="theme" type="button">Dark page</button>
+  <button id="add" type="button">Add a late paragraph to S11</button>
+  <span id="info"></span>
+  <nav>Jump: <a href="#s1">1</a><a href="#s2">2</a><a href="#s3">3</a><a href="#s4">4</a><a href="#s5">5</a><a href="#s6">6</a><a href="#s7">7</a><a href="#s8">8</a><a href="#s9">9</a><a href="#s10">10</a><a href="#s11">11</a><a href="#s12">12</a><a href="#s13">13</a></nav>
+</div>
+
+<h2 id="s1"><span class="n">S1</span>Short text</h2>
+<p class="hint">One word, one sentence, a few words. Basic highlight, underline, strike, note.</p>
+<p>Apple. Banana. Cherry.</p>
+<p>The quick brown fox jumps over the lazy dog.</p>
+<p>Select <b>just these four words</b> and try each style.</p>
+
+<h2 id="s2"><span class="n">S2</span>Paragraphs</h2>
+<p class="hint">Normal multi-paragraph text. Select across paragraph breaks.</p>
+<p>The river had been rising for three days before anyone in the village thought to move the boats. By then the water lapped at the steps of the mill, and the miller's children were floating paper ships down the lane where the carts usually ran.</p>
+<p>Old Teodor said he had seen it worse, in the winter of the long frost, when the ice broke all at once and carried a whole barn past the church. Nobody believed him, but nobody argued either, because Teodor kept the only working pump.</p>
+<p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
+
+<h2 id="s3"><span class="n">S3</span>Overlapping and nested</h2>
+<p class="hint">Highlight sentence A, then highlight across the end of A and start of B (overlap). Underline or strike a word inside a highlight (nesting). Try two colors on the same words.</p>
+<p><span>[A] Sentence A is the first sentence of this paragraph and ends here.</span> <span>[B] Sentence B starts right after it and carries on for a while.</span> <span>[C] Sentence C is last, so you can make a chain of three overlapping marks.</span></p>
+<p>Inline formatting inside: <b>bold words</b>, <i>italic words</i>, <code>code_words()</code>, <b>bold with <i>italic inside</i> it</b>, and a<sup>superscript</sup> and H<sub>2</sub>O.</p>
+
+<h2 id="s4"><span class="n">S4</span>Links inside text</h2>
+<p class="hint">Annotate text that contains links; then click a link (it should follow it) and click plain annotated text (it should select the annotation).</p>
+<p>This sentence has <a href="#s1">a link back to S1</a> in the middle, and <a href="#s13">another to S13</a> near the end.</p>
+<p><a href="#s2">This whole sentence is a single link and can be annotated whole or in part.</a></p>
+
+<h2 id="s5"><span class="n">S5</span>Very long text</h2>
+<p class="hint">30 paragraphs. Select from Part 1 down to Part 10 (drag with scrolling, or click then Shift+click). Watch for lag while dragging and for parts of the drawing vanishing under the selection.</p>
+<h3>Part 1</h3>
+<p>The river had been rising for three days before anyone in the village thought to move the boats. By then the water lapped at the steps of the mill, and the miller's children were floating paper ships down the lane where the carts usually ran.</p>
+<p>Old Teodor said he had seen it worse, in the winter of the long frost, when the ice broke all at once and carried a whole barn past the church. Nobody believed him, but nobody argued either, because Teodor kept the only working pump.</p>
+<p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
+<h3>Part 2</h3>
+<p>Old Teodor said he had seen it worse, in the winter of the long frost, when the ice broke all at once and carried a whole barn past the church. Nobody believed him, but nobody argued either, because Teodor kept the only working pump.</p>
+<p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
+<p>When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.</p>
+<h3>Part 3</h3>
+<p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
+<p>When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.</p>
+<p>The mayor proposed a dam. The baker proposed a festival. In the end they did both, though the dam was smaller than promised and the festival was larger, and only one of them is still remembered fondly.</p>
+<h3>Part 4</h3>
+<p>When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.</p>
+<p>The mayor proposed a dam. The baker proposed a festival. In the end they did both, though the dam was smaller than promised and the festival was larger, and only one of them is still remembered fondly.</p>
+<p>Letters came from the city asking for photographs of the flood line. The postmistress sent back a drawing instead, because the only camera in the village belonged to the priest, and he used it exclusively for weddings.</p>
+<h3>Part 5</h3>
+<p>The mayor proposed a dam. The baker proposed a festival. In the end they did both, though the dam was smaller than promised and the festival was larger, and only one of them is still remembered fondly.</p>
+<p>Letters came from the city asking for photographs of the flood line. The postmistress sent back a drawing instead, because the only camera in the village belonged to the priest, and he used it exclusively for weddings.</p>
+<p>The river had been rising for three days before anyone in the village thought to move the boats. By then the water lapped at the steps of the mill, and the miller's children were floating paper ships down the lane where the carts usually ran.</p>
+<h3>Part 6</h3>
+<p>Letters came from the city asking for photographs of the flood line. The postmistress sent back a drawing instead, because the only camera in the village belonged to the priest, and he used it exclusively for weddings.</p>
+<p>The river had been rising for three days before anyone in the village thought to move the boats. By then the water lapped at the steps of the mill, and the miller's children were floating paper ships down the lane where the carts usually ran.</p>
+<p>Old Teodor said he had seen it worse, in the winter of the long frost, when the ice broke all at once and carried a whole barn past the church. Nobody believed him, but nobody argued either, because Teodor kept the only working pump.</p>
+<h3>Part 7</h3>
+<p>The river had been rising for three days before anyone in the village thought to move the boats. By then the water lapped at the steps of the mill, and the miller's children were floating paper ships down the lane where the carts usually ran.</p>
+<p>Old Teodor said he had seen it worse, in the winter of the long frost, when the ice broke all at once and carried a whole barn past the church. Nobody believed him, but nobody argued either, because Teodor kept the only working pump.</p>
+<p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
+<h3>Part 8</h3>
+<p>Old Teodor said he had seen it worse, in the winter of the long frost, when the ice broke all at once and carried a whole barn past the church. Nobody believed him, but nobody argued either, because Teodor kept the only working pump.</p>
+<p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
+<p>When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.</p>
+<h3>Part 9</h3>
+<p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
+<p>When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.</p>
+<p>The mayor proposed a dam. The baker proposed a festival. In the end they did both, though the dam was smaller than promised and the festival was larger, and only one of them is still remembered fondly.</p>
+<h3>Part 10</h3>
+<p>When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.</p>
+<p>The mayor proposed a dam. The baker proposed a festival. In the end they did both, though the dam was smaller than promised and the festival was larger, and only one of them is still remembered fondly.</p>
+<p>Letters came from the city asking for photographs of the flood line. The postmistress sent back a drawing instead, because the only camera in the village belonged to the priest, and he used it exclusively for weddings.</p>
+
+<h2 id="s6"><span class="n">S6</span>Long lines (zoom and resize)</h2>
+<p class="hint">Annotate inside these, then zoom (Ctrl + / Ctrl -) and resize the window. The drawing should follow the text each frame.</p>
+<p>This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths;</p>
+<div class="box wide">This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths;</div>
+<p class="hint">The box above does not wrap; it scrolls sideways.</p>
+
+<h2 id="s7"><span class="n">S7</span>Dark and light boxes</h2>
+<p class="hint">A dark box on a light page and a light box on a dark page (use the "Dark page" button at the top). Colors should suit what is behind each annotation.</p>
+<div class="darkbox"><p>This paragraph sits on a dark background whatever the page theme is. It has <a href="#s7">a link</a> too.</p></div>
+<p></p>
+<div class="lightbox"><p>This paragraph sits on a light, cream background whatever the page theme is.</p></div>
+
+<h2 id="s8"><span class="n">S8</span>Lists and table</h2>
+<ul>
+  <li>First list item with a few words.</li>
+  <li>Second list item, a bit longer than the first one so it might wrap on narrow windows.</li>
+  <li>Third item with <a href="#s8">a link</a>.</li>
+</ul>
+<ol><li>Numbered one.</li><li>Numbered two.</li></ol>
+<table>
+  <tr><th>Name</th><th>Value</th><th>Note</th></tr>
+  <tr><td>Alpha</td><td>12</td><td>Select across cells.</td></tr>
+  <tr><td>Beta</td><td>34</td><td>Second row text.</td></tr>
+</table>
+
+<h2 id="s9"><span class="n">S9</span>Two columns</h2>
+<div class="cols">
+  <p>The left column. The river had been rising for three days before anyone in the village thought to move the boats. By then the water lapped at the steps of the mill, and the miller's children were floating paper ships down the lane where the carts usually ran.</p>
+  <p>The right column. Old Teodor said he had seen it worse, in the winter of the long frost, when the ice broke all at once and carried a whole barn past the church. Nobody believed him, but nobody argued either, because Teodor kept the only working pump.</p>
+</div>
+
+<h2 id="s10"><span class="n">S10</span>Scrolling box</h2>
+<p class="hint">Annotate inside, then scroll the box. The drawing should move with the text and be clipped at the box's edge.</p>
+<div class="scroller"><p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
+<p>When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.</p>
+<p>The mayor proposed a dam. The baker proposed a festival. In the end they did both, though the dam was smaller than promised and the festival was larger, and only one of them is still remembered fondly.</p>
+<p>Letters came from the city asking for photographs of the flood line. The postmistress sent back a drawing instead, because the only camera in the village belonged to the priest, and he used it exclusively for weddings.</p></div>
+
+<h2 id="s11"><span class="n">S11</span>Text that loads late</h2>
+<p class="hint">Annotate a paragraph added by the button, reload, then press the button again: the annotation should come back when the text arrives.</p>
+<div id="late"></div>
+
+<h2 id="s12"><span class="n">S12</span>Repeated text</h2>
+<p class="hint">The same sentence three times. Annotate the second one, reload: it should come back on the second one, not the first.</p>
+<p>Same words here.</p>
+<p>Same words here.</p>
+<p>Same words here.</p>
+
+<h2 id="s13"><span class="n">S13</span>Odd characters</h2>
+<p>Accents: café, naïve, Zürich, São Paulo. Emoji: 🎉 party 🚀 launch 👍🏽 ok.</p>
+<p dir="rtl" lang="ar">هذا نص عربي قصير لتجربة الاتجاه من اليمين إلى اليسار.</p>
+<p>Hyphen-ated words, «quotes», “curly quotes”, and a very­long­word­with­soft­hyphens.</p>
+
+<script>
+  (function () {
+    var root = document.documentElement, btn = document.getElementById('theme');
+    function setDark(on) {
+      root.classList.toggle('dark', on);
+      btn.textContent = on ? 'Light page' : 'Dark page';
+      try { localStorage.setItem('playground-dark', on ? '1' : ''); } catch (e) {}
+    }
+    var saved = ''; try { saved = localStorage.getItem('playground-dark') || ''; } catch (e) {}
+    setDark(!!saved);
+    btn.addEventListener('click', function () { setDark(!root.classList.contains('dark')); });
+    var n = 0;
+    document.getElementById('add').addEventListener('click', function () {
+      n++;
+      var p = document.createElement('p');
+      p.textContent = 'Late paragraph ' + n + ': this text was added after the page loaded, like comments or "load more".';
+      document.getElementById('late').appendChild(p);
+    });
+    function info() { document.getElementById('info').textContent = 'Window ' + innerWidth + ' x ' + innerHeight + ' px, pixel ratio ' + Math.round(devicePixelRatio * 100) / 100; }
+    info(); addEventListener('resize', info);
+  })();
+</script>
+</body>
+</html>

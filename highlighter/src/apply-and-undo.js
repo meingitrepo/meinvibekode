@@ -239,6 +239,11 @@
         return n === 1 ? '1 annotation' : `${n} annotations`;
     }
 
+    // Undo toasts say only what happened; a count only when it is more than one.
+    function doneText(verb, n) {
+        return n > 1 ? `${n} ${verb.toLowerCase()}` : verb;
+    }
+
     function applyState(state) {
         resetUi({ keepRestore: true });
         stopLateWatcher();
@@ -283,7 +288,7 @@
             unwrapAll();
         });
         startLateWatcher();
-        offerUndo(`Cleared ${annotationsText(n)} on this page`, step);
+        offerUndo(doneText('Cleared', n), step);
         if (unsaved) offerDraft(unsaved);
     }
 
@@ -306,7 +311,7 @@
             pendingRecords = pendingRecords.filter(r => !missing.includes(r));
         });
         startLateWatcher();
-        offerUndo(`Forgot ${annotationsText(n)} that couldn't be found`, step);
+        offerUndo(doneText('Forgotten', n), step);
         if (unsaved) offerDraft(unsaved);
     }
 

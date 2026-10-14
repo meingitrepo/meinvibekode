@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.9
+// @version      8.10
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -2741,6 +2741,11 @@
         return n === 1 ? '1 annotation' : `${n} annotations`;
     }
 
+    // Undo toasts say only what happened; a count only when it is more than one.
+    function doneText(verb, n) {
+        return n > 1 ? `${n} ${verb.toLowerCase()}` : verb;
+    }
+
     function applyState(state) {
         resetUi({ keepRestore: true });
         stopLateWatcher();
@@ -2785,7 +2790,7 @@
             unwrapAll();
         });
         startLateWatcher();
-        offerUndo(`Cleared ${annotationsText(n)} on this page`, step);
+        offerUndo(doneText('Cleared', n), step);
         if (unsaved) offerDraft(unsaved);
     }
 
@@ -2808,7 +2813,7 @@
             pendingRecords = pendingRecords.filter(r => !missing.includes(r));
         });
         startLateWatcher();
-        offerUndo(`Forgot ${annotationsText(n)} that couldn't be found`, step);
+        offerUndo(doneText('Forgotten', n), step);
         if (unsaved) offerDraft(unsaved);
     }
 
@@ -2848,7 +2853,7 @@
             }
         });
         sel.removeAllRanges();
-        if (removed) offerUndo(removed === 1 ? `Removed ${styleLabel(key).toLowerCase()}` : `Removed ${annotationsText(removed)}`, step);
+        if (removed) offerUndo(doneText('Deleted', removed), step);
     }
 
     function removeInSelection({ sel, range: selected }) {
@@ -2860,9 +2865,7 @@
         const groups = Array.from(new Set(overlaps.map(o => o.group)));
         const gone = groups.filter(g => !groupExists(g)).length;
         const kept = groups.length - gone;
-        offerUndo(!kept ? `Removed ${annotationsText(gone)}`
-            : !gone ? `Removed part of ${annotationsText(kept)}`
-            : `Removed ${annotationsText(gone)} and part of ${kept === 1 ? 'another' : `${kept} others`}`, step);
+        offerUndo(kept ? 'Erased' : doneText('Deleted', gone), step);
     }
 
     // What the keys act on when no text is selected: the annotation selected by clicking it, else
@@ -2889,7 +2892,7 @@
         const wrappers = groups.flatMap(groupWrappers);
         if (!wrappers.length) return;
         if (wrappers.every(w => w.getAttribute(STYLE_ATTR) === key)) {
-            deleteGroups(groups, groups.length === 1 ? `Removed ${styleLabel(key).toLowerCase()}` : `Removed ${annotationsText(groups.length)}`);
+            deleteGroups(groups);
             return;
         }
         lastStyleKey = key;
@@ -4784,8 +4787,8 @@
     }
 
     // Removes every annotation in `groups`, as one step for Undo.
-    function deleteGroups(groups, message = `Removed ${annotationsText(groups.length)}`) {
-        if (groups.length === 1) { deleteAnnotation(groups[0], message); return; }
+    function deleteGroups(groups) {
+        if (groups.length === 1) { deleteAnnotation(groups[0]); return; }
         syncLocation();
         if (editor) cancelEditor({ offer: !groups.includes(editor.group) });
         const live = groups.filter(g => groupWrappers(g).length);
@@ -4794,7 +4797,7 @@
             live.forEach(g => unwrapMany(groupWrappers(g)));
             pendingRecords = pendingRecords.filter(r => !live.includes(recordOwner(r)));
         });
-        offerUndo(message, step);
+        offerUndo(doneText('Deleted', live.length), step);
     }
 
     // The keys for the selected annotations, with or without Alt (see onKeyDown). True if used.
@@ -5020,7 +5023,7 @@
 
     // Removes the whole annotation, also from the keyboard (Alt+Backspace, or its own style, with
     // the mouse on it).
-    function deleteAnnotation(group, message = 'Removed 1 annotation') {
+    function deleteAnnotation(group) {
         syncLocation();
         closeNoteForPanel(group);
         if (!groupWrappers(group).length) return;
@@ -5028,7 +5031,7 @@
             unwrapMany(groupWrappers(group));
             pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group);
         });
-        offerUndo(message, step);
+        offerUndo('Deleted', step);
     }
 
     function forgetAnnotation(group) {
@@ -5036,7 +5039,7 @@
         closeNoteForPanel(group);
         if (!pendingRecords.some(r => recordOwner(r) === group)) return;
         const step = runUndoable(() => { pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group); });
-        offerUndo('Forgot 1 annotation that couldn\'t be found', step);
+        offerUndo('Forgotten', step);
     }
 
     // Re-anchors a saved annotation that can't be found to the text selected now. It keeps its

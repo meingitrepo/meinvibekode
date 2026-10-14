@@ -51,6 +51,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.6 | Cyan, magenta, yellow | The highlight colours are soft cyan (#8CE6F2), magenta (#F2A0E8) and yellow (#FFEF6E), all at least 8.7:1 with dark text, and on dark backgrounds deep cyan (#006D7A), magenta (#9C1F8C) and gold (#7A6200), all at least 4.7:1 with light gray text. Alt+2 and Alt+4 keep their keys, so annotations saved green or pink now draw cyan or magenta; the retired blue and orange still draw as before |
 | 8.7 | CMY order | The toolbar lists cyan, magenta, yellow, and the number keys follow: Alt+1 cyan, Alt+2 magenta, Alt+3 yellow (Alt+H still yellow). Alt+4 does nothing now. Saved annotations keep their colours |
 | 8.9 | Overlap layers | Where highlights overlap, the first one is the background and the ones on it split the height in the order they stack: the next one at the bottom, the top one at the top. One alone takes the bottom half, so the background still shows above it (was: bands in toolbar order, which put the newest colour wherever its place in the toolbar fell) |
+| 8.10 | Short Undo toasts | Removal toasts say only what happened: "Deleted" ("3 deleted" for several), "Erased" when part of one stays, "Cleared" and "Forgotten" from the menu, each with Undo (was: "Removed yellow highlight", "Removed part of 1 annotation", "Forgot 1 annotation that couldn't be found") |
 
 ## Next, roughly in order
 

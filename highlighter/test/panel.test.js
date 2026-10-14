@@ -82,7 +82,7 @@ ${filler(40)}
   await page.evaluate(() => { const el = Array.from(window.__hl.panelList.querySelectorAll('[data-group]')).find(e => e.querySelector('.item-text').textContent === 'three four'); el.querySelector('[data-act="delete"]').click(); });
   await page.waitForTimeout(200);
   it = await L.items(page);
-  L.check('delete', !it.some(i => i.text === 'three four') && (await L.toast(page)) === 'Removed 1 annotation · Undo', [it.length, await L.toast(page)]);
+  L.check('delete', !it.some(i => i.text === 'three four') && (await L.toast(page)) === 'Deleted · Undo', [it.length, await L.toast(page)]);
   st = await L.stored(page);
   L.check('delete stored', !st.some(r => r.text === 'three four'), st.length);
   await page.evaluate(() => window.__hl.toastAction.click()); await page.waitForTimeout(200);
@@ -115,7 +115,7 @@ ${filler(40)}
   await page.evaluate(() => window.__hl.panelList.querySelector('.missing [data-act="forget"]').click());
   await page.waitForTimeout(150);
   st = await L.stored(page);
-  L.check('forget', !st.some(r => r.text === 'Gone forever') && /Forgot 1 annotation/.test(await L.toast(page)), st.length);
+  L.check('forget', !st.some(r => r.text === 'Gone forever') && /^Forgotten · Undo$/.test(await L.toast(page)), st.length);
   // close with Alt+O
   await L.altKey(page, 'o');
   L.check('Alt+O closes', await page.evaluate(() => window.__hl.panelEl.hidden));

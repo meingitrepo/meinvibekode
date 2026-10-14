@@ -34,7 +34,7 @@
             }
         });
         sel.removeAllRanges();
-        if (removed) offerUndo(removed === 1 ? `Removed ${styleLabel(key).toLowerCase()}` : `Removed ${annotationsText(removed)}`, step);
+        if (removed) offerUndo(doneText('Deleted', removed), step);
     }
 
     function removeInSelection({ sel, range: selected }) {
@@ -46,9 +46,7 @@
         const groups = Array.from(new Set(overlaps.map(o => o.group)));
         const gone = groups.filter(g => !groupExists(g)).length;
         const kept = groups.length - gone;
-        offerUndo(!kept ? `Removed ${annotationsText(gone)}`
-            : !gone ? `Removed part of ${annotationsText(kept)}`
-            : `Removed ${annotationsText(gone)} and part of ${kept === 1 ? 'another' : `${kept} others`}`, step);
+        offerUndo(kept ? 'Erased' : doneText('Deleted', gone), step);
     }
 
     // What the keys act on when no text is selected: the annotation selected by clicking it, else
@@ -75,7 +73,7 @@
         const wrappers = groups.flatMap(groupWrappers);
         if (!wrappers.length) return;
         if (wrappers.every(w => w.getAttribute(STYLE_ATTR) === key)) {
-            deleteGroups(groups, groups.length === 1 ? `Removed ${styleLabel(key).toLowerCase()}` : `Removed ${annotationsText(groups.length)}`);
+            deleteGroups(groups);
             return;
         }
         lastStyleKey = key;

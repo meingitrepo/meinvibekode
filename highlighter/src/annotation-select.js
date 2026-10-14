@@ -209,8 +209,8 @@
     }
 
     // Removes every annotation in `groups`, as one step for Undo.
-    function deleteGroups(groups, message = `Removed ${annotationsText(groups.length)}`) {
-        if (groups.length === 1) { deleteAnnotation(groups[0], message); return; }
+    function deleteGroups(groups) {
+        if (groups.length === 1) { deleteAnnotation(groups[0]); return; }
         syncLocation();
         if (editor) cancelEditor({ offer: !groups.includes(editor.group) });
         const live = groups.filter(g => groupWrappers(g).length);
@@ -219,7 +219,7 @@
             live.forEach(g => unwrapMany(groupWrappers(g)));
             pendingRecords = pendingRecords.filter(r => !live.includes(recordOwner(r)));
         });
-        offerUndo(message, step);
+        offerUndo(doneText('Deleted', live.length), step);
     }
 
     // The keys for the selected annotations, with or without Alt (see onKeyDown). True if used.

@@ -39,7 +39,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   await page.evaluate(i => window.__hl.toolbarEl.querySelectorAll('button')[i].click(), i); await page.waitForTimeout(300);
   w = await L.wr(page);
   L.check('toolbar removes both', !w.some(x => x.t === 'echo' || x.t === 'kilo') && w.length === 3, w);
-  L.check('toast says 2', /Removed 2 annotations · Undo/.test(await L.toast(page) || ''), await L.toast(page));
+  L.check('toast says 2', /^2 deleted · Undo$/.test(await L.toast(page) || ''), await L.toast(page));
   await L.altKey(page, 'KeyZ');
   L.check('one undo brings both back', (await L.wr(page)).length === 5, await L.wr(page));
   // Delete key on mixed styles

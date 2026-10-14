@@ -8,7 +8,7 @@
 
     // Removes the whole annotation, also from the keyboard (Alt+Backspace, or its own style, with
     // the mouse on it).
-    function deleteAnnotation(group, message = 'Removed 1 annotation') {
+    function deleteAnnotation(group) {
         syncLocation();
         closeNoteForPanel(group);
         if (!groupWrappers(group).length) return;
@@ -16,7 +16,7 @@
             unwrapMany(groupWrappers(group));
             pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group);
         });
-        offerUndo(message, step);
+        offerUndo('Deleted', step);
     }
 
     function forgetAnnotation(group) {
@@ -24,7 +24,7 @@
         closeNoteForPanel(group);
         if (!pendingRecords.some(r => recordOwner(r) === group)) return;
         const step = runUndoable(() => { pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group); });
-        offerUndo('Forgot 1 annotation that couldn\'t be found', step);
+        offerUndo('Forgotten', step);
     }
 
     // Re-anchors a saved annotation that can't be found to the text selected now. It keeps its

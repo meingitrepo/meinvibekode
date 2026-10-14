@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.4
+// @version      8.5
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -188,8 +188,8 @@
         h3: { ...HIGHLIGHT, label: 'Blue highlight', retired: true, color: '#90CAF9' },
         h4: { ...HIGHLIGHT, label: 'Pink highlight', shortcut: 'Digit4', color: '#F48FB1' },
         h5: { ...HIGHLIGHT, label: 'Orange highlight', retired: true, color: '#FFCC80' },
-        u:  { label: 'Underline', shortcut: 'KeyU', type: 'underline', color: '#EF5350', textColor: '', strokeWidth: 1 },
-        s:  { label: 'Strikethrough', shortcut: 'KeyS', type: 'strike-through', color: '#EF5350', textColor: '', strokeWidth: 1 }
+        u:  { label: 'Underline', shortcut: 'KeyU', type: 'underline', color: '#D32F2F', textColor: '', strokeWidth: 1 },   // clear red at 1px, 5:1 on white
+        s:  { label: 'Strikethrough', shortcut: 'KeyS', type: 'strike-through', color: '#D32F2F', textColor: '', strokeWidth: 1 }
     };
     const DARK_OVERRIDES = {
         h:  { color: '#806000' },   // dark gold
@@ -197,8 +197,8 @@
         h3: { color: '#1565C0' },
         h4: { color: '#AD1457' },
         h5: { color: '#B23C00' },   // deep orange
-        u:  { color: '#EF5350' },
-        s:  { color: '#EF5350' }
+        u:  { color: '#FF5F57' },   // warm light red: reads red, not pink, on dark (6:1)
+        s:  { color: '#FF5F57' }
     };
     const MIN_TEXT_CONTRAST = 3;                // below this against its highlight, text turns dark or light
     const INK = { dark: '#1b1b1b', light: '#ffffff' };   // the text colors it turns to

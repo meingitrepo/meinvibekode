@@ -47,6 +47,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.2 | Highlights whole under a partial selection | 8.1's smaller mask left out the highlight's thickness, so the top or bottom half of a highlight's first or last line vanished while a selection covered only part of it. The mask now takes in each stroke's full width |
 | 8.3 | Test page, local files | `test/playground.html`: one page with numbered sections (short and very long text, overlaps and nesting, links, dark and light boxes and a dark-page button, long lines for zoom, a scrolling box, late text, repeated text, odd characters) to try things on and point at by number in screenshots. The script now also runs on `file:///` pages, so the page works opened from disk (Chrome needs Violentmonkey's "Allow access to file URLs") |
 | 8.4 | Windows only | The script is written for Windows (Chrome, Edge, Firefox): Mac and Linux handling is gone (Cmd+click, the Option-key check in the panel's filter box) and so are the plans that only served them (a Linux Alt+Shift+digit alias, the phone toolbar). Alt+O, J and K in the filter box now also work with non-Latin keyboard layouts; the Option-key check blocked them there |
+| 8.5 | Clearer red lines | Underline and strike-through draw in a clear red (#D32F2F, 5:1 on white) on light backgrounds and a warm light red (#FF5F57, 6:1 on near-black) on dark ones, replacing 7.36's #EF5350, which looked pinkish at 1px on white |
 
 ## Next, roughly in order
 

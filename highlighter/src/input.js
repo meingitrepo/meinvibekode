@@ -34,7 +34,7 @@
             }
         });
         sel.removeAllRanges();
-        if (removed) offerUndo(doneText('Deleted', removed), step);
+        if (removed) offerUndo(doneText('erased', removed), step);
     }
 
     function removeInSelection({ sel, range: selected }) {
@@ -42,11 +42,8 @@
         const overlaps = range ? findOverlaps(range) : [];
         const step = overlaps.length ? runUndoable(() => eraseOverlaps(overlaps)) : null;
         sel.removeAllRanges();
-        // Annotations the selection covered only in part are still there.
-        const groups = Array.from(new Set(overlaps.map(o => o.group)));
-        const gone = groups.filter(g => !groupExists(g)).length;
-        const kept = groups.length - gone;
-        offerUndo(kept ? 'Erased' : doneText('Deleted', gone), step);
+        // Annotations erased only in part count too.
+        offerUndo(doneText('erased', new Set(overlaps.map(o => o.group)).size), step);
     }
 
     // What the keys act on when no text is selected: the annotation selected by clicking it, else

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.11
+// @version      8.12
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -2687,10 +2687,6 @@
         showWrappers(rewrap(remainders), false);
     }
 
-    function groupExists(group) {
-        return groupWrappers(group).length > 0 || pendingRecords.some(r => recordOwner(r) === group);
-    }
-
     // --- Undo / redo ---
 
     function captureState() {
@@ -2742,9 +2738,9 @@
         return n === 1 ? '1 annotation' : `${n} annotations`;
     }
 
-    // Undo toasts say only what happened; a count only when it is more than one.
+    // Undo toasts say only how many and what happened, as "2x annotations erased".
     function doneText(verb, n) {
-        return n > 1 ? `${n} ${verb.toLowerCase()}` : verb;
+        return `${n}x ${n === 1 ? 'annotation' : 'annotations'} ${verb}`;
     }
 
     function applyState(state) {
@@ -2791,7 +2787,7 @@
             unwrapAll();
         });
         startLateWatcher();
-        offerUndo(doneText('Cleared', n), step);
+        offerUndo(doneText('cleared', n), step);
         if (unsaved) offerDraft(unsaved);
     }
 
@@ -2814,7 +2810,7 @@
             pendingRecords = pendingRecords.filter(r => !missing.includes(r));
         });
         startLateWatcher();
-        offerUndo(doneText('Forgotten', n), step);
+        offerUndo(doneText('forgotten', n), step);
         if (unsaved) offerDraft(unsaved);
     }
 
@@ -2854,7 +2850,7 @@
             }
         });
         sel.removeAllRanges();
-        if (removed) offerUndo(doneText('Deleted', removed), step);
+        if (removed) offerUndo(doneText('erased', removed), step);
     }
 
     function removeInSelection({ sel, range: selected }) {
@@ -2862,11 +2858,8 @@
         const overlaps = range ? findOverlaps(range) : [];
         const step = overlaps.length ? runUndoable(() => eraseOverlaps(overlaps)) : null;
         sel.removeAllRanges();
-        // Annotations the selection covered only in part are still there.
-        const groups = Array.from(new Set(overlaps.map(o => o.group)));
-        const gone = groups.filter(g => !groupExists(g)).length;
-        const kept = groups.length - gone;
-        offerUndo(kept ? 'Erased' : doneText('Deleted', gone), step);
+        // Annotations erased only in part count too.
+        offerUndo(doneText('erased', new Set(overlaps.map(o => o.group)).size), step);
     }
 
     // What the keys act on when no text is selected: the annotation selected by clicking it, else
@@ -4798,7 +4791,7 @@
             live.forEach(g => unwrapMany(groupWrappers(g)));
             pendingRecords = pendingRecords.filter(r => !live.includes(recordOwner(r)));
         });
-        offerUndo(doneText('Deleted', live.length), step);
+        offerUndo(doneText('erased', live.length), step);
     }
 
     // The keys for the selected annotations, with or without Alt (see onKeyDown). True if used.
@@ -5032,7 +5025,7 @@
             unwrapMany(groupWrappers(group));
             pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group);
         });
-        offerUndo('Deleted', step);
+        offerUndo(doneText('erased', 1), step);
     }
 
     function forgetAnnotation(group) {
@@ -5040,7 +5033,7 @@
         closeNoteForPanel(group);
         if (!pendingRecords.some(r => recordOwner(r) === group)) return;
         const step = runUndoable(() => { pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group); });
-        offerUndo('Forgotten', step);
+        offerUndo(doneText('forgotten', 1), step);
     }
 
     // Re-anchors a saved annotation that can't be found to the text selected now. It keeps its

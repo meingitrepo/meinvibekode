@@ -28,7 +28,7 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
   await L.altKey(page, 'h');
   let w = await L.wr(page);
   L.check('Alt+H on a word inside removes the whole highlight', w.length === 0, w);
-  L.check('toast says removed', (await L.toast(page)) === 'Deleted · Undo', await L.toast(page));
+  L.check('toast says removed', (await L.toast(page)) === '1x annotation erased · Undo', await L.toast(page));
   await L.altKey(page, 'z');
   w = await L.wr(page);
   L.check('undo brings it back', w.length === 1 && w[0].t === 'quick brown fox jumps', w);
@@ -39,7 +39,7 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
   await L.selStr(page, '#p2', 'settings'); await L.altKey(page, 'u');
   w = await L.wr(page);
   L.check('same style on one piece removes every piece', w.every(x => x.k !== 'u'), w);
-  L.check('toast after removing a split one', (await L.toast(page)) === 'Deleted · Undo', await L.toast(page));
+  L.check('toast after removing a split one', (await L.toast(page)) === '1x annotation erased · Undo', await L.toast(page));
   // a different style inside: goes on top, sharing the text (7.53)
   await L.selStr(page, '#p1', 'brown'); await L.altKey(page, '1');
   w = await L.wr(page);
@@ -54,13 +54,13 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
   await L.altKey(page, 'Backspace');
   w = await L.wr(page).then(a => a.filter(x => x.k === 'h4'));
   L.check('eraser keeps the rest with its note, minus the spaces at the cut', w.map(x => x.t).join('|') === 'two three|five' && w.every(x => x.n === 'Numbers note') && new Set(w.map(x => x.g)).size === 1, w);
-  L.check('eraser toast for a part', (await L.toast(page)) === 'Erased · Undo', await L.toast(page));
+  L.check('eraser toast for a part', (await L.toast(page)) === '1x annotation erased · Undo', await L.toast(page));
   let st = await L.stored(page);
   L.check('stored pieces keep note', st.filter(r => r.key === 'h4').length === 2 && st.filter(r => r.key === 'h4').every(r => r.note === 'Numbers note'), st.filter(r => r.key === 'h4'));
   await L.selStr(page, '#p3', 'two', { endStr: 'five' }); await L.altKey(page, 'Backspace');
   w = await L.wr(page).then(a => a.filter(x => x.k === 'h4'));
   L.check('eraser over all of it removes it', w.length === 0, w);
-  L.check('eraser toast for whole', (await L.toast(page)) === 'Deleted · Undo', await L.toast(page));
+  L.check('eraser toast for whole', (await L.toast(page)) === '1x annotation erased · Undo', await L.toast(page));
   // --- trimmed, snapped selections ---
   await L.selStr(page, '#p6', ' beta gamma '); await L.altKey(page, 'h');
   w = await L.wr(page).then(a => a.filter(x => x.t.includes('beta')));

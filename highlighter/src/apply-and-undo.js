@@ -184,10 +184,6 @@
         showWrappers(rewrap(remainders), false);
     }
 
-    function groupExists(group) {
-        return groupWrappers(group).length > 0 || pendingRecords.some(r => recordOwner(r) === group);
-    }
-
     // --- Undo / redo ---
 
     function captureState() {
@@ -239,9 +235,9 @@
         return n === 1 ? '1 annotation' : `${n} annotations`;
     }
 
-    // Undo toasts say only what happened; a count only when it is more than one.
+    // Undo toasts say only how many and what happened, as "2x annotations erased".
     function doneText(verb, n) {
-        return n > 1 ? `${n} ${verb.toLowerCase()}` : verb;
+        return `${n}x ${n === 1 ? 'annotation' : 'annotations'} ${verb}`;
     }
 
     function applyState(state) {
@@ -288,7 +284,7 @@
             unwrapAll();
         });
         startLateWatcher();
-        offerUndo(doneText('Cleared', n), step);
+        offerUndo(doneText('cleared', n), step);
         if (unsaved) offerDraft(unsaved);
     }
 
@@ -311,7 +307,7 @@
             pendingRecords = pendingRecords.filter(r => !missing.includes(r));
         });
         startLateWatcher();
-        offerUndo(doneText('Forgotten', n), step);
+        offerUndo(doneText('forgotten', n), step);
         if (unsaved) offerDraft(unsaved);
     }
 

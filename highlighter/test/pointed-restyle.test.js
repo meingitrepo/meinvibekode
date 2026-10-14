@@ -72,7 +72,7 @@ async function basic(browser) {
   s = await state(p);
   st = await L.stored(p);
   check('its own style removes it (after undo/redo redrew it under a still mouse)', !s.some(w => w.g === 'gA') && !st.some(r => r.group === 'gA'), { s, st });
-  check('removal offers Undo', (await L.toast(p)) === 'Deleted · Undo', await L.toast(p));
+  check('removal offers Undo', (await L.toast(p)) === '1x annotation erased · Undo', await L.toast(p));
   await p.evaluate(() => window.__hl.toastAction.click()); await p.waitForTimeout(150);
   s = await state(p);
   check('Undo brings it back with its note', keysOf(s, 'gA').join() === 'h2' && s.find(w => w.g === 'gA').n === 'my note', s);
@@ -96,7 +96,7 @@ async function multiPiece(browser) {
   await L.altKey(p, 'Backspace');
   s = await state(p);
   check('Alt+Backspace on it removes every piece', !s.some(w => w.g === g) && keysOf(s, 'gA').join() === 'h', s);
-  check('Undo toast for the removal', (await L.toast(p)) === 'Deleted · Undo', await L.toast(p));
+  check('Undo toast for the removal', (await L.toast(p)) === '1x annotation erased · Undo', await L.toast(p));
   await ctx.close();
 }
 

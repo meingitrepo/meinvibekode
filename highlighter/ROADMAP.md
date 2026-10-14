@@ -59,6 +59,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.14 | Eraser wording | Erase toasts (and Cleared) show the eraser icon; trash stays for Forgotten and Note deleted. Eraser tooltip reads "Erase" ("Erase annotation" / "Erase 2x annotations" for clicked ones), a pressed style "Erase yellow highlight", the panel's delete button is the eraser "Erase annotation" and its note button the toolbar's note icon. Copy and missing toasts follow the toast pattern: "5x annotations copied", "1x annotation not found" |
 | 8.15 | Verb-first toasts | Every toast starts with what happened: "Erased 3x annotations", "Cleared 2x annotations", "Forgot 4x annotations", "Copied 5x annotations", "Couldn't find 1x annotation", "Deleted note" |
 | 8.16 | D erases | Alt+D erases (the selection's annotations, or the one pointed at), Alt+Shift+D clears the page; Backspace no longer does, the Delete keys stay. Alt+D (or D on a clicked one) on a single annotation with a note deletes the note first, then the annotation; several clicked ones are erased at once. In the open note editor, Delete deletes the note once there is no text after the caret. Tooltips name the keys (note card Delete: Alt+D; eraser on one clicked annotation with a note: Alt+Delete) |
+| 8.17 | Note card at the badge | The note card opens at the note badge (end of the annotation's last line) and stays put while the pointer moves between the annotation's lines; if the badge is out of view it opens next to the line under the pointer |
 
 ## Next, roughly in order
 

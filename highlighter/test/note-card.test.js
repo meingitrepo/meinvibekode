@@ -1,4 +1,4 @@
-// 7.32 item 5: note card delay, placement at the line under the pointer, Delete in its footer.
+// 7.32 item 5: note card delay and Delete in its footer; 8.17: the card opens at the note badge.
 const L = require('./lib');
 const CTX = 24;
 function rec(xpath, block, text, { key = 'h', group, extra = {} } = {}) {
@@ -54,8 +54,15 @@ async function placement(browser) {
   check('the long annotation spans several lines', ok, lines.length);
   await p.mouse.move(...center(lines[1])); await p.waitForTimeout(500);
   const c = await card(p);
-  const below = lines[1].bottom, whole = lines[lines.length - 1].bottom;
-  check('the card sits under the line the pointer is on, not under the whole annotation', c && c.top >= below && c.top < below + 20 && c.top < whole, { c, below, whole });
+  const last = lines[lines.length - 1];
+  const at = await p.evaluate(() => { const b = window.__hl.noteCardEl.getBoundingClientRect(); return { left: b.left, right: b.right }; });
+  check('the card sits under the last line, where the note badge is', c && c.top >= last.bottom && c.top < last.bottom + 20, { c, last });
+  check('centred on the badge at the end of that line', at && Math.abs((at.left + at.right) / 2 - last.right) < 2 || (at && at.left <= 4), { at, last });
+  for (const i of [0, 2]) {
+    await p.mouse.move(...center(lines[i]), { steps: 4 }); await p.waitForTimeout(80);
+    const c2 = await card(p);
+    check(`moving to line ${i + 1} leaves it where it was`, c2 && c2.text === 'Long note' && Math.abs(c2.top - c.top) < 1, { c2, c });
+  }
   await ctx.close();
 }
 

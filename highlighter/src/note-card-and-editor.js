@@ -32,8 +32,8 @@
         return nodes;
     }
 
-    // The line of `wrapper` under the pointer (the one nearest to it), so the card opens next to
-    // what is being read rather than below the whole annotation.
+    // The line of `wrapper` under the pointer (the one nearest to it). Only used when the note
+    // badge is out of view.
     function lineUnderPointer(wrapper) {
         const rects = Array.from(wrapper.getClientRects()).filter(r => r.width || r.height);
         if (!rects.length || !pointer) return wrapper.getBoundingClientRect();
@@ -42,30 +42,48 @@
         return rects.reduce((best, r) => (dist(r) < dist(best) ? r : best));
     }
 
+    // Where the card opens: at the note badge (the end of the annotation's last line), so it stays
+    // put while the pointer moves between the annotation's lines. When the badge is scrolled out
+    // of view, next to the line under the pointer instead.
+    function noteCardAnchor(wrapper) {
+        const mark = groupWrappers(wrapper.getAttribute(GROUP_ATTR)).find(w => w.hasAttribute(NOTE_MARK_ATTR)) || wrapper;
+        const rects = Array.from(mark.getClientRects()).filter(r => r.width || r.height);
+        const r = rects[rects.length - 1];
+        if (!r || r.bottom < 0 || r.top > window.innerHeight) return lineUnderPointer(wrapper);
+        return { left: r.right, right: r.right, width: 0, top: r.top, bottom: r.bottom };
+    }
+
     // Shows the note of a hovered annotation once the pointer has rested on it for
     // NOTE_CARD_DELAY_MS, so passing over notes on the way somewhere else opens nothing. While a
     // card is open, moving to another note switches at once.
     function scheduleNoteCard(wrapper) {
         clearTimeout(cardHideTimer);
         clearTimeout(cardShowTimer);
-        if (cardWrapper === wrapper && !noteCardEl.hidden) return;
+        if (sameCard(wrapper)) return;
         if (!noteCardEl.hidden) { showNoteCard(wrapper); return; }
         cardShowTimer = setTimeout(() => {
             if (hoveredWrapper === wrapper && wrapper.isConnected && !annotationsHidden && !editor) showNoteCard(wrapper);
         }, NOTE_CARD_DELAY_MS);
     }
 
+    // Another piece of the annotation whose card is open (one split across links) keeps that card.
+    function sameCard(wrapper) {
+        return !noteCardEl.hidden && cardWrapper && (cardWrapper === wrapper ||
+            (cardWrapper.isConnected && wrapper.hasAttribute(GROUP_ATTR) &&
+             cardWrapper.getAttribute(GROUP_ATTR) === wrapper.getAttribute(GROUP_ATTR)));
+    }
+
     function showNoteCard(wrapper) {
         clearTimeout(cardHideTimer);
         clearTimeout(cardShowTimer);
-        if (cardWrapper === wrapper && !noteCardEl.hidden) return;
+        if (sameCard(wrapper)) return;
         ensureUi(wrapper.hasAttribute(DARK_ATTR));
         cardWrapper = wrapper;
         cardText.replaceChildren(...noteNodes(wrapper.getAttribute(NOTE_ATTR) || ''));
         const time = annotationTime(wrapper);
         cardHint.textContent = time ? `Added ${formatDate(time)}` : 'Alt+N to edit';
         noteCardEl.hidden = false;
-        placePanel(noteCardEl, lineUnderPointer(wrapper), true);
+        placePanel(noteCardEl, noteCardAnchor(wrapper), true);
     }
 
     function hideNoteCard() {

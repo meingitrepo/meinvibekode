@@ -16,7 +16,7 @@
             unwrapMany(groupWrappers(group));
             pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group);
         });
-        offerUndo(doneText('erased', 1), step);
+        offerUndo(doneText('Erased', 1), step);
     }
 
     function forgetAnnotation(group) {
@@ -24,7 +24,7 @@
         closeNoteForPanel(group);
         if (!pendingRecords.some(r => recordOwner(r) === group)) return;
         const step = runUndoable(() => { pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group); });
-        offerUndo(doneText('forgotten', 1), step, 'delete_20_regular');
+        offerUndo(doneText('Forgot', 1), step, 'delete_20_regular');
     }
 
     // Re-anchors a saved annotation that can't be found to the text selected now. It keeps its

@@ -45,7 +45,7 @@ async function removalKeepsUndo(browser) {
   await L.altKey(p, 'v');
   await L.selStr(p, '#p1', 'alpha one');
   await L.altKey(p, 'Backspace');
-  check('erasing while hidden: shown again, and the Undo message stays', (await hiddenNow(p)) === false && (await L.toast(p)) === '1x annotation erased · Undo', await L.toast(p));
+  check('erasing while hidden: shown again, and the Undo message stays', (await hiddenNow(p)) === false && (await L.toast(p)) === 'Erased 1x annotation · Undo', await L.toast(p));
   await L.altKey(p, 'v');
   check('hiding replaces the Undo message', (await L.toast(p)) === 'Annotations hidden · Show', await L.toast(p));
   await L.altKey(p, 'z');

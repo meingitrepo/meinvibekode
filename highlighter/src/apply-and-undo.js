@@ -235,9 +235,9 @@
         return n === 1 ? '1 annotation' : `${n} annotations`;
     }
 
-    // Undo toasts say only how many and what happened, as "2x annotations erased".
+    // Toasts say only what happened and to how many, verb first, as "Erased 2x annotations".
     function doneText(verb, n) {
-        return `${n}x ${n === 1 ? 'annotation' : 'annotations'} ${verb}`;
+        return `${verb} ${n}x ${n === 1 ? 'annotation' : 'annotations'}`;
     }
 
     function applyState(state) {
@@ -284,7 +284,7 @@
             unwrapAll();
         });
         startLateWatcher();
-        offerUndo(doneText('cleared', n), step);
+        offerUndo(doneText('Cleared', n), step);
         if (unsaved) offerDraft(unsaved);
     }
 
@@ -307,7 +307,7 @@
             pendingRecords = pendingRecords.filter(r => !missing.includes(r));
         });
         startLateWatcher();
-        offerUndo(doneText('forgotten', n), step, 'delete_20_regular');
+        offerUndo(doneText('Forgot', n), step, 'delete_20_regular');
         if (unsaved) offerDraft(unsaved);
     }
 

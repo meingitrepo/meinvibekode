@@ -183,7 +183,7 @@
             return;
         }
         writeClipboard(markdown).then(
-            () => showToast(doneText('copied', list.length), { icon: 'copy_20_regular' }),
+            () => showToast(doneText('Copied', list.length), { icon: 'copy_20_regular' }),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy to the clipboard.'); });
     }
 

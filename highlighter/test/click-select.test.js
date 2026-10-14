@@ -39,7 +39,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px">
     await page.keyboard.press('Delete'); await page.waitForTimeout(150);
     w = await L.wr(page);
     L.check(`${scheme} Delete removes`, w.length === 0, w);
-    L.check(`${scheme} undo toast`, /^1x annotation erased · Undo$/.test(await L.toast(page) || ''), await L.toast(page));
+    L.check(`${scheme} undo toast`, /^Erased 1x annotation · Undo$/.test(await L.toast(page) || ''), await L.toast(page));
     await page.waitForTimeout(50);
     L.check(`${scheme} box gone with it`, !(await box()), await box());
     await L.altKey(page, 'KeyZ');

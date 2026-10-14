@@ -69,7 +69,7 @@ ${filler(40)}
   L.check('markdown escapes', md.includes('> \\*star\\* and \\_under\\_'), md);
   L.check('markdown context for repeated', /text=Here%2E?|text=[^)]*Repeated%20words[^)]*/.test(md) && md.includes('-,Repeated%20words') === false, md);
   const tst = await L.toast(page);
-  L.check('copy toast', tst === '5x annotations copied', tst);
+  L.check('copy toast', tst === 'Copied 5x annotations', tst);
   // edit note from panel
   await page.evaluate(() => { const el = Array.from(window.__hl.panelList.querySelectorAll('[data-group]')).find(e => e.querySelector('.item-text').textContent === 'three four'); el.querySelector('[data-act="note"]').click(); });
   await page.waitForTimeout(200);
@@ -82,7 +82,7 @@ ${filler(40)}
   await page.evaluate(() => { const el = Array.from(window.__hl.panelList.querySelectorAll('[data-group]')).find(e => e.querySelector('.item-text').textContent === 'three four'); el.querySelector('[data-act="delete"]').click(); });
   await page.waitForTimeout(200);
   it = await L.items(page);
-  L.check('delete', !it.some(i => i.text === 'three four') && (await L.toast(page)) === '1x annotation erased · Undo', [it.length, await L.toast(page)]);
+  L.check('delete', !it.some(i => i.text === 'three four') && (await L.toast(page)) === 'Erased 1x annotation · Undo', [it.length, await L.toast(page)]);
   st = await L.stored(page);
   L.check('delete stored', !st.some(r => r.text === 'three four'), st.length);
   await page.evaluate(() => window.__hl.toastAction.click()); await page.waitForTimeout(200);
@@ -115,7 +115,7 @@ ${filler(40)}
   await page.evaluate(() => window.__hl.panelList.querySelector('.missing [data-act="forget"]').click());
   await page.waitForTimeout(150);
   st = await L.stored(page);
-  L.check('forget', !st.some(r => r.text === 'Gone forever') && /^1x annotation forgotten · Undo$/.test(await L.toast(page)), st.length);
+  L.check('forget', !st.some(r => r.text === 'Gone forever') && /^Forgot 1x annotation · Undo$/.test(await L.toast(page)), st.length);
   // close with Alt+O
   await L.altKey(page, 'o');
   L.check('Alt+O closes', await page.evaluate(() => window.__hl.panelEl.hidden));

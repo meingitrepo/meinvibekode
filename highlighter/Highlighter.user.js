@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.14
+// @version      8.15
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -2285,7 +2285,7 @@
         if (document.hidden) { noticeDue = true; return; }
         noticedKeys.add(currentKey);
         if (!toastEl.hidden && toastRun) return;
-        showToast(doneText('not found', missing), { icon: 'search_20_regular', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
+        showToast(doneText('Couldn\'t find', missing), { icon: 'search_20_regular', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
     }
 
     function restoreHighlights() {
@@ -2751,9 +2751,9 @@
         return n === 1 ? '1 annotation' : `${n} annotations`;
     }
 
-    // Undo toasts say only how many and what happened, as "2x annotations erased".
+    // Toasts say only what happened and to how many, verb first, as "Erased 2x annotations".
     function doneText(verb, n) {
-        return `${n}x ${n === 1 ? 'annotation' : 'annotations'} ${verb}`;
+        return `${verb} ${n}x ${n === 1 ? 'annotation' : 'annotations'}`;
     }
 
     function applyState(state) {
@@ -2800,7 +2800,7 @@
             unwrapAll();
         });
         startLateWatcher();
-        offerUndo(doneText('cleared', n), step);
+        offerUndo(doneText('Cleared', n), step);
         if (unsaved) offerDraft(unsaved);
     }
 
@@ -2823,7 +2823,7 @@
             pendingRecords = pendingRecords.filter(r => !missing.includes(r));
         });
         startLateWatcher();
-        offerUndo(doneText('forgotten', n), step, 'delete_20_regular');
+        offerUndo(doneText('Forgot', n), step, 'delete_20_regular');
         if (unsaved) offerDraft(unsaved);
     }
 
@@ -2863,7 +2863,7 @@
             }
         });
         sel.removeAllRanges();
-        if (removed) offerUndo(doneText('erased', removed), step);
+        if (removed) offerUndo(doneText('Erased', removed), step);
     }
 
     function removeInSelection({ sel, range: selected }) {
@@ -2872,7 +2872,7 @@
         const step = overlaps.length ? runUndoable(() => eraseOverlaps(overlaps)) : null;
         sel.removeAllRanges();
         // Annotations erased only in part count too.
-        offerUndo(doneText('erased', new Set(overlaps.map(o => o.group)).size), step);
+        offerUndo(doneText('Erased', new Set(overlaps.map(o => o.group)).size), step);
     }
 
     // What the keys act on when no text is selected: the annotation selected by clicking it, else
@@ -4135,7 +4135,7 @@
         const group = w.getAttribute(GROUP_ATTR);
         if (editor) cancelEditor();
         const changed = runUndoable(() => setGroupNote(group, ''));
-        offerUndo('Note deleted', changed, 'delete_20_regular');
+        offerUndo('Deleted note', changed, 'delete_20_regular');
     });
 
     // --- Note editor ---
@@ -4311,7 +4311,7 @@
         }
         if (text !== original) {
             const changed = runUndoable(() => setGroupNote(group, text));
-            if (!text) offerUndo('Note deleted', changed, 'delete_20_regular');
+            if (!text) offerUndo('Deleted note', changed, 'delete_20_regular');
         }
     }
 
@@ -4326,7 +4326,7 @@
             return;
         }
         const changed = runUndoable(() => waiting.forEach(r => { r.note = text || undefined; }));
-        if (!text) offerUndo('Note deleted', changed, 'delete_20_regular');
+        if (!text) offerUndo('Deleted note', changed, 'delete_20_regular');
     }
 
     // Returns the unsaved text, if any, as { group, draft, records } (see offerDraft), which
@@ -4804,7 +4804,7 @@
             live.forEach(g => unwrapMany(groupWrappers(g)));
             pendingRecords = pendingRecords.filter(r => !live.includes(recordOwner(r)));
         });
-        offerUndo(doneText('erased', live.length), step);
+        offerUndo(doneText('Erased', live.length), step);
     }
 
     // The keys for the selected annotations, with or without Alt (see onKeyDown). True if used.
@@ -5016,7 +5016,7 @@
             return;
         }
         writeClipboard(markdown).then(
-            () => showToast(doneText('copied', list.length), { icon: 'copy_20_regular' }),
+            () => showToast(doneText('Copied', list.length), { icon: 'copy_20_regular' }),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy to the clipboard.'); });
     }
 
@@ -5038,7 +5038,7 @@
             unwrapMany(groupWrappers(group));
             pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group);
         });
-        offerUndo(doneText('erased', 1), step);
+        offerUndo(doneText('Erased', 1), step);
     }
 
     function forgetAnnotation(group) {
@@ -5046,7 +5046,7 @@
         closeNoteForPanel(group);
         if (!pendingRecords.some(r => recordOwner(r) === group)) return;
         const step = runUndoable(() => { pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group); });
-        offerUndo(doneText('forgotten', 1), step, 'delete_20_regular');
+        offerUndo(doneText('Forgot', 1), step, 'delete_20_regular');
     }
 
     // Re-anchors a saved annotation that can't be found to the text selected now. It keeps its

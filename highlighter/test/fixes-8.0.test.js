@@ -51,7 +51,7 @@ const L = require('./lib');
     await page.keyboard.press('Enter'); await page.waitForTimeout(300);
     const w = await L.wr(page);
     L.check('Enter on Delete deletes the note, the highlight stays', w.length === 1 && !w[0].n, w);
-    L.check('with Undo offered', (await L.toast(page)) === 'Note deleted · Undo', await L.toast(page));
+    L.check('with Undo offered', (await L.toast(page)) === 'Deleted note · Undo', await L.toast(page));
   }
   await L.done(b);
 })();

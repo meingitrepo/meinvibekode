@@ -57,6 +57,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.12 | Counted Undo toasts | Removal toasts read "1x annotation erased" / "3x annotations erased" (also for a partial erase, and with notes), "2x annotations cleared", "4x annotations forgotten"; "Note deleted" stays (was 8.10's "Deleted", "3 deleted", "Erased") |
 | 8.13 | Note badge | Annotations with a note show a small blue speech bubble with three dots on their top-right corner, half above the line and rimmed in the background's color so it stands out on any highlight or line, stacked or not; lighter blue with a dark rim on dark backgrounds. Grows with the font, never moves text (was a small red corner tick) |
 | 8.14 | Eraser wording | Erase toasts (and Cleared) show the eraser icon; trash stays for Forgotten and Note deleted. Eraser tooltip reads "Erase" ("Erase annotation" / "Erase 2x annotations" for clicked ones), a pressed style "Erase yellow highlight", the panel's delete button is the eraser "Erase annotation" and its note button the toolbar's note icon. Copy and missing toasts follow the toast pattern: "5x annotations copied", "1x annotation not found" |
+| 8.15 | Verb-first toasts | Every toast starts with what happened: "Erased 3x annotations", "Cleared 2x annotations", "Forgot 4x annotations", "Copied 5x annotations", "Couldn't find 1x annotation", "Deleted note" |
 
 ## Next, roughly in order
 

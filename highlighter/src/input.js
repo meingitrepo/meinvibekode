@@ -34,7 +34,7 @@
             }
         });
         sel.removeAllRanges();
-        if (removed) offerUndo(doneText('erased', removed), step);
+        if (removed) offerUndo(doneText('Erased', removed), step);
     }
 
     function removeInSelection({ sel, range: selected }) {
@@ -43,7 +43,7 @@
         const step = overlaps.length ? runUndoable(() => eraseOverlaps(overlaps)) : null;
         sel.removeAllRanges();
         // Annotations erased only in part count too.
-        offerUndo(doneText('erased', new Set(overlaps.map(o => o.group)).size), step);
+        offerUndo(doneText('Erased', new Set(overlaps.map(o => o.group)).size), step);
     }
 
     // What the keys act on when no text is selected: the annotation selected by clicking it, else

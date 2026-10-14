@@ -288,7 +288,7 @@
         if (document.hidden) { noticeDue = true; return; }
         noticedKeys.add(currentKey);
         if (!toastEl.hidden && toastRun) return;
-        showToast(doneText('not found', missing), { icon: 'search_20_regular', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
+        showToast(doneText('Couldn\'t find', missing), { icon: 'search_20_regular', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
     }
 
     function restoreHighlights() {

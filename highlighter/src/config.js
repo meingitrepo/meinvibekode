@@ -25,7 +25,7 @@
     const SETTINGS_KEY = 'rnh:settings';       // per-site on/off, toolbar on/off; every other stored key is a page
                                                // ('rnh' is the old name, RoughNotation Highlighter: kept so saved settings stay)
 
-    const GLOBAL_ANIMATION_DURATION = 200;
+    const DRAW_IN_MS = 200;                    // a new annotation draws in over this long
     const ANIMATE_ON_RESTORE = false;          // restored annotations appear instantly
     const CONTEXT_LENGTH = 24;                 // prefix/suffix characters stored per record
     const UNDO_STACK_LIMIT = 20;
@@ -69,8 +69,7 @@
     //   color      color of the annotation drawing (any CSS color: '#FFF176', 'green', ...)
     //   textColor  color of the annotated text ('' = keep the page's own text color)
     //   type       'highlight', 'underline' or 'strike-through'
-    //   strokeWidth, padding   underline and strike-through only: line width, and the gap
-    //              below the text (padding's third value) for an underline
+    //   strokeWidth  underline and strike-through only: line width in px (1 if left out)
     // A highlight is always 95% of the line's height (see "Drawing").
     // The selection toolbar shows the styles in this order.
     // The style's name (h, h2, u, ...) is what gets saved with each annotation, so renaming
@@ -89,8 +88,8 @@
         h3: { ...HIGHLIGHT, label: 'Blue highlight', retired: true, color: '#90CAF9' },
         h4: { ...HIGHLIGHT, label: 'Pink highlight', shortcut: 'Digit4', color: '#F48FB1' },
         h5: { ...HIGHLIGHT, label: 'Orange highlight', retired: true, color: '#FFCC80' },
-        u:  { label: 'Underline', shortcut: 'KeyU', type: 'underline', color: '#EF5350', textColor: '', strokeWidth: 1, padding: 0 },
-        s:  { label: 'Strikethrough', shortcut: 'KeyS', type: 'strike-through', color: '#EF5350', textColor: '', strokeWidth: 1, padding: 0 }
+        u:  { label: 'Underline', shortcut: 'KeyU', type: 'underline', color: '#EF5350', textColor: '', strokeWidth: 1 },
+        s:  { label: 'Strikethrough', shortcut: 'KeyS', type: 'strike-through', color: '#EF5350', textColor: '', strokeWidth: 1 }
     };
     const DARK_OVERRIDES = {
         h:  { color: '#806000' },   // dark gold
@@ -104,8 +103,6 @@
     const MIN_TEXT_CONTRAST = 3;                // below this against its highlight, text turns dark or light
     const INK = { dark: '#1b1b1b', light: '#ffffff' };   // the text colors it turns to
     // ------------------------------------------------------------------------
-
-    const OWN_STYLE_FIELDS = ['label', 'shortcut', 'textColor', 'retired'];   // not drawing settings
 
     const CODE_TO_STYLE = new Map();
     Object.keys(STYLES).forEach(k => {

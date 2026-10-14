@@ -41,7 +41,7 @@
     // Returns the wrappers of the new annotation. `own` ({ group, note, added }) gives it an
     // identity of its own (a saved annotation attached to new text) instead of inheriting one.
     function applyAnnotation(range, key, overlaps, own = null) {
-        if (!getStyleConfig(key)) return [];
+        if (!hasOwn(STYLES, key)) return [];
 
         // Everything is measured before the first DOM change, because unwrapping invalidates the range.
         const startBlock = getBlockParent(range.startContainer);
@@ -150,7 +150,7 @@
         const from = same.find(o => o.group === group);
         return {
             group,
-            note: notes.join('\n\n').slice(0, NOTE_MAX_LENGTH).replace(/[\uD800-\uDBFF]$/, '').trim() || undefined,
+            note: clipNote(notes.join('\n\n')) || undefined,
             added: own ? own.added : from && from.added,
             page: pageTag(),   // made here, whatever it absorbed
             absorbed

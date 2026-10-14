@@ -77,9 +77,10 @@
     // joined halfway between lines into one outline with rounded corners. Rows that don't touch
     // (a line ending left of where the line above it starts) get outlines of their own. Returns
     // the box holding them all, in the viewport, and the outlines as path data within it.
-    function groupOutline(group) {
+    // `rects`: the annotation's line boxes (groupClientRects).
+    function groupOutline(rects) {
         const rows = [];
-        groupClientRects(group).sort((a, b) => a.top - b.top).forEach(r => {
+        rects.slice().sort((a, b) => a.top - b.top).forEach(r => {
             const row = rows.find(o => Math.min(o.bottom, r.bottom) - Math.max(o.top, r.top) > Math.min(o.bottom - o.top, r.height) / 2);
             if (row) Object.assign(row, { top: Math.min(row.top, r.top), bottom: Math.max(row.bottom, r.bottom), left: Math.min(row.left, r.left), right: Math.max(row.right, r.right) });
             else rows.push({ top: r.top, bottom: r.bottom, left: r.left, right: r.right });
@@ -147,14 +148,15 @@
     function followSelectBoxes() {
         selectFrame = 0;
         if (!selectedGroups.length) return;
-        const gone = selectedGroups.filter(g => !groupRect(g));
+        const rects = new Map(selectedGroups.map(g => [g, groupClientRects(g)]));
+        const gone = selectedGroups.filter(g => !rects.get(g).length);
         if (gone.length) {
             setSelectedGroups(selectedGroups.filter(g => !gone.includes(g)));
             if (!selectedGroups.length) return;
         }
         selectedGroups.forEach(g => {
             const box = selectBoxes.get(g);
-            const { rect, d } = groupOutline(g);
+            const { rect, d } = groupOutline(rects.get(g));
             const at = `${rect.left},${rect.top},${rect.width},${rect.height} ${d}`;
             if (at !== box.at) {
                 box.at = at;

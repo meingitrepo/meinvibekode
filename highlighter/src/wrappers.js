@@ -42,23 +42,26 @@
 
     let selectionMarkCount = 0;
     const selectionOverlays = new Set();
-    function markSelected(svg, wrapper, range) {
+
+    // What markSelected needs to know about the selected part of one annotation. Every
+    // annotation in the selection is measured before any is marked, so the page is laid out
+    // once, not once per annotation (marking changes the page).
+    function measureSelected(wrapper, range) {
+        const svg = getSvg(wrapper);
+        if (!svg) return null;
         const part = document.createRange();
         part.selectNodeContents(wrapper);
         if (range.compareBoundaryPoints(Range.START_TO_START, part) > 0) part.setStart(range.startContainer, range.startOffset);
         if (range.compareBoundaryPoints(Range.END_TO_END, part) < 0) part.setEnd(range.endContainer, range.endOffset);
-        const rects = textRects(part);
+        return { svg, wrapper, rects: textRects(part), o: svg.getBoundingClientRect() };
+    }
+
+    function markSelected({ svg, wrapper, rects, o }) {
         const paths = Array.from(svg.children).filter(el => el.tagName.toLowerCase() === 'path');
         if (!rects.length || !paths.length) return;
         const config = annotationMap.get(wrapper).config;
-        const width = config.strokeWidth || 2;
-        const o = svg.getBoundingClientRect();
+        const width = config.strokeWidth;
         const n = ++selectionMarkCount;
-        const svgEl = (tag, attrs) => {
-            const el = document.createElementNS(SVG_NS, tag);
-            Object.keys(attrs).forEach(k => el.setAttribute(k, String(attrs[k])));
-            return el;
-        };
         const box = (r, grow) => ({ x: r.left - o.left, y: r.top - o.top - grow, width: r.width, height: r.height + 2 * grow });
         const g = svgEl('g', { [SELECTED_ATTR]: '' });
         const clip = svgEl('clipPath', { id: `highlighter-selected-${n}`, clipPathUnits: 'userSpaceOnUse' });
@@ -143,11 +146,7 @@
             if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
             let range;
             try { range = sel.getRangeAt(0); } catch (e) { return; }
-            candidateWrappers(range).forEach(w => {
-                const ann = annotationMap.get(w);
-                const svg = getSvg(w);
-                if (svg) markSelected(svg, w, range);
-            });
+            candidateWrappers(range).map(w => measureSelected(w, range)).filter(Boolean).forEach(markSelected);
         });
     }
 
@@ -239,7 +238,7 @@
                 });
             });
             pendingRecords.forEach(r => { if (recordOwner(r) === from) r.group = into; });
-            setGroupNote(into, notes.join('\n\n').slice(0, NOTE_MAX_LENGTH).replace(/[\uD800-\uDBFF]$/, '').trim());
+            setGroupNote(into, clipNote(notes.join('\n\n')));
         });
     }
 
@@ -248,7 +247,7 @@
     // With `draw` false it is only rebuilt: the caller draws it (see restyleGroups).
     function restyle(wrapper, { animate = false, draw = true } = {}) {
         const dark = darkBehind(wrapper);
-        const config = getStyleConfig(wrapper.getAttribute(STYLE_ATTR), { animate, dark });
+        const config = getStyleConfig(wrapper.getAttribute(STYLE_ATTR), dark);
         if (!config) return;
         wrapper.toggleAttribute(DARK_ATTR, dark);
         updateInk(wrapper);
@@ -256,7 +255,7 @@
         const oldSvg = getSvg(wrapper);
         if (oldSvg) selectedSVGs.delete(oldSvg);
         if (old) old.remove();
-        const ann = makeAnnotation(wrapper, config);
+        const ann = makeAnnotation(wrapper, config, animate);
         annotationMap.set(wrapper, ann);
         redrawInner(wrapper);
         if (!draw) return ann;
@@ -355,7 +354,7 @@
         wrapper.setAttribute(WRAPPER_ATTR, 'true');
         wrapper.setAttribute(STYLE_ATTR, key);
         wrapper.setAttribute(GROUP_ATTR, meta.group);
-        if (typeof meta.note === 'string' && meta.note) wrapper.setAttribute(NOTE_ATTR, meta.note.slice(0, NOTE_MAX_LENGTH));
+        if (typeof meta.note === 'string' && meta.note) wrapper.setAttribute(NOTE_ATTR, clipNote(meta.note));
         if (meta.added) wrapper.setAttribute(ADDED_ATTR, String(meta.added));
         if (typeof meta.page === 'string') wrapper.setAttribute(PAGE_ATTR, meta.page);
         try {
@@ -364,7 +363,7 @@
             const dark = darkBehind(wrapper);
             if (dark) wrapper.setAttribute(DARK_ATTR, '');
             updateInk(wrapper);
-            annotationMap.set(wrapper, makeAnnotation(wrapper, getStyleConfig(key, { dark })));
+            annotationMap.set(wrapper, makeAnnotation(wrapper, getStyleConfig(key, dark), true));
             redrawInner(wrapper);
             return wrapper;
         } catch (err) {

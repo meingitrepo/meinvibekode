@@ -152,13 +152,18 @@
             if (penKey) setPen(penKey);
         }
         if (!panelEl.hidden) setPanelTheme(next);
-        let changed = false;
-        allWrappers().forEach(w => {
-            if (darkBehind(w) === w.hasAttribute(DARK_ATTR)) { updateInk(w); return; }   // its text color may have changed
-            restyle(w);
-            changed = true;
+        // Those whose background changed are all rebuilt first, then drawn together: one layout
+        // of the page, not one per annotation.
+        const flipped = allWrappers().filter(w => {
+            if (darkBehind(w) !== w.hasAttribute(DARK_ATTR)) return true;
+            updateInk(w);   // its text color may have changed
+            return false;
         });
-        if (changed) updateSelectionVisibility();
+        const rebuilt = flipped.map(w => restyle(w, { draw: false })).filter(Boolean);
+        if (!rebuilt.length) return;
+        drawAnnotations(rebuilt);
+        rebuilt.forEach(a => snapshotRect(a.element));
+        updateSelectionVisibility();
     }
 
     let themeTimers = [];
@@ -212,12 +217,12 @@
         return { ...STYLES[key], ...(dark && hasOwn(DARK_OVERRIDES, key) ? DARK_OVERRIDES[key] : null) };
     }
 
-    function getStyleConfig(key, { animate = true, dark } = {}) {
+    // What drawing style `key` takes (on a dark background when `dark`): its type, color and
+    // line width. Null for a style that doesn't exist.
+    function getStyleConfig(key, dark) {
         if (!hasOwn(STYLES, key)) return null;
-        const config = { animate, animationDuration: GLOBAL_ANIMATION_DURATION, ...resolveStyle(key, dark) };
-        OWN_STYLE_FIELDS.forEach(f => { delete config[f]; });
-        Object.keys(config).forEach(k => { if (config[k] === undefined) delete config[k]; });
-        return config;
+        const { type, color, strokeWidth } = resolveStyle(key, dark);
+        return { type, color, strokeWidth: strokeWidth || 1 };
     }
 
     function getTextColor(key, dark) {

@@ -125,7 +125,7 @@
     const SETTINGS_KEY = 'rnh:settings';       // per-site on/off, toolbar on/off; every other stored key is a page
                                                // ('rnh' is the old name, RoughNotation Highlighter: kept so saved settings stay)
 
-    const GLOBAL_ANIMATION_DURATION = 200;
+    const DRAW_IN_MS = 200;                    // a new annotation draws in over this long
     const ANIMATE_ON_RESTORE = false;          // restored annotations appear instantly
     const CONTEXT_LENGTH = 24;                 // prefix/suffix characters stored per record
     const UNDO_STACK_LIMIT = 20;
@@ -169,8 +169,7 @@
     //   color      color of the annotation drawing (any CSS color: '#FFF176', 'green', ...)
     //   textColor  color of the annotated text ('' = keep the page's own text color)
     //   type       'highlight', 'underline' or 'strike-through'
-    //   strokeWidth, padding   underline and strike-through only: line width, and the gap
-    //              below the text (padding's third value) for an underline
+    //   strokeWidth  underline and strike-through only: line width in px (1 if left out)
     // A highlight is always 95% of the line's height (see "Drawing").
     // The selection toolbar shows the styles in this order.
     // The style's name (h, h2, u, ...) is what gets saved with each annotation, so renaming
@@ -189,8 +188,8 @@
         h3: { ...HIGHLIGHT, label: 'Blue highlight', retired: true, color: '#90CAF9' },
         h4: { ...HIGHLIGHT, label: 'Pink highlight', shortcut: 'Digit4', color: '#F48FB1' },
         h5: { ...HIGHLIGHT, label: 'Orange highlight', retired: true, color: '#FFCC80' },
-        u:  { label: 'Underline', shortcut: 'KeyU', type: 'underline', color: '#EF5350', textColor: '', strokeWidth: 1, padding: 0 },
-        s:  { label: 'Strikethrough', shortcut: 'KeyS', type: 'strike-through', color: '#EF5350', textColor: '', strokeWidth: 1, padding: 0 }
+        u:  { label: 'Underline', shortcut: 'KeyU', type: 'underline', color: '#EF5350', textColor: '', strokeWidth: 1 },
+        s:  { label: 'Strikethrough', shortcut: 'KeyS', type: 'strike-through', color: '#EF5350', textColor: '', strokeWidth: 1 }
     };
     const DARK_OVERRIDES = {
         h:  { color: '#806000' },   // dark gold
@@ -204,8 +203,6 @@
     const MIN_TEXT_CONTRAST = 3;                // below this against its highlight, text turns dark or light
     const INK = { dark: '#1b1b1b', light: '#ffffff' };   // the text colors it turns to
     // ------------------------------------------------------------------------
-
-    const OWN_STYLE_FIELDS = ['label', 'shortcut', 'textColor', 'retired'];   // not drawing settings
 
     const CODE_TO_STYLE = new Map();
     Object.keys(STYLES).forEach(k => {
@@ -461,13 +458,18 @@
             if (penKey) setPen(penKey);
         }
         if (!panelEl.hidden) setPanelTheme(next);
-        let changed = false;
-        allWrappers().forEach(w => {
-            if (darkBehind(w) === w.hasAttribute(DARK_ATTR)) { updateInk(w); return; }   // its text color may have changed
-            restyle(w);
-            changed = true;
+        // Those whose background changed are all rebuilt first, then drawn together: one layout
+        // of the page, not one per annotation.
+        const flipped = allWrappers().filter(w => {
+            if (darkBehind(w) !== w.hasAttribute(DARK_ATTR)) return true;
+            updateInk(w);   // its text color may have changed
+            return false;
         });
-        if (changed) updateSelectionVisibility();
+        const rebuilt = flipped.map(w => restyle(w, { draw: false })).filter(Boolean);
+        if (!rebuilt.length) return;
+        drawAnnotations(rebuilt);
+        rebuilt.forEach(a => snapshotRect(a.element));
+        updateSelectionVisibility();
     }
 
     let themeTimers = [];
@@ -521,12 +523,12 @@
         return { ...STYLES[key], ...(dark && hasOwn(DARK_OVERRIDES, key) ? DARK_OVERRIDES[key] : null) };
     }
 
-    function getStyleConfig(key, { animate = true, dark } = {}) {
+    // What drawing style `key` takes (on a dark background when `dark`): its type, color and
+    // line width. Null for a style that doesn't exist.
+    function getStyleConfig(key, dark) {
         if (!hasOwn(STYLES, key)) return null;
-        const config = { animate, animationDuration: GLOBAL_ANIMATION_DURATION, ...resolveStyle(key, dark) };
-        OWN_STYLE_FIELDS.forEach(f => { delete config[f]; });
-        Object.keys(config).forEach(k => { if (config[k] === undefined) delete config[k]; });
-        return config;
+        const { type, color, strokeWidth } = resolveStyle(key, dark);
+        return { type, color, strokeWidth: strokeWidth || 1 };
     }
 
     function getTextColor(key, dark) {
@@ -625,22 +627,6 @@
 
     const SVG_NS = 'http://www.w3.org/2000/svg';   // also used by the UI's icons
 
-    function normalizePadding(p) {
-        if (p || p === 0) {
-            if (typeof p === 'number') return [p, p, p, p];
-            if (Array.isArray(p) && p.length) {
-                switch (p.length) {
-                    case 4: return [...p];
-                    case 1: return [p[0], p[0], p[0], p[0]];
-                    case 2: return [...p, ...p];
-                    case 3: return [...p, p[1]];
-                    default: return [p[0], p[1], p[2], p[3]];
-                }
-            }
-        }
-        return [5, 5, 5, 5];
-    }
-
     function line(sx, sy, ex, ey) {
         return `M${sx} ${sy} L${ex} ${ey}`;
     }
@@ -718,8 +704,7 @@
 
     // One straight stroke per line box: [path data, stroke width, length].
     function strokesFor(config, { rects, strike, band }) {
-        const pad = normalizePadding(config.padding);
-        const width = config.strokeWidth || 2;
+        const width = config.strokeWidth;
         const out = [];
         rects.forEach((r, i) => {
             if (config.type === 'highlight') {
@@ -730,7 +715,7 @@
             } else {
                 // An underline sits just inside the bottom of the line box, where a selection
                 // still covers it (see markSelected).
-                const y = config.type === 'underline' ? r.y + r.h - width / 2 - 1 + pad[2] : strike[i];
+                const y = config.type === 'underline' ? r.y + r.h - width / 2 - 1 : strike[i];
                 out.push([line(r.x, y, r.x + r.w, y), width, r.w]);
             }
         });
@@ -770,7 +755,7 @@
     // The svg's own box is 1px: the strokes show outside it, but the box counts as page content,
     // and a bigger one adds scrolling where it sticks out (from a highlight near the edge of a
     // scrolling box, say). At 0px the browser wouldn't draw it at all.
-    function makeAnnotation(element, config) {
+    function makeAnnotation(element, config, animate) {
         const svg = document.createElementNS(SVG_NS, 'svg');
         svg.setAttribute('class', 'highlighter-annotation');
         svg.setAttribute(SVG_ATTR, '');
@@ -786,7 +771,7 @@
         return {
             element, config, svg,
             drawn: false,              // a redraw never animates
-            animate: !!config.animate,
+            animate,                   // a first drawing draws in
             remove() {
                 if (this.svg && this.svg.parentNode) this.svg.parentNode.removeChild(this.svg);
                 this.svg = null;
@@ -815,7 +800,7 @@
             if (!measured[i]) return;
             const animate = !a.drawn && a.animate;
             const group = groupOf(a);
-            const full = a.config.animationDuration || 0;
+            const full = DRAW_IN_MS;
             const total = lengths.get(group);
             const duration = animate ? (total ? full * lengthOf(measured[i]) / total : full) : 0;
             if (animate && !starts.has(group)) {
@@ -1196,23 +1181,26 @@
 
     let selectionMarkCount = 0;
     const selectionOverlays = new Set();
-    function markSelected(svg, wrapper, range) {
+
+    // What markSelected needs to know about the selected part of one annotation. Every
+    // annotation in the selection is measured before any is marked, so the page is laid out
+    // once, not once per annotation (marking changes the page).
+    function measureSelected(wrapper, range) {
+        const svg = getSvg(wrapper);
+        if (!svg) return null;
         const part = document.createRange();
         part.selectNodeContents(wrapper);
         if (range.compareBoundaryPoints(Range.START_TO_START, part) > 0) part.setStart(range.startContainer, range.startOffset);
         if (range.compareBoundaryPoints(Range.END_TO_END, part) < 0) part.setEnd(range.endContainer, range.endOffset);
-        const rects = textRects(part);
+        return { svg, wrapper, rects: textRects(part), o: svg.getBoundingClientRect() };
+    }
+
+    function markSelected({ svg, wrapper, rects, o }) {
         const paths = Array.from(svg.children).filter(el => el.tagName.toLowerCase() === 'path');
         if (!rects.length || !paths.length) return;
         const config = annotationMap.get(wrapper).config;
-        const width = config.strokeWidth || 2;
-        const o = svg.getBoundingClientRect();
+        const width = config.strokeWidth;
         const n = ++selectionMarkCount;
-        const svgEl = (tag, attrs) => {
-            const el = document.createElementNS(SVG_NS, tag);
-            Object.keys(attrs).forEach(k => el.setAttribute(k, String(attrs[k])));
-            return el;
-        };
         const box = (r, grow) => ({ x: r.left - o.left, y: r.top - o.top - grow, width: r.width, height: r.height + 2 * grow });
         const g = svgEl('g', { [SELECTED_ATTR]: '' });
         const clip = svgEl('clipPath', { id: `highlighter-selected-${n}`, clipPathUnits: 'userSpaceOnUse' });
@@ -1297,11 +1285,7 @@
             if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
             let range;
             try { range = sel.getRangeAt(0); } catch (e) { return; }
-            candidateWrappers(range).forEach(w => {
-                const ann = annotationMap.get(w);
-                const svg = getSvg(w);
-                if (svg) markSelected(svg, w, range);
-            });
+            candidateWrappers(range).map(w => measureSelected(w, range)).filter(Boolean).forEach(markSelected);
         });
     }
 
@@ -1393,7 +1377,7 @@
                 });
             });
             pendingRecords.forEach(r => { if (recordOwner(r) === from) r.group = into; });
-            setGroupNote(into, notes.join('\n\n').slice(0, NOTE_MAX_LENGTH).replace(/[\uD800-\uDBFF]$/, '').trim());
+            setGroupNote(into, clipNote(notes.join('\n\n')));
         });
     }
 
@@ -1402,7 +1386,7 @@
     // With `draw` false it is only rebuilt: the caller draws it (see restyleGroups).
     function restyle(wrapper, { animate = false, draw = true } = {}) {
         const dark = darkBehind(wrapper);
-        const config = getStyleConfig(wrapper.getAttribute(STYLE_ATTR), { animate, dark });
+        const config = getStyleConfig(wrapper.getAttribute(STYLE_ATTR), dark);
         if (!config) return;
         wrapper.toggleAttribute(DARK_ATTR, dark);
         updateInk(wrapper);
@@ -1410,7 +1394,7 @@
         const oldSvg = getSvg(wrapper);
         if (oldSvg) selectedSVGs.delete(oldSvg);
         if (old) old.remove();
-        const ann = makeAnnotation(wrapper, config);
+        const ann = makeAnnotation(wrapper, config, animate);
         annotationMap.set(wrapper, ann);
         redrawInner(wrapper);
         if (!draw) return ann;
@@ -1509,7 +1493,7 @@
         wrapper.setAttribute(WRAPPER_ATTR, 'true');
         wrapper.setAttribute(STYLE_ATTR, key);
         wrapper.setAttribute(GROUP_ATTR, meta.group);
-        if (typeof meta.note === 'string' && meta.note) wrapper.setAttribute(NOTE_ATTR, meta.note.slice(0, NOTE_MAX_LENGTH));
+        if (typeof meta.note === 'string' && meta.note) wrapper.setAttribute(NOTE_ATTR, clipNote(meta.note));
         if (meta.added) wrapper.setAttribute(ADDED_ATTR, String(meta.added));
         if (typeof meta.page === 'string') wrapper.setAttribute(PAGE_ATTR, meta.page);
         try {
@@ -1518,7 +1502,7 @@
             const dark = darkBehind(wrapper);
             if (dark) wrapper.setAttribute(DARK_ATTR, '');
             updateInk(wrapper);
-            annotationMap.set(wrapper, makeAnnotation(wrapper, getStyleConfig(key, { dark })));
+            annotationMap.set(wrapper, makeAnnotation(wrapper, getStyleConfig(key, dark), true));
             redrawInner(wrapper);
             return wrapper;
         } catch (err) {
@@ -2541,7 +2525,7 @@
     // Returns the wrappers of the new annotation. `own` ({ group, note, added }) gives it an
     // identity of its own (a saved annotation attached to new text) instead of inheriting one.
     function applyAnnotation(range, key, overlaps, own = null) {
-        if (!getStyleConfig(key)) return [];
+        if (!hasOwn(STYLES, key)) return [];
 
         // Everything is measured before the first DOM change, because unwrapping invalidates the range.
         const startBlock = getBlockParent(range.startContainer);
@@ -2650,7 +2634,7 @@
         const from = same.find(o => o.group === group);
         return {
             group,
-            note: notes.join('\n\n').slice(0, NOTE_MAX_LENGTH).replace(/[\uD800-\uDBFF]$/, '').trim() || undefined,
+            note: clipNote(notes.join('\n\n')) || undefined,
             added: own ? own.added : from && from.added,
             page: pageTag(),   // made here, whatever it absorbed
             absorbed
@@ -2878,15 +2862,9 @@
         return jumpGroup && groupWrappers(jumpGroup).some(isInView) ? jumpGroup : null;
     }
 
-    // A style chosen with nothing selected, for the annotation pointed at: all of it takes that
-    // style (pieces waiting to come back too), keeping its note and date, or goes when it has that
-    // style already, as with a selection.
-    function restylePointed(group, key) {
-        restyleGroups([group], key);
-    }
-
-    // The same for several annotations (clicked ones, see setSelectedGroups), as one step for
-    // Undo: they all go when all of them have that style already.
+    // A style chosen with nothing selected, for the annotations pointed at or clicked (see
+    // setSelectedGroups), as one step for Undo: all of each takes that style (pieces waiting to
+    // come back too), keeping its note and date; they all go when all have that style already.
     function restyleGroups(groups, key) {
         if (editor && !groups.includes(editor.group)) cancelEditor();   // one note at a time, as when opening another
         groups = groups.filter(g => groupWrappers(g).length);
@@ -3043,7 +3021,7 @@
         }
         e.preventDefault();
         if (selected) annotateSelection(key, active);
-        else restylePointed(group, key);
+        else restyleGroups([group], key);
     }
 
     // Triple-click selects the paragraph under the pointer as it is shown (see visualParagraph),
@@ -3100,8 +3078,13 @@
         }
     }
 
+    // A note cut to NOTE_MAX_LENGTH, without half an emoji at the cut or spaces at its ends.
+    function clipNote(text) {
+        return text.slice(0, NOTE_MAX_LENGTH).replace(/[\uD800-\uDBFF]$/, '').trim();
+    }
+
     function groupWrappers(group) {
-        return group ? allWrappers().filter(w => w.getAttribute(GROUP_ATTR) === group) : [];
+        return group ? Array.from(document.querySelectorAll(`${WRAPPER_SELECTOR}[${GROUP_ATTR}="${CSS.escape(group)}"]`)) : [];
     }
 
     // The note tick goes on the last piece of each annotation that has a note, so an annotation
@@ -3736,9 +3719,8 @@
     }
 
     // Style icons show the colors the annotation will get where the selection is (`dark`).
-    // `overlaps` are the annotations the selection touches (findOverlaps): while text is selected
-    // its annotation is hidden, so the toolbar shows what is there instead. The styles all of it
-    // has (`current`, see selectionStyles) show pressed, and choosing it removes it; the note
+    // `overlaps` are the annotations the selection touches (findOverlaps). The styles all of the
+    // selected text has (`current`, see selectionStyles) show pressed, and choosing one removes it; the note
     // button says whether the note it opens exists; the eraser shows when there is anything to erase.
     // For an annotation selected by clicking it, `act` holds what the buttons do instead (see
     // showGroupToolbar).
@@ -4198,7 +4180,7 @@
     });
 
     function noteDraft() {
-        return noteInput.value.trim().slice(0, NOTE_MAX_LENGTH);
+        return clipNote(noteInput.value.trim());
     }
 
     // Save turns brand blue while the note differs from what is saved.
@@ -4373,7 +4355,7 @@
         const cover = located && candidateWrappers(located.range)[0];
         if (!cover) return;
         const existing = cover.getAttribute(NOTE_ATTR);
-        openNoteEditor(cover.getAttribute(GROUP_ATTR), { draft: existing ? `${existing}\n\n${draft}`.slice(0, NOTE_MAX_LENGTH) : draft });
+        openNoteEditor(cover.getAttribute(GROUP_ATTR), { draft: existing ? clipNote(`${existing}\n\n${draft}`) : draft });
     }
 
     noteSave.addEventListener('click', () => saveEditor());
@@ -4654,9 +4636,10 @@
     // joined halfway between lines into one outline with rounded corners. Rows that don't touch
     // (a line ending left of where the line above it starts) get outlines of their own. Returns
     // the box holding them all, in the viewport, and the outlines as path data within it.
-    function groupOutline(group) {
+    // `rects`: the annotation's line boxes (groupClientRects).
+    function groupOutline(rects) {
         const rows = [];
-        groupClientRects(group).sort((a, b) => a.top - b.top).forEach(r => {
+        rects.slice().sort((a, b) => a.top - b.top).forEach(r => {
             const row = rows.find(o => Math.min(o.bottom, r.bottom) - Math.max(o.top, r.top) > Math.min(o.bottom - o.top, r.height) / 2);
             if (row) Object.assign(row, { top: Math.min(row.top, r.top), bottom: Math.max(row.bottom, r.bottom), left: Math.min(row.left, r.left), right: Math.max(row.right, r.right) });
             else rows.push({ top: r.top, bottom: r.bottom, left: r.left, right: r.right });
@@ -4724,14 +4707,15 @@
     function followSelectBoxes() {
         selectFrame = 0;
         if (!selectedGroups.length) return;
-        const gone = selectedGroups.filter(g => !groupRect(g));
+        const rects = new Map(selectedGroups.map(g => [g, groupClientRects(g)]));
+        const gone = selectedGroups.filter(g => !rects.get(g).length);
         if (gone.length) {
             setSelectedGroups(selectedGroups.filter(g => !gone.includes(g)));
             if (!selectedGroups.length) return;
         }
         selectedGroups.forEach(g => {
             const box = selectBoxes.get(g);
-            const { rect, d } = groupOutline(g);
+            const { rect, d } = groupOutline(rects.get(g));
             const at = `${rect.left},${rect.top},${rect.width},${rect.height} ${d}`;
             if (at !== box.at) {
                 box.at = at;

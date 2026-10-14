@@ -97,9 +97,8 @@
     }
 
     // Style icons show the colors the annotation will get where the selection is (`dark`).
-    // `overlaps` are the annotations the selection touches (findOverlaps): while text is selected
-    // its annotation is hidden, so the toolbar shows what is there instead. The styles all of it
-    // has (`current`, see selectionStyles) show pressed, and choosing it removes it; the note
+    // `overlaps` are the annotations the selection touches (findOverlaps). The styles all of the
+    // selected text has (`current`, see selectionStyles) show pressed, and choosing one removes it; the note
     // button says whether the note it opens exists; the eraser shows when there is anything to erase.
     // For an annotation selected by clicking it, `act` holds what the buttons do instead (see
     // showGroupToolbar).

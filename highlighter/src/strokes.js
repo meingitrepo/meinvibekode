@@ -4,22 +4,6 @@
 
     const SVG_NS = 'http://www.w3.org/2000/svg';   // also used by the UI's icons
 
-    function normalizePadding(p) {
-        if (p || p === 0) {
-            if (typeof p === 'number') return [p, p, p, p];
-            if (Array.isArray(p) && p.length) {
-                switch (p.length) {
-                    case 4: return [...p];
-                    case 1: return [p[0], p[0], p[0], p[0]];
-                    case 2: return [...p, ...p];
-                    case 3: return [...p, p[1]];
-                    default: return [p[0], p[1], p[2], p[3]];
-                }
-            }
-        }
-        return [5, 5, 5, 5];
-    }
-
     function line(sx, sy, ex, ey) {
         return `M${sx} ${sy} L${ex} ${ey}`;
     }
@@ -97,8 +81,7 @@
 
     // One straight stroke per line box: [path data, stroke width, length].
     function strokesFor(config, { rects, strike, band }) {
-        const pad = normalizePadding(config.padding);
-        const width = config.strokeWidth || 2;
+        const width = config.strokeWidth;
         const out = [];
         rects.forEach((r, i) => {
             if (config.type === 'highlight') {
@@ -109,7 +92,7 @@
             } else {
                 // An underline sits just inside the bottom of the line box, where a selection
                 // still covers it (see markSelected).
-                const y = config.type === 'underline' ? r.y + r.h - width / 2 - 1 + pad[2] : strike[i];
+                const y = config.type === 'underline' ? r.y + r.h - width / 2 - 1 : strike[i];
                 out.push([line(r.x, y, r.x + r.w, y), width, r.w]);
             }
         });
@@ -149,7 +132,7 @@
     // The svg's own box is 1px: the strokes show outside it, but the box counts as page content,
     // and a bigger one adds scrolling where it sticks out (from a highlight near the edge of a
     // scrolling box, say). At 0px the browser wouldn't draw it at all.
-    function makeAnnotation(element, config) {
+    function makeAnnotation(element, config, animate) {
         const svg = document.createElementNS(SVG_NS, 'svg');
         svg.setAttribute('class', 'highlighter-annotation');
         svg.setAttribute(SVG_ATTR, '');
@@ -165,7 +148,7 @@
         return {
             element, config, svg,
             drawn: false,              // a redraw never animates
-            animate: !!config.animate,
+            animate,                   // a first drawing draws in
             remove() {
                 if (this.svg && this.svg.parentNode) this.svg.parentNode.removeChild(this.svg);
                 this.svg = null;
@@ -194,7 +177,7 @@
             if (!measured[i]) return;
             const animate = !a.drawn && a.animate;
             const group = groupOf(a);
-            const full = a.config.animationDuration || 0;
+            const full = DRAW_IN_MS;
             const total = lengths.get(group);
             const duration = animate ? (total ? full * lengthOf(measured[i]) / total : full) : 0;
             if (animate && !starts.has(group)) {

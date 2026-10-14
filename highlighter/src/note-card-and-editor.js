@@ -191,7 +191,7 @@
     });
 
     function noteDraft() {
-        return noteInput.value.trim().slice(0, NOTE_MAX_LENGTH);
+        return clipNote(noteInput.value.trim());
     }
 
     // Save turns brand blue while the note differs from what is saved.
@@ -366,7 +366,7 @@
         const cover = located && candidateWrappers(located.range)[0];
         if (!cover) return;
         const existing = cover.getAttribute(NOTE_ATTR);
-        openNoteEditor(cover.getAttribute(GROUP_ATTR), { draft: existing ? `${existing}\n\n${draft}`.slice(0, NOTE_MAX_LENGTH) : draft });
+        openNoteEditor(cover.getAttribute(GROUP_ATTR), { draft: existing ? clipNote(`${existing}\n\n${draft}`) : draft });
     }
 
     noteSave.addEventListener('click', () => saveEditor());

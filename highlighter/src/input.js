@@ -66,15 +66,9 @@
         return jumpGroup && groupWrappers(jumpGroup).some(isInView) ? jumpGroup : null;
     }
 
-    // A style chosen with nothing selected, for the annotation pointed at: all of it takes that
-    // style (pieces waiting to come back too), keeping its note and date, or goes when it has that
-    // style already, as with a selection.
-    function restylePointed(group, key) {
-        restyleGroups([group], key);
-    }
-
-    // The same for several annotations (clicked ones, see setSelectedGroups), as one step for
-    // Undo: they all go when all of them have that style already.
+    // A style chosen with nothing selected, for the annotations pointed at or clicked (see
+    // setSelectedGroups), as one step for Undo: all of each takes that style (pieces waiting to
+    // come back too), keeping its note and date; they all go when all have that style already.
     function restyleGroups(groups, key) {
         if (editor && !groups.includes(editor.group)) cancelEditor();   // one note at a time, as when opening another
         groups = groups.filter(g => groupWrappers(g).length);
@@ -231,7 +225,7 @@
         }
         e.preventDefault();
         if (selected) annotateSelection(key, active);
-        else restylePointed(group, key);
+        else restyleGroups([group], key);
     }
 
     // Triple-click selects the paragraph under the pointer as it is shown (see visualParagraph),

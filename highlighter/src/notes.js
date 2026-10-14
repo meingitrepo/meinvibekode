@@ -27,8 +27,13 @@
         }
     }
 
+    // A note cut to NOTE_MAX_LENGTH, without half an emoji at the cut or spaces at its ends.
+    function clipNote(text) {
+        return text.slice(0, NOTE_MAX_LENGTH).replace(/[\uD800-\uDBFF]$/, '').trim();
+    }
+
     function groupWrappers(group) {
-        return group ? allWrappers().filter(w => w.getAttribute(GROUP_ATTR) === group) : [];
+        return group ? Array.from(document.querySelectorAll(`${WRAPPER_SELECTOR}[${GROUP_ATTR}="${CSS.escape(group)}"]`)) : [];
     }
 
     // The note tick goes on the last piece of each annotation that has a note, so an annotation

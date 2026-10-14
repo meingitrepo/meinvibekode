@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.15
+// @version      8.16
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -30,9 +30,10 @@
  *                         the one just jumped to, keeping its note; its own style removes it.
  *   N                     add or edit a note: on the selected annotation, on the annotation
  *                         under the mouse, or on new selected text (it gets a highlight)
- *   Backspace / Delete    remove annotations from the selected text (what is left of them stays);
+ *   D / Delete            erase annotations from the selected text (what is left of them stays);
  *                         with nothing selected, the annotation under the mouse, all of it
- *   Shift+Backspace/Del   remove every annotation on the page
+ *                         (D on an annotation with a note deletes the note first; D again erases it)
+ *   Shift+D / Shift+Del   erase every annotation on the page
  *   V                     hide / show all annotations (nothing is deleted; a message says they're hidden)
  *   P                     pen on / off: every mouse selection gets the pen's style at once (it starts
  *                         with the style used last; a style key with nothing selected or pointed at
@@ -47,7 +48,7 @@
  * Clicking an annotation selects it: a dashed box goes around all of it. Ctrl+click
  * adds one or takes it out again; Shift+click selects all of them from the last one selected to
  * the one clicked. While annotations are selected, the style keys, N (the first one's note) and
- * Backspace / Delete act on all of them, with or without Alt; Esc, clicking elsewhere
+ * D / Delete act on all of them (D on a single one with a note deletes the note first), with or without Alt; Esc, clicking elsewhere
  * or selecting text lets it go. The selection toolbar shows over it too, its buttons acting on
  * it. A click on a link inside annotated text just follows the link.
  *

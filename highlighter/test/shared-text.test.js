@@ -59,7 +59,7 @@ const recs = s => s.map(r => `${r.key}:${r.text}`).sort();
     L.check(`${scheme} restyle drops nested same style`, !s3.some(x => x.k === 'h2' && x.nested && x.sw < 15) && !s3.some(x => x.k === 'h'), s3);
     await p2.keyboard.press('Escape');
     // eraser takes everything off the selection
-    await L.selStr(p2, '#p', 'charlie'); await L.altKey(p2, 'Backspace');
+    await L.selStr(p2, '#p', 'charlie'); await L.altKey(p2, 'd');
     const w4 = await L.wr(p2);
     L.check(`${scheme} eraser clears all styles there`, !w4.some(x => x.t.includes('charlie')), w4);
     // same style still merges

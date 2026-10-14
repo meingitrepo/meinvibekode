@@ -86,10 +86,10 @@
 
     // The note editor's header buttons: tips above them, flipping below near the top of the view.
     addLabelTip(noteSave, 'Save note', 'Enter', () => false);
-    addLabelTip(noteDelete, 'Delete note', '', () => false);
+    addLabelTip(noteDelete, 'Delete note', 'Delete', () => false);
     // The note preview sits below its text, so its tip goes below too, off the text.
     addLabelTip(cardEdit, 'Edit note', 'Alt+N', () => true);
-    addLabelTip(cardDelete, 'Delete note', '', () => true);
+    addLabelTip(cardDelete, 'Delete note', 'Alt+D', () => true);   // D on the annotation deletes its note first
     addLabelTip(penOff, 'Turn off the pen', 'Esc', () => true);
 
     function toolbarDivider() {
@@ -118,7 +118,7 @@
         const noteLabel = overlaps.length && overlaps[0].note ? 'Edit note' : 'Add note';
         items.push(toolButton(fluentIcon('note_edit_20_regular'), noteLabel, 'Alt+N', act ? act.note : () => runToolbarAction(noteSelection)));
         if (overlaps.length) {
-            items.push(toolButton(fluentIcon('eraser_20_regular'), act ? act.removeLabel : 'Erase', 'Alt+Backspace', act ? act.remove : () => runToolbarAction(removeInSelection)));
+            items.push(toolButton(fluentIcon('eraser_20_regular'), act ? act.removeLabel : 'Erase', act ? act.removeKey : 'Alt+D', act ? act.remove : () => runToolbarAction(removeInSelection)));
         }
         toolbarEl.replaceChildren(...items);
         // One Tab stop for the whole toolbar, on its first button; the arrow keys move along it.
@@ -199,7 +199,9 @@
             style: after(k => restyleGroups(groups, k), true),
             note: after(() => openNoteEditor(groups[0])),
             remove: after(() => deleteGroups(groups)),
-            removeLabel: groups.length > 1 ? `Erase ${groups.length}x annotations` : 'Erase annotation'
+            removeLabel: groups.length > 1 ? `Erase ${groups.length}x annotations` : 'Erase annotation',
+            // D on a single one with a note deletes only the note; Delete erases it all.
+            removeKey: groups.length === 1 && note ? 'Alt+Delete' : 'Alt+D'
         });
         toolbarGroups = groups;
         toolbarRange = null;

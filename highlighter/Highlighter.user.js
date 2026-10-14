@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.15
+// @version      8.16
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -30,9 +30,10 @@
  *                         the one just jumped to, keeping its note; its own style removes it.
  *   N                     add or edit a note: on the selected annotation, on the annotation
  *                         under the mouse, or on new selected text (it gets a highlight)
- *   Backspace / Delete    remove annotations from the selected text (what is left of them stays);
+ *   D / Delete            erase annotations from the selected text (what is left of them stays);
  *                         with nothing selected, the annotation under the mouse, all of it
- *   Shift+Backspace/Del   remove every annotation on the page
+ *                         (D on an annotation with a note deletes the note first; D again erases it)
+ *   Shift+D / Shift+Del   erase every annotation on the page
  *   V                     hide / show all annotations (nothing is deleted; a message says they're hidden)
  *   P                     pen on / off: every mouse selection gets the pen's style at once (it starts
  *                         with the style used last; a style key with nothing selected or pointed at
@@ -47,7 +48,7 @@
  * Clicking an annotation selects it: a dashed box goes around all of it. Ctrl+click
  * adds one or takes it out again; Shift+click selects all of them from the last one selected to
  * the one clicked. While annotations are selected, the style keys, N (the first one's note) and
- * Backspace / Delete act on all of them, with or without Alt; Esc, clicking elsewhere
+ * D / Delete act on all of them (D on a single one with a note deletes the note first), with or without Alt; Esc, clicking elsewhere
  * or selecting text lets it go. The selection toolbar shows over it too, its buttons acting on
  * it. A click on a link inside annotated text just follows the link.
  *
@@ -2939,7 +2940,7 @@
         openNoteEditor(created[0].getAttribute(GROUP_ATTR), { step: undoStack[undoStack.length - 1] });
     }
 
-    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'Backspace', 'Delete']);
+    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD', 'Delete']);
 
     function onKeyDown(e) {
         // Esc closes everything saved (Alt+Shift+O) wherever focus is.
@@ -3024,7 +3025,8 @@
             return;
         }
 
-        if (code === 'Backspace' || code === 'Delete') {
+        // D on one annotation with a note deletes the note first; Delete erases it all at once.
+        if (code === 'KeyD' || code === 'Delete') {
             if (e.shiftKey) {
                 e.preventDefault();
                 clearPageAnnotations();
@@ -3034,6 +3036,7 @@
             if (!selected && !group) return;
             e.preventDefault();
             if (selected) removeInSelection(active);
+            else if (code === 'KeyD' && groupHasNote(group)) deleteGroupNote(group);
             else deleteAnnotation(group);
             return;
         }
@@ -3734,10 +3737,10 @@
 
     // The note editor's header buttons: tips above them, flipping below near the top of the view.
     addLabelTip(noteSave, 'Save note', 'Enter', () => false);
-    addLabelTip(noteDelete, 'Delete note', '', () => false);
+    addLabelTip(noteDelete, 'Delete note', 'Delete', () => false);
     // The note preview sits below its text, so its tip goes below too, off the text.
     addLabelTip(cardEdit, 'Edit note', 'Alt+N', () => true);
-    addLabelTip(cardDelete, 'Delete note', '', () => true);
+    addLabelTip(cardDelete, 'Delete note', 'Alt+D', () => true);   // D on the annotation deletes its note first
     addLabelTip(penOff, 'Turn off the pen', 'Esc', () => true);
 
     function toolbarDivider() {
@@ -3766,7 +3769,7 @@
         const noteLabel = overlaps.length && overlaps[0].note ? 'Edit note' : 'Add note';
         items.push(toolButton(fluentIcon('note_edit_20_regular'), noteLabel, 'Alt+N', act ? act.note : () => runToolbarAction(noteSelection)));
         if (overlaps.length) {
-            items.push(toolButton(fluentIcon('eraser_20_regular'), act ? act.removeLabel : 'Erase', 'Alt+Backspace', act ? act.remove : () => runToolbarAction(removeInSelection)));
+            items.push(toolButton(fluentIcon('eraser_20_regular'), act ? act.removeLabel : 'Erase', act ? act.removeKey : 'Alt+D', act ? act.remove : () => runToolbarAction(removeInSelection)));
         }
         toolbarEl.replaceChildren(...items);
         // One Tab stop for the whole toolbar, on its first button; the arrow keys move along it.
@@ -3847,7 +3850,9 @@
             style: after(k => restyleGroups(groups, k), true),
             note: after(() => openNoteEditor(groups[0])),
             remove: after(() => deleteGroups(groups)),
-            removeLabel: groups.length > 1 ? `Erase ${groups.length}x annotations` : 'Erase annotation'
+            removeLabel: groups.length > 1 ? `Erase ${groups.length}x annotations` : 'Erase annotation',
+            // D on a single one with a note deletes only the note; Delete erases it all.
+            removeKey: groups.length === 1 && note ? 'Alt+Delete' : 'Alt+D'
         });
         toolbarGroups = groups;
         toolbarRange = null;
@@ -4127,16 +4132,23 @@
         if (w && w.isConnected) openNoteEditor(w.getAttribute(GROUP_ATTR));
     });
 
-    // Removes the note; the annotation stays, and Undo brings the note back.
     cardDelete.addEventListener('click', () => {
         const w = cardWrapper;
         hideNoteCard();
-        if (!w || !w.isConnected) return;
-        const group = w.getAttribute(GROUP_ATTR);
+        if (w && w.isConnected) deleteGroupNote(w.getAttribute(GROUP_ATTR));
+    });
+
+    function groupHasNote(group) {
+        return groupWrappers(group).some(w => w.getAttribute(NOTE_ATTR));
+    }
+
+    // Removes the note; the annotation stays, and Undo brings the note back.
+    function deleteGroupNote(group) {
+        syncLocation();
         if (editor) cancelEditor();
         const changed = runUndoable(() => setGroupNote(group, ''));
         offerUndo('Deleted note', changed, 'delete_20_regular');
-    });
+    }
 
     // --- Note editor ---
 
@@ -4396,6 +4408,13 @@
             // Enter saves; Shift+Enter starts a new line. On a button, Enter presses that button.
             e.preventDefault();
             saveEditor();
+        } else if (e.key === 'Delete' && !e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && !e.isComposing
+            && !(e.target === noteInput && noteInput.selectionEnd < noteInput.value.length)
+            && noteInput.selectionStart === noteInput.selectionEnd) {
+            // Delete deletes the note, as its Delete button does, unless it has text after the
+            // caret (or selected) to delete.
+            e.preventDefault();
+            noteDelete.click();
         } else if (e.key === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {
             // Tab and Shift+Tab go round the editor's controls instead of leaving it.
             const stops = [noteSave, noteDelete, noteInput].filter(el => !el.hidden && !el.disabled);
@@ -4590,8 +4609,8 @@
     // selection or takes it out, and Shift+click selects the annotations from the one selected
     // last to the one clicked, in reading order, and no others. While annotations are selected
     // the keys act on all of them, with or without Alt: a style key restyles them (the style all
-    // of them have removes them), Delete or Backspace removes them, N edits the note of the
-    // first, Esc lets them go. The selection toolbar shows over them too, its buttons acting on
+    // of them have removes them), Delete or D removes them (D on a single one with a note removes
+    // the note first), N edits the note of the first, Esc lets them go. The selection toolbar shows over them too, its buttons acting on
     // them. Clicking elsewhere or selecting text lets them go as well. Each change is one step
     // for Undo.
     let selectedGroups = [];      // in the order they were selected; the last is Shift+click's start
@@ -4816,7 +4835,10 @@
             clearSelectedGroups();
         } else if (e.shiftKey) {
             return false;
-        } else if (e.code === 'Delete' || e.code === 'Backspace') {
+        } else if (e.code === 'KeyD' && groups.length === 1 && groupHasNote(groups[0])) {
+            deleteGroupNote(groups[0]);   // the note first, then (D again) the annotation
+            refreshGroupToolbar();
+        } else if (e.code === 'Delete' || e.code === 'KeyD') {
             deleteGroups(groups);
         } else if (e.code === 'KeyN') {
             openNoteEditor(groups[0]);
@@ -5028,7 +5050,7 @@
         if (editor) cancelEditor({ offer: editor.group !== group });
     }
 
-    // Removes the whole annotation, also from the keyboard (Alt+Backspace, or its own style, with
+    // Removes the whole annotation, also from the keyboard (Alt+D or Alt+Delete, or its own style, with
     // the mouse on it).
     function deleteAnnotation(group) {
         syncLocation();

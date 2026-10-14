@@ -6,7 +6,7 @@
         if (editor) cancelEditor({ offer: editor.group !== group });
     }
 
-    // Removes the whole annotation, also from the keyboard (Alt+Backspace, or its own style, with
+    // Removes the whole annotation, also from the keyboard (Alt+D or Alt+Delete, or its own style, with
     // the mouse on it).
     function deleteAnnotation(group) {
         syncLocation();

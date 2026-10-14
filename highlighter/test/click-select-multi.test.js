@@ -47,10 +47,10 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   await page.keyboard.press('Delete'); await page.waitForTimeout(200);
   L.check('Delete removes all selected', (await L.wr(page)).length === 3 && (await boxes()) === 0, await L.wr(page));
   await L.altKey(page, 'KeyZ');
-  // Alt+Backspace too
+  // Alt+D too
   await click('bravo'); await click('echo', 'Control');
-  await L.altKey(page, 'Backspace');
-  L.check('Alt+Backspace removes all selected', (await L.wr(page)).length === 3, await L.wr(page));
+  await L.altKey(page, 'd');
+  L.check('Alt+D removes all selected', (await L.wr(page)).length === 3, await L.wr(page));
   await L.altKey(page, 'KeyZ');
   // N edits the first
   await click('kilo'); await click('bravo', 'Control');

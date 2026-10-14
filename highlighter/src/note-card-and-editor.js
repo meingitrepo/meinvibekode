@@ -112,16 +112,23 @@
         if (w && w.isConnected) openNoteEditor(w.getAttribute(GROUP_ATTR));
     });
 
-    // Removes the note; the annotation stays, and Undo brings the note back.
     cardDelete.addEventListener('click', () => {
         const w = cardWrapper;
         hideNoteCard();
-        if (!w || !w.isConnected) return;
-        const group = w.getAttribute(GROUP_ATTR);
+        if (w && w.isConnected) deleteGroupNote(w.getAttribute(GROUP_ATTR));
+    });
+
+    function groupHasNote(group) {
+        return groupWrappers(group).some(w => w.getAttribute(NOTE_ATTR));
+    }
+
+    // Removes the note; the annotation stays, and Undo brings the note back.
+    function deleteGroupNote(group) {
+        syncLocation();
         if (editor) cancelEditor();
         const changed = runUndoable(() => setGroupNote(group, ''));
         offerUndo('Deleted note', changed, 'delete_20_regular');
-    });
+    }
 
     // --- Note editor ---
 
@@ -381,6 +388,13 @@
             // Enter saves; Shift+Enter starts a new line. On a button, Enter presses that button.
             e.preventDefault();
             saveEditor();
+        } else if (e.key === 'Delete' && !e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && !e.isComposing
+            && !(e.target === noteInput && noteInput.selectionEnd < noteInput.value.length)
+            && noteInput.selectionStart === noteInput.selectionEnd) {
+            // Delete deletes the note, as its Delete button does, unless it has text after the
+            // caret (or selected) to delete.
+            e.preventDefault();
+            noteDelete.click();
         } else if (e.key === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {
             // Tab and Shift+Tab go round the editor's controls instead of leaving it.
             const stops = [noteSave, noteDelete, noteInput].filter(el => !el.hidden && !el.disabled);

@@ -110,7 +110,7 @@
         openNoteEditor(created[0].getAttribute(GROUP_ATTR), { step: undoStack[undoStack.length - 1] });
     }
 
-    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'Backspace', 'Delete']);
+    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD', 'Delete']);
 
     function onKeyDown(e) {
         // Esc closes everything saved (Alt+Shift+O) wherever focus is.
@@ -195,7 +195,8 @@
             return;
         }
 
-        if (code === 'Backspace' || code === 'Delete') {
+        // D on one annotation with a note deletes the note first; Delete erases it all at once.
+        if (code === 'KeyD' || code === 'Delete') {
             if (e.shiftKey) {
                 e.preventDefault();
                 clearPageAnnotations();
@@ -205,6 +206,7 @@
             if (!selected && !group) return;
             e.preventDefault();
             if (selected) removeInSelection(active);
+            else if (code === 'KeyD' && groupHasNote(group)) deleteGroupNote(group);
             else deleteAnnotation(group);
             return;
         }

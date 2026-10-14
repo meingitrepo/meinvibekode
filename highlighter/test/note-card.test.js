@@ -32,7 +32,7 @@ async function delay(browser) {
   const c = await card(p);
   check('the card shows after resting on the note', c && c.text === 'Note A', c);
   check('its footer has the date', c && /^Added .*2026/.test(c.hint), c);
-  check('and a Delete button', await p.evaluate(() => !window.__hl.noteCardEl.hidden && window.__hl.cardDelete.getAttribute('aria-label') === 'Delete note'), null);
+  check('and a Delete button', await p.evaluate(() => !window.__hl.noteCardEl.hidden && window.__hl.cardDelete.getAttribute('aria-label') === 'Delete note (Alt+D)'), null);
   const b = (await L.rects(p, '#p3', 'beta note'))[0];
   await p.mouse.move(...center(b));   // straight there: with steps it would cross the long note
   await p.waitForTimeout(80);

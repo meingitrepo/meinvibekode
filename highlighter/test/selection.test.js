@@ -51,13 +51,13 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
   await page.waitForTimeout(400);
   tb = await L.toolbar(page);
   L.check('note button says Edit note on an annotation with a note', tb && tb.buttons.some(b => b.label === 'Edit note'), tb && tb.buttons.map(b => b.label));
-  await L.altKey(page, 'Backspace');
+  await L.altKey(page, 'd');
   w = await L.wr(page).then(a => a.filter(x => x.k === 'h4'));
   L.check('eraser keeps the rest with its note, minus the spaces at the cut', w.map(x => x.t).join('|') === 'two three|five' && w.every(x => x.n === 'Numbers note') && new Set(w.map(x => x.g)).size === 1, w);
   L.check('eraser toast for a part', (await L.toast(page)) === 'Erased 1x annotation · Undo', await L.toast(page));
   let st = await L.stored(page);
   L.check('stored pieces keep note', st.filter(r => r.key === 'h4').length === 2 && st.filter(r => r.key === 'h4').every(r => r.note === 'Numbers note'), st.filter(r => r.key === 'h4'));
-  await L.selStr(page, '#p3', 'two', { endStr: 'five' }); await L.altKey(page, 'Backspace');
+  await L.selStr(page, '#p3', 'two', { endStr: 'five' }); await L.altKey(page, 'd');
   w = await L.wr(page).then(a => a.filter(x => x.k === 'h4'));
   L.check('eraser over all of it removes it', w.length === 0, w);
   L.check('eraser toast for whole', (await L.toast(page)) === 'Erased 1x annotation · Undo', await L.toast(page));

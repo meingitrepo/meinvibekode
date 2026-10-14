@@ -80,7 +80,7 @@ const tbRect = page => L.toolbar(page).then(t => t && t.rect);
     // keyboard focus returns after the toast's button
     const { ctx, page } = await L.open(browser, { html: HTML });
     await L.selStr(page, '#p1', 'words to select'); await L.altKey(page, 'h');
-    await L.selStr(page, '#p1', 'words'); await L.altKey(page, 'Backspace');
+    await L.selStr(page, '#p1', 'words'); await L.altKey(page, 'd');
     await page.focus('#lnk'); await page.keyboard.press('Tab'); await page.waitForTimeout(100);
     const inToast = await page.evaluate(() => window.__hl.toastEl.contains(window.__hl.uiRoot.activeElement));
     await page.keyboard.press('Enter'); await page.waitForTimeout(200);

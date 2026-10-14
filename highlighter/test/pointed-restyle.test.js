@@ -93,9 +93,9 @@ async function multiPiece(browser) {
   s = await state(p);
   check('Alt+U on one piece underlines every piece', keysOf(s, g).length === pieces && keysOf(s, g).every(k => k === 'u'), s);
   check('still one annotation', new Set((await L.stored(p)).filter(r => r.key === 'u').map(r => r.group)).size === 1, await L.stored(p));
-  await L.altKey(p, 'Backspace');
+  await L.altKey(p, 'd');
   s = await state(p);
-  check('Alt+Backspace on it removes every piece', !s.some(w => w.g === g) && keysOf(s, 'gA').join() === 'h', s);
+  check('Alt+D on it removes every piece', !s.some(w => w.g === g) && keysOf(s, 'gA').join() === 'h', s);
   check('Undo toast for the removal', (await L.toast(p)) === 'Erased 1x annotation · Undo', await L.toast(p));
   await ctx.close();
 }
@@ -108,8 +108,8 @@ async function noTarget(browser) {
   const s = await state(p);
   check('pointing at plain text: Alt+1 changes nothing', keysOf(s, 'gA').join() === 'h' && keysOf(s, 'gB').join() === 'u', s);
   check('pointing at plain text: the key stays the page\'s', (await lastPrevented(p)) === false, null);
-  await L.altKey(p, 'Backspace');
-  check('pointing at plain text: Alt+Backspace changes nothing and stays the page\'s', (await state(p)).length === 2 && (await lastPrevented(p)) === false, null);
+  await L.altKey(p, 'd');
+  check('pointing at plain text: Alt+D changes nothing and stays the page\'s', (await state(p)).length === 2 && (await lastPrevented(p)) === false, null);
   // The mouse leaves the window from an annotation.
   await hover(p, 'gA');
   await p.evaluate(() => document.querySelector('[data-highlighter-group="gA"]').dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: null })));
@@ -127,8 +127,8 @@ async function hidden(browser) {
   let s = await state(p);
   check('hidden: Alt+2 on a pointed annotation does nothing', keysOf(s, 'gA').join() === 'h' && (await p.evaluate(() => window.__hl.annotationsHidden)) === true, s);
   check('hidden: the key stays the page\'s', (await lastPrevented(p)) === false, null);
-  await L.altKey(p, 'Backspace');
-  check('hidden: Alt+Backspace on it does nothing', keysOf(await state(p), 'gA').join() === 'h', await state(p));
+  await L.altKey(p, 'd');
+  check('hidden: Alt+D on it does nothing', keysOf(await state(p), 'gA').join() === 'h', await state(p));
   await L.altKey(p, 'n');
   check('hidden: Alt+N still opens its note, as before', (await p.evaluate(() => window.__hl.editor && window.__hl.editor.group)) === 'gA', null);
   await ctx.close();

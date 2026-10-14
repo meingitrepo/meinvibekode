@@ -18,7 +18,7 @@ const HTML = `<!doctype html><html><head><title>T3</title></head><body style="fo
   L.check('link-split annotation is one paragraph', JSON.stringify(pa) === JSON.stringify([['one mid link end ital']]), pa);
   // erase the link piece
   await L.selStr(page, '#p1', 'link');
-  await L.altKey(page, 'Backspace');
+  await L.altKey(page, 'd');
   pa = await page.evaluate(() => window.__hl.pageAnnotations().map(a => a.paragraphs));
   L.check('gap shows ellipsis', JSON.stringify(pa) === JSON.stringify([['one mid … end ital']]), pa);
   // two-paragraph annotation

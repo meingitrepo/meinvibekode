@@ -5,8 +5,8 @@
     // selection or takes it out, and Shift+click selects the annotations from the one selected
     // last to the one clicked, in reading order, and no others. While annotations are selected
     // the keys act on all of them, with or without Alt: a style key restyles them (the style all
-    // of them have removes them), Delete or Backspace removes them, N edits the note of the
-    // first, Esc lets them go. The selection toolbar shows over them too, its buttons acting on
+    // of them have removes them), Delete or D removes them (D on a single one with a note removes
+    // the note first), N edits the note of the first, Esc lets them go. The selection toolbar shows over them too, its buttons acting on
     // them. Clicking elsewhere or selecting text lets them go as well. Each change is one step
     // for Undo.
     let selectedGroups = [];      // in the order they were selected; the last is Shift+click's start
@@ -231,7 +231,10 @@
             clearSelectedGroups();
         } else if (e.shiftKey) {
             return false;
-        } else if (e.code === 'Delete' || e.code === 'Backspace') {
+        } else if (e.code === 'KeyD' && groups.length === 1 && groupHasNote(groups[0])) {
+            deleteGroupNote(groups[0]);   // the note first, then (D again) the annotation
+            refreshGroupToolbar();
+        } else if (e.code === 'Delete' || e.code === 'KeyD') {
             deleteGroups(groups);
         } else if (e.code === 'KeyN') {
             openNoteEditor(groups[0]);

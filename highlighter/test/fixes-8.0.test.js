@@ -53,5 +53,20 @@ const L = require('./lib');
     L.check('Enter on Delete deletes the note, the highlight stays', w.length === 1 && !w[0].n, w);
     L.check('with Undo offered', (await L.toast(page)) === 'Deleted note · Undo', await L.toast(page));
   }
+  {
+    // Delete in the note editor deletes text after the caret first, then the note.
+    const html = '<!doctype html><html><body><p id="p">alpha bravo charlie delta echo foxtrot</p></body></html>';
+    const { page } = await L.open(b, { html });
+    await L.selStr(page, '#p', 'bravo charlie'); await L.altKey(page, 'n');
+    await page.keyboard.type('a note'); await page.keyboard.press('Enter'); await page.waitForTimeout(200);
+    await L.selStr(page, '#p', 'bravo'); await L.altKey(page, 'n'); await page.waitForTimeout(200);
+    await page.keyboard.press('Home'); await page.keyboard.press('Delete');
+    const text = await page.evaluate(() => window.__hl.noteInput.value);
+    L.check('Delete before text deletes a character', text === ' note', text);
+    await page.keyboard.press('End'); await page.keyboard.press('Delete'); await page.waitForTimeout(300);
+    const w = await L.wr(page);
+    L.check('Delete at the end deletes the note, the highlight stays', w.length === 1 && !w[0].n, w);
+    L.check('Delete: Undo offered', (await L.toast(page)) === 'Deleted note · Undo', await L.toast(page));
+  }
   await L.done(b);
 })();

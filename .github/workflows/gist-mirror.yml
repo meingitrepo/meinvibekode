@@ -1,23 +1,58 @@
-# Copies the built userscript to a secret gist, because Violentmonkey cannot
+# Runs the highlighter's tests on every push and pull request that touches it. On main, once
+# they pass, copies the built userscript to a secret gist, because Violentmonkey cannot
 # fetch updates from this private repo. The copy's @updateURL/@downloadURL are
 # rewritten to the gist's raw URL, so installs from the gist update from the gist.
 # The same file also goes to the gist as RoughNotationHighlighter.user.js, its name before 7.45,
 # so copies installed from that URL keep updating (to the new URL, after one update).
 # Needs repo secrets GIST_TOKEN (classic token with "gist" scope, or fine-grained with Gists: read and write) and GIST_ID.
-name: Mirror userscript to gist
+name: Test, then mirror userscript to gist
 
 on:
   push:
-    branches: [main]
-    paths: [highlighter/Highlighter.user.js]
+    paths: [highlighter/**, .github/workflows/gist-mirror.yml]
+  pull_request:
+    paths: [highlighter/**, .github/workflows/gist-mirror.yml]
   workflow_dispatch:
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: highlighter/test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Run the tests
+        run: node run.js
+
+  # Only for main, once the tests pass, and only when the built file changed (or on a manual run).
   mirror:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Did the built file change?
+        id: changed
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "${{ github.event_name }}" != push ] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null \
+            || ! git diff --quiet "$BEFORE" HEAD -- highlighter/Highlighter.user.js; then
+            echo "yes=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Update gist
+        if: steps.changed.outputs.yes == 'true'
         env:
           GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
           GIST_ID: ${{ secrets.GIST_ID }}

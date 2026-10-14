@@ -53,10 +53,12 @@
         part.selectNodeContents(wrapper);
         if (range.compareBoundaryPoints(Range.START_TO_START, part) > 0) part.setStart(range.startContainer, range.startOffset);
         if (range.compareBoundaryPoints(Range.END_TO_END, part) < 0) part.setEnd(range.endContainer, range.endOffset);
-        return { svg, wrapper, rects: textRects(part), o: svg.getBoundingClientRect() };
+        let area = null;   // the drawing's own extent, in its user space
+        try { area = svg.getBBox(); } catch (e) { /* not rendered */ }
+        return { svg, wrapper, rects: textRects(part), o: svg.getBoundingClientRect(), area };
     }
 
-    function markSelected({ svg, wrapper, rects, o }) {
+    function markSelected({ svg, wrapper, rects, o, area }) {
         const paths = Array.from(svg.children).filter(el => el.tagName.toLowerCase() === 'path');
         if (!rects.length || !paths.length) return;
         const config = annotationMap.get(wrapper).config;
@@ -74,8 +76,15 @@
         });
         g.append(clip, copies);
         const highlight = config.type === 'highlight';
-        const mask = svgEl('mask', { id: `highlighter-unselected-${n}`, maskUnits: 'userSpaceOnUse', x: -1e5, y: -1e5, width: 2e5, height: 2e5 });
-        mask.appendChild(svgEl('rect', { x: -1e5, y: -1e5, width: 2e5, height: 2e5, fill: '#fff' }));
+        // The mask covers only the drawing (with its stroke): the browser paints a mask over its
+        // whole region, and a page-sized one made every move of a selection over a big
+        // annotation slow.
+        const pad = width + 2;
+        const region = area && area.width + area.height > 0
+            ? { x: area.x - pad, y: area.y - pad, width: area.width + 2 * pad, height: area.height + 2 * pad }
+            : { x: -1e5, y: -1e5, width: 2e5, height: 2e5 };
+        const mask = svgEl('mask', { id: `highlighter-unselected-${n}`, maskUnits: 'userSpaceOnUse', ...region });
+        mask.appendChild(svgEl('rect', { ...region, fill: '#fff' }));
         rects.forEach(r => mask.appendChild(svgEl('rect', { ...box(r, highlight ? 0 : width + 1), fill: '#000' })));
         paths.forEach(p => p.setAttribute('mask', `url(#highlighter-unselected-${n})`));
         selectedSVGs.add(svg);

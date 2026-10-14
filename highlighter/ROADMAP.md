@@ -43,6 +43,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 7.58 | Selection gap fix | Selecting text across overlapping highlights no longer cuts a square hole out of the outer highlight while the selection lasts |
 | 7.59 | No flicker after deselecting | A highlight's color comes back in the same frame the selection clears (on the mouse press, or as soon as the selection collapses), not a frame later |
 | 8.0 | Clean base | Fixes: the click-select outline works on sites that enforce Trusted Types (it threw before); drawings no longer add empty scrolling past the page's end; Enter on the note editor's Delete or Cancel button presses that button instead of saving. Faster with many annotations (300 measured): selecting across them 290 ms to 25 ms, a theme switch 380 ms to 50 ms, outlines of selected annotations 115 ms to 40 ms a frame. Leftovers from rough-notation (padding, unused options) removed. The tests moved into `test/` (`node test/run.js`), and the gist mirror Action runs them first and only publishes when they pass. Saved annotations and settings are unchanged |
+| 8.1 | Smooth selecting over big annotations | Dragging a selection over a large annotation (a highlight across many paragraphs) lagged behind the mouse: the mask that hides the drawing under the selection covered a 200,000 px square, which the browser painted on every move. It now covers only the drawing. Frames of up to 110 ms while dragging are now 17 ms |
 
 ## Next, roughly in order
 

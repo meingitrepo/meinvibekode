@@ -16,7 +16,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px">
   let wb = await L.wr(B);
   L.check('A highlight shows in B', wb.length === 1 && wb[0].k === 'h' && wb[0].t === 'bravo charlie delta', wb);
 
-  await click(B); await B.keyboard.press('Digit4'); await settle();
+  await click(B); await B.keyboard.press('Digit2'); await settle();
   let wa = await L.wr(A);
   L.check('B restyle shows in A', wa.length === 1 && wa[0].k === 'h4', wa);
 
@@ -36,7 +36,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px">
   await click(B, wb.findIndex(w => w.k === 'u')); await B.keyboard.press('KeyN'); await B.waitForTimeout(150);
   L.check('B editor open', await B.evaluate(() => !!window.__hl.editor), null);
   wa = await L.wr(A);
-  await click(A, wa.findIndex(w => w.k === 'u')); await A.keyboard.press('Digit2'); await settle();
+  await click(A, wa.findIndex(w => w.k === 'u')); await A.keyboard.press('Digit1'); await settle();
   wb = await L.wr(B);
   L.check('annotation being noted in B untouched', wb.some(w => w.g === g && w.k === 'u'), wb);
   await B.keyboard.type('hello'); await B.evaluate(() => window.__hl.saveEditor()); await settle();

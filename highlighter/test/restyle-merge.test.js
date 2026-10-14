@@ -8,13 +8,13 @@ const groups = w => { const m = {}; w.forEach(x => { (m[x.g] = m[x.g] || []).pus
   for (const which of ['inner', 'outer']) {
     const { page } = await L.open(b, { html });
     await L.selStr(page, '#p', 'Alpha', { endStr: 'charlie' }); await L.altKey(page, 'KeyH');
-    await L.selStr(page, '#p', 'bravo', { endStr: 'echo' }); await L.altKey(page, 'Digit4');
+    await L.selStr(page, '#p', 'bravo', { endStr: 'echo' }); await L.altKey(page, 'Digit2');
     await page.evaluate(() => { const g = window.__hl.allWrappers().find(w => w.getAttribute('data-style-key') === 'h'); g.setAttribute('data-highlighter-note', 'yellow note'); });
     // click the magenta (outside the yellow) or the yellow, and give it the other's color
     const key = which === 'inner' ? 'h4' : 'h';
     const pt = await page.evaluate(k => { const ws = window.__hl.allWrappers().filter(w => w.getAttribute('data-style-key') === k); const w = ws[ws.length - 1]; const r = w.getClientRects()[0]; return k === 'h' ? { x: r.left + 4, y: r.top + r.height / 2 } : { x: r.right - 4, y: r.top + r.height / 2 }; }, key);
     await page.mouse.click(pt.x, pt.y); await page.waitForTimeout(150);
-    await page.keyboard.press(which === 'inner' ? 'Digit1' : 'Digit4');
+    await page.keyboard.press(which === 'inner' ? 'Digit3' : 'Digit2');
     // 7.57: the merged annotation draws in as one stroke: its pieces one after another, 200 ms in all
     const anim = await page.evaluate(() => window.__hl.allWrappers().map(w => { const p = window.__hl.getSvg(w).querySelector('path'); const m = /(\d+(?:\.\d+)?)ms ease-out (\d+(?:\.\d+)?)ms/.exec(p.style.animation || ''); return m ? [w.textContent, +m[1], +m[2]] : [w.textContent, null]; }));
     const spans = anim.filter(a => a[1] !== null).map(a => [a[2], a[2] + a[1]]).sort((x, y) => x[0] - y[0]);

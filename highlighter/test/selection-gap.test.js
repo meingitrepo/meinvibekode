@@ -8,7 +8,7 @@ const html = `<html><body style="font:18px/1.6 Georgia,serif;margin:40px;width:6
   for (const scheme of ['light', 'dark']) {
     const { page } = await L.open(b, { html, scheme });
     await L.selStr(page, '#p', 'word5 ', { endStr: 'word90' }); await L.altKey(page, 'KeyH');
-    await L.selStr(page, '#p', 'word40 ', { endStr: 'word50' }); await L.altKey(page, 'Digit2');
+    await L.selStr(page, '#p', 'word40 ', { endStr: 'word50' }); await L.altKey(page, 'Digit1');
     await page.mouse.move(1000, 650); await page.waitForTimeout(500);
     await L.selStr(page, '#p', 'word30 ', { endStr: 'word60' }); await page.waitForTimeout(300);
     // every mask rect must lie within a line of the selection

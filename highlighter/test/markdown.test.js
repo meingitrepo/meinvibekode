@@ -23,7 +23,7 @@ const HTML = `<!doctype html><html><head><title>T3</title></head><body style="fo
   L.check('gap shows ellipsis', JSON.stringify(pa) === JSON.stringify([['one mid … end ital']]), pa);
   // two-paragraph annotation
   await page.evaluate(() => { const a = document.querySelector('#p2').firstChild, b = document.querySelector('#p3').firstChild; const r = document.createRange(); r.setStart(a, 7); r.setEnd(b, 15); getSelection().removeAllRanges(); getSelection().addRange(r); });
-  await L.altKey(page, '4');
+  await L.altKey(page, '2');
   await page.evaluate(() => window.__hl.copyAnnotations()); await page.waitForTimeout(100);
   const md = await page.evaluate(() => window.__clip);
   console.log(md);

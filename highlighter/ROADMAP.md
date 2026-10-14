@@ -49,6 +49,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.4 | Windows only | The script is written for Windows (Chrome, Edge, Firefox): Mac and Linux handling is gone (Cmd+click, the Option-key check in the panel's filter box) and so are the plans that only served them (a Linux Alt+Shift+digit alias, the phone toolbar). Alt+O, J and K in the filter box now also work with non-Latin keyboard layouts; the Option-key check blocked them there |
 | 8.5 | Clearer red lines | Underline and strike-through draw in a clear red (#D32F2F, 5:1 on white) on light backgrounds and a warm light red (#FF5F57, 6:1 on near-black) on dark ones, replacing 7.36's #EF5350, which looked pinkish at 1px on white |
 | 8.6 | Cyan, magenta, yellow | The highlight colours are soft cyan (#8CE6F2), magenta (#F2A0E8) and yellow (#FFEF6E), all at least 8.7:1 with dark text, and on dark backgrounds deep cyan (#006D7A), magenta (#9C1F8C) and gold (#7A6200), all at least 4.7:1 with light gray text. Alt+2 and Alt+4 keep their keys, so annotations saved green or pink now draw cyan or magenta; the retired blue and orange still draw as before |
+| 8.7 | CMY order | The toolbar lists cyan, magenta, yellow, and the number keys follow: Alt+1 cyan, Alt+2 magenta, Alt+3 yellow (Alt+H still yellow). Alt+4 does nothing now. Saved annotations keep their colours |
 
 ## Next, roughly in order
 

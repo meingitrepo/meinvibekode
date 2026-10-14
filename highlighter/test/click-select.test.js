@@ -23,13 +23,13 @@ const html = `<html><body style="font:16px sans-serif;margin:40px">
     console.log('  box color', bx && bx.color);
     // plain digit restyles, mouse away
     await page.mouse.move(800, 600);
-    await page.keyboard.press('Digit4'); await page.waitForTimeout(150);
+    await page.keyboard.press('Digit2'); await page.waitForTimeout(150);
     w = await L.wr(page);
     L.check(`${scheme} plain 4 restyles`, w.every(x => x.k === 'h4'), w);
     L.check(`${scheme} still selected`, !!(await box()), null);
-    await L.altKey(page, 'Digit2');
+    await L.altKey(page, 'Digit1');
     w = await L.wr(page);
-    L.check(`${scheme} Alt+2 restyles`, w.every(x => x.k === 'h2'), w);
+    L.check(`${scheme} Alt+1 restyles`, w.every(x => x.k === 'h2'), w);
     // N opens the note editor
     await page.keyboard.press('KeyN'); await page.waitForTimeout(200);
     L.check(`${scheme} N opens editor`, await page.evaluate(() => !!window.__hl.editor), null);

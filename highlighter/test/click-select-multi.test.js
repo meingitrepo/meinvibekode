@@ -25,7 +25,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   L.check('shift+click again from the anchor (hotel), just that span', JSON.stringify(await sel()) === '["echo","hotel"]', await sel());
   let t = await L.toolbar(page);
   L.check('toolbar for several', t && t.buttons.some(x => x.label === 'Remove 2 annotations'), t && t.buttons.map(x => x.label));
-  await page.keyboard.press('Digit2'); await page.waitForTimeout(200);
+  await page.keyboard.press('Digit1'); await page.waitForTimeout(200);
   let w = await L.wr(page);
   L.check('2 restyles all selected', ['echo', 'hotel'].every(s => w.find(x => x.t === s).k === 'h2') && w.find(x => x.t === 'kilo').k === 'h', w);
   await L.altKey(page, 'KeyZ');
@@ -62,7 +62,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   await click('bravo'); await click('kilo', 'Control');
   t = await L.toolbar(page);
   L.check('common style pressed', t && t.buttons.some(x => x.label === 'Remove yellow highlight' && x.pressed === 'true'), t && t.buttons);
-  await page.keyboard.press('Digit1'); await page.waitForTimeout(200);
+  await page.keyboard.press('Digit3'); await page.waitForTimeout(200);
   L.check('own style removes both', (await L.wr(page)).length === 3, await L.wr(page));
   await L.altKey(page, 'KeyZ');
   // Esc clears, plain click selects one

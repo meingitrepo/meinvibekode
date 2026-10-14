@@ -17,7 +17,7 @@ const recs = s => s.map(r => `${r.key}:${r.text}`).sort();
     let w = await L.wr(page);
     L.check(`${scheme} highlight kept under underline`, w.some(x => x.k === 'h' && x.t === 'Alpha bravo charlie') && w.filter(x => x.k === 'u').map(x => x.t).join('') === 'bravo charlie delta', w);
     // second highlight, partly over the first
-    await L.selStr(page, '#p', 'charlie', { endStr: 'echo' }); await L.altKey(page, 'Digit2');
+    await L.selStr(page, '#p', 'charlie', { endStr: 'echo' }); await L.altKey(page, 'Digit1');
     await page.waitForTimeout(300);
     let s = await sw(page);
     const y = s.find(x => x.k === 'h'), gIn = s.find(x => x.k === 'h2' && x.nested), gOut = s.find(x => x.k === 'h2' && !x.nested);
@@ -52,7 +52,7 @@ const recs = s => s.map(r => `${r.key}:${r.text}`).sort();
     // restyle yellow to green by clicking it: the nested green merges in
     const pt = await p2.evaluate(() => { const w = window.__hl.allWrappers().find(w => w.getAttribute('data-style-key') === 'h'); const r = w.getClientRects()[0]; return { x: r.left + 4, y: r.top + r.height / 2 }; });
     await p2.mouse.click(pt.x, pt.y); await p2.waitForTimeout(150);
-    await p2.keyboard.press('Digit2'); await p2.waitForTimeout(300);
+    await p2.keyboard.press('Digit1'); await p2.waitForTimeout(300);
     const s3 = await sw(p2);
     L.check(`${scheme} restyle drops nested same style`, !s3.some(x => x.k === 'h2' && x.nested && x.sw < 15) && !s3.some(x => x.k === 'h'), s3);
     await p2.keyboard.press('Escape');

@@ -29,7 +29,7 @@ async function toolbar(browser) {
   await p.keyboard.press('ArrowRight');
   await p.keyboard.press('Enter'); await p.waitForTimeout(200);
   const w = await L.wr(p);
-  check('Enter on a button applies it (the second: green)', w.length === 1 && w[0].k === 'h2', w);
+  check('Enter on a button applies it (the second: magenta)', w.length === 1 && w[0].k === 'h4', w);
   check('no page errors', p.__errors.length === 0, p.__errors);
   await ctx.close();
 }

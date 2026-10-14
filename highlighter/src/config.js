@@ -83,10 +83,10 @@
     // overrides that, for example { color: '#444', textColor: '#fff' }.
     const HIGHLIGHT = { type: 'highlight', textColor: '' };
     const STYLES = {
-        h:  { ...HIGHLIGHT, label: 'Yellow highlight', shortcut: ['KeyH', 'Digit1'], color: '#FFEF6E' },
-        h2: { ...HIGHLIGHT, label: 'Cyan highlight', shortcut: 'Digit2', color: '#8CE6F2' },     // was green before 8.6
+        h2: { ...HIGHLIGHT, label: 'Cyan highlight', shortcut: 'Digit1', color: '#8CE6F2' },     // was green before 8.6
+        h4: { ...HIGHLIGHT, label: 'Magenta highlight', shortcut: 'Digit2', color: '#F2A0E8' }, // was pink before 8.6
+        h:  { ...HIGHLIGHT, label: 'Yellow highlight', shortcut: ['KeyH', 'Digit3'], color: '#FFEF6E' },
         h3: { ...HIGHLIGHT, label: 'Blue highlight', retired: true, color: '#90CAF9' },
-        h4: { ...HIGHLIGHT, label: 'Magenta highlight', shortcut: 'Digit4', color: '#F2A0E8' }, // was pink before 8.6
         h5: { ...HIGHLIGHT, label: 'Orange highlight', retired: true, color: '#FFCC80' },
         u:  { label: 'Underline', shortcut: 'KeyU', type: 'underline', color: '#D32F2F', textColor: '', strokeWidth: 1 },   // clear red at 1px, 5:1 on white
         s:  { label: 'Strikethrough', shortcut: 'KeyS', type: 'strike-through', color: '#D32F2F', textColor: '', strokeWidth: 1 }

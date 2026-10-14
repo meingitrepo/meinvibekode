@@ -51,11 +51,11 @@ async function basic(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store: storeOf(recA(), recB()) });
   await watchPrevented(p);
   await hover(p, 'gA');
-  await L.altKey(p, '2');
+  await L.altKey(p, '1');
   let s = await state(p);
   let st = await L.stored(p);
   const a = st.find(r => r.group === 'gA');
-  check('Alt+2 on a pointed yellow makes it green, note kept', keysOf(s, 'gA').join() === 'h2' && s.find(w => w.g === 'gA').n === 'my note', s);
+  check('Alt+1 on a pointed yellow makes it green, note kept', keysOf(s, 'gA').join() === 'h2' && s.find(w => w.g === 'gA').n === 'my note', s);
   check('stored with the new style, same group, note and date', a && a.key === 'h2' && a.note === 'my note' && st.length === 2, st);
   check('key was taken (preventDefault)', (await lastPrevented(p)) === true, null);
   check('no toast for a restyle', (await L.toast(p)) === null, await L.toast(p));
@@ -68,7 +68,7 @@ async function basic(browser) {
   s = await state(p);
   check('Alt+Y makes it green again', keysOf(s, 'gA').join() === 'h2', s);
   // Undo and redo drew it again: the mouse hasn't moved, and it still points at it.
-  await L.altKey(p, '2');
+  await L.altKey(p, '1');
   s = await state(p);
   st = await L.stored(p);
   check('its own style removes it (after undo/redo redrew it under a still mouse)', !s.some(w => w.g === 'gA') && !st.some(r => r.group === 'gA'), { s, st });
@@ -104,16 +104,16 @@ async function noTarget(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store: storeOf(recA(), recB()) });
   await watchPrevented(p);
   await hoverEl(p, '#p4');
-  await L.altKey(p, '2');
+  await L.altKey(p, '1');
   const s = await state(p);
-  check('pointing at plain text: Alt+2 changes nothing', keysOf(s, 'gA').join() === 'h' && keysOf(s, 'gB').join() === 'u', s);
+  check('pointing at plain text: Alt+1 changes nothing', keysOf(s, 'gA').join() === 'h' && keysOf(s, 'gB').join() === 'u', s);
   check('pointing at plain text: the key stays the page\'s', (await lastPrevented(p)) === false, null);
   await L.altKey(p, 'Backspace');
   check('pointing at plain text: Alt+Backspace changes nothing and stays the page\'s', (await state(p)).length === 2 && (await lastPrevented(p)) === false, null);
   // The mouse leaves the window from an annotation.
   await hover(p, 'gA');
   await p.evaluate(() => document.querySelector('[data-highlighter-group="gA"]').dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: null })));
-  await L.altKey(p, '4');
+  await L.altKey(p, '2');
   check('mouse out of the window: nothing pointed at', keysOf(await state(p), 'gA').join() === 'h', await state(p));
   await ctx.close();
 }
@@ -123,9 +123,9 @@ async function hidden(browser) {
   await watchPrevented(p);
   await hover(p, 'gA');
   await L.altKey(p, 'v');
-  await L.altKey(p, '4');
+  await L.altKey(p, '2');
   let s = await state(p);
-  check('hidden: Alt+4 on a pointed annotation does nothing', keysOf(s, 'gA').join() === 'h' && (await p.evaluate(() => window.__hl.annotationsHidden)) === true, s);
+  check('hidden: Alt+2 on a pointed annotation does nothing', keysOf(s, 'gA').join() === 'h' && (await p.evaluate(() => window.__hl.annotationsHidden)) === true, s);
   check('hidden: the key stays the page\'s', (await lastPrevented(p)) === false, null);
   await L.altKey(p, 'Backspace');
   check('hidden: Alt+Backspace on it does nothing', keysOf(await state(p), 'gA').join() === 'h', await state(p));
@@ -141,7 +141,7 @@ async function panelHover(browser) {
   const b = await p.evaluate(() => { const r = window.__hl.panelEl.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + 20 }; });
   await p.mouse.move(b.x, b.y, { steps: 3 }); await p.waitForTimeout(100);
   await p.evaluate(() => document.activeElement && document.activeElement.blur());
-  await L.altKey(p, '2');
+  await L.altKey(p, '1');
   check('mouse over the panel points at no annotation', keysOf(await state(p), 'gA').join() === 'h', { s: await state(p), hovered: await p.evaluate(() => !!window.__hl.hoveredWrapper) });
   await ctx.close();
 }
@@ -152,7 +152,7 @@ async function jumpFallback(browser) {
   await L.altKey(p, 'j');
   await p.waitForTimeout(600);
   const jumped = await p.evaluate(() => window.__hl.jumpGroup);
-  await L.altKey(p, '4');
+  await L.altKey(p, '2');
   const s = await state(p);
   check('after Alt+J, a style key restyles the annotation jumped to', jumped && keysOf(s, jumped).join() === 'h4', { jumped, s });
   await ctx.close();
@@ -166,10 +166,10 @@ async function noteCard(browser) {
   check('setup: the note card shows', !!card, card);
   if (card) {
     await p.mouse.move(card.x, card.y, { steps: 3 }); await p.waitForTimeout(100);
-    await L.altKey(p, '2');
+    await L.altKey(p, '1');
     const s = await state(p);
-    check('mouse on the note card: Alt+2 restyles its annotation', keysOf(s, 'gA').join() === 'h2' && s[0].n === 'my note', s);
-    await L.altKey(p, '2');
+    check('mouse on the note card: Alt+1 restyles its annotation', keysOf(s, 'gA').join() === 'h2' && s[0].n === 'my note', s);
+    await L.altKey(p, '1');
     check('and its own style removes it, closing the card', (await state(p)).length === 0 && (await p.evaluate(() => window.__hl.noteCardEl.hidden)), { s: await state(p) });
   }
   await ctx.close();
@@ -179,7 +179,7 @@ async function selectionWins(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store: storeOf(recA(), recB()) });
   await hover(p, 'gA');
   await L.selStr(p, '#p4', 'Plain text');
-  await L.altKey(p, '4');
+  await L.altKey(p, '2');
   const s = await state(p);
   check('with a selection, the key acts on the selection, not on the pointed annotation', keysOf(s, 'gA').join() === 'h' && s.some(w => w.t === 'Plain text' && w.k === 'h4'), s);
   await ctx.close();
@@ -191,10 +191,10 @@ async function waitingPiece(browser) {
   const waiting = { xpath: '//*[@id="gone"]', startOffset: 0, length: 12, key: 'h', text: 'missing text', prefix: '', suffix: '', group: 'gP' };
   const { ctx, page: p } = await L.open(browser, { html: HTML, store: storeOf(present, waiting) });
   await hover(p, 'gP');
-  await L.altKey(p, '2');
+  await L.altKey(p, '1');
   const st = await L.stored(p);
   check('the waiting piece takes the new style too', st.length === 2 && st.every(r => r.key === 'h2' && r.group === 'gP'), st);
-  await L.altKey(p, '2');
+  await L.altKey(p, '1');
   check('its own style removes the waiting piece as well', (await L.stored(p)).length === 0, await L.stored(p));
   await ctx.close();
 }
@@ -207,7 +207,7 @@ async function legacyWaiting(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store: storeOf(placed) });
   const g = (await state(p))[0].g;
   await hover(p, g);
-  await L.altKey(p, '4');
+  await L.altKey(p, '2');
   const st = await L.stored(p);
   check('a legacy annotation keeps its derived group when restyled', st.length === 1 && st[0].key === 'h4' && st[0].group === g, { st, g });
   await ctx.close();
@@ -216,7 +216,7 @@ async function legacyWaiting(browser) {
 async function dark(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store: storeOf(recD()) });
   await hover(p, 'gD');
-  await L.altKey(p, '2');
+  await L.altKey(p, '1');
   const s = await state(p);
   check('on a dark box the new style uses its dark color', s[0].k === 'h2' && s[0].dark && s[0].stroke === '#006D7A', s);
   await ctx.close();
@@ -231,7 +231,7 @@ async function editorOther(browser) {
   await p.evaluate(() => document.body.focus());   // focus back on the page, editor still open
   await p.evaluate(() => { const h = window.__hl.uiHost; if (document.activeElement === h) h.blur(); });
   await hover(p, 'gA');
-  await L.altKey(p, '2');
+  await L.altKey(p, '1');
   const s = await state(p);
   const ed = await p.evaluate(() => window.__hl.editor);
   check('editor on another annotation closes, restyle applies', keysOf(s, 'gA').join() === 'h2' && !ed, { s, ed });

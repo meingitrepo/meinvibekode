@@ -41,11 +41,11 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
   L.check('same style on one piece removes every piece', w.every(x => x.k !== 'u'), w);
   L.check('toast after removing a split one', (await L.toast(page)) === 'Removed underline · Undo', await L.toast(page));
   // a different style inside: goes on top, sharing the text (7.53)
-  await L.selStr(page, '#p1', 'brown'); await L.altKey(page, '2');
+  await L.selStr(page, '#p1', 'brown'); await L.altKey(page, '1');
   w = await L.wr(page);
   L.check('another style on a word inside goes on top of it', w.map(x => x.k + ':' + x.t).join('|') === 'h:quick brown fox jumps|h2:brown', w);
   // --- eraser: exactly the selection, rest keeps its note ---
-  await L.selStr(page, '#p3', 'two three four five'); await L.altKey(page, '4');
+  await L.selStr(page, '#p3', 'two three four five'); await L.altKey(page, '2');
   await L.selStr(page, '#p3', 'three'); await L.altKey(page, 'n'); await page.keyboard.type('Numbers note'); await page.keyboard.press('Enter'); await page.waitForTimeout(150);
   await L.selStr(page, '#p3', 'four');
   await page.waitForTimeout(400);

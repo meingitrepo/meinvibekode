@@ -21,7 +21,7 @@ ${filler(40)}
   let st = await L.stored(page);
   L.check('legacy record gets added date', st.some(r => r.text === 'beta' && r.added > 1e12 && /^old-/.test(r.group)), st);
   // annotate with note
-  await L.selStr(page, '#p2', 'three four'); await L.altKey(page, '2');
+  await L.selStr(page, '#p2', 'three four'); await L.altKey(page, '1');
   await L.selStr(page, '#p3', 'quick brown fox'); await L.altKey(page, 'n'); await page.keyboard.type('Fox note #animals'); await page.keyboard.press('Enter'); await page.waitForTimeout(150);
   await L.selStr(page, '#p4', 'Repeated words'); await L.altKey(page, 'u');
   await L.selStr(page, '#p4', '*star* and _under_'); await L.altKey(page, 's');

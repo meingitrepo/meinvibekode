@@ -46,7 +46,7 @@ async function basics(browser) {
 async function startsWithLast(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML });
   await L.selStr(p, '#p1', 'plain words');
-  await L.altKey(p, '2');
+  await L.altKey(p, '1');
   await L.altKey(p, 'p');
   check('the pen starts with the style used last', (await pill(p)) === 'Pen: cyan highlight', await pill(p));
   await L.altKey(p, 'p');

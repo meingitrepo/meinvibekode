@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.6
+// @version      8.7
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -23,8 +23,7 @@
 /*
  * Shortcuts (Alt + key, matched by physical key so they work on non-Latin layouts;
  * written for Windows):
- *   H or 1                highlight (yellow)
- *   2 / 4                 highlight in cyan / magenta
+ *   1 / 2 / 3 (or H)      highlight in cyan / magenta / yellow
  *   U / S                 underline / strike-through
  *                         (the style the selected text already has removes that annotation, all of it)
  *                         With nothing selected, these restyle the annotation under the mouse, or
@@ -183,10 +182,10 @@
     // overrides that, for example { color: '#444', textColor: '#fff' }.
     const HIGHLIGHT = { type: 'highlight', textColor: '' };
     const STYLES = {
-        h:  { ...HIGHLIGHT, label: 'Yellow highlight', shortcut: ['KeyH', 'Digit1'], color: '#FFEF6E' },
-        h2: { ...HIGHLIGHT, label: 'Cyan highlight', shortcut: 'Digit2', color: '#8CE6F2' },     // was green before 8.6
+        h2: { ...HIGHLIGHT, label: 'Cyan highlight', shortcut: 'Digit1', color: '#8CE6F2' },     // was green before 8.6
+        h4: { ...HIGHLIGHT, label: 'Magenta highlight', shortcut: 'Digit2', color: '#F2A0E8' }, // was pink before 8.6
+        h:  { ...HIGHLIGHT, label: 'Yellow highlight', shortcut: ['KeyH', 'Digit3'], color: '#FFEF6E' },
         h3: { ...HIGHLIGHT, label: 'Blue highlight', retired: true, color: '#90CAF9' },
-        h4: { ...HIGHLIGHT, label: 'Magenta highlight', shortcut: 'Digit4', color: '#F2A0E8' }, // was pink before 8.6
         h5: { ...HIGHLIGHT, label: 'Orange highlight', retired: true, color: '#FFCC80' },
         u:  { label: 'Underline', shortcut: 'KeyU', type: 'underline', color: '#D32F2F', textColor: '', strokeWidth: 1 },   // clear red at 1px, 5:1 on white
         s:  { label: 'Strikethrough', shortcut: 'KeyS', type: 'strike-through', color: '#D32F2F', textColor: '', strokeWidth: 1 }

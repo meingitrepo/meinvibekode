@@ -119,6 +119,8 @@
             closeEverything();
             return;
         }
+        // Everything saved covers the page: the page's keys wait until it closes.
+        if (!everythingEl.hidden && e.code !== 'KeyO') return;
         if (selectedGroupKey(e)) return;
         // Esc turns the pen off, unless it is meant for a panel or a field.
         if (e.key === 'Escape' && penKey && !editor && !isUiEvent(e) && !isEditableTarget(e)) {

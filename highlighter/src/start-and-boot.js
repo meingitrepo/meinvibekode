@@ -152,15 +152,17 @@
         GM_listValues().forEach(k => { if (k !== SETTINGS_KEY) GM_deleteValue(k); });
         if (running) {
             resetUi();
+            closeEverything();
             stopLateWatcher();
             pendingRecords = [];
             undoStack.length = 0;
             redoStack.length = 0;
             unwrapAll();
             resetPageTracking();
+            schedulePanelRefresh();
             refreshMenu();
         }
-        alert('All saved highlights have been cleared.');
+        alert('Deleted all saved annotations.');
     }
 
     // =====================================================================

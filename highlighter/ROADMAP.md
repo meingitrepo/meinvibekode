@@ -64,6 +64,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.19 | Panel toasts and tooltips | Toasts stay in the bottom-right corner while the Alt+O panel is open (they no longer move left of it); tooltips stay on one line and inside the window near its edge |
 | 8.20 | Menu commands | Violentmonkey menu regrouped (view and copy, switches, then clearing) and reworded verb first with toast-style counts; "Turn off for file:" now reads "Turn off for local files"; "Clear ALL saved highlights" is "Delete all saved annotations…" |
 | 8.21 | Selection outline in step | The dashed outline around clicked annotations hides under the page's fixed and sticky bars (like the annotation itself) and scrolls with the page in the same frame instead of catching up a moment later |
+| 8.22 | Review: lighter selection, fixes | 8.21's check for the page's fixed and sticky bars over a clicked annotation's dashed outline is gone: it kept the browser busy the whole time an annotation stayed selected (300 selected: a full core), so the outline draws over such bars again, as before 8.21. It still scrolls with the page in step, and it is worked out again only when its lines move. With Alt+Shift+O open, the page's keys wait (Alt+D erased the annotation behind it). Delete on a new note offers "Deleted note · Restore", bringing back the highlight and the text (both were lost). With fewer animations set in Windows, new annotations appear at once. "Delete all saved annotations…" closes the search and says "Deleted all saved annotations." |
 
 ## Next, roughly in order
 
@@ -75,7 +76,7 @@ Item numbers stay the same when other items ship.
 |---|---|---|---|
 | 3 | **Site switch and shortcuts** | "Pause shortcuts and toolbar on this site" (annotations still show); `www.x.com` and `x.com` as one site. | S |
 | 6 | **Undo that lasts longer** | History kept per page while the tab is open; Alt+Shift+Backspace gets the Undo toast and a "Restore cleared annotations" menu item that works after a reload. | M |
-| 9 | **High contrast and reduced motion** | System colours in forced-colors mode, no animation with reduced motion, one 300 ms highlight stroke. | S |
+| 9 | **High contrast** | Annotations in system colours when a Windows contrast theme is on (forced-colors mode); the panels already follow it. | S |
 | 14 | **Backup and restore** | Export all annotations to JSON; import with Merge or Replace. Violentmonkey's own backup already covers script data. | M |
 
 Ranked lower: a scrollbar minimap of annotations (M); box and margin-bracket marks (M); a settings panel for colours and shortcuts (L).

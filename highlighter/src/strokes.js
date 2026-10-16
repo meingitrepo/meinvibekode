@@ -171,13 +171,15 @@
     // in one after another, like one stroke: together they take the animation's duration, each
     // its share by length. With `stagger` each annotation starts when the one before it has
     // finished, like a pen going through them in turn; without, they all start at once.
+    // With reduced motion asked for (a Windows setting), nothing draws in: it is there at once.
     function drawAnnotations(anns, { stagger = false } = {}) {
+        const still = prefersReducedMotion();   // see toast-and-jump.js
         const measured = anns.map(measureAnnotation);
         const groupOf = a => a.element.getAttribute(GROUP_ATTR) || a;
         const lengthOf = m => m.rects.reduce((sum, r) => sum + r.w, 0);
         const lengths = new Map();   // group -> length of its pieces that draw in
         anns.forEach((a, i) => {
-            if (!measured[i] || a.drawn || !a.animate) return;
+            if (!measured[i] || a.drawn || !a.animate || still) return;
             lengths.set(groupOf(a), (lengths.get(groupOf(a)) || 0) + lengthOf(measured[i]));
         });
         const starts = new Map();    // group -> when its next piece starts
@@ -185,7 +187,7 @@
         anns.forEach((a, i) => {
             if (innerToRedraw.has(a.element)) innerToRedraw.delete(a.element);   // drawn now (see redrawInner)
             if (!measured[i]) return;
-            const animate = !a.drawn && a.animate;
+            const animate = !a.drawn && a.animate && !still;
             const group = groupOf(a);
             const full = DRAW_IN_MS;
             const total = lengths.get(group);

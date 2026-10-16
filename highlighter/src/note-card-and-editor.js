@@ -370,9 +370,9 @@
 
     // Only Save saves, but text closed without saving can be brought back from the toast. For a
     // new note, `records` is the highlight that was made for it, which comes back too.
-    function offerDraft({ group, draft, records }) {
-        showToast('Note not saved', {
-            icon: 'note_edit_20_regular',
+    function offerDraft({ group, draft, records }, message = 'Note not saved', icon = 'note_edit_20_regular') {
+        showToast(message, {
+            icon,
             action: { label: 'Restore', keep: true, run: () => restoreDraft(group, draft, records) }
         });
     }
@@ -395,9 +395,14 @@
     }
 
     noteSave.addEventListener('click', () => saveEditor());
-    // An existing note is removed (its annotation stays); a new one is dropped along with the
-    // highlight that was made for it.
-    noteDelete.addEventListener('click', () => { noteInput.value = ''; saveEditor(); });
+    // An existing note is removed (its annotation stays), with Undo; a new one is dropped along
+    // with the highlight that was made for it, and what was typed in it can be restored, both.
+    noteDelete.addEventListener('click', () => {
+        const unsaved = editor && editor.step && noteDraft() ? cancelEditor({ offer: false }) : null;
+        if (unsaved) { offerDraft(unsaved, 'Deleted note', 'delete_20_regular'); return; }
+        noteInput.value = '';
+        saveEditor();
+    });
     editorEl.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
             e.preventDefault();

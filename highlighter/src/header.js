@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.21
+// @version      8.22
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -93,7 +93,8 @@
  * annotation remembers its page: on the others it isn't counted as missing, and the panel
  * lists it under "Saved on other pages".
  *
- * Annotations are drawn by the script itself (straight SVG strokes); it loads no library.
+ * Annotations are drawn by the script itself (straight SVG strokes); it loads no library. New
+ * ones draw in from the left, or appear at once where Windows is set to show fewer animations.
  *
  * This file is built from the files in src/ by build.js: edit those, then run node build.js.
  */

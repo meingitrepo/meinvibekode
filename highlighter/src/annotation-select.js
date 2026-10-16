@@ -11,15 +11,13 @@
     // for Undo.
     let selectedGroups = [];      // in the order they were selected; the last is Shift+click's start
     let selectFrame = 0;
-    const selectBoxes = new Map();   // group -> { el, path, hole, covers, at, cover, coveredAt }, `at` its last position
+    const selectBoxes = new Map();   // group -> { el, path, hole, shape }, `shape` its lines when last drawn (see followSelectBoxes)
     let selectBoxCount = 0;          // for the ids of their masks
-    let selectHostAt = { left: 0, top: 0 };   // the boxes' layer's last place in the window
+    let selectWrappers = null;       // { groups, epoch, at, map }: the selected annotations' wrappers (see followSelectBoxes)
 
     const SELECT_BOX_PAD = 4;
     const SELECT_BOX_RADIUS = 4;
     const SELECT_BADGE_GAP = 2;      // px between the note badge's rim and the outline around it
-    const SELECT_COVER_STEP = 16;    // px between the points tested for page bars over the outline
-    const SELECT_COVER_EVERY = 250;  // ms between those tests while nothing moves
     const CLICK_THROUGH_SELECTOR = 'a[href], button, input, select, textarea, label, summary, [role="button"], [role="link"], [contenteditable=""], [contenteditable="true"]';
 
     // The selected annotations in reading order.
@@ -39,20 +37,18 @@
         selectedGroups.forEach(g => {
             if (selectBoxes.has(g)) return;
             const first = groupWrappers(g)[0];
-            // The mask leaves a gap in the outline around the note badge (see noteBadgeHole), and
-            // hides it under the page's fixed and sticky bars (see pageCovers).
+            // The mask leaves a gap in the outline around the note badge (see noteBadgeHole).
             const id = `highlighter-select-mask-${++selectBoxCount}`;
             const outline = svgEl('svg', { 'aria-hidden': 'true' });
             const mask = svgEl('mask', { id, maskUnits: 'userSpaceOnUse', x: -1e4, y: -1e4, width: 2e4, height: 2e4 });
             const hole = svgEl('rect', { fill: 'black', width: 0, height: 0 });
-            const covers = svgEl('g', { fill: 'black' });
             const path = svgEl('path', { mask: `url(#${id})` });
-            mask.append(svgEl('rect', { x: -1e4, y: -1e4, width: 2e4, height: 2e4, fill: 'white' }), covers, hole);
+            mask.append(svgEl('rect', { x: -1e4, y: -1e4, width: 2e4, height: 2e4, fill: 'white' }), hole);
             outline.append(mask, path);
             const el = makeEl('div', { class: 'select-box', 'data-theme': first && first.hasAttribute(DARK_ATTR) ? 'dark' : 'light', hidden: '' },
                 [outline]);
             selectBoxesEl.appendChild(el);
-            selectBoxes.set(g, { el, path, hole, covers, at: '', cover: '', coveredAt: 0 });
+            selectBoxes.set(g, { el, path, hole, shape: '' });
         });
         ensureUi();
         if (!selectFrame) followSelectBoxes();
@@ -65,12 +61,24 @@
         selectFrame = 0;
         selectBoxes.forEach(({ el }) => el.remove());
         selectBoxes.clear();
+        selectWrappers = null;
         if (toolbarGroups) hideToolbar();
     }
 
-    function groupClientRects(groups) {
-        return annotationsHidden ? [] : [].concat(groups).flatMap(groupWrappers)
+    // `wrappers`: the groups' wrappers, when the caller has them already.
+    function groupClientRects(groups, wrappers = null) {
+        return annotationsHidden ? [] : (wrappers || [].concat(groups).flatMap(groupWrappers))
             .flatMap(w => Array.from(w.getClientRects())).filter(r => r.width || r.height);
+    }
+
+    // The wrappers of each of `groups`, found in one pass over the page rather than one per group.
+    function wrappersByGroup(groups) {
+        const map = new Map(groups.map(g => [g, []]));
+        allWrappers().forEach(w => {
+            const list = map.get(w.getAttribute(GROUP_ATTR));
+            if (list) list.push(w);
+        });
+        return map;
     }
 
     // The box around all of an annotation's lines (of several: around all of them), in the
@@ -89,8 +97,7 @@
     // line, from where the text starts on the first line to where it ends on the last, the rows
     // joined halfway between lines into one outline with rounded corners. Rows that don't touch
     // (a line ending left of where the line above it starts) get outlines of their own. Returns
-    // the box holding them all, in the viewport, the outlines as path data within it, and the rows
-    // (in the viewport).
+    // the box holding them all, in the viewport, and the outlines as path data within it.
     // `rects`: the annotation's line boxes (groupClientRects).
     function groupOutline(rects) {
         const rows = [];
@@ -124,57 +131,15 @@
             for (let i = run.length - 1; i >= 0; i--) pts.push([run[i].left, run[i].bottom], [run[i].left, run[i].top]);
             return roundedPath(cleanPolygon(pts), SELECT_BOX_RADIUS, rect);
         }).join(' ');
-        return { rect, d, rows };
-    }
-
-    // The page's fixed and sticky elements drawn over the outline (a site's header bar, say), as
-    // boxes in the viewport: the outline is hidden under them, as the annotation is. Found by
-    // asking which element is on top at points along the outline's rows; one in a fixed or
-    // sticky element that doesn't hold the annotation covers it.
-    function pageCovers(group, rows) {
-        const own = groupWrappers(group)[0];
-        const seen = new Map();   // element on top -> the element covering, or null
-        const covers = new Set();
-        const coverOf = el => {
-            if (seen.has(el)) return seen.get(el);
-            let c = null;
-            for (let e = el; e && e !== document.documentElement; e = e.parentElement || (e.getRootNode().host || null)) {
-                const pos = getComputedStyle(e).position;
-                if (pos === 'fixed' || pos === 'sticky') { c = e; break; }
-            }
-            if (c && own && c.contains(own)) c = null;
-            seen.set(el, c);
-            return c;
-        };
-        const vw = innerWidth, vh = innerHeight;
-        const test = (x, y) => {
-            if (x < 0 || y < 0 || x >= vw || y >= vh) return;
-            const el = document.elementFromPoint(x, y);
-            if (!el || el === uiHost) return;
-            const c = coverOf(el);
-            if (c) covers.add(c);
-        };
-        rows.forEach(o => {
-            const across = Math.max(1, Math.ceil((o.right - o.left) / SELECT_COVER_STEP));
-            for (let i = 0; i <= across; i++) {
-                const x = o.left + (o.right - o.left) * i / across;
-                test(x, o.top); test(x, o.bottom - 1);
-            }
-            const down = Math.max(1, Math.ceil((o.bottom - o.top) / SELECT_COVER_STEP));
-            for (let i = 0; i <= down; i++) {
-                const y = o.top + (o.bottom - o.top) * i / down;
-                test(o.left, y); test(o.right - 1, y);
-            }
-        });
-        return Array.from(covers, c => c.getBoundingClientRect()).filter(r => r.width && r.height);
+        return { rect, d };
     }
 
     // The note badge's box, widened by its rim and a gap, in the viewport; null without a note.
     // The badge is generated content (::after, see page-css-and-state.js), which has no rects of
     // its own: its size comes from its computed style, and its place from the end of the
     // annotation's last line, moved as the CSS moves it (translate(45%, -55%) from text-top).
-    function noteBadgeHole(group) {
-        const mark = groupWrappers(group).find(w => w.hasAttribute(NOTE_MARK_ATTR));
+    // `mark`: the annotation's wrapper that shows the badge, if any.
+    function noteBadgeHole(mark) {
         const r = mark && Array.from(mark.getClientRects()).filter(o => o.width || o.height).pop();
         if (!r) return null;
         const cs = getComputedStyle(mark, '::after');
@@ -216,11 +181,21 @@
     }
 
     // Each frame while any is selected: the boxes follow their annotations through scrolling,
-    // reflow and redraws, and go when they do (removed, undone, hidden by Alt+V).
+    // reflow and redraws, and go when they do (removed, undone, hidden by Alt+V). An outline is
+    // worked out again only when its lines moved in the layer (not when only the page scrolled),
+    // so a still selection costs little, however many annotations or lines it has.
     function followSelectBoxes() {
         selectFrame = 0;
         if (!selectedGroups.length) return;
-        const rects = new Map(selectedGroups.map(g => [g, groupClientRects(g)]));
+        const now = performance.now();
+        // Their wrappers are searched for again only when the script added or removed some, one
+        // left the page or its annotation, or a second has passed.
+        const cached = selectWrappers;
+        const valid = cached && cached.groups === selectedGroups && cached.epoch === wrapperEpoch && now - cached.at < 1000 &&
+            Array.from(cached.map).every(([g, ws]) => ws.every(w => w.isConnected && w.getAttribute(GROUP_ATTR) === g));
+        if (!valid) selectWrappers = { groups: selectedGroups, epoch: wrapperEpoch, at: now, map: wrappersByGroup(selectedGroups) };
+        const wrappersOf = selectWrappers.map;
+        const rects = new Map(selectedGroups.map(g => [g, groupClientRects(g, wrappersOf.get(g))]));
         const gone = selectedGroups.filter(g => !rects.get(g).length);
         if (gone.length) {
             setSelectedGroups(selectedGroups.filter(g => !gone.includes(g)));
@@ -228,34 +203,22 @@
         }
         // Where the boxes' layer is in the window: it moves as the page scrolls.
         const layer = selectHost.getBoundingClientRect();
-        const moved = layer.left !== selectHostAt.left || layer.top !== selectHostAt.top;
-        selectHostAt = layer;
         selectedGroups.forEach(g => {
             const box = selectBoxes.get(g);
-            const { rect, d, rows } = groupOutline(rects.get(g));
-            const hole = noteBadgeHole(g);
-            const cut = hole ? [hole.left - rect.left, hole.top - rect.top, hole.width, hole.height, hole.radius].map(n => Math.round(n * 10) / 10) : [0, 0, 0, 0, 0];
-            // In the layer: the same while only the page scrolls, so nothing is written then.
-            const top = Math.round((rect.top - layer.top) * 10) / 10, left = Math.round((rect.left - layer.left) * 10) / 10;
-            const at = `${left},${top},${rect.width},${rect.height} ${cut} ${d}`;
-            if (moved) box.coveredAt = 0;
-            if (at !== box.at) {
-                box.at = at;
+            const wrappers = wrappersOf.get(g);
+            const mark = wrappers.find(w => w.hasAttribute(NOTE_MARK_ATTR));
+            const shape = rects.get(g).map(r => `${r.left - layer.left},${r.top - layer.top},${r.width},${r.height}`).join(' ') +
+                (mark ? `|${wrappers.indexOf(mark)}` : '');
+            if (shape !== box.shape) {
+                box.shape = shape;
+                const { rect, d } = groupOutline(rects.get(g));
+                const hole = noteBadgeHole(mark);
+                const cut = hole ? [hole.left - rect.left, hole.top - rect.top, hole.width, hole.height, hole.radius].map(n => Math.round(n * 10) / 10) : [0, 0, 0, 0, 0];
+                // In the layer: the same while only the page scrolls.
+                const top = Math.round((rect.top - layer.top) * 10) / 10, left = Math.round((rect.left - layer.left) * 10) / 10;
                 Object.assign(box.el.style, { top: `${top}px`, left: `${left}px`, width: `${rect.width}px`, height: `${rect.height}px` });
                 box.path.setAttribute('d', d);   // not innerHTML: see makeEl
                 ['x', 'y', 'width', 'height', 'rx'].forEach((k, i) => box.hole.setAttribute(k, cut[i]));
-                box.coveredAt = 0;
-            }
-            // Bars over the outline: when it moves, and now and then while it doesn't (a bar
-            // can come and go by itself).
-            const now = performance.now();
-            if (now - box.coveredAt >= SELECT_COVER_EVERY) {
-                box.coveredAt = now;
-                const cover = pageCovers(g, rows).map(r => [r.left - rect.left, r.top - rect.top, r.width, r.height].map(n => Math.round(n * 10) / 10));
-                if (String(cover) !== box.cover) {
-                    box.cover = String(cover);
-                    box.covers.replaceChildren(...cover.map(([x, y, width, height]) => svgEl('rect', { x, y, width, height })));
-                }
             }
             box.el.hidden = false;
         });

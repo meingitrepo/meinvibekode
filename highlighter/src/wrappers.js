@@ -6,6 +6,10 @@
         return Array.from(document.querySelectorAll(WRAPPER_SELECTOR));
     }
 
+    // Goes up whenever the script adds or removes a wrapper, so what was found by searching the
+    // page for them can be kept until it does (see followSelectBoxes).
+    let wrapperEpoch = 0;
+
     function getSvg(wrapper) {
         const ann = annotationMap.get(wrapper);
         return ann && ann.svg && ann.svg.isConnected ? ann.svg : null;
@@ -325,6 +329,7 @@
         trackedRecords.delete(wrapper);
         visibilityObserver.unobserve(wrapper);
         redrawInner(wrapper);
+        wrapperEpoch++;
         return unwrapDom(wrapper);
     }
 
@@ -370,6 +375,7 @@
         try {
             wrapper.appendChild(range.extractContents());
             range.insertNode(wrapper);
+            wrapperEpoch++;
             const dark = darkBehind(wrapper);
             if (dark) wrapper.setAttribute(DARK_ATTR, '');
             updateInk(wrapper);

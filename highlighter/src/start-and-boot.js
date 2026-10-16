@@ -23,7 +23,7 @@
         if (uiFrame) return;
         uiFrame = requestAnimationFrame(() => {
             uiFrame = 0;
-            if (!noteCardEl.hidden) hideNoteCard();
+            if (!noteCardEl.hidden) followNoteCard();
             hideLabelTip();
             if (!toolbarEl.hidden) placeToolbar();
             if (editor) followEditorAnchor();

@@ -13,7 +13,7 @@ const check = (name, ok, info) => results.push([name, ok, info]);
   try {
     const { ctx, page: p } = await L.open(browser, { html: HTML, store });
     const r = (await L.rects(p, '#p1', 'alpha words'))[0];
-    await p.mouse.move((r.left + r.right) / 2, (r.top + r.bottom) / 2); await p.waitForTimeout(500);
+    await p.mouse.click((r.left + r.right) / 2, (r.top + r.bottom) / 2); await p.waitForTimeout(150);
     const c = await p.evaluate(() => { const t = window.__hl.cardText; return { text: t.textContent, links: Array.from(t.querySelectorAll('a')).map(a => [a.textContent, a.getAttribute('href'), a.target, a.rel]), b: t.querySelectorAll('b').length }; });
     check('the card shows the whole note as text', c.text === NOTE, c.text);
     check('addresses are links, without the punctuation after them', JSON.stringify(c.links.map(l => l.slice(0, 2))) === JSON.stringify([['https://example.org/a_(b)', 'https://example.org/a_(b)'], ['www.test.org/x', 'https://www.test.org/x']]), c.links);

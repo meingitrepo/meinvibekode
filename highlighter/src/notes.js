@@ -48,6 +48,7 @@
             const marked = lastOfGroup.get(w.getAttribute(GROUP_ATTR)) === w;
             if (marked !== w.hasAttribute(NOTE_MARK_ATTR)) w.toggleAttribute(NOTE_MARK_ATTR, marked);
         });
+        syncNoteFocus();   // the badge may have moved, or the note changed
         schedulePanelRefresh();
     }
 

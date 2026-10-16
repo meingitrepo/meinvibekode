@@ -109,5 +109,74 @@ const markOf = (p, word) => p.evaluate(`(() => { const w = ${wrapperOf(word)}; c
     L.check('no page errors', !p.__errors.length, p.__errors);
     await p.context().close();
   }
+  {
+    // A chat-style page: <html> never changes size and the log scrolls inside it. The site
+    // re-renders the log (new nodes, same text) a few times: the old wrappers are let go.
+    const msgs = Array.from({ length: 20 }, (_, i) => `<p id="m${i}">${i} ${TEXT}</p>`).join('');
+    const html = `<!doctype html><html style="height:100%;overflow:hidden"><body style="height:100%;margin:0;overflow:hidden;font:16px sans-serif"><div id="log" style="height:100%;overflow:auto">${msgs}</div></body></html>`;
+    const recs = Array.from({ length: 20 }, (_, i) => rec(`//*[@id="m${i}"]`, `${i} ${TEXT}`, 'hotel', 'h', 300 + i));
+    const { page: p } = await L.open(b, { html, store: { 'https://example.test/a': JSON.stringify(recs) } });
+    await p.waitForFunction(() => window.__hl.allWrappers().length === 20);
+    await p.waitForTimeout(400);
+    for (let k = 0; k < 3; k++) {
+      await p.evaluate(() => { const log = document.getElementById('log'); log.innerHTML = Array.from(log.children).map(el => `<p id="${el.id}">${el.textContent}</p>`).join(''); });
+      await p.waitForTimeout(2500);
+    }
+    const r = await p.evaluate(() => ({ onPage: window.__hl.allWrappers().length, held: Array.from(window.__hl.shownWrappers).filter(w => !w.isConnected).length }));
+    L.check('a page that re-renders its annotated text keeps no old wrappers', r.onPage === 20 && r.held === 0, r);
+    L.check('no page errors', !p.__errors.length, p.__errors);
+    await p.context().close();
+  }
+  {
+    // A tab panel kept off the page (same nodes) while an undo runs, then shown again.
+    const html = `<!doctype html><html><body style="font:16px/1.5 sans-serif;margin:40px;width:600px"><div id="top"></div>
+      <div id="tabs"><div id="P1"><p id="t1">${TEXT}</p></div></div><p id="o">${TEXT}</p></body></html>`;
+    const { page: p } = await L.open(b, { html, store: { 'https://example.test/a': JSON.stringify([rec('//*[@id="t1"]', TEXT, 'hotel india', 'h', 400), rec('//*[@id="o"]', TEXT, 'bravo', 'h', 401)]) } });
+    await p.waitForFunction(() => window.__hl.allWrappers().length === 2);
+    await p.waitForTimeout(400);
+    const off = () => p.evaluate(() => {
+      const w = document.querySelector('#t1 [data-highlighter-wrapper]'); if (!w) return 'no wrapper';
+      const a = w.getBoundingClientRect(); let t = null;
+      window.__hl.getSvg(w).querySelectorAll('path').forEach(q => { const r = q.getBoundingClientRect(); if (r.width || r.height) t = t === null ? r.top : Math.min(t, r.top); });
+      return t === null ? 'not drawn' : Math.round(t - a.top);
+    });
+    const ref = await off();
+    await L.selStr(p, '#o', 'bravo'); await L.altKey(p, 'KeyD'); await p.evaluate(() => getSelection().removeAllRanges());
+    await p.waitForTimeout(300);
+    // The other tab is as tall, so the page's size doesn't change.
+    await p.evaluate(T => { window.__P1 = document.getElementById('P1'); const P2 = document.createElement('div'); P2.id = 'P2'; P2.innerHTML = `<p>${T.split(' ').reverse().join(' ')}</p>`; window.__P1.replaceWith(P2); }, TEXT);
+    await p.waitForTimeout(1500);
+    await L.altKey(p, 'KeyZ'); await p.waitForTimeout(500);
+    await p.evaluate(() => document.getElementById('P2').replaceWith(window.__P1));
+    await p.waitForTimeout(2000);
+    await p.evaluate(() => { document.getElementById('top').style.height = '47px'; }); await frames(p); await p.waitForTimeout(1300);
+    const now = await off();
+    L.check('an annotation shown again after an undo still follows its text', now === ref, { now, ref });
+    L.check('no page errors', !p.__errors.length, p.__errors);
+    await p.context().close();
+  }
+  {
+    // A window resize brings other paragraphs into view: they are drawn in place in that frame.
+    const paras = Array.from({ length: 80 }, (_, i) => `<p id="q${i}">${i} ${TEXT}</p>`).join('');
+    const recs = Array.from({ length: 80 }, (_, i) => rec(`//*[@id="q${i}"]`, `${i} ${TEXT}`, 'romeo', 'h', 500 + i));
+    const html = `<!doctype html><html><body style="font:16px/1.5 sans-serif;margin:40px">${paras}</body></html>`;
+    const { page: p } = await L.open(b, { html, viewport: { width: 1100, height: 700 }, store: { 'https://example.test/a': JSON.stringify(recs) } });
+    await p.waitForFunction(() => window.__hl.allWrappers().length === 80);
+    await p.waitForTimeout(400);
+    await p.evaluate(() => {
+      window.__res = [];
+      addEventListener('resize', () => requestAnimationFrame(() => {
+        window.__res.push(window.__hl.allWrappers().filter(w => {
+          const a = w.getBoundingClientRect(); if (a.bottom < 0 || a.top > innerHeight) return false;
+          let l = null; window.__hl.getSvg(w).querySelectorAll('path').forEach(q => { const r = q.getBoundingClientRect(); if (r.width) l = l === null ? r.left : Math.min(l, r.left); });
+          return l === null || Math.abs(l - a.left) > 1;
+        }).length);
+      }));
+    });
+    for (const w of [500, 350, 900, 300, 1100]) { await p.setViewportSize({ width: w, height: 700 }); await p.waitForTimeout(300); }
+    const res = await p.evaluate(() => window.__res);
+    L.check('resizing: every annotation on screen is on its text in that frame', res.length >= 5 && res.every(n => n === 0), res);
+    await p.context().close();
+  }
   await L.done(b);
 })();

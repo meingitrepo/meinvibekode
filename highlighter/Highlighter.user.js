@@ -1547,6 +1547,7 @@
     const watchesVisibility = typeof IntersectionObserver === 'function';
     const visibilityObserver = watchesVisibility
         ? new IntersectionObserver(entries => {
+            if (!running) return;
             entries.forEach(e => {
                 if (!e.isIntersecting) { nearWrappers.delete(e.target); return; }
                 if (!annotationMap.has(e.target)) return;   // unwrapped since
@@ -1557,26 +1558,32 @@
         }, { rootMargin: '200px', threshold: 0 })
         : { observe() {}, unobserve() {} };
 
-    // Redraws the annotations whose text moved. `nearView` limits it to those on or near the screen.
-    function redrawMoved(nearView) {
+    // Lets go of the wrappers the site took off the page (also every second, so a page that keeps
+    // re-rendering doesn't keep the old ones alive); one it puts back is added again when the
+    // observer sees it.
+    function pruneShown() {
+        shownWrappers.forEach(w => { if (!w.isConnected) { shownWrappers.delete(w); nearWrappers.delete(w); } });
+    }
+
+    // Redraws the annotations whose text moved: of those near the screen as the observer last saw
+    // them ('near'), of those on or near it now ('view': after a resize, whose reflow can bring
+    // others into view before the observer has seen them), or of all ('all').
+    function redrawMoved(scope) {
+        const margin = 200;
+        const inView = w => { const r = w.getBoundingClientRect(); return r.bottom >= -margin && r.top <= window.innerHeight + margin; };
         if (watchesVisibility) {
-            const ws = nearView ? nearWrappers : shownWrappers;
-            if (!nearView) {
-                // Those the site took off the page are let go; one it puts back is added again
-                // when the observer sees it.
-                ws.forEach(w => { if (!w.isConnected) { shownWrappers.delete(w); nearWrappers.delete(w); } });
+            let ws;
+            if (scope === 'near') {
+                ws = Array.from(nearWrappers);
+            } else {
+                pruneShown();
+                ws = Array.from(shownWrappers);
+                if (scope === 'view') ws = ws.filter(inView);
             }
-            reposition(Array.from(ws).filter(w => w.isConnected && textMoved(w)));
+            reposition(ws.filter(w => w.isConnected && textMoved(w)));
             return;
         }
-        const margin = 200, bottom = window.innerHeight + margin;
-        reposition(allWrappers().filter(w => {
-            if (nearView) {
-                const r = w.getBoundingClientRect();
-                if (r.bottom < -margin || r.top > bottom) return false;
-            }
-            return textMoved(w);
-        }));
+        reposition(allWrappers().filter(w => (scope === 'all' || inView(w)) && textMoved(w)));
     }
 
     // While the window is resized or zoomed, or the page grows or shifts, the annotations on or
@@ -1586,13 +1593,23 @@
     let redrawTimer = null;
     let redrawFrame = 0;
     let lastFullRedraw = -Infinity;
+    let redrawResized = false;
     const FULL_REDRAW_GAP_MS = 1000;
-    function scheduleRedraw() {
-        if (!shownWrappers.size) return;   // nothing on the page: nothing to do, however big the page
-        if (!redrawFrame) redrawFrame = requestAnimationFrame(() => { redrawFrame = 0; redrawMoved(true); });
+    // `e` is the window's resize event when that is what calls it.
+    function scheduleRedraw(e) {
+        if (watchesVisibility && !shownWrappers.size) return;   // nothing on the page: nothing to do, however big the page
+        if (e && e.type === 'resize') redrawResized = true;
+        if (!redrawFrame) {
+            redrawFrame = requestAnimationFrame(() => {
+                redrawFrame = 0;
+                const scope = redrawResized ? 'view' : 'near';
+                redrawResized = false;
+                redrawMoved(scope);
+            });
+        }
         clearTimeout(redrawTimer);
         const wait = Math.max(150, lastFullRedraw + FULL_REDRAW_GAP_MS - performance.now());
-        redrawTimer = setTimeout(() => { lastFullRedraw = performance.now(); redrawMoved(false); }, wait);
+        redrawTimer = setTimeout(() => { lastFullRedraw = performance.now(); redrawMoved('all'); }, wait);
     }
 
     // =====================================================================
@@ -1641,8 +1658,8 @@
 
     function unwrapAll() {
         unwrapMany(allWrappers());
-        // Those the site took off the page are gone for good now (a new page, or stopped).
-        shownWrappers.forEach(w => visibilityObserver.unobserve(w));
+        // Those the site took off the page stay observed: one it puts back (and an undo takes as
+        // the same annotation) is added again when the observer sees it.
         shownWrappers.clear();
         nearWrappers.clear();
     }
@@ -5968,7 +5985,7 @@
             listen(window.navigation, 'navigatesuccess', () => setTimeout(onUrlMaybeChanged, 0));
         }
         listen(document, 'visibilitychange', onVisibilityChange);
-        const poll = setInterval(() => { onUrlMaybeChanged(); checkDetached(); notePanelChanges(); }, 1000);
+        const poll = setInterval(() => { onUrlMaybeChanged(); checkDetached(); pruneShown(); notePanelChanges(); }, 1000);
         teardown.push(() => clearInterval(poll));
 
         watchTheme();

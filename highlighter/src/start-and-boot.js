@@ -95,7 +95,7 @@
             listen(window.navigation, 'navigatesuccess', () => setTimeout(onUrlMaybeChanged, 0));
         }
         listen(document, 'visibilitychange', onVisibilityChange);
-        const poll = setInterval(() => { onUrlMaybeChanged(); checkDetached(); notePanelChanges(); }, 1000);
+        const poll = setInterval(() => { onUrlMaybeChanged(); checkDetached(); pruneShown(); notePanelChanges(); }, 1000);
         teardown.push(() => clearInterval(poll));
 
         watchTheme();

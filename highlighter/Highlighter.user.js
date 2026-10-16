@@ -1547,14 +1547,14 @@
     const watchesVisibility = typeof IntersectionObserver === 'function';
     const visibilityObserver = watchesVisibility
         ? new IntersectionObserver(entries => {
-            if (!running) return;
+            // Also while the script is off: a wrapper the site puts back then is followed once it is on.
             entries.forEach(e => {
                 if (!e.isIntersecting) { nearWrappers.delete(e.target); return; }
                 if (!annotationMap.has(e.target)) return;   // unwrapped since
                 nearWrappers.add(e.target);
                 shownWrappers.add(e.target);   // back on the page after the site took it off
             });
-            reposition(entries.filter(e => e.isIntersecting && rectChanged(e.target)).map(e => e.target));
+            if (running) reposition(entries.filter(e => e.isIntersecting && rectChanged(e.target)).map(e => e.target));
         }, { rootMargin: '200px', threshold: 0 })
         : { observe() {}, unobserve() {} };
 

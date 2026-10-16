@@ -124,6 +124,7 @@
         jumpGroup = null;
         setPen(null);
         uiHost.remove();
+        selectHost.remove();
         unwrapAll();
         resetPageTracking();
         unmarkSelected();

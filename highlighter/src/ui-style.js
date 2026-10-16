@@ -189,7 +189,7 @@
 
         /* Annotations selected by clicking them: a dashed outline around their lines' shape,
            black, or white on a dark page. */
-        .select-box { position: fixed; top: 0; left: 0; pointer-events: none; color: #000000; }
+        .select-box { position: absolute; top: 0; left: 0; pointer-events: none; color: #000000; }
         .select-box[data-theme="dark"] { color: #ffffff; }
         .select-box svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
         .select-box path { fill: none; stroke: currentColor; stroke-width: 2; stroke-dasharray: 6 4; }

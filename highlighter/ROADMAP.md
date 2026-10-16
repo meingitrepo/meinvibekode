@@ -63,6 +63,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.18 | Gap around the note badge | The dashed outline of a selected annotation leaves a small gap around its note badge instead of running over it |
 | 8.19 | Panel toasts and tooltips | Toasts stay in the bottom-right corner while the Alt+O panel is open (they no longer move left of it); tooltips stay on one line and inside the window near its edge |
 | 8.20 | Menu commands | Violentmonkey menu regrouped (view and copy, switches, then clearing) and reworded verb first with toast-style counts; "Turn off for file:" now reads "Turn off for local files"; "Clear ALL saved highlights" is "Delete all saved annotations…" |
+| 8.21 | Selection outline in step | The dashed outline around clicked annotations hides under the page's fixed and sticky bars (like the annotation itself) and scrolls with the page in the same frame instead of catching up a moment later |
 
 ## Next, roughly in order
 

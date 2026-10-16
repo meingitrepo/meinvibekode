@@ -86,11 +86,18 @@
     ]);
 
     // The dashed boxes around the annotations selected by clicking them (see setSelectedGroups).
+    // They sit in a layer of their own, placed in the page rather than the window, so they scroll
+    // with the page in the same frame as the text instead of following it a frame late. It stays
+    // under the other panels.
+    const selectHost = makeEl('div', { [UI_ATTR]: '' });
+    selectHost.style.cssText = 'all: initial !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 0 !important; height: 0 !important; pointer-events: none !important; z-index: 2147483646 !important;';
+    const selectRoot = selectHost.attachShadow({ mode: 'closed' });
     const selectBoxesEl = makeEl('div', { class: 'select-boxes' });
+    selectRoot.append(makeEl('style', { text: UI_CSS }), selectBoxesEl);
 
     // The note card and editor draw over the panel, and the tooltip goes last so it draws on top
     // of whichever panel its button is in.
-    uiRoot.append(makeEl('style', { text: UI_CSS }), selectBoxesEl, panelEl, toolbarEl, noteCardEl, editorEl, toastEl, penEl, everythingEl, labelTipEl);
+    uiRoot.append(makeEl('style', { text: UI_CSS }), panelEl, toolbarEl, noteCardEl, editorEl, toastEl, penEl, everythingEl, labelTipEl);
 
     // Keys typed in the note editor stay out of the page's own shortcut handlers.
     ['keydown', 'keyup', 'keypress'].forEach(type => uiHost.addEventListener(type, e => e.stopPropagation()));
@@ -107,6 +114,7 @@
 
     function ensureUi(dark = isDarkMode()) {
         applyUiTheme(dark);
+        if (!selectHost.isConnected) document.documentElement.appendChild(selectHost);
         if (!uiHost.isConnected) document.documentElement.appendChild(uiHost);
     }
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.39
+// @version      8.40
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -119,6 +119,7 @@
     const NOTE_ATTR = 'data-highlighter-note';
     const NOTE_MARK_ATTR = 'data-highlighter-note-mark';  // the piece that shows the note badge
     const NOTE_PIN_ATTR = 'data-highlighter-note-pin';    // on that piece while its badge was clicked to keep the note open
+    const NOTE_EDIT_ATTR = 'data-highlighter-note-edit';  // on an annotation's pieces while its note editor is open
     const INK_ATTR = 'data-highlighter-ink';          // 'dark' / 'light': text recolored to read on its highlight
     const DARK_ATTR = 'data-highlighter-dark';        // on a dark background: drawn with DARK_OVERRIDES
     const ADDED_ATTR = 'data-highlighter-added';      // when it was first seen, for annotations whose group has no date
@@ -163,8 +164,8 @@
     const NOTE_MAX_LINES = 12;                  // grows with the text up to this (the note card's 240px), then scrolls
     const NOTE_BADGE_SIZE = 10;                 // px, at least; the speech-bubble badge on annotations with a note,
     const NOTE_BADGE_EM = 0.6;                  // which grows with the font (0.6em: 10px at 16px, 19px on a 32px heading)
-    const NOTE_BADGE_COLOR = '#0F6CBD';         // Fluent's blue, apart from every highlight and line color,
-    const NOTE_BADGE_DARK_COLOR = '#479EF5';    // and its lighter tint on dark backgrounds
+    const NOTE_BADGE_COLOR = '#0F6CBD';         // Fluent's blue: the badge while its note is edited, on dark
+    const NOTE_BADGE_DARK_COLOR = '#479EF5';    // backgrounds (light dots); its lighter tint on light ones (dark dots)
     const FLASH_MS = 900;                       // an annotation jumped to blinks twice in this time
     const MARKDOWN_FRAGMENT_WORDS = 5;          // a long quote's link names its passage by this many words at each end
     const TRACKING_PARAM_RE = /^(utm_|fbclid$|gclid$|dclid$|msclkid$|mc_eid$|mc_cid$|igshid$|yclid$|_ga$|ref_src$)/i;
@@ -244,7 +245,7 @@
            holding three dots, sitting on the top-right corner of an annotation that has a note.
            Zero net width (its width is cancelled by an equal negative margin), so it never moves
            text; a transform lifts it half out of the line, so it covers little of the text. Its
-           rim and dots are in the background's color (light or dark, per DARK_ATTR), which keeps
+           rim is in the background's color (light or dark, per DARK_ATTR), which keeps
            it apart from highlights and lines of any color, stacked or not. Drawn with gradients,
            not an image, so pages that limit images (CSP) still show it. Generated content isn't
            part of textContent or the selection, so saved offsets are unaffected. It grows with
@@ -253,6 +254,7 @@
             --highlighter-badge: max(${NOTE_BADGE_SIZE}px, ${NOTE_BADGE_EM}em);
             --highlighter-badge-fill: ${NOTE_BADGE_COLOR};
             --highlighter-badge-rim: #ffffff;
+            --highlighter-badge-dots: ${INK.dark};
             content: "" !important;
             display: inline-block !important;
             box-sizing: border-box !important;
@@ -260,9 +262,9 @@
             margin: 0 0 0 calc(-1 * var(--highlighter-badge)) !important; padding: 0 !important; border: 0 !important;
             border-radius: 50% 50% 50% 8% !important;
             background:
-                radial-gradient(circle, var(--highlighter-badge-rim) 0 45%, transparent 55%) 18% 50% / 22% 26% no-repeat,
-                radial-gradient(circle, var(--highlighter-badge-rim) 0 45%, transparent 55%) 50% 50% / 22% 26% no-repeat,
-                radial-gradient(circle, var(--highlighter-badge-rim) 0 45%, transparent 55%) 82% 50% / 22% 26% no-repeat,
+                radial-gradient(circle, var(--highlighter-badge-dots) 0 45%, transparent 55%) 18% 50% / 22% 26% no-repeat,
+                radial-gradient(circle, var(--highlighter-badge-dots) 0 45%, transparent 55%) 50% 50% / 22% 26% no-repeat,
+                radial-gradient(circle, var(--highlighter-badge-dots) 0 45%, transparent 55%) 82% 50% / 22% 26% no-repeat,
                 var(--highlighter-badge-fill) !important;
             box-shadow: 0 0 0 max(1.5px, 0.08em) var(--highlighter-badge-rim) !important;
             vertical-align: text-top !important;
@@ -272,10 +274,20 @@
         span[${NOTE_MARK_ATTR}][${DARK_ATTR}]::after {
             --highlighter-badge-fill: ${NOTE_BADGE_DARK_COLOR};
             --highlighter-badge-rim: #1b1b1b;
+            --highlighter-badge-dots: ${INK.light};
         }
-        /* Clicked to keep its note open: the selection outline's color (see .select-box). */
-        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}]::after { --highlighter-badge-fill: #000000; }
-        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: #ffffff; }
+        /* The badge takes its annotation's color; clicked to keep its note open, a darker shade
+           of it (lighter on dark); while its note is being edited, blue. Dots are dark on light pages and
+           light on dark ones, so each color comes from the style's light or dark set, whichever is
+           further from the dots (a red line's badge is the light red on a light page). */
+        ${Object.keys(STYLES).map(k => `
+        span[${NOTE_MARK_ATTR}][${STYLE_ATTR}="${k}"]::after { --highlighter-badge-color: ${badgeColor(k, INK.dark)}; }
+        span[${NOTE_MARK_ATTR}][${STYLE_ATTR}="${k}"][${DARK_ATTR}]::after { --highlighter-badge-color: ${badgeColor(k, INK.light)}; }`).join('')}
+        span[${NOTE_MARK_ATTR}][${STYLE_ATTR}]::after { --highlighter-badge-fill: var(--highlighter-badge-color); }
+        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}]::after { --highlighter-badge-fill: color-mix(in srgb, var(--highlighter-badge-color) 80%, #000); }
+        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: color-mix(in srgb, var(--highlighter-badge-color) 80%, #fff); }
+        span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_DARK_COLOR}; }
+        span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_COLOR}; }
         /* An annotation jumped to (Alt+J / Alt+K, or from the panel) blinks twice. */
         svg[${FLASH_ATTR}] {
             animation: highlighter-flash ${FLASH_MS / 2}ms ease-in-out 2 !important;
@@ -287,6 +299,16 @@
             svg[${FLASH_ATTR}] { animation: highlighter-flash ${FLASH_MS}ms ease-in-out 1 !important; }
         }
     `;
+
+    // Of style `key`'s light and dark colors, the one with more contrast against the badge's `dots`.
+    // shortcut: compares 6-digit hex only (STYLES' colors); otherwise the light page takes the light set.
+    function badgeColor(key, dots) {
+        const colors = [resolveStyle(key, false).color, resolveStyle(key, true).color];
+        if (dots === INK.light) colors.reverse();
+        const rgb = h => ({ r: parseInt(h.slice(1, 3), 16), g: parseInt(h.slice(3, 5), 16), b: parseInt(h.slice(5, 7), 16) });
+        if (!colors.every(c => /^#[0-9a-f]{6}$/i.test(c))) return colors[0];
+        return contrastRatio(rgb(colors[1]), rgb(dots)) > contrastRatio(rgb(colors[0]), rgb(dots)) ? colors[1] : colors[0];
+    }
 
     // Alt+V: hides every annotation drawing. Switched on and off through its media attribute.
     const hideStyle = document.createElement('style');
@@ -4734,6 +4756,7 @@
         const focused = document.activeElement;
         if (!returnFocus) returnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
         editor = { group, original, step, returnFocus };
+        wrappers.forEach(w => w.setAttribute(NOTE_EDIT_ATTR, ''));
         editorTitle.textContent = original ? 'Edit note' : 'Add note';
         noteInput.value = draft === null ? original : draft;
         updateSaveState();
@@ -4747,6 +4770,7 @@
     function closeEditor() {
         const returnFocus = editor && editor.returnFocus;
         const hadFocus = document.activeElement === uiHost;
+        if (editor) groupWrappers(editor.group).forEach(w => w.removeAttribute(NOTE_EDIT_ATTR));
         editor = null;
         hideLabelTip();
         releaseFocus(editorEl);

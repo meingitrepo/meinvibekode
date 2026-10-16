@@ -360,6 +360,7 @@
         const focused = document.activeElement;
         if (!returnFocus) returnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
         editor = { group, original, step, returnFocus };
+        wrappers.forEach(w => w.setAttribute(NOTE_EDIT_ATTR, ''));
         editorTitle.textContent = original ? 'Edit note' : 'Add note';
         noteInput.value = draft === null ? original : draft;
         updateSaveState();
@@ -373,6 +374,7 @@
     function closeEditor() {
         const returnFocus = editor && editor.returnFocus;
         const hadFocus = document.activeElement === uiHost;
+        if (editor) groupWrappers(editor.group).forEach(w => w.removeAttribute(NOTE_EDIT_ATTR));
         editor = null;
         hideLabelTip();
         releaseFocus(editorEl);

@@ -57,9 +57,10 @@ async function delay(browser) {
   await ctx.close();
 }
 
-// 8.34: clicking a badge keeps its note open, the badge black like the selection outline; clicking it again or Esc (8.35) lets it go.
+// 8.34: clicking a badge keeps its note open, the badge a darker shade of its color (8.40); clicking it again or Esc (8.35) lets it go.
 // 8.38: clicks elsewhere keep it; it drags by its footer, the editor by its header.
 // 8.39: several can be pinned; a pinned note scrolls away with its badge; clicking outside the editor keeps it.
+const DARKER = 'color(srgb 0.8 0.749804 0.345098)';   // the yellow highlight mixed 80% with black
 async function pin(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store });
   await p.evaluate(() => { document.body.style.paddingBottom = '2000px'; });
@@ -71,14 +72,14 @@ async function pin(browser) {
   await p.mouse.click(bx, by); await p.waitForTimeout(50);
   let ps = await pins();
   check('clicking the badge pins its note at once', ps.length === 1 && ps[0].text === 'Note A', ps);
-  check('the clicked badge turns black', (await fill('gA')) === 'rgb(0, 0, 0)', await fill('gA'));
+  check('the clicked badge turns darker', (await fill('gA')) === DARKER, await fill('gA'));
   check('and the annotation is not selected', await p.evaluate(() => !window.__hl.selectedGroups.length), null);
   await p.mouse.move(5, 300, { steps: 4 }); await p.waitForTimeout(400);
   await p.mouse.click(5, 300); await p.waitForTimeout(50);
-  check('moving away and clicking elsewhere keep it', (await pins()).length === 1 && (await fill('gA')) === 'rgb(0, 0, 0)', await pins());
+  check('moving away and clicking elsewhere keep it', (await pins()).length === 1 && (await fill('gA')) === DARKER, await pins());
   await p.mouse.click(...await L.badge(p, 'gB')); await p.waitForTimeout(50);
   ps = await pins();
-  check('another badge pins a second note', ps.length === 2 && ps.map(c => c.text).sort().join() === 'Note A,Note B' && (await fill('gB')) === 'rgb(0, 0, 0)', ps);
+  check('another badge pins a second note', ps.length === 2 && ps.map(c => c.text).sort().join() === 'Note A,Note B' && (await fill('gB')) === DARKER, ps);
   await p.mouse.move(5, 300); await p.mouse.wheel(0, 500); await p.waitForTimeout(200);
   const ps2 = await pins();
   check('pinned notes scroll away with their badges', ps2.every((c, i) => Math.abs(ps[i].y - c.y - 500) < 3 && c.x === ps[i].x), { ps, ps2 });

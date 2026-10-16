@@ -54,8 +54,13 @@ const tbRect = page => L.toolbar(page).then(t => t && t.rect);
     const badge = t => badges.find(x => x.t === t);
     L.check('badge 10px at 16px, zero net width', badge('words').w === '10px' && badge('words').ml === '-10px', badges);
     L.check('badge grows on a heading', parseFloat(badge('heading').w) > 18, badges);
-    L.check('badge blue with a white rim on light', badge('words').bg === 'rgb(15, 108, 189)' && /rgb\(255, 255, 255\)/.test(badge('words').ring), badges);
-    L.check('badge lighter with a dark rim on dark', badge('darkCode').bg === 'rgb(71, 158, 245)' && /rgb\(27, 27, 27\)/.test(badge('darkCode').ring), badges);
+    L.check('badge in its highlight color with a white rim on light', badge('words').bg === 'rgb(255, 239, 110)' && /rgb\(255, 255, 255\)/.test(badge('words').ring), badges);
+    L.check('badge in the dark highlight color with a dark rim on dark', badge('darkCode').bg === 'rgb(122, 98, 0)' && /rgb\(27, 27, 27\)/.test(badge('darkCode').ring), badges);
+    await L.selStr(page, '#p1', 'words'); await L.altKey(page, 'n'); await page.waitForTimeout(150);
+    const editing = await page.evaluate(() => Array.from(document.querySelectorAll('span[data-highlighter-note-mark]')).map(w => [w.textContent, getComputedStyle(w, '::after').backgroundColor]));
+    L.check('badge blue while its note is edited', editing.find(x => x[0] === 'words')[1] === 'rgb(71, 158, 245)' && editing.find(x => x[0] === 'heading')[1] === 'rgb(255, 239, 110)', editing);
+    await page.keyboard.press('Escape'); await page.waitForTimeout(100);
+    L.check('back to its color after', await page.evaluate(() => Array.from(document.querySelectorAll('span[data-highlighter-note-mark]')).every(w => getComputedStyle(w, '::after').backgroundColor !== 'rgb(71, 158, 245)')), null);
     L.check('badge adds no text', !/n$/.test(badge('words').t), badges);
     // toast theme stays when the toolbar opens on a dark block
     await page.evaluate(() => window.__menu[Object.keys(window.__menu).find(k => /^Clear/.test(k))]());

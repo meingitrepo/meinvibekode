@@ -40,8 +40,8 @@ async function scenarioNotice(browser) {
   const { ctx, page: p } = await L.open(browser, { html: base, store: { [KEY]: JSON.stringify([recA(), recB(), recGone()]) } });
   await p.waitForTimeout(1300);
   let menu = await L.menu(p);
-  check('menu: Clear with count', menu.includes('Clear 3 annotations on this page'), menu);
-  check('menu: Forget with count', menu.includes('Forget 1 annotation not found'), menu);
+  check('menu: Clear with count', menu.includes('Clear 3x annotations on this page'), menu);
+  check('menu: Forget with count', menu.includes('Forget 1x annotation not found'), menu);
   const regs = await p.evaluate(() => window.__menuLog);
   await p.waitForTimeout(3000);
   check('menu: not registered again while nothing changes', (await p.evaluate(() => window.__menuLog)) === regs, regs);
@@ -58,17 +58,17 @@ async function scenarioNotice(browser) {
   });
   check('Show opens the panel at Not found', shown.open && shown.title === 'Not found on the page (1)' && shown.inView, shown);
   // Forget from the menu; the label goes, Clear's count follows
-  await p.evaluate(() => window.__menu['Forget 1 annotation not found']());
+  await p.evaluate(() => window.__menu['Forget 1x annotation not found']());
   await p.waitForTimeout(200);
   check('Forget from the menu', (await L.toast(p)) === 'Forgot 1x annotation · Undo', await L.toast(p));
   await p.waitForTimeout(1200);
   menu = await L.menu(p);
-  check('menu after Forget: no Forget item, Clear 2', !menu.some(m => m.startsWith('Forget')) && menu.includes('Clear 2 annotations on this page'), menu);
+  check('menu after Forget: no Forget item, Clear 2', !menu.some(m => m.startsWith('Forget')) && menu.includes('Clear 2x annotations on this page'), menu);
   // a new annotation updates the count
   await p.evaluate(() => window.__hl.closePanel());
   await L.selStr(p, '#p2', 'other words'); await L.altKey(p, 'KeyS'); await p.waitForTimeout(1200);
   menu = await L.menu(p);
-  check('menu after a new annotation: Clear 3', menu.includes('Clear 3 annotations on this page'), menu);
+  check('menu after a new annotation: Clear 3', menu.includes('Clear 3x annotations on this page'), menu);
   // undo restarts the watcher; the notice isn't repeated (nothing missing now anyway), and not twice per page
   check('notice remembered for the page', await p.evaluate(k => window.__hl.noticedKeys.has(k), KEY), null);
   check('no page errors', p.__errors.length === 0, p.__errors);
@@ -80,7 +80,7 @@ async function scenarioAllMissing(browser) {
   const seen = await watchToast(p, 18000);
   check('all missing: wording', seen.includes('Couldn\'t find 2x annotations · Show'), seen);
   const menu = await L.menu(p);
-  check('all missing: menu', menu.includes('Clear 2 annotations on this page') && menu.includes('Forget 2 annotations not found'), menu);
+  check('all missing: menu', menu.includes('Clear 2x annotations on this page') && menu.includes('Forget 2x annotations not found'), menu);
   await ctx.close();
 }
 
@@ -167,14 +167,14 @@ async function scenarioPages(browser) {
   check('pages: other page not missing', await p.evaluate(() => JSON.stringify(window.__hl.pageCounts())) === JSON.stringify({ total: 2, present: 1, missing: 1 }), await p.evaluate(() => window.__hl.pageCounts()));
   await p.waitForTimeout(1200);
   let menu = await L.menu(p);
-  check('pages: menu counts this page only', menu.includes('Clear 2 annotations on this page') && menu.includes('Forget 1 annotation not found'), menu);
+  check('pages: menu counts this page only', menu.includes('Clear 2x annotations on this page') && menu.includes('Forget 1x annotation not found'), menu);
   const seen = await watchToast(p, 17000);
   check('pages: notice counts this page only', seen.includes('Couldn\'t find 1x annotation · Show'), seen);
   st = await L.stored(p, CANON);
   check('pages: no miss for the other page\'s record', !st.find(r => r.group === 'gP1').misses && st.find(r => r.group === 'gLeg').misses === 1, st);
   const panel = await p.evaluate(() => { const r = window.__hl; r.openPanel({ focus: false }); r.renderPanel(); return Array.from(r.panelList.querySelectorAll('.section-title, .item-meta')).map(e => e.textContent); });
   check('pages: panel lists it under Saved on other pages', panel.length === 5 && panel[1] === 'Not found on the page (1)' && !panel[2].includes(' on ') && panel[3] === 'Saved on other pages (1)' && panel[4].endsWith(' · on /t'), panel);
-  await p.evaluate(() => window.__menu['Clear 2 annotations on this page']());
+  await p.evaluate(() => window.__menu['Clear 2x annotations on this page']());
   await p.waitForTimeout(300);
   check('pages: Clear says what it cleared', (await L.toast(p)) === 'Cleared 2x annotations · Undo', await L.toast(p));
   st = await L.stored(p, CANON);
@@ -185,7 +185,7 @@ async function scenarioPages(browser) {
   await p.waitForTimeout(1200);
   check('pages: page-1 record placed on page 1', (await L.wr(p)).some(x => x.g === 'gP1'), await L.wr(p));
   menu = await L.menu(p);
-  check('pages: page 1 menu has no Forget', menu.includes('Clear 1 annotation on this page') && !menu.some(m => m.startsWith('Forget')), menu);
+  check('pages: page 1 menu has no Forget', menu.includes('Clear 1x annotation on this page') && !menu.some(m => m.startsWith('Forget')), menu);
   await L.selStr(p, '#post', 'its first post'); await L.altKey(p, 'KeyU'); await p.waitForTimeout(300);
   st = await L.stored(p, CANON);
   check('pages: annotation made on the canonical page gets page ""', st.find(r => r.text === 'its first post').page === '', st);

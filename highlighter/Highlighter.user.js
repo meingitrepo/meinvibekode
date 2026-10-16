@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.19
+// @version      8.20
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -5820,38 +5820,42 @@
         menuTimer = setTimeout(() => { menuTimer = null; refreshMenu(); }, 300);
     }
 
-    // Labels carry counts ("Clear 12 annotations on this page"), and the command to forget
-    // missing annotations is there only when some are missing. The commands are registered
-    // again only when a label changes. A manager that can't take a command back keeps the
-    // first set, with fixed labels; its commands check the current state.
+    // Grouped as: look and copy, switches, then what deletes (the page's, then every page's).
+    // Labels are verb first, counts as in the toasts ("Clear 2x annotations"). The command to
+    // forget missing annotations is there only when some are missing. The commands are
+    // registered again only when a label changes. A manager that can't take a command back
+    // keeps the first set, with fixed labels; its commands check the current state.
     function refreshMenu() {
         if (typeof GM_registerMenuCommand !== 'function') return;
         const canRelabel = typeof GM_unregisterMenuCommand === 'function';
         if (menuIds.length && !canRelabel) return;
         const items = [];
-        if (running || !canRelabel) {
-            items.push(['Show annotations on this page', () => { if (running) openPanel(); }]);
-            items.push(['Copy annotations as Markdown', () => copyAnnotations()]);
-            items.push(['Search all saved annotations', () => { if (running) openEverything(); }]);
+        const shown = running || !canRelabel;
+        if (shown) {
+            items.push(['Show annotations', () => { if (running) openPanel(); }]);
+            items.push(['Search all pages', () => { if (running) openEverything(); }]);
+            items.push(['Copy as Markdown', () => copyAnnotations()]);
+        }
+        if (ENABLE_SELECTION_TOOLBAR && shown) {
+            items.push([!canRelabel ? 'Turn toolbar on/off'
+                : toolbarSwitchedOff() ? 'Turn toolbar on' : 'Turn toolbar off',
+                () => { if (running) toggleToolbarSwitch(); }]);
+        }
+        const site = location.hostname || (location.protocol === 'file:' ? 'local files' : siteId());
+        if (!canRelabel) items.push([`Turn on/off for ${site}`, toggleSite]);
+        else items.push([running ? `Turn off for ${site}` : `Turn on for ${site}`, toggleSite]);
+        if (shown) {
             if (!canRelabel) {
-                items.push(['Clear annotations on this page', clearPageAnnotations]);
-                items.push(['Forget annotations that can\'t be found on this page', forgetMissingAnnotations]);
+                items.push(['Forget missing annotations', forgetMissingAnnotations]);
+                items.push(['Clear this page', clearPageAnnotations]);
             } else {
                 const { total } = pageCounts();
                 const missing = countAnnotations(missingRecords());
-                if (total) items.push([`Clear ${annotationsText(total)} on this page`, clearPageAnnotations]);
-                if (missing) items.push([`Forget ${annotationsText(missing)} not found`, forgetMissingAnnotations]);
+                if (missing) items.push([`${doneText('Forget', missing)} not found`, forgetMissingAnnotations]);
+                if (total) items.push([`${doneText('Clear', total)} on this page`, clearPageAnnotations]);
             }
         }
-        const site = siteId();
-        if (!canRelabel) items.push([`Turn highlighter on/off for ${site}`, toggleSite]);
-        else items.push([running ? `Turn off for ${site}` : `Turn on for ${site}`, toggleSite]);
-        if (ENABLE_SELECTION_TOOLBAR && (running || !canRelabel)) {
-            items.push([!canRelabel ? 'Selection toolbar on/off'
-                : toolbarSwitchedOff() ? 'Turn selection toolbar on' : 'Turn selection toolbar off',
-                () => { if (running) toggleToolbarSwitch(); }]);
-        }
-        items.push(['Clear ALL saved highlights', clearAllSaved]);
+        items.push(['Delete all saved annotations…', clearAllSaved]);
 
         const labels = items.map(([label]) => label).join('\n');
         if (menuIds.length && labels === menuLabels) return;

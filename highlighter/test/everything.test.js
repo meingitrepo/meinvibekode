@@ -60,7 +60,7 @@ async function main(browser) {
   const vis = await p.evaluate(() => { const r = document.getElementById('p1').getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; });
   check('a quote from this page closes it and scrolls to the passage', (await state(p)) === null && vis, vis);
   // menu
-  check('the menu has it', (await L.menu(p)).includes('Search all saved annotations'), await L.menu(p));
+  check('the menu has it', (await L.menu(p)).includes('Search all pages'), await L.menu(p));
   // clicking the backdrop closes
   await L.altKey(p, 'o', true);
   await p.mouse.click(5, 5); await p.waitForTimeout(100);

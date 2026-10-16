@@ -53,18 +53,19 @@
             --highlighter-badge-rim: #1b1b1b;
             --highlighter-badge-dots: ${INK.light};
         }
-        /* The badge takes its annotation's color; clicked to keep its note open, a darker shade
-           of it (lighter on dark); while its note is being edited, blue. Dots are dark on light pages and
-           light on dark ones, so each color comes from the style's light or dark set, whichever is
-           further from the dots (a red line's badge is the light red on a light page). */
+        /* The badge takes its annotation's color. Dots are dark on light pages and light on dark
+           ones, so each color comes from the style's light or dark set, whichever is further from
+           the dots (a red line's badge is the light red on a light page). Clicked to keep its note
+           open, blue; while its annotation is selected or its note edited, the selection outline's
+           color (see .select-box), which wins over pinned. These have dots in the rim's color. */
         ${Object.keys(STYLES).map(k => `
         span[${NOTE_MARK_ATTR}][${STYLE_ATTR}="${k}"]::after { --highlighter-badge-color: ${badgeColor(k, INK.dark)}; }
         span[${NOTE_MARK_ATTR}][${STYLE_ATTR}="${k}"][${DARK_ATTR}]::after { --highlighter-badge-color: ${badgeColor(k, INK.light)}; }`).join('')}
         span[${NOTE_MARK_ATTR}][${STYLE_ATTR}]::after { --highlighter-badge-fill: var(--highlighter-badge-color); }
-        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}]::after { --highlighter-badge-fill: color-mix(in srgb, var(--highlighter-badge-color) 80%, #000); }
-        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: color-mix(in srgb, var(--highlighter-badge-color) 80%, #fff); }
-        span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_DARK_COLOR}; }
-        span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_COLOR}; }
+        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_COLOR}; --highlighter-badge-dots: var(--highlighter-badge-rim); }
+        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_DARK_COLOR}; }
+        span[${NOTE_MARK_ATTR}][${NOTE_SELECT_ATTR}]::after, span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}]::after { --highlighter-badge-fill: #000000; --highlighter-badge-dots: var(--highlighter-badge-rim); }
+        span[${NOTE_MARK_ATTR}][${NOTE_SELECT_ATTR}][${DARK_ATTR}]::after, span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: #ffffff; }
         /* An annotation jumped to (Alt+J / Alt+K, or from the panel) blinks twice. */
         svg[${FLASH_ATTR}] {
             animation: highlighter-flash ${FLASH_MS / 2}ms ease-in-out 2 !important;

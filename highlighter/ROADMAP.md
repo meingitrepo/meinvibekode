@@ -84,6 +84,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.39 | Several pinned notes; editor stays | Any number of notes can be pinned by their badges at once (Esc closes the last pinned); a pinned note now scrolls away with its badge instead of jumping beside the annotation; clicking outside the note editor no longer discards it (Save, Esc or opening another note closes it) |
 | 8.40 | Note badge in its annotation's color | The note badge takes its annotation's color, from the style's light or dark set, whichever stands out from its dots (dark dots on light pages, light dots on dark); pinned, a darker shade of it (lighter on dark pages); light blue while its note is edited (deeper blue on dark) |
 | 8.41 | Pinning a shown note without a flash | Clicking the badge of a note already open from hovering pins it in place; it no longer fades out and back in |
+| 8.42 | Note badge colors by state | The badge keeps its annotation's color normally; a selected annotation's badge, and one whose note is being added or edited, takes the dashed outline's color (black, white on dark), and editing a note draws that outline around its annotation without the toolbar; a pinned note's badge is the note blue. Those three use the old dot colors |
 
 ## Next, roughly in order
 

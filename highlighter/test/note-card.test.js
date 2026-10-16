@@ -57,10 +57,10 @@ async function delay(browser) {
   await ctx.close();
 }
 
-// 8.34: clicking a badge keeps its note open, the badge a darker shade of its color (8.40); clicking it again or Esc (8.35) lets it go.
+// 8.34: clicking a badge keeps its note open, the badge blue (8.42); clicking it again or Esc (8.35) lets it go.
 // 8.38: clicks elsewhere keep it; it drags by its footer, the editor by its header.
 // 8.39: several can be pinned; a pinned note scrolls away with its badge; clicking outside the editor keeps it.
-const DARKER = 'color(srgb 0.8 0.749804 0.345098)';   // the yellow highlight mixed 80% with black
+const DARKER = 'rgb(15, 108, 189)';   // 8.42: pinned badges are the note blue
 async function pin(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store });
   await p.evaluate(() => { document.body.style.paddingBottom = '2000px'; });
@@ -72,7 +72,7 @@ async function pin(browser) {
   await p.mouse.click(bx, by); await p.waitForTimeout(50);
   let ps = await pins();
   check('clicking the badge pins its note at once', ps.length === 1 && ps[0].text === 'Note A', ps);
-  check('the clicked badge turns darker', (await fill('gA')) === DARKER, await fill('gA'));
+  check('the clicked badge turns blue', (await fill('gA')) === DARKER, await fill('gA'));
   check('and the annotation is not selected', await p.evaluate(() => !window.__hl.selectedGroups.length), null);
   await p.mouse.move(5, 300, { steps: 4 }); await p.waitForTimeout(400);
   await p.mouse.click(5, 300); await p.waitForTimeout(50);

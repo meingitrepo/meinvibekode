@@ -32,7 +32,7 @@
 
     function setSelectedGroups(groups) {
         selectedGroups = Array.from(new Set(groups));
-        selectBoxes.forEach(({ el }, g) => { if (!selectedGroups.includes(g)) { el.remove(); selectBoxes.delete(g); } });
+        selectBoxes.forEach(({ el }, g) => { if (!selectedGroups.includes(g)) { el.remove(); selectBoxes.delete(g); unmarkSelected(g); } });
         if (!selectedGroups.length) { clearSelectedGroups(); return; }
         selectedGroups.forEach(g => {
             if (selectBoxes.has(g)) return;
@@ -60,10 +60,14 @@
         selectedGroups = [];
         cancelAnimationFrame(selectFrame);
         selectFrame = 0;
-        selectBoxes.forEach(({ el }) => el.remove());
+        selectBoxes.forEach(({ el }, g) => { el.remove(); unmarkSelected(g); });
         selectBoxes.clear();
         selectWrappers = null;
         if (toolbarGroups) hideToolbar();
+    }
+
+    function unmarkSelected(group) {
+        groupWrappers(group).forEach(w => w.removeAttribute(NOTE_SELECT_ATTR));
     }
 
     // `wrappers`: the groups' wrappers, when the caller has them already.
@@ -216,6 +220,8 @@
             const box = selectBoxes.get(g);
             const wrappers = wrappersOf.get(g);
             const mark = wrappers.find(w => w.hasAttribute(NOTE_MARK_ATTR));
+            // Its badge in the outline's color; set here so it follows a redraw that replaced the piece.
+            if (mark && !mark.hasAttribute(NOTE_SELECT_ATTR)) mark.setAttribute(NOTE_SELECT_ATTR, '');
             const shape = rects.get(g).map(r => `${r.left - layer.left},${r.top - layer.top},${r.width},${r.height}`).join(' ') +
                 (mark ? `|${wrappers.indexOf(mark)}` : '');
             if (shape !== box.shape) {

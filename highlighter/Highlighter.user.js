@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.41
+// @version      8.42
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -120,6 +120,7 @@
     const NOTE_MARK_ATTR = 'data-highlighter-note-mark';  // the piece that shows the note badge
     const NOTE_PIN_ATTR = 'data-highlighter-note-pin';    // on that piece while its badge was clicked to keep the note open
     const NOTE_EDIT_ATTR = 'data-highlighter-note-edit';  // on an annotation's pieces while its note editor is open
+    const NOTE_SELECT_ATTR = 'data-highlighter-note-selected';  // on the badge's piece while its annotation is selected (outlined)
     const INK_ATTR = 'data-highlighter-ink';          // 'dark' / 'light': text recolored to read on its highlight
     const DARK_ATTR = 'data-highlighter-dark';        // on a dark background: drawn with DARK_OVERRIDES
     const ADDED_ATTR = 'data-highlighter-added';      // when it was first seen, for annotations whose group has no date
@@ -164,8 +165,8 @@
     const NOTE_MAX_LINES = 12;                  // grows with the text up to this (the note card's 240px), then scrolls
     const NOTE_BADGE_SIZE = 10;                 // px, at least; the speech-bubble badge on annotations with a note,
     const NOTE_BADGE_EM = 0.6;                  // which grows with the font (0.6em: 10px at 16px, 19px on a 32px heading)
-    const NOTE_BADGE_COLOR = '#0F6CBD';         // Fluent's blue: the badge while its note is edited, on dark
-    const NOTE_BADGE_DARK_COLOR = '#479EF5';    // backgrounds (light dots); its lighter tint on light ones (dark dots)
+    const NOTE_BADGE_COLOR = '#0F6CBD';         // Fluent's blue: the badge while its note is pinned,
+    const NOTE_BADGE_DARK_COLOR = '#479EF5';    // and its lighter tint on dark backgrounds
     const FLASH_MS = 900;                       // an annotation jumped to blinks twice in this time
     const MARKDOWN_FRAGMENT_WORDS = 5;          // a long quote's link names its passage by this many words at each end
     const TRACKING_PARAM_RE = /^(utm_|fbclid$|gclid$|dclid$|msclkid$|mc_eid$|mc_cid$|igshid$|yclid$|_ga$|ref_src$)/i;
@@ -276,18 +277,19 @@
             --highlighter-badge-rim: #1b1b1b;
             --highlighter-badge-dots: ${INK.light};
         }
-        /* The badge takes its annotation's color; clicked to keep its note open, a darker shade
-           of it (lighter on dark); while its note is being edited, blue. Dots are dark on light pages and
-           light on dark ones, so each color comes from the style's light or dark set, whichever is
-           further from the dots (a red line's badge is the light red on a light page). */
+        /* The badge takes its annotation's color. Dots are dark on light pages and light on dark
+           ones, so each color comes from the style's light or dark set, whichever is further from
+           the dots (a red line's badge is the light red on a light page). Clicked to keep its note
+           open, blue; while its annotation is selected or its note edited, the selection outline's
+           color (see .select-box), which wins over pinned. These have dots in the rim's color. */
         ${Object.keys(STYLES).map(k => `
         span[${NOTE_MARK_ATTR}][${STYLE_ATTR}="${k}"]::after { --highlighter-badge-color: ${badgeColor(k, INK.dark)}; }
         span[${NOTE_MARK_ATTR}][${STYLE_ATTR}="${k}"][${DARK_ATTR}]::after { --highlighter-badge-color: ${badgeColor(k, INK.light)}; }`).join('')}
         span[${NOTE_MARK_ATTR}][${STYLE_ATTR}]::after { --highlighter-badge-fill: var(--highlighter-badge-color); }
-        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}]::after { --highlighter-badge-fill: color-mix(in srgb, var(--highlighter-badge-color) 80%, #000); }
-        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: color-mix(in srgb, var(--highlighter-badge-color) 80%, #fff); }
-        span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_DARK_COLOR}; }
-        span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_COLOR}; }
+        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_COLOR}; --highlighter-badge-dots: var(--highlighter-badge-rim); }
+        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_DARK_COLOR}; }
+        span[${NOTE_MARK_ATTR}][${NOTE_SELECT_ATTR}]::after, span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}]::after { --highlighter-badge-fill: #000000; --highlighter-badge-dots: var(--highlighter-badge-rim); }
+        span[${NOTE_MARK_ATTR}][${NOTE_SELECT_ATTR}][${DARK_ATTR}]::after, span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: #ffffff; }
         /* An annotation jumped to (Alt+J / Alt+K, or from the panel) blinks twice. */
         svg[${FLASH_ATTR}] {
             animation: highlighter-flash ${FLASH_MS / 2}ms ease-in-out 2 !important;
@@ -4757,8 +4759,9 @@
         const original = wrappers[0].getAttribute(NOTE_ATTR) || '';
         const focused = document.activeElement;
         if (!returnFocus) returnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
-        editor = { group, original, step, returnFocus };
+        editor = { group, original, step, returnFocus, wasSelected: selectedGroups.includes(group) };
         wrappers.forEach(w => w.setAttribute(NOTE_EDIT_ATTR, ''));
+        setSelectedGroups(selectedGroups.concat(group));   // its dashed outline; no toolbar while the editor is open
         editorTitle.textContent = original ? 'Edit note' : 'Add note';
         noteInput.value = draft === null ? original : draft;
         updateSaveState();
@@ -4772,8 +4775,10 @@
     function closeEditor() {
         const returnFocus = editor && editor.returnFocus;
         const hadFocus = document.activeElement === uiHost;
-        if (editor) groupWrappers(editor.group).forEach(w => w.removeAttribute(NOTE_EDIT_ATTR));
+        const ed = editor;
+        if (ed) groupWrappers(ed.group).forEach(w => w.removeAttribute(NOTE_EDIT_ATTR));
         editor = null;
+        if (ed && !ed.wasSelected && selectedGroups.includes(ed.group)) setSelectedGroups(selectedGroups.filter(g => g !== ed.group));
         hideLabelTip();
         releaseFocus(editorEl);
         editorEl.hidden = true;
@@ -5133,7 +5138,7 @@
 
     function setSelectedGroups(groups) {
         selectedGroups = Array.from(new Set(groups));
-        selectBoxes.forEach(({ el }, g) => { if (!selectedGroups.includes(g)) { el.remove(); selectBoxes.delete(g); } });
+        selectBoxes.forEach(({ el }, g) => { if (!selectedGroups.includes(g)) { el.remove(); selectBoxes.delete(g); unmarkSelected(g); } });
         if (!selectedGroups.length) { clearSelectedGroups(); return; }
         selectedGroups.forEach(g => {
             if (selectBoxes.has(g)) return;
@@ -5161,10 +5166,14 @@
         selectedGroups = [];
         cancelAnimationFrame(selectFrame);
         selectFrame = 0;
-        selectBoxes.forEach(({ el }) => el.remove());
+        selectBoxes.forEach(({ el }, g) => { el.remove(); unmarkSelected(g); });
         selectBoxes.clear();
         selectWrappers = null;
         if (toolbarGroups) hideToolbar();
+    }
+
+    function unmarkSelected(group) {
+        groupWrappers(group).forEach(w => w.removeAttribute(NOTE_SELECT_ATTR));
     }
 
     // `wrappers`: the groups' wrappers, when the caller has them already.
@@ -5317,6 +5326,8 @@
             const box = selectBoxes.get(g);
             const wrappers = wrappersOf.get(g);
             const mark = wrappers.find(w => w.hasAttribute(NOTE_MARK_ATTR));
+            // Its badge in the outline's color; set here so it follows a redraw that replaced the piece.
+            if (mark && !mark.hasAttribute(NOTE_SELECT_ATTR)) mark.setAttribute(NOTE_SELECT_ATTR, '');
             const shape = rects.get(g).map(r => `${r.left - layer.left},${r.top - layer.top},${r.width},${r.height}`).join(' ') +
                 (mark ? `|${wrappers.indexOf(mark)}` : '');
             if (shape !== box.shape) {

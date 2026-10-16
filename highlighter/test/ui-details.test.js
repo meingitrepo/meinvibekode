@@ -54,8 +54,8 @@ const tbRect = page => L.toolbar(page).then(t => t && t.rect);
     const badge = t => badges.find(x => x.t === t);
     L.check('badge 10px at 16px, zero net width', badge('words').w === '10px' && badge('words').ml === '-10px', badges);
     L.check('badge grows on a heading', parseFloat(badge('heading').w) > 18, badges);
-    L.check('badge black with a white rim on light', badge('words').bg === 'rgb(0, 0, 0)' && /rgb\(255, 255, 255\)/.test(badge('words').ring), badges);
-    L.check('badge white with a dark rim on dark', badge('darkCode').bg === 'rgb(255, 255, 255)' && /rgb\(27, 27, 27\)/.test(badge('darkCode').ring), badges);
+    L.check('badge blue with a white rim on light', badge('words').bg === 'rgb(15, 108, 189)' && /rgb\(255, 255, 255\)/.test(badge('words').ring), badges);
+    L.check('badge lighter with a dark rim on dark', badge('darkCode').bg === 'rgb(71, 158, 245)' && /rgb\(27, 27, 27\)/.test(badge('darkCode').ring), badges);
     L.check('badge adds no text', !/n$/.test(badge('words').t), badges);
     // toast theme stays when the toolbar opens on a dark block
     await page.evaluate(() => window.__menu[Object.keys(window.__menu).find(k => /^Clear/.test(k))]());

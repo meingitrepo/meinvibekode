@@ -1,4 +1,4 @@
-// 7.32 item 5: Delete in the note card's footer; 8.17: the card opens at the note badge; 8.26: only for a clicked annotation.
+// 7.32 item 5: note card delay and Delete in its footer; 8.17: the card opens at the note badge; 8.32: by hovering the badge.
 const L = require('./lib');
 const CTX = 24;
 function rec(xpath, block, text, { key = 'h', group, extra = {} } = {}) {
@@ -22,42 +22,30 @@ const check = (name, ok, info) => results.push([name, ok, info]);
 // Measured once its opening animation (a 4px slide) has finished, so a card that opened a few ms
 // later doesn't read as moved.
 const card = p => p.evaluate(async () => { const r = window.__hl; if (r.noteCardEl.hidden) return null; await Promise.all(r.noteCardEl.getAnimations({ subtree: true }).map(a => a.finished.catch(() => {}))); const b = r.noteCardEl.getBoundingClientRect(); return { text: r.cardText.textContent, hint: r.cardHint.textContent, top: b.top, bottom: b.bottom }; });
-const center = r => [(r.left + r.right) / 2, (r.top + r.bottom) / 2];
 
-// 8.26: the card opens only for one clicked annotation, and its badge turns blue meanwhile (8.31; was green).
-const badge = (p, g) => p.evaluate(g => { const w = window.__hl.allWrappers().find(w => w.getAttribute('data-highlighter-group') === g && w.hasAttribute('data-highlighter-note-mark')); return w && { focus: w.hasAttribute('data-highlighter-note-focus'), fill: getComputedStyle(w, '::after').backgroundColor }; }, g);
-async function focus(browser) {
+async function delay(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store });
   const a = (await L.rects(p, '#p1', 'alpha note'))[0];
-  const b = (await L.rects(p, '#p3', 'beta note'))[0];
-  await p.mouse.move(...center(a)); await p.waitForTimeout(500);
-  check('hovering a note opens nothing', (await card(p)) === null, await card(p));
-  const black = await badge(p, 'gA');
-  await p.mouse.click(...center(a)); await p.waitForTimeout(100);
+  await p.mouse.move(a.left + 3, (a.top + a.bottom) / 2); await p.waitForTimeout(450);
+  check('resting on the annotation away from its badge opens nothing', (await card(p)) === null, await card(p));
+  const [bx, by] = await L.badge(p, 'gA');
+  await p.mouse.move(bx + 12, by);   // just beside the badge
+  await p.waitForTimeout(120);
+  check('no card right away', (await card(p)) === null, await card(p));
+  await p.waitForTimeout(350);
   const c = await card(p);
-  check('clicking it opens its card', c && c.text === 'Note A', c);
+  check('the card shows after resting near the badge', c && c.text === 'Note A', c);
   check('its footer has the date', c && /^Added .*2026/.test(c.hint), c);
   check('and a Delete button', await p.evaluate(() => !window.__hl.noteCardEl.hidden && window.__hl.cardDelete.getAttribute('aria-label') === 'Delete note (Alt+D)'), null);
-  const blue = await badge(p, 'gA');
-  check('its badge turns blue', blue.focus && blue.fill === 'rgb(15, 108, 189)' && black.fill === 'rgb(0, 0, 0)', { black, blue });
-  await p.mouse.move(...center(b)); await p.waitForTimeout(450);
-  check('hovering another note keeps the clicked one\'s card', ((await card(p)) || {}).text === 'Note A', await card(p));
-  await p.mouse.click(...center(b)); await p.waitForTimeout(100);
-  check('clicking another switches to its card', ((await card(p)) || {}).text === 'Note B', await card(p));
-  check('and the first badge is black again', !(await badge(p, 'gA')).focus && (await badge(p, 'gB')).focus, null);
-  await p.keyboard.down('Control'); await p.mouse.click(...center(a)); await p.keyboard.up('Control'); await p.waitForTimeout(100);
-  check('two selected: no card, no blue badge', (await card(p)) === null && !(await badge(p, 'gA')).focus && !(await badge(p, 'gB')).focus, await card(p));
-  await p.mouse.click(...center(a)); await p.waitForTimeout(100);
-  await p.mouse.click(5, 650); await p.waitForTimeout(100);
-  check('clicking elsewhere closes it', (await card(p)) === null && !(await badge(p, 'gA')).focus, await card(p));
-  await p.mouse.click(...center(a)); await p.waitForTimeout(100);
-  await p.keyboard.press('Escape'); await p.waitForTimeout(100);
-  check('Esc closes it', (await card(p)) === null, await card(p));
-  await p.mouse.click(...center(a)); await p.waitForTimeout(100);
-  await p.keyboard.press('n'); await p.waitForTimeout(100);
-  check('N hides the card for the editor', (await card(p)) === null && await p.evaluate(() => !!window.__hl.editor), null);
-  await p.keyboard.press('Control+a'); await p.keyboard.type('Edited A'); await p.keyboard.press('Enter'); await p.waitForTimeout(150);
-  check('saving brings the card back with the new note', ((await card(p)) || {}).text === 'Edited A', await card(p));
+  await p.mouse.move(...await L.badge(p, 'gB'));   // straight there: with steps it would cross the long note
+  await p.waitForTimeout(80);
+  const c2 = await card(p);
+  check('with a card open, another note switches at once', c2 && c2.text === 'Note B', c2);
+  await p.mouse.move(5, 5); await p.waitForTimeout(400);
+  check('moving off hides it', (await card(p)) === null, await card(p));
+  // passing over a note on the way elsewhere
+  await p.mouse.move(bx, by); await p.waitForTimeout(100); await p.mouse.move(5, 300); await p.waitForTimeout(450);
+  check('passing over a badge opens nothing', (await card(p)) === null, await card(p));
   check('no page errors', p.__errors.length === 0, p.__errors);
   await ctx.close();
 }
@@ -67,28 +55,18 @@ async function placement(browser) {
   const lines = await L.rects(p, '#p2', LONG);
   const ok = lines.length >= 4;
   check('the long annotation spans several lines', ok, lines.length);
-  await p.mouse.click(...center(lines[1])); await p.waitForTimeout(150);
+  await p.mouse.move(...await L.badge(p, 'gL')); await p.waitForTimeout(500);
   const c = await card(p);
   const last = lines[lines.length - 1];
   const at = await p.evaluate(() => { const b = window.__hl.noteCardEl.getBoundingClientRect(); return { left: b.left, right: b.right }; });
   check('the card sits under the last line, where the note badge is', c && c.top >= last.bottom && c.top < last.bottom + 20, { c, last });
   check('centred on the badge at the end of that line', at && Math.abs((at.left + at.right) / 2 - last.right) < 2 || (at && at.left <= 4), { at, last });
-  for (const i of [0, 2]) {
-    await p.mouse.click(...center(lines[i])); await p.waitForTimeout(80);
-    const c2 = await card(p);
-    check(`clicking line ${i + 1} leaves it where it was`, c2 && c2.text === 'Long note' && Math.abs(c2.top - c.top) < 1, { c2, c });
-  }
-  await p.evaluate(() => { document.body.style.paddingBottom = '2000px'; window.scrollBy(0, 40); }); await p.waitForTimeout(150);
-  const c3 = await card(p);
-  const last2 = (await L.rects(p, '#p2', LONG)).pop();
-  check('scrolling, it stays at the badge', c3 && c3.top >= last2.bottom && c3.top < last2.bottom + 20 && last2.bottom < last.bottom, { c3, last2, last });
   await ctx.close();
 }
 
 async function del(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store });
-  const a = (await L.rects(p, '#p1', 'alpha note'))[0];
-  await p.mouse.click(...center(a)); await p.waitForTimeout(150);
+  await p.mouse.move(...await L.badge(p, 'gA')); await p.waitForTimeout(500);
   await p.evaluate(() => window.__hl.cardDelete.click()); await p.waitForTimeout(150);
   let w = (await L.wr(p)).filter(x => x.g === 'gA');
   check('Delete removes the note and keeps the annotation', w.length === 1 && !w[0].n && (await card(p)) === null, w);
@@ -104,7 +82,7 @@ async function del(browser) {
 
 (async () => {
   const browser = await L.launch();
-  await Promise.all([focus, placement, del].map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
+  await Promise.all([delay, placement, del].map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
   await browser.close();
   let fails = 0;
   results.forEach(([name, ok, info]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' :: ' + JSON.stringify(info)}`); if (!ok) fails++; });

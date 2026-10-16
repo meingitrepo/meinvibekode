@@ -53,7 +53,6 @@
         });
         ensureUi();
         if (!selectFrame) followSelectBoxes();
-        syncNoteFocus();
         scheduleToolbar();   // the selection toolbar, for these annotations (see showGroupToolbar)
     }
 
@@ -64,7 +63,6 @@
         selectBoxes.forEach(({ el }) => el.remove());
         selectBoxes.clear();
         selectWrappers = null;
-        syncNoteFocus();
         if (toolbarGroups) hideToolbar();
     }
 

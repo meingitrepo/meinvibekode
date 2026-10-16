@@ -126,3 +126,10 @@ module.exports.drag = async (page, sel, str) => {
   await page.mouse.up();
   await page.waitForTimeout(350);
 };
+// 8.32: the middle of the note badge of the annotation with this group or text (the top right
+// corner of its last line, where the badge sits), for hovering it.
+module.exports.badge = (page, key) => page.evaluate(k => {
+  const w = window.__hl.allWrappers().filter(w => w.getAttribute('data-highlighter-group') === k || w.textContent === k).find(w => w.hasAttribute('data-highlighter-note-mark'));
+  const r = w && Array.from(w.getClientRects()).filter(r => r.width).pop();
+  return r ? [r.right, r.top] : null;
+}, key);

@@ -15,8 +15,7 @@ async function wheel(p, xy, dy) { await p.mouse.move(...xy); for (let i = 0; i <
   const browser = await L.launch();
   const { page: p } = await L.open(browser, { html: HTML, store });
   await p.evaluate(() => scrollTo(0, 100)); await p.waitForTimeout(100);
-  const a = (await L.rects(p, '#p1', 'alpha note'))[0];
-  await p.mouse.click(...center(a)); await p.waitForTimeout(400);
+  await p.mouse.move(...await L.badge(p, 'gA')); await p.waitForTimeout(500);   // 8.32: the card opens at the badge
   // The card: its text scrolls; past its end, and over its footer, the page stays put.
   const ct = await box(p, 'cardText');
   await wheel(p, center(ct), 400);
@@ -25,7 +24,7 @@ async function wheel(p, xy, dy) { await p.mouse.move(...xy); for (let i = 0; i <
   const cf = await box(p, 'cardHint');
   await wheel(p, center(cf), 200);
   L.check('scrolling over the card footer leaves the page', (await scrollY(p)) === 100, await scrollY(p));
-  await p.keyboard.press('n'); await p.waitForTimeout(200);
+  await L.altKey(p, 'n'); await p.waitForTimeout(200);   // the mouse is on the card: its annotation
   L.check('the editor is open', await p.evaluate(() => !!window.__hl.editor), null);
   const ta = await box(p, 'noteInput');
   await wheel(p, center(ta), 400);

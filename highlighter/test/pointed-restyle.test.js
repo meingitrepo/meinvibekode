@@ -169,7 +169,7 @@ async function jumpFallback(browser) {
 async function noteCard(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store: storeOf(recA()) });
   await hover(p, 'gA');
-  await p.mouse.down(); await p.mouse.up();   // 8.26: the card shows for a clicked annotation
+  await p.mouse.move(...await L.badge(p, 'gA'));   // 8.32: the card opens at the badge
   await L.until(p, () => !window.__hl.noteCardEl.hidden);
   // Measured once its opening slide has finished.
   const card = await p.evaluate(async () => { const c = window.__hl.noteCardEl; if (c.hidden) return null; await Promise.all(c.getAnimations({ subtree: true }).map(a => a.finished.catch(() => {}))); const r = c.getBoundingClientRect(); return { x: r.left + 20, y: r.top + 10 }; });

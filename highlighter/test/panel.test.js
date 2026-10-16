@@ -28,11 +28,10 @@ ${filler(40)}
   // note card date
   await page.evaluate(() => { const w = window.__hl.allWrappers().find(w => w.textContent === 'quick brown fox'); w.scrollIntoView({ block: 'center' }); });
   await page.waitForTimeout(200);
-  const box = await page.evaluate(() => { const r = window.__hl.allWrappers().find(w => w.textContent === 'quick brown fox').getBoundingClientRect(); return { x: r.left + 10, y: r.top + r.height / 2 }; });
-  await page.mouse.click(box.x, box.y); await page.waitForTimeout(150);   // 8.26: the card opens for a clicked annotation
+  await page.mouse.move(...await L.badge(page, 'quick brown fox')); await page.waitForTimeout(450);   // 8.32: on the badge, after 300 ms
   const hint = await page.evaluate(() => !window.__hl.noteCardEl.hidden && window.__hl.cardHint.textContent);
   L.check('note card shows date', hint === `Added ${today}`, hint);
-  await page.keyboard.press('Escape'); await page.mouse.move(5, 5); await page.waitForTimeout(150);
+  await page.mouse.move(5, 5); await page.waitForTimeout(400);
   // panel
   await L.altKey(page, 'o');
   let it = await L.items(page);

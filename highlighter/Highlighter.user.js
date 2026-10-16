@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.31
+// @version      8.32
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -59,7 +59,7 @@
  * (Alt+T switches it off and on for every site; ENABLE_SELECTION_TOOLBAR removes it), centered above the selection. The style the
  * selected text already has shows pressed. It is one Tab stop: the arrow keys, Home and End
  * move between its buttons. In the note editor, Tab goes round its controls. Annotations with a note have a small blue speech
- * bubble on their top-right corner; clicking one (alone) turns its bubble green and shows the note under it, with the
+ * bubble on their top-right corner; resting the pointer on or near one shows the note under it, with the
  * date it was added and buttons to edit or delete it. Web addresses in a note are links there.
  *
  * Spaces at the edges of a selection are left out, and a word it cuts in two is annotated
@@ -118,7 +118,6 @@
     const GROUP_ATTR = 'data-highlighter-group';      // shared by the pieces of one annotation
     const NOTE_ATTR = 'data-highlighter-note';
     const NOTE_MARK_ATTR = 'data-highlighter-note-mark';  // the piece that shows the note badge
-    const NOTE_FOCUS_ATTR = 'data-highlighter-note-focus'; // on that piece while its annotation alone is selected
     const INK_ATTR = 'data-highlighter-ink';          // 'dark' / 'light': text recolored to read on its highlight
     const DARK_ATTR = 'data-highlighter-dark';        // on a dark background: drawn with DARK_OVERRIDES
     const ADDED_ATTR = 'data-highlighter-added';      // when it was first seen, for annotations whose group has no date
@@ -152,6 +151,8 @@
     const ENABLE_TRIPLE_CLICK_BLOCK_SELECT = true;   // triple-click selects the paragraph as shown, without its edge spaces
     const SNAP_SELECTION_TO_WORDS = true;       // a selection that cuts a word in two annotates the whole word
     const ENABLE_SELECTION_TOOLBAR = true;
+    const NOTE_CARD_DELAY_MS = 300;             // the pointer rests this long on or near a note badge before its note shows
+    const NOTE_BADGE_REACH = 8;                 // px around the badge that count as near it
     const TOOLBAR_IDLE_MS = 4000;               // the selection toolbar fades out after this long untouched (0 = never)
     const TOAST_MS = 4000;                      // how long a message stays up,
     const TOAST_ACTION_MS = 6000;               // or one with a button such as Undo (pointing at it keeps it)
@@ -161,10 +162,8 @@
     const NOTE_MAX_LINES = 6;                   // grows with the text up to this, then scrolls
     const NOTE_BADGE_SIZE = 10;                 // px, at least; the speech-bubble badge on annotations with a note,
     const NOTE_BADGE_EM = 0.6;                  // which grows with the font (0.6em: 10px at 16px, 19px on a 32px heading)
-    const NOTE_BADGE_COLOR = '#000000';         // black, like the click-select dashed outline,
-    const NOTE_BADGE_DARK_COLOR = '#FFFFFF';    // and white on dark backgrounds
-    const NOTE_BADGE_FOCUS_COLOR = '#0F6CBD';      // Fluent's blue while its annotation alone is selected (its note
-    const NOTE_BADGE_FOCUS_DARK_COLOR = '#479EF5'; // card open), its lighter tint on dark: no highlight or line is blue
+    const NOTE_BADGE_COLOR = '#0F6CBD';         // Fluent's blue, apart from every highlight and line color,
+    const NOTE_BADGE_DARK_COLOR = '#479EF5';    // and its lighter tint on dark backgrounds
     const FLASH_MS = 900;                       // an annotation jumped to blinks twice in this time
     const MARKDOWN_FRAGMENT_WORDS = 5;          // a long quote's link names its passage by this many words at each end
     const TRACKING_PARAM_RE = /^(utm_|fbclid$|gclid$|dclid$|msclkid$|mc_eid$|mc_cid$|igshid$|yclid$|_ga$|ref_src$)/i;
@@ -273,8 +272,6 @@
             --highlighter-badge-fill: ${NOTE_BADGE_DARK_COLOR};
             --highlighter-badge-rim: #1b1b1b;
         }
-        span[${NOTE_MARK_ATTR}][${NOTE_FOCUS_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_FOCUS_COLOR}; }
-        span[${NOTE_MARK_ATTR}][${NOTE_FOCUS_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_FOCUS_DARK_COLOR}; }
         /* An annotation jumped to (Alt+J / Alt+K, or from the panel) blinks twice. */
         svg[${FLASH_ATTR}] {
             animation: highlighter-flash ${FLASH_MS / 2}ms ease-in-out 2 !important;
@@ -3427,7 +3424,7 @@
             const marked = lastOfGroup.get(w.getAttribute(GROUP_ATTR)) === w;
             if (marked !== w.hasAttribute(NOTE_MARK_ATTR)) w.toggleAttribute(NOTE_MARK_ATTR, marked);
         });
-        syncNoteFocus();   // the badge may have moved, or the note changed
+        noteMarks = null;   // looked up again by markNear
         schedulePanelRefresh();
     }
 
@@ -4329,11 +4326,13 @@
     }
 
     penOff.addEventListener('click', () => setPen(null));
-    // --- Note card (shown while an annotation that has a note is selected alone) ---
+    // --- Note card (shown when hovering an annotation that has a note) ---
 
     let hoveredWrapper = null;    // for the keys used without a selection (see pointedGroup)
     let pointer = null;           // where the mouse last went over page content, in the viewport
     let cardWrapper = null;
+    let cardHideTimer = null;
+    let cardShowTimer = null;
 
     // A note's text with its web addresses as links, opened in a new tab. Punctuation right after
     // an address (a full stop, a closing bracket the address didn't open) stays outside the link.
@@ -4382,68 +4381,91 @@
         return { left: r.right, right: r.right, width: 0, top: r.top, bottom: r.bottom };
     }
 
-    // The note card opens only for an annotation selected by clicking it, alone (see
-    // syncNoteFocus), at its badge. Shown again for the same piece, it only moves.
+    // Shows the note of an annotation once the pointer has rested on its badge for
+    // NOTE_CARD_DELAY_MS, so passing over notes on the way somewhere else opens nothing. While a
+    // card is open, moving to another note switches at once.
+    function scheduleNoteCard(wrapper) {
+        clearTimeout(cardHideTimer);
+        clearTimeout(cardShowTimer);
+        if (sameCard(wrapper)) return;
+        if (!noteCardEl.hidden) { showNoteCard(wrapper); return; }
+        cardShowTimer = setTimeout(() => {
+            if (nearMark === wrapper && wrapper.isConnected && !annotationsHidden && !editor) showNoteCard(wrapper);
+        }, NOTE_CARD_DELAY_MS);
+    }
+
+    // Another piece of the annotation whose card is open (one split across links) keeps that card.
+    function sameCard(wrapper) {
+        return !noteCardEl.hidden && cardWrapper && (cardWrapper === wrapper ||
+            (cardWrapper.isConnected && wrapper.hasAttribute(GROUP_ATTR) &&
+             cardWrapper.getAttribute(GROUP_ATTR) === wrapper.getAttribute(GROUP_ATTR)));
+    }
+
     function showNoteCard(wrapper) {
+        clearTimeout(cardHideTimer);
+        clearTimeout(cardShowTimer);
+        if (sameCard(wrapper)) return;
         ensureUi(wrapper.hasAttribute(DARK_ATTR));
-        if (noteCardEl.hidden || cardWrapper !== wrapper) {
-            cardWrapper = wrapper;
-            cardText.replaceChildren(...noteNodes(wrapper.getAttribute(NOTE_ATTR) || ''));
-            const time = annotationTime(wrapper);
-            cardHint.textContent = time ? `Added ${formatDate(time)}` : 'Alt+N to edit';
-            noteCardEl.hidden = false;
-        }
+        cardWrapper = wrapper;
+        cardText.replaceChildren(...noteNodes(wrapper.getAttribute(NOTE_ATTR) || ''));
+        const time = annotationTime(wrapper);
+        cardHint.textContent = time ? `Added ${formatDate(time)}` : 'Alt+N to edit';
+        noteCardEl.hidden = false;
         placePanel(noteCardEl, noteCardAnchor(wrapper), true);
     }
 
     function hideNoteCard() {
+        clearTimeout(cardHideTimer);
+        clearTimeout(cardShowTimer);
         if (!noteCardEl.hidden) hideLabelTip();   // its Edit button's tip goes with it
         releaseFocus(noteCardEl);
         noteCardEl.hidden = true;
         cardWrapper = null;
     }
 
-    // While one annotation with a note is selected, its badge turns blue (black or white otherwise) and its note card
-    // shows; selecting another, several, or none closes it. Called when the selection changes,
-    // when notes or badges change, and when the editor closes.
-    let focusedMark = null;   // the badge piece of that annotation
-    function syncNoteFocus() {
-        const group = selectedGroups.length === 1 ? selectedGroups[0] : null;
-        const mark = (group && !annotationsHidden && groupWrappers(group).find(w => w.hasAttribute(NOTE_MARK_ATTR))) || null;
-        if (mark !== focusedMark) {
-            if (focusedMark) focusedMark.removeAttribute(NOTE_FOCUS_ATTR);
-            if (mark) mark.setAttribute(NOTE_FOCUS_ATTR, '');
-            if (cardWrapper && cardWrapper === focusedMark) hideNoteCard();
-            focusedMark = mark;
-        }
-        if (mark && !editor) {
-            if (cardWrapper === mark) cardText.replaceChildren(...noteNodes(mark.getAttribute(NOTE_ATTR) || ''));
-            followNoteCard();
-        }
-    }
-
-    // Scrolling and resizing: the card stays at its badge, and hides while the annotation is out
-    // of view. A card opened another way (from the panel) closes.
-    function followNoteCard() {
-        if (!focusedMark || editor) { if (!noteCardEl.hidden) hideNoteCard(); return; }
-        const r = focusedMark.getBoundingClientRect();
-        if (r.bottom < 0 || r.top > window.innerHeight) hideNoteCard();
-        else showNoteCard(focusedMark);
-    }
-
     function onMouseOver(e) {
-        if (isUiEvent(e)) return;
+        if (isUiEvent(e)) { clearTimeout(cardHideTimer); return; }   // moving into the card keeps it open
         hoveredWrapper = e.target instanceof Element ? e.target.closest(WRAPPER_SELECTOR) : null;
-        pointer = { x: e.clientX, y: e.clientY };
+        onMouseMove(e);
     }
 
     function onMouseMove(e) {
-        if (!isUiEvent(e)) pointer = { x: e.clientX, y: e.clientY };
+        if (isUiEvent(e)) return;
+        pointer = { x: e.clientX, y: e.clientY };
+        const mark = annotationsHidden || editor ? null : markNear(e.clientX, e.clientY);
+        if (mark === nearMark) return;
+        nearMark = mark;
+        if (mark) {
+            scheduleNoteCard(mark);
+        } else {
+            clearTimeout(cardShowTimer);
+            if (cardWrapper) {
+                clearTimeout(cardHideTimer);
+                cardHideTimer = setTimeout(hideNoteCard, 250);
+            }
+        }
+    }
+
+    // The note card opens for the pointer on or near a note badge (NOTE_BADGE_REACH px around
+    // it), not anywhere on the annotation. The badges are looked up again once wrappers change.
+    let nearMark = null;
+    let noteMarks = null;
+    let noteMarksEpoch = -1;
+    function markNear(x, y) {
+        if (!noteMarks || noteMarksEpoch !== wrapperEpoch) {
+            noteMarks = Array.from(document.querySelectorAll(`span[${NOTE_MARK_ATTR}]`));
+            noteMarksEpoch = wrapperEpoch;
+        }
+        return noteMarks.find(m => {
+            const b = m.isConnected && noteBadgeHole(m);
+            return b && x >= b.left - NOTE_BADGE_REACH && x <= b.left + b.width + NOTE_BADGE_REACH &&
+                y >= b.top - NOTE_BADGE_REACH && y <= b.top + b.height + NOTE_BADGE_REACH;
+        }) || null;
     }
 
     // Leaving the window, the mouse points at nothing on the page.
     function onMouseOut(e) {
-        if (!e.relatedTarget) hoveredWrapper = null;
+        if (!e.relatedTarget) { hoveredWrapper = nearMark = null; clearTimeout(cardShowTimer); }
     }
 
     // Over our own panels the mouse points at no annotation, except on a note card, which is its
@@ -4621,7 +4643,6 @@
         hideLabelTip();
         releaseFocus(editorEl);
         editorEl.hidden = true;
-        syncNoteFocus();   // its annotation still selected: the card comes back
         if (hadFocus && returnFocus && returnFocus.isConnected && typeof returnFocus.focus === 'function') {
             returnFocus.focus({ preventScroll: true });
         }
@@ -4999,7 +5020,6 @@
         });
         ensureUi();
         if (!selectFrame) followSelectBoxes();
-        syncNoteFocus();
         scheduleToolbar();   // the selection toolbar, for these annotations (see showGroupToolbar)
     }
 
@@ -5010,7 +5030,6 @@
         selectBoxes.forEach(({ el }) => el.remove());
         selectBoxes.clear();
         selectWrappers = null;
-        syncNoteFocus();
         if (toolbarGroups) hideToolbar();
     }
 
@@ -6034,7 +6053,7 @@
         if (uiFrame) return;
         uiFrame = requestAnimationFrame(() => {
             uiFrame = 0;
-            if (!noteCardEl.hidden) followNoteCard();
+            if (!noteCardEl.hidden) hideNoteCard();
             hideLabelTip();
             if (!toolbarEl.hidden) placeToolbar();
             if (editor) followEditorAnchor();

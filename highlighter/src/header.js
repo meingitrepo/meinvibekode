@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.31
+// @version      8.32
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -59,7 +59,7 @@
  * (Alt+T switches it off and on for every site; ENABLE_SELECTION_TOOLBAR removes it), centered above the selection. The style the
  * selected text already has shows pressed. It is one Tab stop: the arrow keys, Home and End
  * move between its buttons. In the note editor, Tab goes round its controls. Annotations with a note have a small blue speech
- * bubble on their top-right corner; clicking one (alone) turns its bubble green and shows the note under it, with the
+ * bubble on their top-right corner; resting the pointer on or near one shows the note under it, with the
  * date it was added and buttons to edit or delete it. Web addresses in a note are links there.
  *
  * Spaces at the edges of a selection are left out, and a word it cuts in two is annotated

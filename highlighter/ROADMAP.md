@@ -74,6 +74,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.29 | No clashes with site keys | An Alt key a site also uses (its access keys, as on Wikipedia, or its own Alt shortcuts) does one thing, never both: ours when it has something to act on (text selected, an annotation pointed at or clicked, something to undo, annotations to jump to or clear), else the site's. Alt+O, Alt+Shift+O, Alt+P, Alt+T and Alt+V (with annotations) stay ours; no keys changed |
 | 8.30 | Site Alt keys off | While the shortcut keys are on, every Alt key outside a field is the highlighter's alone: the site's access keys (Wikipedia's) and its own Alt shortcuts never run, used by us or not (replaces 8.29's "the site's when ours has nothing to do"). Alt+Shift+K, and the menu, turn our keys off and on for every site; off, the sites get their Alt keys back. Browser keys (Alt+Left, Alt+D) are untouched |
 | 8.31 | Note badge colors | The note badge is black on light pages and white on dark ones, like the dashed outline around a clicked annotation, and turns blue (#0F6CBD, #479EF5 on dark) while its annotation alone is selected and its note card is open (was blue, and green while selected) |
+| 8.32 | Note on badge hover | Back to 8.25: the note badge is always blue (#0F6CBD, #479EF5 on dark) and the note card opens by resting the pointer on or within 8px of the badge, no longer on the rest of the annotation, and not by clicking it (replaces 8.26 and 8.31). J/K and panel jumps still show the note |
 
 ## Next, roughly in order
 

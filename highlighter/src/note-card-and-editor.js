@@ -72,7 +72,7 @@
         cardWrapper = null;
     }
 
-    // While one annotation with a note is selected, its badge turns green and its note card
+    // While one annotation with a note is selected, its badge turns blue (black or white otherwise) and its note card
     // shows; selecting another, several, or none closes it. Called when the selection changes,
     // when notes or badges change, and when the editor closes.
     let focusedMark = null;   // the badge piece of that annotation

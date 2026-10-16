@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.30
+// @version      8.31
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -161,10 +161,10 @@
     const NOTE_MAX_LINES = 6;                   // grows with the text up to this, then scrolls
     const NOTE_BADGE_SIZE = 10;                 // px, at least; the speech-bubble badge on annotations with a note,
     const NOTE_BADGE_EM = 0.6;                  // which grows with the font (0.6em: 10px at 16px, 19px on a 32px heading)
-    const NOTE_BADGE_COLOR = '#0F6CBD';         // Fluent's blue, apart from every highlight and line color,
-    const NOTE_BADGE_DARK_COLOR = '#479EF5';    // and its lighter tint on dark backgrounds
-    const NOTE_BADGE_FOCUS_COLOR = '#107C10';      // Fluent's green while its annotation alone is selected (its note
-    const NOTE_BADGE_FOCUS_DARK_COLOR = '#54B054'; // card open): no highlight or line is green
+    const NOTE_BADGE_COLOR = '#000000';         // black, like the click-select dashed outline,
+    const NOTE_BADGE_DARK_COLOR = '#FFFFFF';    // and white on dark backgrounds
+    const NOTE_BADGE_FOCUS_COLOR = '#0F6CBD';      // Fluent's blue while its annotation alone is selected (its note
+    const NOTE_BADGE_FOCUS_DARK_COLOR = '#479EF5'; // card open), its lighter tint on dark: no highlight or line is blue
     const FLASH_MS = 900;                       // an annotation jumped to blinks twice in this time
     const MARKDOWN_FRAGMENT_WORDS = 5;          // a long quote's link names its passage by this many words at each end
     const TRACKING_PARAM_RE = /^(utm_|fbclid$|gclid$|dclid$|msclkid$|mc_eid$|mc_cid$|igshid$|yclid$|_ga$|ref_src$)/i;
@@ -4403,7 +4403,7 @@
         cardWrapper = null;
     }
 
-    // While one annotation with a note is selected, its badge turns green and its note card
+    // While one annotation with a note is selected, its badge turns blue (black or white otherwise) and its note card
     // shows; selecting another, several, or none closes it. Called when the selection changes,
     // when notes or badges change, and when the editor closes.
     let focusedMark = null;   // the badge piece of that annotation

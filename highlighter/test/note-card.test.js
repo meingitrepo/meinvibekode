@@ -24,7 +24,7 @@ const check = (name, ok, info) => results.push([name, ok, info]);
 const card = p => p.evaluate(async () => { const r = window.__hl; if (r.noteCardEl.hidden) return null; await Promise.all(r.noteCardEl.getAnimations({ subtree: true }).map(a => a.finished.catch(() => {}))); const b = r.noteCardEl.getBoundingClientRect(); return { text: r.cardText.textContent, hint: r.cardHint.textContent, top: b.top, bottom: b.bottom }; });
 const center = r => [(r.left + r.right) / 2, (r.top + r.bottom) / 2];
 
-// 8.26: the card opens only for one clicked annotation, and its badge turns green meanwhile.
+// 8.26: the card opens only for one clicked annotation, and its badge turns blue meanwhile (8.31; was green).
 const badge = (p, g) => p.evaluate(g => { const w = window.__hl.allWrappers().find(w => w.getAttribute('data-highlighter-group') === g && w.hasAttribute('data-highlighter-note-mark')); return w && { focus: w.hasAttribute('data-highlighter-note-focus'), fill: getComputedStyle(w, '::after').backgroundColor }; }, g);
 async function focus(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store });
@@ -32,21 +32,21 @@ async function focus(browser) {
   const b = (await L.rects(p, '#p3', 'beta note'))[0];
   await p.mouse.move(...center(a)); await p.waitForTimeout(500);
   check('hovering a note opens nothing', (await card(p)) === null, await card(p));
-  const blue = await badge(p, 'gA');
+  const black = await badge(p, 'gA');
   await p.mouse.click(...center(a)); await p.waitForTimeout(100);
   const c = await card(p);
   check('clicking it opens its card', c && c.text === 'Note A', c);
   check('its footer has the date', c && /^Added .*2026/.test(c.hint), c);
   check('and a Delete button', await p.evaluate(() => !window.__hl.noteCardEl.hidden && window.__hl.cardDelete.getAttribute('aria-label') === 'Delete note (Alt+D)'), null);
-  const green = await badge(p, 'gA');
-  check('its badge turns green', green.focus && green.fill === 'rgb(16, 124, 16)' && blue.fill === 'rgb(15, 108, 189)', { blue, green });
+  const blue = await badge(p, 'gA');
+  check('its badge turns blue', blue.focus && blue.fill === 'rgb(15, 108, 189)' && black.fill === 'rgb(0, 0, 0)', { black, blue });
   await p.mouse.move(...center(b)); await p.waitForTimeout(450);
   check('hovering another note keeps the clicked one\'s card', ((await card(p)) || {}).text === 'Note A', await card(p));
   await p.mouse.click(...center(b)); await p.waitForTimeout(100);
   check('clicking another switches to its card', ((await card(p)) || {}).text === 'Note B', await card(p));
-  check('and the first badge is blue again', !(await badge(p, 'gA')).focus && (await badge(p, 'gB')).focus, null);
+  check('and the first badge is black again', !(await badge(p, 'gA')).focus && (await badge(p, 'gB')).focus, null);
   await p.keyboard.down('Control'); await p.mouse.click(...center(a)); await p.keyboard.up('Control'); await p.waitForTimeout(100);
-  check('two selected: no card, no green badge', (await card(p)) === null && !(await badge(p, 'gA')).focus && !(await badge(p, 'gB')).focus, await card(p));
+  check('two selected: no card, no blue badge', (await card(p)) === null && !(await badge(p, 'gA')).focus && !(await badge(p, 'gB')).focus, await card(p));
   await p.mouse.click(...center(a)); await p.waitForTimeout(100);
   await p.mouse.click(5, 650); await p.waitForTimeout(100);
   check('clicking elsewhere closes it', (await card(p)) === null && !(await badge(p, 'gA')).focus, await card(p));

@@ -1,4 +1,5 @@
-// 8.18: the dashed outline of a selected annotation leaves a gap around its note badge.
+// 8.18: the dashed outline of a selected annotation leaves a gap around its note badge. 8.23: it
+// is masked only while there is a badge (the mask is costly to draw).
 const L = require('./lib');
 const html = `<html><body style="font:16px serif;margin:40px">
 <p id="p">Select just these four words and try each style.</p></body></html>`;
@@ -11,11 +12,11 @@ const html = `<html><body style="font:16px serif;margin:40px">
   const hole = () => page.evaluate(() => {
     const box = window.__hl.selectBoxesEl.querySelector('.select-box'); const h = box && box.querySelector('mask rect:last-child');
     const p = box && box.querySelector('path');
-    return box && { w: +h.getAttribute('width'), mask: p.getAttribute('mask'), masked: !!box.querySelector(p.getAttribute('mask').slice(4, -1)) };
+    return box && { w: +h.getAttribute('width'), mask: p.getAttribute('mask'), masked: !!(p.getAttribute('mask') && box.querySelector(p.getAttribute('mask').slice(4, -1))) };
   });
   await page.mouse.click(pt.x, pt.y); await page.waitForTimeout(100);
   let h = await hole();
-  L.check('no note, no gap', h && h.w === 0 && h.masked, h);
+  L.check('no note, no gap and no mask', h && h.w === 0 && h.mask === null, h);
   await page.keyboard.press('KeyN'); await page.waitForTimeout(200);
   await page.keyboard.type('a note'); await page.keyboard.press('Enter'); await page.waitForTimeout(200);
   await page.mouse.click(pt.x, pt.y); await page.waitForTimeout(150);
@@ -28,6 +29,12 @@ const html = `<html><body style="font:16px serif;margin:40px">
   });
   L.check('gap around the badge', g.hole[0] < g.end[0] && g.hole[2] > g.end[0] && g.hole[1] < g.end[1] && g.hole[3] > g.end[1]
     && g.hole[0] < g.box[0] && g.hole[2] > g.box[0] && g.hole[1] < g.box[1] && g.hole[3] > g.box[1], g);
+  L.check('with a note: masked', (await hole()).masked, await hole());
+  // The note goes (D deletes a single annotation's note first): so does the mask.
+  await L.altKey(page, 'KeyD'); await page.waitForTimeout(250);
+  if (!(await page.evaluate(() => window.__hl.selectedGroups.length))) { await page.mouse.click(pt.x, pt.y); await page.waitForTimeout(150); }
+  h = await hole();
+  L.check('note deleted: no gap, no mask', h && h.w === 0 && h.mask === null, h);
   L.check('no page errors', !page.__errors.length, page.__errors);
   await L.done(b);
 })();

@@ -19,9 +19,11 @@
         return groupTime(wrapper.getAttribute(GROUP_ATTR)) || +wrapper.getAttribute(ADDED_ATTR) || null;
     }
 
+    let dateFormat = null;   // made once: making one per date took most of each search keystroke in Alt+Shift+O
     function formatDate(time) {
         try {
-            return new Date(time).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+            if (!dateFormat) dateFormat = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+            return dateFormat.format(new Date(time));
         } catch (e) {
             return new Date(time).toDateString();
         }

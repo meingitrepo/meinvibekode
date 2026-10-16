@@ -11,9 +11,9 @@
     // for Undo.
     let selectedGroups = [];      // in the order they were selected; the last is Shift+click's start
     let selectFrame = 0;
-    const selectBoxes = new Map();   // group -> { el, path, hole, shape }, `shape` its lines when last drawn (see followSelectBoxes)
+    const selectBoxes = new Map();   // group -> { el, path, hole, mask, shape }, `shape` its lines when last drawn (see followSelectBoxes)
     let selectBoxCount = 0;          // for the ids of their masks
-    let selectWrappers = null;       // { groups, epoch, at, map }: the selected annotations' wrappers (see followSelectBoxes)
+    let selectWrappers = null;       // { groups, epoch, at, map }: the selected annotations' wrappers (see wrappersOfGroups)
 
     const SELECT_BOX_PAD = 4;
     const SELECT_BOX_RADIUS = 4;
@@ -37,18 +37,19 @@
         selectedGroups.forEach(g => {
             if (selectBoxes.has(g)) return;
             const first = groupWrappers(g)[0];
-            // The mask leaves a gap in the outline around the note badge (see noteBadgeHole).
+            // The mask leaves a gap in the outline around the note badge (see noteBadgeHole). It
+            // is costly to draw, so the outline has it only while there is a badge.
             const id = `highlighter-select-mask-${++selectBoxCount}`;
             const outline = svgEl('svg', { 'aria-hidden': 'true' });
             const mask = svgEl('mask', { id, maskUnits: 'userSpaceOnUse', x: -1e4, y: -1e4, width: 2e4, height: 2e4 });
             const hole = svgEl('rect', { fill: 'black', width: 0, height: 0 });
-            const path = svgEl('path', { mask: `url(#${id})` });
+            const path = svgEl('path', {});
             mask.append(svgEl('rect', { x: -1e4, y: -1e4, width: 2e4, height: 2e4, fill: 'white' }), hole);
             outline.append(mask, path);
             const el = makeEl('div', { class: 'select-box', 'data-theme': first && first.hasAttribute(DARK_ATTR) ? 'dark' : 'light', hidden: '' },
                 [outline]);
             selectBoxesEl.appendChild(el);
-            selectBoxes.set(g, { el, path, hole, shape: '' });
+            selectBoxes.set(g, { el, path, hole, mask: `url(#${id})`, shape: '' });
         });
         ensureUi();
         if (!selectFrame) followSelectBoxes();
@@ -81,10 +82,25 @@
         return map;
     }
 
+    // The wrappers of each of `groups`. The selected annotations' are kept from frame to frame,
+    // searched for again only when the script added or removed some, one left the page or its
+    // annotation, or a second has passed: the outlines and their toolbar follow them each frame.
+    function wrappersOfGroups(groups) {
+        if (!groups.every(g => selectBoxes.has(g))) return wrappersByGroup(groups);
+        const now = performance.now();
+        const cached = selectWrappers;
+        const valid = cached && cached.groups === selectedGroups && cached.epoch === wrapperEpoch && now - cached.at < 1000 &&
+            Array.from(cached.map).every(([g, ws]) => ws.every(w => w.isConnected && w.getAttribute(GROUP_ATTR) === g));
+        if (!valid) selectWrappers = { groups: selectedGroups, epoch: wrapperEpoch, at: now, map: wrappersByGroup(selectedGroups) };
+        return selectWrappers.map;
+    }
+
     // The box around all of an annotation's lines (of several: around all of them), in the
     // viewport; null when none of it is shown.
     function groupRect(groups) {
-        const rects = groupClientRects(groups);
+        const list = [].concat(groups);
+        const byGroup = wrappersOfGroups(list);
+        const rects = groupClientRects(list, list.flatMap(g => byGroup.get(g) || []));
         if (!rects.length) return null;
         const top = Math.min(...rects.map(r => r.top)) - SELECT_BOX_PAD;
         const left = Math.min(...rects.map(r => r.left)) - SELECT_BOX_PAD;
@@ -187,14 +203,7 @@
     function followSelectBoxes() {
         selectFrame = 0;
         if (!selectedGroups.length) return;
-        const now = performance.now();
-        // Their wrappers are searched for again only when the script added or removed some, one
-        // left the page or its annotation, or a second has passed.
-        const cached = selectWrappers;
-        const valid = cached && cached.groups === selectedGroups && cached.epoch === wrapperEpoch && now - cached.at < 1000 &&
-            Array.from(cached.map).every(([g, ws]) => ws.every(w => w.isConnected && w.getAttribute(GROUP_ATTR) === g));
-        if (!valid) selectWrappers = { groups: selectedGroups, epoch: wrapperEpoch, at: now, map: wrappersByGroup(selectedGroups) };
-        const wrappersOf = selectWrappers.map;
+        const wrappersOf = wrappersOfGroups(selectedGroups);
         const rects = new Map(selectedGroups.map(g => [g, groupClientRects(g, wrappersOf.get(g))]));
         const gone = selectedGroups.filter(g => !rects.get(g).length);
         if (gone.length) {
@@ -219,6 +228,8 @@
                 Object.assign(box.el.style, { top: `${top}px`, left: `${left}px`, width: `${rect.width}px`, height: `${rect.height}px` });
                 box.path.setAttribute('d', d);   // not innerHTML: see makeEl
                 ['x', 'y', 'width', 'height', 'rx'].forEach((k, i) => box.hole.setAttribute(k, cut[i]));
+                if (hole) box.path.setAttribute('mask', box.mask);
+                else box.path.removeAttribute('mask');
             }
             box.el.hidden = false;
         });

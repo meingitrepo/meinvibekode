@@ -14,6 +14,7 @@
         if (range.compareBoundaryPoints(Range.END_TO_END, blockRange) < 0) {
             e = computeOffsetWithinBlock(block, range.endContainer, range.endOffset);
         }
+        dropRange(blockRange);
         return [s, e];
     }
 
@@ -73,6 +74,7 @@
                 clean.setStart(sp.node, sp.offset);
                 clean.setEnd(ep.node, ep.offset);
                 created = wrapRange(clean, key, { group: meta.group, note: meta.note, added: meta.added, page: meta.page });
+                dropRange(clean);
             } catch (e) {
                 console.warn(`${LOG} could not annotate selection`, e);
             }
@@ -131,6 +133,7 @@
         parts.forEach(p => {
             const range = rangeFromOffsets(p.block, p.start, p.end);
             if (range) wrappers.push(...wrapRange(range, p.key, p.meta));
+            dropRange(range);
         });
         return wrappers;
     }

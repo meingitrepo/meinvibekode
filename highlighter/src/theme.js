@@ -5,6 +5,7 @@
     const RGB_RE = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:\s*[,/]\s*([\d.]+)(%?))?\s*\)$/i;
     const THEME_ATTR_RE = /^(class|style)$|theme|dark|light|mode|scheme|color/i;
     let colorCtx = null;
+    const canvasColors = new Map();   // css -> what the canvas made of it (see toRGBA)
 
     function toRGBA(css) {
         const m = RGB_RE.exec((css || '').trim());
@@ -13,7 +14,17 @@
             if (m[5] === '%') a /= 100;
             return { r: +m[1], g: +m[2], b: +m[3], a };
         }
-        // Newer syntaxes (color(), lab(), oklch(), ...): let a canvas normalise them.
+        // Read by the canvas once each: the script's own hex colours come by on every theme check,
+        // once per annotation.
+        if (canvasColors.has(css)) { const c = canvasColors.get(css); return c && { ...c }; }
+        if (canvasColors.size > 200) canvasColors.clear();
+        const c = canvasRGBA(css);
+        canvasColors.set(css, c);
+        return c && { ...c };
+    }
+
+    // Newer syntaxes (color(), lab(), oklch(), ...) and hex: let a canvas normalise them.
+    function canvasRGBA(css) {
         try {
             if (!colorCtx) colorCtx = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
             if (!colorCtx) return null;

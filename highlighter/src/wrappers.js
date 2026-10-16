@@ -34,6 +34,7 @@
             if (node === range.startContainer) r.setStart(node, range.startOffset);
             if (node === range.endContainer) r.setEnd(node, range.endOffset);
             Array.from(r.getClientRects()).forEach(b => { if (b.width && b.height) out.push(b); });
+            dropRange(r);
         };
         if (root.nodeType === Node.TEXT_NODE) { add(root); return out; }
         const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -59,7 +60,9 @@
         if (range.compareBoundaryPoints(Range.END_TO_END, part) < 0) part.setEnd(range.endContainer, range.endOffset);
         let area = null;   // the drawing's own extent, in its user space
         try { area = svg.getBBox(); } catch (e) { /* not rendered */ }
-        return { svg, wrapper, rects: textRects(part), o: svg.getBoundingClientRect(), area };
+        const rects = textRects(part);
+        dropRange(part);
+        return { svg, wrapper, rects, o: svg.getBoundingClientRect(), area };
     }
 
     function markSelected({ svg, wrapper, rects, o, area }) {
@@ -459,8 +462,10 @@
         // An annotation inside the range would end up nested in the new wrapper: split around it.
         if (!nodes.some(n => breaks.has(n)) && isCleanRange(whole)) {
             const w = createWrapper(whole, key, meta);
+            dropRange(whole);
             return w ? [w] : [];
         }
+        dropRange(whole);
 
         // The selection cuts through inline elements (e.g. <a>, <b>). Wrapping it in one piece
         // would clone those elements, so wrap each run of same-parent text separately instead.
@@ -478,6 +483,7 @@
             r.setStart(rf, rf === first ? startOffset : 0);
             r.setEnd(rl, rl === last ? endOffset : rl.nodeValue.length);
             const w = createWrapper(r, key, meta);
+            dropRange(r);
             if (w) out.push(w);
         });
         return out;

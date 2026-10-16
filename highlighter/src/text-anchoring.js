@@ -119,11 +119,25 @@
         return null;
     }
 
+    // A Range stays tied to the page until it is garbage collected, and the browser updates every
+    // tied Range on each change to the page, the site's own changes too. Spent ones (six per
+    // restored annotation, two per annotation on the page for every edit) piled up by the
+    // thousand and slowed every change down until a collection, often long after. Moved into a
+    // spare document, a Range is no longer tied to the page.
+    let spareDoc = null;
+    function dropRange(range) {
+        if (!range) return;
+        if (!spareDoc) spareDoc = document.implementation.createHTMLDocument('');
+        range.setStart(spareDoc, 0);
+    }
+
     function computeOffsetWithinBlock(block, node, offset) {
         const r = document.createRange();
         r.setStart(block, 0);
         r.setEnd(node, offset);
-        return r.toString().length;
+        const length = r.toString().length;
+        dropRange(r);
+        return length;
     }
 
     function rangeFromOffsets(block, start, end) {
@@ -143,7 +157,9 @@
     function offsetMatchesText(block, start, length, expected) {
         if (typeof expected !== 'string') return true;
         const r = rangeFromOffsets(block, start, start + length);
-        return !!r && r.toString() === expected;
+        const matches = !!r && r.toString() === expected;
+        dropRange(r);
+        return matches;
     }
 
     function occurrences(text, part) {

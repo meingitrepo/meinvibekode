@@ -93,9 +93,7 @@
             t.spot = { block, start: computeOffsetWithinBlock(block, r.startContainer, r.startOffset), end: computeOffsetWithinBlock(block, r.endContainer, r.endOffset) };
         });
 
-        targets.forEach(({ record, located, spot }) => {
-            if (!located) { failed.push(record); return; }
-            const range = (spot && rangeFromOffsets(spot.block, spot.start, spot.end)) || located.range;
+        const place = (record, located, range) => {
             const group = typeof record.group === 'string' && record.group ? record.group : legacyGroup(record);
             // An annotation whose group carries no date is dated by its first restore.
             const added = record.added || (groupTime(group) ? undefined : Date.now());
@@ -111,6 +109,13 @@
             placed.push(...wrappers);
             if (located.relocated) relocated = true;
             if (added !== record.added) stamped = true;
+        };
+        targets.forEach(({ record, located, spot }) => {
+            if (!located) { failed.push(record); return; }
+            const range = (spot && rangeFromOffsets(spot.block, spot.start, spot.end)) || located.range;
+            place(record, located, range);
+            dropRange(range);   // the others' stay live until their turn
+            dropRange(located.range);
         });
 
         showWrappers(placed, animate);

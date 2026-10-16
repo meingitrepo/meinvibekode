@@ -71,8 +71,15 @@
     // Cleaner selections: no spaces at the edges, no half words
     // =====================================================================
 
-    const wordSegmenter = typeof Intl === 'object' && typeof Intl.Segmenter === 'function'
-        ? new Intl.Segmenter(undefined, { granularity: 'word' }) : null;
+    // Made on first use: making one takes about 9 ms, a good part of the script's start on every page.
+    let segmenter;
+    function wordSegmenter() {
+        if (segmenter === undefined) {
+            segmenter = typeof Intl === 'object' && typeof Intl.Segmenter === 'function'
+                ? new Intl.Segmenter(undefined, { granularity: 'word' }) : null;
+        }
+        return segmenter;
+    }
     const WORD_WINDOW = 64;   // characters looked at on each side of a boundary to find its word
 
     // The selected part of each page text node in the range (not script or style contents), in
@@ -104,8 +111,9 @@
     // spaces too (Chinese, Japanese, Thai).
     function wordEdge(text, i, side) {
         const at = side === 'start' ? i : i - 1;   // the selected character next to the boundary
-        if (!wordSegmenter || at < 0 || at >= text.length) return null;
-        const word = wordSegmenter.segment(text).containing(at);
+        const words = at < 0 || at >= text.length ? null : wordSegmenter();
+        if (!words) return null;
+        const word = words.segment(text).containing(at);
         if (!word || !word.isWordLike) return null;
         const start = word.index;
         const end = word.index + word.segment.length;

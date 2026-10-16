@@ -22,7 +22,7 @@
     // The page's <link rel="canonical"> as a storage key, when it can be trusted to name this page.
     function canonicalKey() {
         if (/^#[!/]/.test(location.hash)) return null;   // hash-routed apps: the canonical ignores the route
-        const link = document.querySelector('link[rel~="canonical" i][href]');
+        const link = canonicalLink();
         if (!link) return null;
         try {
             const u = new URL(link.href, location.href);
@@ -33,6 +33,19 @@
         } catch (e) {
             return null;
         }
+    }
+
+    // The first link[rel~="canonical" i][href], as document.querySelector would find it. It is
+    // looked for every second (see onUrlMaybeChanged): the browser keeps this list of the page's
+    // links between changes to the page, where querySelector searched a big page all over each
+    // time (2 ms on 180,000 elements).
+    let linkElements = null;
+    function canonicalLink() {
+        if (!linkElements) linkElements = document.getElementsByTagName('link');
+        for (const link of linkElements) {
+            if (link.hasAttribute('href') && /(^|[ \t\n\f\r])canonical([ \t\n\f\r]|$)/i.test(link.getAttribute('rel') || '')) return link;
+        }
+        return null;
     }
 
     // Pages can share a storage key: the pages of a thread whose canonical URL names its first
@@ -62,6 +75,7 @@
         pre.setStart(block, 0);
         pre.setEndBefore(wrapper);
         const start = pre.toString().length;
+        dropRange(pre);
         return { start, end: start + wrapper.textContent.length };
     }
 

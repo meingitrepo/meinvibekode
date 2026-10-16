@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.22
+// @version      8.23
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -329,6 +329,7 @@
     const RGB_RE = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:\s*[,/]\s*([\d.]+)(%?))?\s*\)$/i;
     const THEME_ATTR_RE = /^(class|style)$|theme|dark|light|mode|scheme|color/i;
     let colorCtx = null;
+    const canvasColors = new Map();   // css -> what the canvas made of it (see toRGBA)
 
     function toRGBA(css) {
         const m = RGB_RE.exec((css || '').trim());
@@ -337,7 +338,17 @@
             if (m[5] === '%') a /= 100;
             return { r: +m[1], g: +m[2], b: +m[3], a };
         }
-        // Newer syntaxes (color(), lab(), oklch(), ...): let a canvas normalise them.
+        // Read by the canvas once each: the script's own hex colours come by on every theme check,
+        // once per annotation.
+        if (canvasColors.has(css)) { const c = canvasColors.get(css); return c && { ...c }; }
+        if (canvasColors.size > 200) canvasColors.clear();
+        const c = canvasRGBA(css);
+        canvasColors.set(css, c);
+        return c && { ...c };
+    }
+
+    // Newer syntaxes (color(), lab(), oklch(), ...) and hex: let a canvas normalise them.
+    function canvasRGBA(css) {
         try {
             if (!colorCtx) colorCtx = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
             if (!colorCtx) return null;
@@ -964,11 +975,25 @@
         return null;
     }
 
+    // A Range stays tied to the page until it is garbage collected, and the browser updates every
+    // tied Range on each change to the page, the site's own changes too. Spent ones (six per
+    // restored annotation, two per annotation on the page for every edit) piled up by the
+    // thousand and slowed every change down until a collection, often long after. Moved into a
+    // spare document, a Range is no longer tied to the page.
+    let spareDoc = null;
+    function dropRange(range) {
+        if (!range) return;
+        if (!spareDoc) spareDoc = document.implementation.createHTMLDocument('');
+        range.setStart(spareDoc, 0);
+    }
+
     function computeOffsetWithinBlock(block, node, offset) {
         const r = document.createRange();
         r.setStart(block, 0);
         r.setEnd(node, offset);
-        return r.toString().length;
+        const length = r.toString().length;
+        dropRange(r);
+        return length;
     }
 
     function rangeFromOffsets(block, start, end) {
@@ -988,7 +1013,9 @@
     function offsetMatchesText(block, start, length, expected) {
         if (typeof expected !== 'string') return true;
         const r = rangeFromOffsets(block, start, start + length);
-        return !!r && r.toString() === expected;
+        const matches = !!r && r.toString() === expected;
+        dropRange(r);
+        return matches;
     }
 
     function occurrences(text, part) {
@@ -1203,6 +1230,7 @@
             if (node === range.startContainer) r.setStart(node, range.startOffset);
             if (node === range.endContainer) r.setEnd(node, range.endOffset);
             Array.from(r.getClientRects()).forEach(b => { if (b.width && b.height) out.push(b); });
+            dropRange(r);
         };
         if (root.nodeType === Node.TEXT_NODE) { add(root); return out; }
         const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -1228,7 +1256,9 @@
         if (range.compareBoundaryPoints(Range.END_TO_END, part) < 0) part.setEnd(range.endContainer, range.endOffset);
         let area = null;   // the drawing's own extent, in its user space
         try { area = svg.getBBox(); } catch (e) { /* not rendered */ }
-        return { svg, wrapper, rects: textRects(part), o: svg.getBoundingClientRect(), area };
+        const rects = textRects(part);
+        dropRange(part);
+        return { svg, wrapper, rects, o: svg.getBoundingClientRect(), area };
     }
 
     function markSelected({ svg, wrapper, rects, o, area }) {
@@ -1628,8 +1658,10 @@
         // An annotation inside the range would end up nested in the new wrapper: split around it.
         if (!nodes.some(n => breaks.has(n)) && isCleanRange(whole)) {
             const w = createWrapper(whole, key, meta);
+            dropRange(whole);
             return w ? [w] : [];
         }
+        dropRange(whole);
 
         // The selection cuts through inline elements (e.g. <a>, <b>). Wrapping it in one piece
         // would clone those elements, so wrap each run of same-parent text separately instead.
@@ -1647,6 +1679,7 @@
             r.setStart(rf, rf === first ? startOffset : 0);
             r.setEnd(rl, rl === last ? endOffset : rl.nodeValue.length);
             const w = createWrapper(r, key, meta);
+            dropRange(r);
             if (w) out.push(w);
         });
         return out;
@@ -1695,7 +1728,7 @@
     // The page's <link rel="canonical"> as a storage key, when it can be trusted to name this page.
     function canonicalKey() {
         if (/^#[!/]/.test(location.hash)) return null;   // hash-routed apps: the canonical ignores the route
-        const link = document.querySelector('link[rel~="canonical" i][href]');
+        const link = canonicalLink();
         if (!link) return null;
         try {
             const u = new URL(link.href, location.href);
@@ -1706,6 +1739,19 @@
         } catch (e) {
             return null;
         }
+    }
+
+    // The first link[rel~="canonical" i][href], as document.querySelector would find it. It is
+    // looked for every second (see onUrlMaybeChanged): the browser keeps this list of the page's
+    // links between changes to the page, where querySelector searched a big page all over each
+    // time (2 ms on 180,000 elements).
+    let linkElements = null;
+    function canonicalLink() {
+        if (!linkElements) linkElements = document.getElementsByTagName('link');
+        for (const link of linkElements) {
+            if (link.hasAttribute('href') && /(^|[ \t\n\f\r])canonical([ \t\n\f\r]|$)/i.test(link.getAttribute('rel') || '')) return link;
+        }
+        return null;
     }
 
     // Pages can share a storage key: the pages of a thread whose canonical URL names its first
@@ -1735,6 +1781,7 @@
         pre.setStart(block, 0);
         pre.setEndBefore(wrapper);
         const start = pre.toString().length;
+        dropRange(pre);
         return { start, end: start + wrapper.textContent.length };
     }
 
@@ -2100,9 +2147,7 @@
             t.spot = { block, start: computeOffsetWithinBlock(block, r.startContainer, r.startOffset), end: computeOffsetWithinBlock(block, r.endContainer, r.endOffset) };
         });
 
-        targets.forEach(({ record, located, spot }) => {
-            if (!located) { failed.push(record); return; }
-            const range = (spot && rangeFromOffsets(spot.block, spot.start, spot.end)) || located.range;
+        const place = (record, located, range) => {
             const group = typeof record.group === 'string' && record.group ? record.group : legacyGroup(record);
             // An annotation whose group carries no date is dated by its first restore.
             const added = record.added || (groupTime(group) ? undefined : Date.now());
@@ -2118,6 +2163,13 @@
             placed.push(...wrappers);
             if (located.relocated) relocated = true;
             if (added !== record.added) stamped = true;
+        };
+        targets.forEach(({ record, located, spot }) => {
+            if (!located) { failed.push(record); return; }
+            const range = (spot && rangeFromOffsets(spot.block, spot.start, spot.end)) || located.range;
+            place(record, located, range);
+            dropRange(range);   // the others' stay live until their turn
+            dropRange(located.range);
         });
 
         showWrappers(placed, animate);
@@ -2395,8 +2447,15 @@
     // Cleaner selections: no spaces at the edges, no half words
     // =====================================================================
 
-    const wordSegmenter = typeof Intl === 'object' && typeof Intl.Segmenter === 'function'
-        ? new Intl.Segmenter(undefined, { granularity: 'word' }) : null;
+    // Made on first use: making one takes about 9 ms, a good part of the script's start on every page.
+    let segmenter;
+    function wordSegmenter() {
+        if (segmenter === undefined) {
+            segmenter = typeof Intl === 'object' && typeof Intl.Segmenter === 'function'
+                ? new Intl.Segmenter(undefined, { granularity: 'word' }) : null;
+        }
+        return segmenter;
+    }
     const WORD_WINDOW = 64;   // characters looked at on each side of a boundary to find its word
 
     // The selected part of each page text node in the range (not script or style contents), in
@@ -2428,8 +2487,9 @@
     // spaces too (Chinese, Japanese, Thai).
     function wordEdge(text, i, side) {
         const at = side === 'start' ? i : i - 1;   // the selected character next to the boundary
-        if (!wordSegmenter || at < 0 || at >= text.length) return null;
-        const word = wordSegmenter.segment(text).containing(at);
+        const words = at < 0 || at >= text.length ? null : wordSegmenter();
+        if (!words) return null;
+        const word = words.segment(text).containing(at);
         if (!word || !word.isWordLike) return null;
         const start = word.index;
         const end = word.index + word.segment.length;
@@ -2540,6 +2600,7 @@
         if (range.compareBoundaryPoints(Range.END_TO_END, blockRange) < 0) {
             e = computeOffsetWithinBlock(block, range.endContainer, range.endOffset);
         }
+        dropRange(blockRange);
         return [s, e];
     }
 
@@ -2599,6 +2660,7 @@
                 clean.setStart(sp.node, sp.offset);
                 clean.setEnd(ep.node, ep.offset);
                 created = wrapRange(clean, key, { group: meta.group, note: meta.note, added: meta.added, page: meta.page });
+                dropRange(clean);
             } catch (e) {
                 console.warn(`${LOG} could not annotate selection`, e);
             }
@@ -2657,6 +2719,7 @@
         parts.forEach(p => {
             const range = rangeFromOffsets(p.block, p.start, p.end);
             if (range) wrappers.push(...wrapRange(range, p.key, p.meta));
+            dropRange(range);
         });
         return wrappers;
     }
@@ -3110,9 +3173,11 @@
         return groupTime(wrapper.getAttribute(GROUP_ATTR)) || +wrapper.getAttribute(ADDED_ATTR) || null;
     }
 
+    let dateFormat = null;   // made once: making one per date took most of each search keystroke in Alt+Shift+O
     function formatDate(time) {
         try {
-            return new Date(time).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+            if (!dateFormat) dateFormat = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+            return dateFormat.format(new Date(time));
         } catch (e) {
             return new Date(time).toDateString();
         }
@@ -3848,11 +3913,12 @@
     // their dashed boxes. The style all of them have shows pressed and removes them, as with a
     // selection; the others restyle them, and they stay selected with the toolbar over them.
     function showGroupToolbar(groups) {
-        const wrappers = groups.flatMap(groupWrappers);
+        const byGroup = wrappersOfGroups(groups);
+        const wrappers = groups.flatMap(g => byGroup.get(g) || []);
         if (!wrappers.length || !groupRect(groups)) return false;
         const key = wrappers[0].getAttribute(STYLE_ATTR);
         const current = wrappers.every(w => w.getAttribute(STYLE_ATTR) === key) ? [key] : [];
-        const note = groupWrappers(groups[0]).map(w => w.getAttribute(NOTE_ATTR)).find(Boolean) || '';   // N edits the first's
+        const note = (byGroup.get(groups[0]) || []).map(w => w.getAttribute(NOTE_ATTR)).find(Boolean) || '';   // N edits the first's
         const dark = wrappers[0].hasAttribute(DARK_ATTR);
         // A restyle keeps the toolbar where it is and updates it at once; the others hide it.
         const after = (fn, keep = false) => (...args) => {
@@ -4657,9 +4723,9 @@
     // for Undo.
     let selectedGroups = [];      // in the order they were selected; the last is Shift+click's start
     let selectFrame = 0;
-    const selectBoxes = new Map();   // group -> { el, path, hole, shape }, `shape` its lines when last drawn (see followSelectBoxes)
+    const selectBoxes = new Map();   // group -> { el, path, hole, mask, shape }, `shape` its lines when last drawn (see followSelectBoxes)
     let selectBoxCount = 0;          // for the ids of their masks
-    let selectWrappers = null;       // { groups, epoch, at, map }: the selected annotations' wrappers (see followSelectBoxes)
+    let selectWrappers = null;       // { groups, epoch, at, map }: the selected annotations' wrappers (see wrappersOfGroups)
 
     const SELECT_BOX_PAD = 4;
     const SELECT_BOX_RADIUS = 4;
@@ -4683,18 +4749,19 @@
         selectedGroups.forEach(g => {
             if (selectBoxes.has(g)) return;
             const first = groupWrappers(g)[0];
-            // The mask leaves a gap in the outline around the note badge (see noteBadgeHole).
+            // The mask leaves a gap in the outline around the note badge (see noteBadgeHole). It
+            // is costly to draw, so the outline has it only while there is a badge.
             const id = `highlighter-select-mask-${++selectBoxCount}`;
             const outline = svgEl('svg', { 'aria-hidden': 'true' });
             const mask = svgEl('mask', { id, maskUnits: 'userSpaceOnUse', x: -1e4, y: -1e4, width: 2e4, height: 2e4 });
             const hole = svgEl('rect', { fill: 'black', width: 0, height: 0 });
-            const path = svgEl('path', { mask: `url(#${id})` });
+            const path = svgEl('path', {});
             mask.append(svgEl('rect', { x: -1e4, y: -1e4, width: 2e4, height: 2e4, fill: 'white' }), hole);
             outline.append(mask, path);
             const el = makeEl('div', { class: 'select-box', 'data-theme': first && first.hasAttribute(DARK_ATTR) ? 'dark' : 'light', hidden: '' },
                 [outline]);
             selectBoxesEl.appendChild(el);
-            selectBoxes.set(g, { el, path, hole, shape: '' });
+            selectBoxes.set(g, { el, path, hole, mask: `url(#${id})`, shape: '' });
         });
         ensureUi();
         if (!selectFrame) followSelectBoxes();
@@ -4727,10 +4794,25 @@
         return map;
     }
 
+    // The wrappers of each of `groups`. The selected annotations' are kept from frame to frame,
+    // searched for again only when the script added or removed some, one left the page or its
+    // annotation, or a second has passed: the outlines and their toolbar follow them each frame.
+    function wrappersOfGroups(groups) {
+        if (!groups.every(g => selectBoxes.has(g))) return wrappersByGroup(groups);
+        const now = performance.now();
+        const cached = selectWrappers;
+        const valid = cached && cached.groups === selectedGroups && cached.epoch === wrapperEpoch && now - cached.at < 1000 &&
+            Array.from(cached.map).every(([g, ws]) => ws.every(w => w.isConnected && w.getAttribute(GROUP_ATTR) === g));
+        if (!valid) selectWrappers = { groups: selectedGroups, epoch: wrapperEpoch, at: now, map: wrappersByGroup(selectedGroups) };
+        return selectWrappers.map;
+    }
+
     // The box around all of an annotation's lines (of several: around all of them), in the
     // viewport; null when none of it is shown.
     function groupRect(groups) {
-        const rects = groupClientRects(groups);
+        const list = [].concat(groups);
+        const byGroup = wrappersOfGroups(list);
+        const rects = groupClientRects(list, list.flatMap(g => byGroup.get(g) || []));
         if (!rects.length) return null;
         const top = Math.min(...rects.map(r => r.top)) - SELECT_BOX_PAD;
         const left = Math.min(...rects.map(r => r.left)) - SELECT_BOX_PAD;
@@ -4833,14 +4915,7 @@
     function followSelectBoxes() {
         selectFrame = 0;
         if (!selectedGroups.length) return;
-        const now = performance.now();
-        // Their wrappers are searched for again only when the script added or removed some, one
-        // left the page or its annotation, or a second has passed.
-        const cached = selectWrappers;
-        const valid = cached && cached.groups === selectedGroups && cached.epoch === wrapperEpoch && now - cached.at < 1000 &&
-            Array.from(cached.map).every(([g, ws]) => ws.every(w => w.isConnected && w.getAttribute(GROUP_ATTR) === g));
-        if (!valid) selectWrappers = { groups: selectedGroups, epoch: wrapperEpoch, at: now, map: wrappersByGroup(selectedGroups) };
-        const wrappersOf = selectWrappers.map;
+        const wrappersOf = wrappersOfGroups(selectedGroups);
         const rects = new Map(selectedGroups.map(g => [g, groupClientRects(g, wrappersOf.get(g))]));
         const gone = selectedGroups.filter(g => !rects.get(g).length);
         if (gone.length) {
@@ -4865,6 +4940,8 @@
                 Object.assign(box.el.style, { top: `${top}px`, left: `${left}px`, width: `${rect.width}px`, height: `${rect.height}px` });
                 box.path.setAttribute('d', d);   // not innerHTML: see makeEl
                 ['x', 'y', 'width', 'height', 'rx'].forEach((k, i) => box.hole.setAttribute(k, cut[i]));
+                if (hole) box.path.setAttribute('mask', box.mask);
+                else box.path.removeAttribute('mask');
             }
             box.el.hidden = false;
         });

@@ -178,11 +178,12 @@
     // their dashed boxes. The style all of them have shows pressed and removes them, as with a
     // selection; the others restyle them, and they stay selected with the toolbar over them.
     function showGroupToolbar(groups) {
-        const wrappers = groups.flatMap(groupWrappers);
+        const byGroup = wrappersOfGroups(groups);
+        const wrappers = groups.flatMap(g => byGroup.get(g) || []);
         if (!wrappers.length || !groupRect(groups)) return false;
         const key = wrappers[0].getAttribute(STYLE_ATTR);
         const current = wrappers.every(w => w.getAttribute(STYLE_ATTR) === key) ? [key] : [];
-        const note = groupWrappers(groups[0]).map(w => w.getAttribute(NOTE_ATTR)).find(Boolean) || '';   // N edits the first's
+        const note = (byGroup.get(groups[0]) || []).map(w => w.getAttribute(NOTE_ATTR)).find(Boolean) || '';   // N edits the first's
         const dark = wrappers[0].hasAttribute(DARK_ATTR);
         // A restyle keeps the toolbar where it is and updates it at once; the others hide it.
         const after = (fn, keep = false) => (...args) => {

@@ -128,14 +128,22 @@ ${filler(40)}
   // jump
   await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(100);
   const seq = [];
+  // Until the smooth scroll has brought the annotation jumped to into view and stopped (slow on
+  // the CI machine), then the note card's moment.
+  const settled = () => page.waitForFunction(() => {
+    const g = window.__hl.jumpGroup; const w = g && window.__hl.allWrappers().find(x => x.getAttribute('data-highlighter-group') === g);
+    if (!w) return false;
+    const t = w.getBoundingClientRect().top, ok = t >= 0 && t < innerHeight && window.__jumpTop === t;
+    window.__jumpTop = t; return ok;
+  }, null, { polling: 100, timeout: 5000 }).then(() => page.waitForTimeout(300));
   for (let i = 0; i < 6; i++) {
-    await L.altKey(page, 'j'); await page.waitForTimeout(900);
+    await L.altKey(page, 'j'); await settled();
     seq.push(await page.evaluate(() => { const g = window.__hl.jumpGroup; const w = window.__hl.allWrappers().find(x => x.getAttribute('data-highlighter-group') === g); return [w.textContent, !window.__hl.noteCardEl.hidden, Math.round(w.getBoundingClientRect().top)]; }));
   }
   console.log(JSON.stringify(seq), await L.toast(page));
   L.check('jump order', seq.map(s => s[0]).join('|') === 'beta|three four|quick brown fox|Repeated words|*star* and _under_|beta', seq);
   L.check('jump shows note card for noted', seq[2][1] === true && seq[0][1] === false, seq);
-  await L.altKey(page, 'k'); await page.waitForTimeout(900);
+  await L.altKey(page, 'k'); await settled();
   const back = await page.evaluate(() => window.__hl.jumpGroup);
   const backText = await page.evaluate(g => window.__hl.allWrappers().find(x => x.getAttribute('data-highlighter-group') === g).textContent, back);
   L.check('Alt+K wraps to last', backText === '*star* and _under_', backText);

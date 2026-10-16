@@ -56,7 +56,7 @@
     const NOTE_STYLE_KEY = 'h';                 // style given to plain text that receives a note
     const NOTE_MAX_LENGTH = 2000;
     const NOTE_MIN_LINES = 2;                   // the note box starts this tall,
-    const NOTE_MAX_LINES = 6;                   // grows with the text up to this, then scrolls
+    const NOTE_MAX_LINES = 12;                  // grows with the text up to this (the note card's 240px), then scrolls
     const NOTE_BADGE_SIZE = 10;                 // px, at least; the speech-bubble badge on annotations with a note,
     const NOTE_BADGE_EM = 0.6;                  // which grows with the font (0.6em: 10px at 16px, 19px on a 32px heading)
     const NOTE_BADGE_COLOR = '#0F6CBD';         // Fluent's blue, apart from every highlight and line color,

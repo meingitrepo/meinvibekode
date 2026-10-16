@@ -47,11 +47,17 @@
     // put while the pointer moves between the annotation's lines. When the badge is scrolled out
     // of view, next to the line under the pointer instead.
     function noteCardAnchor(wrapper) {
+        const r = badgeAnchor(wrapper);
+        return !r || r.bottom < 0 || r.top > window.innerHeight ? lineUnderPointer(wrapper) : r;
+    }
+
+    // The end of the annotation's last line, where its note badge is (or would be). The note
+    // editor opens here too, like the card.
+    function badgeAnchor(wrapper) {
         const mark = groupWrappers(wrapper.getAttribute(GROUP_ATTR)).find(w => w.hasAttribute(NOTE_MARK_ATTR)) || wrapper;
         const rects = Array.from(mark.getClientRects()).filter(r => r.width || r.height);
         const r = rects[rects.length - 1];
-        if (!r || r.bottom < 0 || r.top > window.innerHeight) return lineUnderPointer(wrapper);
-        return { left: r.right, right: r.right, width: 0, top: r.top, bottom: r.bottom };
+        return r && { left: r.right, right: r.right, width: 0, top: r.top, bottom: r.bottom };
     }
 
     // Shows the note of an annotation once the pointer has rested on its badge for
@@ -214,7 +220,7 @@
 
     function editorAnchorRect() {
         const wrappers = editor ? groupWrappers(editor.group) : [];
-        return wrappers.length ? wrappers[wrappers.length - 1].getBoundingClientRect() : null;
+        return wrappers.length ? badgeAnchor(wrappers[wrappers.length - 1]) || null : null;
     }
 
     // Fits the note box to its text: NOTE_MIN_LINES to NOTE_MAX_LINES lines (20px each, plus

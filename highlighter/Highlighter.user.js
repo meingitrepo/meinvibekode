@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.36
+// @version      8.37
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -160,7 +160,7 @@
     const NOTE_STYLE_KEY = 'h';                 // style given to plain text that receives a note
     const NOTE_MAX_LENGTH = 2000;
     const NOTE_MIN_LINES = 2;                   // the note box starts this tall,
-    const NOTE_MAX_LINES = 6;                   // grows with the text up to this, then scrolls
+    const NOTE_MAX_LINES = 12;                  // grows with the text up to this (the note card's 240px), then scrolls
     const NOTE_BADGE_SIZE = 10;                 // px, at least; the speech-bubble badge on annotations with a note,
     const NOTE_BADGE_EM = 0.6;                  // which grows with the font (0.6em: 10px at 16px, 19px on a 32px heading)
     const NOTE_BADGE_COLOR = '#0F6CBD';         // Fluent's blue, apart from every highlight and line color,
@@ -3553,6 +3553,7 @@
         --durationSlow: 300ms;
         --curveEasyEase: cubic-bezier(0.33, 0, 0.67, 1);
         --curveDecelerateMid: cubic-bezier(0.1, 0.9, 0.2, 1);
+        --colorScheme: light;
     `;
     const DARK_TOKENS = `
         --colorNeutralForeground1: #ffffff;
@@ -3580,6 +3581,7 @@
         --colorStrokeFocus2: #ffffff;
         --shadow8: 0 0 2px rgba(0, 0, 0, 0.24), 0 4px 8px rgba(0, 0, 0, 0.28);
         --toolbarDivider: #666666;
+        --colorScheme: dark;
     `;
     const UI_CSS = `
         :host { all: initial; ${LIGHT_TOKENS} }
@@ -3587,6 +3589,9 @@
         .panel[data-theme="light"], .toast[data-theme="light"], .pen[data-theme="light"], .everything[data-theme="light"] { ${LIGHT_TOKENS} }
         .panel[data-theme="dark"], .toast[data-theme="dark"], .pen[data-theme="dark"], .everything[data-theme="dark"] { ${DARK_TOKENS} }
         [hidden] { display: none !important; }
+        /* Scrollbars (note box, card text, lists) follow our theme, not the page's. Set here, not on
+           :host: the host's inline all: initial !important would reset it. */
+        .surface, .everything { color-scheme: var(--colorScheme); }
 
         /* Every floating panel (toolbar, note preview, note editor, toast, tooltip) shares this
            surface: 8px corners and shadow8, matched to Edge's PDF selection toolbar. Tooltips
@@ -3673,7 +3678,8 @@
         .card-actions { display: flex; gap: 4px; }
 
         /* Note editor, with an outline Textarea */
-        /* As wide as its note box, which starts 252px wide (a 280px panel) and can be dragged larger. */
+        /* As wide as its note box, which starts 292px wide (a 320px panel, the note preview at its
+           widest) and can be dragged wider, never narrower. */
         .editor { max-width: calc(100vw - 16px); padding: 12px; }
         .editor-header { display: flex; align-items: center; justify-content: space-between; min-height: 24px; margin: -4px -4px 8px 0; }
         /* Save and Delete, icon only, at the top right. */
@@ -3708,7 +3714,7 @@
         textarea {
             /* Height is set by sizeNoteInput(): NOTE_MIN_LINES to NOTE_MAX_LINES, then it scrolls.
                The corner handle resizes it (and the panel) for the current edit only. */
-            display: block; box-sizing: border-box; width: 252px; min-width: 252px; margin: 0; padding: 5px 11px;
+            display: block; box-sizing: border-box; width: 292px; min-width: 292px; margin: 0; padding: 5px 11px;
             min-height: 30px; max-width: min(640px, calc(100vw - 50px)); max-height: 60vh;   /* 30px: one line */
             border: 0; outline: 0; resize: both; overflow-y: auto; overscroll-behavior: contain; background: transparent;
             color: var(--colorNeutralForeground1); font: inherit;
@@ -4397,11 +4403,17 @@
     // put while the pointer moves between the annotation's lines. When the badge is scrolled out
     // of view, next to the line under the pointer instead.
     function noteCardAnchor(wrapper) {
+        const r = badgeAnchor(wrapper);
+        return !r || r.bottom < 0 || r.top > window.innerHeight ? lineUnderPointer(wrapper) : r;
+    }
+
+    // The end of the annotation's last line, where its note badge is (or would be). The note
+    // editor opens here too, like the card.
+    function badgeAnchor(wrapper) {
         const mark = groupWrappers(wrapper.getAttribute(GROUP_ATTR)).find(w => w.hasAttribute(NOTE_MARK_ATTR)) || wrapper;
         const rects = Array.from(mark.getClientRects()).filter(r => r.width || r.height);
         const r = rects[rects.length - 1];
-        if (!r || r.bottom < 0 || r.top > window.innerHeight) return lineUnderPointer(wrapper);
-        return { left: r.right, right: r.right, width: 0, top: r.top, bottom: r.bottom };
+        return r && { left: r.right, right: r.right, width: 0, top: r.top, bottom: r.bottom };
     }
 
     // Shows the note of an annotation once the pointer has rested on its badge for
@@ -4564,7 +4576,7 @@
 
     function editorAnchorRect() {
         const wrappers = editor ? groupWrappers(editor.group) : [];
-        return wrappers.length ? wrappers[wrappers.length - 1].getBoundingClientRect() : null;
+        return wrappers.length ? badgeAnchor(wrappers[wrappers.length - 1]) || null : null;
     }
 
     // Fits the note box to its text: NOTE_MIN_LINES to NOTE_MAX_LINES lines (20px each, plus

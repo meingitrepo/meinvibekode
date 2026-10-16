@@ -24,8 +24,12 @@ async function wheel(p, xy, dy) { await p.mouse.move(...xy); for (let i = 0; i <
   const cf = await box(p, 'cardHint');
   await wheel(p, center(cf), 200);
   L.check('scrolling over the card footer leaves the page', (await scrollY(p)) === 100, await scrollY(p));
+  const card = await box(p, 'noteCardEl');
   await L.altKey(p, 'n'); await p.waitForTimeout(200);   // the mouse is on the card: its annotation
   L.check('the editor is open', await p.evaluate(() => !!window.__hl.editor), null);
+  // 8.37: the editor opens where the card was (centred on the badge), as wide as the card at its widest.
+  const ed = await box(p, 'editorEl');
+  L.check('the editor sits and sizes like the card', Math.abs(ed.left + ed.right - card.left - card.right) < 4 && Math.abs(ed.top - card.top) < 2 && Math.round(ed.right - ed.left) === 320, { card, ed });
   const ta = await box(p, 'noteInput');
   await wheel(p, center(ta), 400);
   L.check('the long note scrolls', await p.evaluate(() => window.__hl.noteInput.scrollTop > 0), null);

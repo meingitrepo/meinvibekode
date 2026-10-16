@@ -109,6 +109,7 @@
         --durationSlow: 300ms;
         --curveEasyEase: cubic-bezier(0.33, 0, 0.67, 1);
         --curveDecelerateMid: cubic-bezier(0.1, 0.9, 0.2, 1);
+        --colorScheme: light;
     `;
     const DARK_TOKENS = `
         --colorNeutralForeground1: #ffffff;
@@ -136,6 +137,7 @@
         --colorStrokeFocus2: #ffffff;
         --shadow8: 0 0 2px rgba(0, 0, 0, 0.24), 0 4px 8px rgba(0, 0, 0, 0.28);
         --toolbarDivider: #666666;
+        --colorScheme: dark;
     `;
     const UI_CSS = `
         :host { all: initial; ${LIGHT_TOKENS} }
@@ -143,6 +145,9 @@
         .panel[data-theme="light"], .toast[data-theme="light"], .pen[data-theme="light"], .everything[data-theme="light"] { ${LIGHT_TOKENS} }
         .panel[data-theme="dark"], .toast[data-theme="dark"], .pen[data-theme="dark"], .everything[data-theme="dark"] { ${DARK_TOKENS} }
         [hidden] { display: none !important; }
+        /* Scrollbars (note box, card text, lists) follow our theme, not the page's. Set here, not on
+           :host: the host's inline all: initial !important would reset it. */
+        .surface, .everything { color-scheme: var(--colorScheme); }
 
         /* Every floating panel (toolbar, note preview, note editor, toast, tooltip) shares this
            surface: 8px corners and shadow8, matched to Edge's PDF selection toolbar. Tooltips
@@ -229,7 +234,8 @@
         .card-actions { display: flex; gap: 4px; }
 
         /* Note editor, with an outline Textarea */
-        /* As wide as its note box, which starts 252px wide (a 280px panel) and can be dragged larger. */
+        /* As wide as its note box, which starts 292px wide (a 320px panel, the note preview at its
+           widest) and can be dragged wider, never narrower. */
         .editor { max-width: calc(100vw - 16px); padding: 12px; }
         .editor-header { display: flex; align-items: center; justify-content: space-between; min-height: 24px; margin: -4px -4px 8px 0; }
         /* Save and Delete, icon only, at the top right. */
@@ -264,7 +270,7 @@
         textarea {
             /* Height is set by sizeNoteInput(): NOTE_MIN_LINES to NOTE_MAX_LINES, then it scrolls.
                The corner handle resizes it (and the panel) for the current edit only. */
-            display: block; box-sizing: border-box; width: 252px; min-width: 252px; margin: 0; padding: 5px 11px;
+            display: block; box-sizing: border-box; width: 292px; min-width: 292px; margin: 0; padding: 5px 11px;
             min-height: 30px; max-width: min(640px, calc(100vw - 50px)); max-height: 60vh;   /* 30px: one line */
             border: 0; outline: 0; resize: both; overflow-y: auto; overscroll-behavior: contain; background: transparent;
             color: var(--colorNeutralForeground1); font: inherit;

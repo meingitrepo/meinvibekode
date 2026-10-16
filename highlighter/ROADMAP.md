@@ -79,6 +79,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.34 | Pin a note by its badge | Clicking a note badge keeps its note open (moving away or hovering other badges no longer closes it; it follows the badge on scroll) and turns the badge the dashed selection outline's color (black, white on dark pages); a click anywhere else on the page, or on the badge again, closes it. The click no longer selects the annotation |
 | 8.35 | Esc closes a pinned note | Esc now also closes a note pinned by clicking its badge (8.34) |
 | 8.36 | Panels scroll with the text | The selection toolbar, the note card, the note editor and tooltips now sit in the page instead of the window, so they move with their text in the same frame while scrolling instead of a frame late (as the dashed selection outline since 8.21). Inside scrolling boxes on a page they still follow a frame late |
+| 8.37 | Note editor like the note card | The add/edit note panel opens where the note card does (centred on the note badge), is as wide as the card at its widest (320px) and its note box grows to the card's height (12 lines) before scrolling; its corner handle can still make it wider, never narrower. Scrollbars in our panels follow our light/dark theme (they were white in dark mode) |
 
 ## Next, roughly in order
 

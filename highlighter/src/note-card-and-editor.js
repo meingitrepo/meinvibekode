@@ -112,9 +112,11 @@
         const mark = e.button || annotationsHidden ? null : markNear(e.clientX, e.clientY);
         if (!mark) return false;
         if (pinnedCards.has(mark)) { unpinNoteCard(mark); return true; }
+        const shown = sameCard(mark);
         showNoteCard(mark);
         const card = noteCardEl.cloneNode(true);
         card.setAttribute('data-pinned', '');
+        if (shown) card.style.animation = 'none';   // the hover card already on screen just stays; no second fade-in
         hideNoteCard();
         noteCardEl.after(card);
         pinnedCards.set(mark, card);

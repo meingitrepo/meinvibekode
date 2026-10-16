@@ -77,7 +77,9 @@ async function pin(browser) {
   await p.mouse.move(5, 300, { steps: 4 }); await p.waitForTimeout(400);
   await p.mouse.click(5, 300); await p.waitForTimeout(50);
   check('moving away and clicking elsewhere keep it', (await pins()).length === 1 && (await fill('gA')) === DARKER, await pins());
+  await p.mouse.move(...await L.badge(p, 'gB')); await p.waitForFunction(() => !window.__hl.noteCardEl.hidden);
   await p.mouse.click(...await L.badge(p, 'gB')); await p.waitForTimeout(50);
+  check('pinning a note already shown on hover does not fade it in again', await p.evaluate(() => Array.from(window.__hl.uiRoot.querySelectorAll('.card[data-pinned]')).map(c => getComputedStyle(c).animationName).join() === 'none,highlighter-enter'), await p.evaluate(() => Array.from(window.__hl.uiRoot.querySelectorAll('.card[data-pinned]')).map(c => getComputedStyle(c).animationName).join()));
   ps = await pins();
   check('another badge pins a second note', ps.length === 2 && ps.map(c => c.text).sort().join() === 'Note A,Note B' && (await fill('gB')) === DARKER, ps);
   await p.mouse.move(5, 300); await p.mouse.wheel(0, 500); await p.waitForTimeout(200);

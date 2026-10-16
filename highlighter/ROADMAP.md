@@ -83,6 +83,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.38 | Pinned notes stay; drag note panels | A note pinned by its badge (8.34) no longer closes on clicks elsewhere, only on its badge again or Esc. The pinned note card moves by dragging its footer, the note editor by its header; dropped, they stay in that spot of the page and scroll with it |
 | 8.39 | Several pinned notes; editor stays | Any number of notes can be pinned by their badges at once (Esc closes the last pinned); a pinned note now scrolls away with its badge instead of jumping beside the annotation; clicking outside the note editor no longer discards it (Save, Esc or opening another note closes it) |
 | 8.40 | Note badge in its annotation's color | The note badge takes its annotation's color, from the style's light or dark set, whichever stands out from its dots (dark dots on light pages, light dots on dark); pinned, a darker shade of it (lighter on dark pages); light blue while its note is edited (deeper blue on dark) |
+| 8.41 | Pinning a shown note without a flash | Clicking the badge of a note already open from hovering pins it in place; it no longer fades out and back in |
 
 ## Next, roughly in order
 

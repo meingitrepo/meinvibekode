@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.40
+// @version      8.41
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -4508,9 +4508,11 @@
         const mark = e.button || annotationsHidden ? null : markNear(e.clientX, e.clientY);
         if (!mark) return false;
         if (pinnedCards.has(mark)) { unpinNoteCard(mark); return true; }
+        const shown = sameCard(mark);
         showNoteCard(mark);
         const card = noteCardEl.cloneNode(true);
         card.setAttribute('data-pinned', '');
+        if (shown) card.style.animation = 'none';   // the hover card already on screen just stays; no second fade-in
         hideNoteCard();
         noteCardEl.after(card);
         pinnedCards.set(mark, card);

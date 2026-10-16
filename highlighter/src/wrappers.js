@@ -409,8 +409,10 @@
     let lastFullRedraw = -Infinity;
     let redrawResized = false;
     const FULL_REDRAW_GAP_MS = 1000;
-    // `e` is the window's resize event when that is what calls it.
-    function scheduleRedraw(e) {
+    // `e` is the window's resize event when that is what calls it. With `nearOnly` (the site
+    // changed a style or class, see watchPageStyle) only those near the screen are looked at:
+    // the others are redrawn by visibilityObserver if they moved, once they come near.
+    function scheduleRedraw(e, nearOnly) {
         if (watchesVisibility && !shownWrappers.size) return;   // nothing on the page: nothing to do, however big the page
         if (e && e.type === 'resize') redrawResized = true;
         if (!redrawFrame) {
@@ -421,9 +423,32 @@
                 redrawMoved(scope);
             });
         }
+        if (nearOnly === true && watchesVisibility) return;
         clearTimeout(redrawTimer);
         const wait = Math.max(150, lastFullRedraw + FULL_REDRAW_GAP_MS - performance.now());
         redrawTimer = setTimeout(() => { lastFullRedraw = performance.now(); redrawMoved('all'); }, wait);
+    }
+
+    // The site's own settings (a bigger font, more padding, another theme) restyle the page
+    // without resizing it: a style or class set on any element, or a stylesheet added, changed
+    // or removed. The annotations near the screen then follow their text in the next frame.
+    // Changes on our own drawings (SVG) and wrappers are left out.
+    function watchPageStyle() {
+        if (typeof MutationObserver !== 'function') return () => {};
+        const ours = n => n instanceof SVGElement || (n.matches && n.matches(WRAPPER_SELECTOR));
+        const sheet = n => n.nodeName === 'STYLE' || n.nodeName === 'LINK';
+        const mo = new MutationObserver(list => {
+            let hit = false;
+            for (const m of list) {
+                if (m.type === 'attributes') { if (!ours(m.target)) hit = true; continue; }
+                m.addedNodes.forEach(n => { if (n.nodeName === 'LINK') n.addEventListener('load', () => scheduleRedraw(null, true), { once: true }); });
+                if (m.type === 'characterData' || sheet(m.target) || Array.from(m.addedNodes).some(sheet) || Array.from(m.removedNodes).some(sheet)) hit = true;
+            }
+            if (hit) scheduleRedraw(null, true);
+        });
+        mo.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'], subtree: true });
+        if (document.head) mo.observe(document.head, { childList: true, characterData: true, subtree: true });
+        return () => mo.disconnect();
     }
 
     // =====================================================================

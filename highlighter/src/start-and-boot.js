@@ -89,6 +89,7 @@
             ro.observe(document.documentElement);
             teardown.push(() => ro.disconnect());
         }
+        teardown.push(watchPageStyle());
 
         listen(window, 'popstate', onUrlMaybeChanged);
         listen(window, 'hashchange', onUrlMaybeChanged);

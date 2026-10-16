@@ -69,6 +69,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.24 | Growing pages and drags | When the page grows or shifts (feeds, chats, opening sections), only the annotations on or near the screen are looked at in that frame, the rest at most once a second, and pages without annotations do nothing (script time with 1000 annotations and a line added 5 times a second: 44 to 7 ms a second; a 180k-element page without annotations: 44 to 4); dragging a selection over annotations marks again only those whose selected part changed, not all of them each frame (over 300: script 202 to 38 ms a second, 51 to 60 frames a second) |
 | 8.25 | Two older fixes | An annotation in a tab panel the site keeps and puts back while it is out of view follows its text again when the page grows; dragging the selected text (as into a search box) no longer leaves its annotations unmarked |
 | 8.26 | Notes on click | A note card opens only while one annotation is selected by clicking it (no longer on hover), stays at its badge while scrolling, and comes back after its note is edited; meanwhile its note badge turns green (#107C10, #54B054 on dark pages) |
+| 8.27 | Follows site restyles | Annotations follow their text when the site itself changes font size, padding or theme without the page changing size (a style or class set on any element, a stylesheet added, edited or removed); only those near the screen are looked at then |
 
 ## Next, roughly in order
 

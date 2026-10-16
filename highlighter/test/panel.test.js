@@ -147,7 +147,7 @@ ${filler(40)}
   await page.keyboard.press('Escape');
   // menu
   const menu = await page.evaluate(() => Object.keys(window.__menu));
-  L.check('menu has new items', menu.includes('Show annotations on this page') && menu.includes('Copy annotations as Markdown'), menu);
+  L.check('menu has new items', menu.includes('Show annotations') && menu.includes('Copy as Markdown'), menu);
   console.log('errors', page.__errors);
   L.check('no page errors', !page.__errors.length, page.__errors);
   await ctx.close(); await browser.close();

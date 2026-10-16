@@ -14,7 +14,7 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"></head><body styl
   L.check('toast says off', /off/.test(JSON.stringify(toastText)), toastText);
   const settings = await page.evaluate(() => JSON.parse(window.__gm['rnh:settings']));
   L.check('stored in settings', settings.toolbarOff === true, settings);
-  L.check('menu says turn on', await page.evaluate(() => Object.keys(window.__menu).some(l => l.startsWith('Turn selection toolbar on'))));
+  L.check('menu says turn on', await page.evaluate(() => Object.keys(window.__menu).some(l => l.startsWith('Turn toolbar on'))));
   await L.selStr(page, '#p2', 'other words'); await page.waitForTimeout(400);
   L.check('new selection: no toolbar', !(await L.toolbar(page)));
   await L.altKey(page, 'h'); await page.waitForTimeout(300);

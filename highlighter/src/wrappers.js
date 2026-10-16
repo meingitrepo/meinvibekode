@@ -46,7 +46,11 @@
     }
 
     let selectionMarkCount = 0;
-    const selectionOverlays = new Set();
+    // wrapper -> what marks its selected part: { svg, nodes (added to the svg), paths (given a
+    // mask), overlay, shape (where the part was, in the drawing), whole (all of it selected) }.
+    // While a selection is dragged, only the annotations whose selected part changed are marked
+    // again, not every one in the selection each frame.
+    const selectionMarks = new Map();
 
     // What markSelected needs to know about the selected part of one annotation. Every
     // annotation in the selection is measured before any is marked, so the page is laid out
@@ -62,12 +66,26 @@
         try { area = svg.getBBox(); } catch (e) { /* not rendered */ }
         const rects = textRects(part);
         dropRange(part);
-        return { svg, wrapper, rects, o: svg.getBoundingClientRect(), area };
+        const o = svg.getBoundingClientRect();
+        const round = n => Math.round(n * 10) / 10;
+        const shape = rects.map(r => [r.left - o.left, r.top - o.top, r.width, r.height].map(round).join(',')).join(' ') +
+            (area ? `|${[area.x, area.y, area.width, area.height].map(round).join(',')}` : '');
+        return { svg, wrapper, rects, o, area, shape };
     }
 
+    // Is all of the wrapper's text in the range?
+    function rangeHoldsWrapper(range, wrapper) {
+        try {
+            return range.comparePoint(wrapper, 0) === 0 && range.comparePoint(wrapper, wrapper.childNodes.length) === 0;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // Returns what it added (see selectionMarks), or null.
     function markSelected({ svg, wrapper, rects, o, area }) {
         const paths = Array.from(svg.children).filter(el => el.tagName.toLowerCase() === 'path');
-        if (!rects.length || !paths.length) return;
+        if (!rects.length || !paths.length) return null;
         const config = annotationMap.get(wrapper).config;
         const width = config.strokeWidth;
         const n = ++selectionMarkCount;
@@ -98,9 +116,10 @@
         if (!highlight) {
             g.insertBefore(mask, g.firstChild);
             svg.appendChild(g);
-            return;
+            return { svg, nodes: [g], paths, overlay: null };
         }
-        svg.appendChild(svgEl('g', { [SELECTED_ATTR]: '' })).appendChild(mask);
+        const holder = svg.appendChild(svgEl('g', { [SELECTED_ATTR]: '' }));
+        holder.appendChild(mask);
         // Same place and containing block as the drawing: the wrapper is positioned itself.
         const overlay = svgEl('svg', { class: 'highlighter-annotation', [SELECTED_ATTR]: '' });
         overlay.style.cssText = svg.style.cssText;
@@ -109,7 +128,14 @@
             overlay.appendChild(svgEl('rect', { x: b.x + 0.5, y: b.y, width: Math.max(0, b.width - 1), height: Math.max(0, b.height), fill: 'none' }));
         });
         wrapper.insertAdjacentElement('afterend', overlay);
-        selectionOverlays.add(overlay);
+        return { svg, nodes: [holder], paths, overlay };
+    }
+
+    function unmarkOne(mark) {
+        mark.nodes.forEach(n => n.remove());
+        mark.paths.forEach(p => p.removeAttribute('mask'));
+        if (mark.overlay) mark.overlay.remove();
+        selectedSVGs.delete(mark.svg);
     }
 
     // A click on the page usually clears the selection, but the browser may paint that before
@@ -120,13 +146,13 @@
     }
 
     function unmarkSelected() {
+        selectionMarks.forEach(unmarkOne);
+        selectionMarks.clear();
         selectedSVGs.forEach(svg => {
             svg.querySelectorAll(`g[${SELECTED_ATTR}]`).forEach(g => g.remove());
             svg.querySelectorAll('path[mask]').forEach(p => p.removeAttribute('mask'));
         });
         selectedSVGs.clear();
-        selectionOverlays.forEach(overlay => overlay.remove());
-        selectionOverlays.clear();
     }
 
     // The annotation wrapping this one, if any: annotations of different styles can share text
@@ -157,12 +183,39 @@
         selectionFramePending = true;
         requestAnimationFrame(() => {
             selectionFramePending = false;
-            unmarkSelected();
             const sel = window.getSelection();
-            if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
-            let range;
-            try { range = sel.getRangeAt(0); } catch (e) { return; }
-            candidateWrappers(range).map(w => measureSelected(w, range)).filter(Boolean).forEach(markSelected);
+            let range = null;
+            if (sel && !sel.isCollapsed && sel.rangeCount) {
+                try { range = sel.getRangeAt(0); } catch (e) { /* none */ }
+            }
+            if (!range) { unmarkSelected(); return; }
+            // Everything is measured before anything is marked or unmarked, so the page is laid
+            // out once. Marks still in their drawing (a redraw takes them away) stay where the
+            // selected part is as it was: all of the annotation both times, or the same boxes.
+            const keep = new Set();
+            const fresh = [];
+            candidateWrappers(range).forEach(w => {
+                const svg = getSvg(w);
+                if (!svg) return;
+                const mark = selectionMarks.get(w);
+                const valid = mark && mark.svg === svg && mark.nodes.every(n => n.parentNode === svg);
+                const whole = rangeHoldsWrapper(range, w);
+                if (valid && whole && mark.whole) { keep.add(w); return; }
+                const m = measureSelected(w, range);
+                if (!m) return;
+                m.whole = whole;
+                if (valid && mark.shape === m.shape) { mark.whole = whole; keep.add(w); return; }
+                fresh.push(m);
+            });
+            selectionMarks.forEach((mark, w) => {
+                if (keep.has(w)) return;
+                unmarkOne(mark);
+                selectionMarks.delete(w);
+            });
+            fresh.forEach(m => {
+                const mark = markSelected(m);
+                if (mark) selectionMarks.set(m.wrapper, Object.assign(mark, { shape: m.shape, whole: m.whole }));
+            });
         });
     }
 
@@ -180,8 +233,16 @@
     }
 
     function rectChanged(wrapper) {
+        return rectsDiffer(measureRects(wrapper), rectCache.get(wrapper));
+    }
+
+    // Did the text of a wrapper that is shown (has boxes) move since it was last drawn?
+    function textMoved(wrapper) {
         const now = measureRects(wrapper);
-        const before = rectCache.get(wrapper);
+        return !!now && rectsDiffer(now, rectCache.get(wrapper));
+    }
+
+    function rectsDiffer(now, before) {
         if (!now || !before || now.length !== before.length) return true;
         const TOL = 1;
         return now.some((r, i) =>
@@ -282,32 +343,60 @@
         return ann;
     }
 
-    const visibilityObserver = (typeof IntersectionObserver === 'function')
+    // The wrappers shown on the page (see showWrappers), and those of them on or near the screen
+    // as the observer last saw them: when the page moves, only those near the screen are looked
+    // at in the same frame, and the page isn't searched for wrappers.
+    const shownWrappers = new Set();
+    const nearWrappers = new Set();
+    const watchesVisibility = typeof IntersectionObserver === 'function';
+    const visibilityObserver = watchesVisibility
         ? new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (!e.isIntersecting) { nearWrappers.delete(e.target); return; }
+                if (!annotationMap.has(e.target)) return;   // unwrapped since
+                nearWrappers.add(e.target);
+                shownWrappers.add(e.target);   // back on the page after the site took it off
+            });
             reposition(entries.filter(e => e.isIntersecting && rectChanged(e.target)).map(e => e.target));
         }, { rootMargin: '200px', threshold: 0 })
         : { observe() {}, unobserve() {} };
 
     // Redraws the annotations whose text moved. `nearView` limits it to those on or near the screen.
     function redrawMoved(nearView) {
+        if (watchesVisibility) {
+            const ws = nearView ? nearWrappers : shownWrappers;
+            if (!nearView) {
+                // Those the site took off the page are let go; one it puts back is added again
+                // when the observer sees it.
+                ws.forEach(w => { if (!w.isConnected) { shownWrappers.delete(w); nearWrappers.delete(w); } });
+            }
+            reposition(Array.from(ws).filter(w => w.isConnected && textMoved(w)));
+            return;
+        }
         const margin = 200, bottom = window.innerHeight + margin;
         reposition(allWrappers().filter(w => {
             if (nearView) {
                 const r = w.getBoundingClientRect();
                 if (r.bottom < -margin || r.top > bottom) return false;
             }
-            return w.getClientRects().length > 0 && rectChanged(w);
+            return textMoved(w);
         }));
     }
 
-    // While the window is resized or zoomed, the annotations on screen follow their text in the
-    // same frame; the rest catch up once it has been still for 150 ms.
+    // While the window is resized or zoomed, or the page grows or shifts, the annotations on or
+    // near the screen follow their text in the same frame; the rest are looked at once it has
+    // been still for 150 ms, and at most once a second while it keeps changing (a live feed, a
+    // chat). The ones that come into view are redrawn by visibilityObserver if they moved.
     let redrawTimer = null;
     let redrawFrame = 0;
+    let lastFullRedraw = -Infinity;
+    const FULL_REDRAW_GAP_MS = 1000;
     function scheduleRedraw() {
+        if (!shownWrappers.size) return;   // nothing on the page: nothing to do, however big the page
         if (!redrawFrame) redrawFrame = requestAnimationFrame(() => { redrawFrame = 0; redrawMoved(true); });
         clearTimeout(redrawTimer);
-        redrawTimer = setTimeout(() => redrawMoved(false), 150);
+        const wait = Math.max(150, lastFullRedraw + FULL_REDRAW_GAP_MS - performance.now());
+        redrawTimer = setTimeout(() => { lastFullRedraw = performance.now(); redrawMoved(false); }, wait);
     }
 
     // =====================================================================
@@ -327,10 +416,14 @@
         const ann = annotationMap.get(wrapper);
         if (ann) ann.remove();
         if (svg) { selectedSVGs.delete(svg); if (svg.isConnected) svg.remove(); }
+        const mark = selectionMarks.get(wrapper);
+        if (mark) { unmarkOne(mark); selectionMarks.delete(wrapper); }
         annotationMap.delete(wrapper);
         rectCache.delete(wrapper);
         trackedRecords.delete(wrapper);
         visibilityObserver.unobserve(wrapper);
+        shownWrappers.delete(wrapper);
+        nearWrappers.delete(wrapper);
         redrawInner(wrapper);
         wrapperEpoch++;
         return unwrapDom(wrapper);
@@ -352,6 +445,10 @@
 
     function unwrapAll() {
         unwrapMany(allWrappers());
+        // Those the site took off the page are gone for good now (a new page, or stopped).
+        shownWrappers.forEach(w => visibilityObserver.unobserve(w));
+        shownWrappers.clear();
+        nearWrappers.clear();
     }
 
     // True when extracting the range would not have to clone any partially selected element.
@@ -504,6 +601,7 @@
         wrappers.forEach(w => {
             snapshotRect(w);
             visibilityObserver.observe(w);
+            shownWrappers.add(w);
         });
         updateSelectionVisibility();
     }

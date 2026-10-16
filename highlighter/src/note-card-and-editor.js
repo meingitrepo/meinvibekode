@@ -5,6 +5,7 @@
     let cardWrapper = null;
     let cardHideTimer = null;
     let cardShowTimer = null;
+    let pinnedMark = null;        // the badge clicked to keep its note open (see onBadgeClick)
 
     // A note's text with its web addresses as links, opened in a new tab. Punctuation right after
     // an address (a full stop, a closing bracket the address didn't open) stays outside the link.
@@ -77,6 +78,7 @@
         clearTimeout(cardHideTimer);
         clearTimeout(cardShowTimer);
         if (sameCard(wrapper)) return;
+        unpinNoteCard();
         ensureUi(wrapper.hasAttribute(DARK_ATTR));
         cardWrapper = wrapper;
         cardText.replaceChildren(...noteNodes(wrapper.getAttribute(NOTE_ATTR) || ''));
@@ -94,6 +96,26 @@
         releaseFocus(noteCardEl);
         noteCardEl.hidden = true;
         cardWrapper = null;
+        unpinNoteCard();
+    }
+
+    function unpinNoteCard() {
+        if (pinnedMark) pinnedMark.removeAttribute(NOTE_PIN_ATTR);
+        pinnedMark = null;
+        nearMark = undefined;
+    }
+
+    // A click on a note badge keeps its note open, the badge in the selection outline's color,
+    // until the next click anywhere else on the page (or on the badge again). True if it was one.
+    function onBadgeClick(e) {
+        const mark = e.button || annotationsHidden || editor ? null : markNear(e.clientX, e.clientY);
+        const was = pinnedMark;
+        if (was) hideNoteCard();
+        if (!mark || mark === was) return !!mark;
+        showNoteCard(mark);
+        pinnedMark = mark;
+        mark.setAttribute(NOTE_PIN_ATTR, '');
+        return true;
     }
 
     function onMouseOver(e) {
@@ -106,6 +128,7 @@
     function onMouseMove(e) {
         if (isUiEvent(e)) return;
         pointer = { x: e.clientX, y: e.clientY };
+        if (pinnedMark) return;   // a pinned note stays until a click elsewhere
         const mark = annotationsHidden || editor ? null : markNear(e.clientX, e.clientY);
         if (mark === nearMark) return;
         nearMark = mark;

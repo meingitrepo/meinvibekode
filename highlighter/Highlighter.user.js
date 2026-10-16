@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.33
+// @version      8.34
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -118,6 +118,7 @@
     const GROUP_ATTR = 'data-highlighter-group';      // shared by the pieces of one annotation
     const NOTE_ATTR = 'data-highlighter-note';
     const NOTE_MARK_ATTR = 'data-highlighter-note-mark';  // the piece that shows the note badge
+    const NOTE_PIN_ATTR = 'data-highlighter-note-pin';    // on that piece while its badge was clicked to keep the note open
     const INK_ATTR = 'data-highlighter-ink';          // 'dark' / 'light': text recolored to read on its highlight
     const DARK_ATTR = 'data-highlighter-dark';        // on a dark background: drawn with DARK_OVERRIDES
     const ADDED_ATTR = 'data-highlighter-added';      // when it was first seen, for annotations whose group has no date
@@ -272,6 +273,9 @@
             --highlighter-badge-fill: ${NOTE_BADGE_DARK_COLOR};
             --highlighter-badge-rim: #1b1b1b;
         }
+        /* Clicked to keep its note open: the selection outline's color (see .select-box). */
+        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}]::after { --highlighter-badge-fill: #000000; }
+        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: #ffffff; }
         /* An annotation jumped to (Alt+J / Alt+K, or from the panel) blinks twice. */
         svg[${FLASH_ATTR}] {
             animation: highlighter-flash ${FLASH_MS / 2}ms ease-in-out 2 !important;
@@ -4333,6 +4337,7 @@
     let cardWrapper = null;
     let cardHideTimer = null;
     let cardShowTimer = null;
+    let pinnedMark = null;        // the badge clicked to keep its note open (see onBadgeClick)
 
     // A note's text with its web addresses as links, opened in a new tab. Punctuation right after
     // an address (a full stop, a closing bracket the address didn't open) stays outside the link.
@@ -4405,6 +4410,7 @@
         clearTimeout(cardHideTimer);
         clearTimeout(cardShowTimer);
         if (sameCard(wrapper)) return;
+        unpinNoteCard();
         ensureUi(wrapper.hasAttribute(DARK_ATTR));
         cardWrapper = wrapper;
         cardText.replaceChildren(...noteNodes(wrapper.getAttribute(NOTE_ATTR) || ''));
@@ -4422,6 +4428,26 @@
         releaseFocus(noteCardEl);
         noteCardEl.hidden = true;
         cardWrapper = null;
+        unpinNoteCard();
+    }
+
+    function unpinNoteCard() {
+        if (pinnedMark) pinnedMark.removeAttribute(NOTE_PIN_ATTR);
+        pinnedMark = null;
+        nearMark = undefined;
+    }
+
+    // A click on a note badge keeps its note open, the badge in the selection outline's color,
+    // until the next click anywhere else on the page (or on the badge again). True if it was one.
+    function onBadgeClick(e) {
+        const mark = e.button || annotationsHidden || editor ? null : markNear(e.clientX, e.clientY);
+        const was = pinnedMark;
+        if (was) hideNoteCard();
+        if (!mark || mark === was) return !!mark;
+        showNoteCard(mark);
+        pinnedMark = mark;
+        mark.setAttribute(NOTE_PIN_ATTR, '');
+        return true;
     }
 
     function onMouseOver(e) {
@@ -4434,6 +4460,7 @@
     function onMouseMove(e) {
         if (isUiEvent(e)) return;
         pointer = { x: e.clientX, y: e.clientY };
+        if (pinnedMark) return;   // a pinned note stays until a click elsewhere
         const mark = annotationsHidden || editor ? null : markNear(e.clientX, e.clientY);
         if (mark === nearMark) return;
         nearMark = mark;
@@ -5223,6 +5250,7 @@
 
     function onDocumentClick(e) {
         if (isUiEvent(e)) return;   // the note card, the toast's Undo: the selection stays
+        if (onBadgeClick(e)) return;   // pins or unpins its note, nothing more
         const group = clickedGroup(e);
         if (!group || getActiveRange()) { clearSelectedGroups(); return; }
         if (e.ctrlKey) {
@@ -6055,7 +6083,8 @@
         if (uiFrame) return;
         uiFrame = requestAnimationFrame(() => {
             uiFrame = 0;
-            if (!noteCardEl.hidden) hideNoteCard();
+            if (pinnedMark && cardWrapper) placePanel(noteCardEl, noteCardAnchor(cardWrapper), true);   // a pinned note follows its badge
+            else if (!noteCardEl.hidden) hideNoteCard();
             hideLabelTip();
             if (!toolbarEl.hidden) placeToolbar();
             if (editor) followEditorAnchor();

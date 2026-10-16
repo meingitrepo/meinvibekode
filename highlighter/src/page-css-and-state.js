@@ -51,6 +51,9 @@
             --highlighter-badge-fill: ${NOTE_BADGE_DARK_COLOR};
             --highlighter-badge-rim: #1b1b1b;
         }
+        /* Clicked to keep its note open: the selection outline's color (see .select-box). */
+        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}]::after { --highlighter-badge-fill: #000000; }
+        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: #ffffff; }
         /* An annotation jumped to (Alt+J / Alt+K, or from the panel) blinks twice. */
         svg[${FLASH_ATTR}] {
             animation: highlighter-flash ${FLASH_MS / 2}ms ease-in-out 2 !important;

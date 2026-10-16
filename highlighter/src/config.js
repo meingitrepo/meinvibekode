@@ -14,6 +14,7 @@
     const GROUP_ATTR = 'data-highlighter-group';      // shared by the pieces of one annotation
     const NOTE_ATTR = 'data-highlighter-note';
     const NOTE_MARK_ATTR = 'data-highlighter-note-mark';  // the piece that shows the note badge
+    const NOTE_PIN_ATTR = 'data-highlighter-note-pin';    // on that piece while its badge was clicked to keep the note open
     const INK_ATTR = 'data-highlighter-ink';          // 'dark' / 'light': text recolored to read on its highlight
     const DARK_ATTR = 'data-highlighter-dark';        // on a dark background: drawn with DARK_OVERRIDES
     const ADDED_ATTR = 'data-highlighter-added';      // when it was first seen, for annotations whose group has no date

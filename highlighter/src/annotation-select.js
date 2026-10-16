@@ -254,6 +254,7 @@
 
     function onDocumentClick(e) {
         if (isUiEvent(e)) return;   // the note card, the toast's Undo: the selection stays
+        if (onBadgeClick(e)) return;   // pins or unpins its note, nothing more
         const group = clickedGroup(e);
         if (!group || getActiveRange()) { clearSelectedGroups(); return; }
         if (e.ctrlKey) {

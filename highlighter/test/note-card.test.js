@@ -57,6 +57,29 @@ async function delay(browser) {
   await ctx.close();
 }
 
+// 8.34: clicking a badge keeps its note open, the badge black like the selection outline; a click elsewhere lets it go.
+async function pin(browser) {
+  const { ctx, page: p } = await L.open(browser, { html: HTML, store });
+  const fill = () => p.evaluate(() => { const m = document.querySelector('[data-highlighter-note-pin]'); return m && getComputedStyle(m, '::after').backgroundColor; });
+  const [bx, by] = await L.badge(p, 'gA');
+  await p.mouse.click(bx, by); await p.waitForTimeout(50);
+  const c = await card(p);
+  check('clicking the badge opens its note at once', c && c.text === 'Note A', c);
+  check('the clicked badge turns black', (await fill()) === 'rgb(0, 0, 0)', await fill());
+  check('and the annotation is not selected', await p.evaluate(() => !document.querySelector('.select-box') && !window.__hl.uiRoot.querySelector('.select-box')), null);
+  await p.mouse.move(5, 300, { steps: 4 }); await p.waitForTimeout(400);
+  check('moving away keeps it open', !!(await card(p)), await card(p));
+  await p.mouse.move(...await L.badge(p, 'gB')); await p.waitForTimeout(450);
+  check('hovering another badge does not switch it', (await card(p) || {}).text === 'Note A', await card(p));
+  await p.mouse.click(5, 300); await p.waitForTimeout(50);
+  check('a click elsewhere hides it', (await card(p)) === null, await card(p));
+  check('and the badge is blue again', (await fill()) === null, await fill());
+  await p.mouse.click(bx, by); await p.waitForTimeout(50); await p.mouse.click(bx, by); await p.waitForTimeout(50);
+  check('clicking the pinned badge again hides it', (await card(p)) === null, await card(p));
+  check('no page errors', p.__errors.length === 0, p.__errors);
+  await ctx.close();
+}
+
 async function placement(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store });
   const lines = await L.rects(p, '#p2', LONG);
@@ -89,7 +112,7 @@ async function del(browser) {
 
 (async () => {
   const browser = await L.launch();
-  await Promise.all([delay, placement, del].map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
+  await Promise.all([delay, pin, placement, del].map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
   await browser.close();
   let fails = 0;
   results.forEach(([name, ok, info]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' :: ' + JSON.stringify(info)}`); if (!ok) fails++; });

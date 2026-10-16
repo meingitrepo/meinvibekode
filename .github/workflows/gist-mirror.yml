@@ -16,6 +16,9 @@ on:
 
 jobs:
   test:
+    # Paused by Mhmd's request (2026-10-16). To turn tests back on: delete this `if: false`
+    # and uncomment `needs: test` in the mirror job.
+    if: false
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     defaults:
@@ -33,9 +36,9 @@ jobs:
       - name: Run the tests
         run: node run.js
 
-  # Only for main, once the tests pass.
+  # Only for main (once the tests pass, while they are on).
   mirror:
-    needs: test
+    # needs: test
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     steps:

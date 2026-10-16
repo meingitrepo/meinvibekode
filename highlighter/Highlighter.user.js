@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.17
+// @version      8.18
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -4633,10 +4633,12 @@
     // for Undo.
     let selectedGroups = [];      // in the order they were selected; the last is Shift+click's start
     let selectFrame = 0;
-    const selectBoxes = new Map();   // group -> { el, at }, `at` its last position
+    const selectBoxes = new Map();   // group -> { el, path, hole, at }, `at` its last position
+    let selectBoxCount = 0;          // for the ids of their masks
 
     const SELECT_BOX_PAD = 4;
     const SELECT_BOX_RADIUS = 4;
+    const SELECT_BADGE_GAP = 2;      // px between the note badge's rim and the outline around it
     const CLICK_THROUGH_SELECTOR = 'a[href], button, input, select, textarea, label, summary, [role="button"], [role="link"], [contenteditable=""], [contenteditable="true"]';
 
     // The selected annotations in reading order.
@@ -4656,12 +4658,18 @@
         selectedGroups.forEach(g => {
             if (selectBoxes.has(g)) return;
             const first = groupWrappers(g)[0];
+            // The mask leaves a gap in the outline around the note badge (see noteBadgeHole).
+            const id = `highlighter-select-mask-${++selectBoxCount}`;
             const outline = svgEl('svg', { 'aria-hidden': 'true' });
-            outline.appendChild(svgEl('path', {}));
+            const mask = svgEl('mask', { id, maskUnits: 'userSpaceOnUse', x: -1e4, y: -1e4, width: 2e4, height: 2e4 });
+            const hole = svgEl('rect', { fill: 'black', width: 0, height: 0 });
+            const path = svgEl('path', { mask: `url(#${id})` });
+            mask.append(svgEl('rect', { x: -1e4, y: -1e4, width: 2e4, height: 2e4, fill: 'white' }), hole);
+            outline.append(mask, path);
             const el = makeEl('div', { class: 'select-box', 'data-theme': first && first.hasAttribute(DARK_ATTR) ? 'dark' : 'light', hidden: '' },
                 [outline]);
             selectBoxesEl.appendChild(el);
-            selectBoxes.set(g, { el, at: '' });
+            selectBoxes.set(g, { el, path, hole, at: '' });
         });
         ensureUi();
         if (!selectFrame) followSelectBoxes();
@@ -4735,6 +4743,22 @@
         return { rect, d };
     }
 
+    // The note badge's box, widened by its rim and a gap, in the viewport; null without a note.
+    // The badge is generated content (::after, see page-css-and-state.js), which has no rects of
+    // its own: its size comes from its computed style, and its place from the end of the
+    // annotation's last line, moved as the CSS moves it (translate(45%, -55%) from text-top).
+    function noteBadgeHole(group) {
+        const mark = groupWrappers(group).find(w => w.hasAttribute(NOTE_MARK_ATTR));
+        const r = mark && Array.from(mark.getClientRects()).filter(o => o.width || o.height).pop();
+        if (!r) return null;
+        const cs = getComputedStyle(mark, '::after');
+        const w = parseFloat(cs.width), h = parseFloat(cs.height);
+        if (!(w > 0 && h > 0)) return null;
+        const left = r.right - 0.55 * w, top = r.top - 0.55 * h;
+        const pad = Math.max(1.5, 0.08 * parseFloat(cs.fontSize)) + SELECT_BADGE_GAP;
+        return { left: left - pad, top: top - pad, width: w + 2 * pad, height: h + 2 * pad, radius: h / 2 + pad };
+    }
+
     // Drops repeated points and points in the middle of a straight edge.
     function cleanPolygon(pts) {
         let out = pts.filter((p, i) => { const q = pts[(i + 1) % pts.length]; return p[0] !== q[0] || p[1] !== q[1]; });
@@ -4779,11 +4803,14 @@
         selectedGroups.forEach(g => {
             const box = selectBoxes.get(g);
             const { rect, d } = groupOutline(rects.get(g));
-            const at = `${rect.left},${rect.top},${rect.width},${rect.height} ${d}`;
+            const hole = noteBadgeHole(g);
+            const cut = hole ? [hole.left - rect.left, hole.top - rect.top, hole.width, hole.height, hole.radius].map(n => Math.round(n * 10) / 10) : [0, 0, 0, 0, 0];
+            const at = `${rect.left},${rect.top},${rect.width},${rect.height} ${cut} ${d}`;
             if (at !== box.at) {
                 box.at = at;
                 Object.assign(box.el.style, { top: `${rect.top}px`, left: `${rect.left}px`, width: `${rect.width}px`, height: `${rect.height}px` });
-                box.el.firstChild.firstChild.setAttribute('d', d);   // not innerHTML: see makeEl
+                box.path.setAttribute('d', d);   // not innerHTML: see makeEl
+                ['x', 'y', 'width', 'height', 'rx'].forEach((k, i) => box.hole.setAttribute(k, cut[i]));
             }
             box.el.hidden = false;
         });

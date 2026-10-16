@@ -43,6 +43,13 @@ async function delay(browser) {
   check('with a card open, another note switches at once', c2 && c2.text === 'Note B', c2);
   await p.mouse.move(5, 5); await p.waitForTimeout(400);
   check('moving off hides it', (await card(p)) === null, await card(p));
+  // 8.33: from the badge into the card and out to the page, the card still hides (it stuck open)
+  await p.mouse.move(bx, by); await p.waitForTimeout(450);
+  const cb = await p.evaluate(() => { const r = window.__hl.noteCardEl.getBoundingClientRect(); return [r.left + 20, r.top + 10]; });
+  await p.mouse.move(...cb, { steps: 4 }); await p.waitForTimeout(100);
+  check('setup: the card stays while the mouse is on it', !!(await card(p)), await card(p));
+  await p.mouse.move(5, 300, { steps: 4 }); await p.waitForTimeout(400);
+  check('leaving the card for the page hides it', (await card(p)) === null, await card(p));
   // passing over a note on the way elsewhere
   await p.mouse.move(bx, by); await p.waitForTimeout(100); await p.mouse.move(5, 300); await p.waitForTimeout(450);
   check('passing over a badge opens nothing', (await card(p)) === null, await card(p));

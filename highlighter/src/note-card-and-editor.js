@@ -83,6 +83,7 @@
         const time = annotationTime(wrapper);
         cardHint.textContent = time ? `Added ${formatDate(time)}` : 'Alt+N to edit';
         noteCardEl.hidden = false;
+        nearMark = undefined;   // a card opened by a jump also hides once the mouse moves off any badge
         placePanel(noteCardEl, noteCardAnchor(wrapper), true);
     }
 
@@ -96,7 +97,8 @@
     }
 
     function onMouseOver(e) {
-        if (isUiEvent(e)) { clearTimeout(cardHideTimer); return; }   // moving into the card keeps it open
+        // Moving into the card keeps it open; nearMark forgotten, the next move off it starts the hide.
+        if (isUiEvent(e)) { clearTimeout(cardHideTimer); nearMark = undefined; return; }
         hoveredWrapper = e.target instanceof Element ? e.target.closest(WRAPPER_SELECTOR) : null;
         onMouseMove(e);
     }

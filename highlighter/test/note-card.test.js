@@ -19,7 +19,9 @@ const store = { [KEY]: JSON.stringify([
   rec('//*[@id="p3"]', P3, 'beta note', { group: 'gB', extra: { note: 'Note B' } })]) };
 const results = [];
 const check = (name, ok, info) => results.push([name, ok, info]);
-const card = p => p.evaluate(() => { const r = window.__hl; if (r.noteCardEl.hidden) return null; const b = r.noteCardEl.getBoundingClientRect(); return { text: r.cardText.textContent, hint: r.cardHint.textContent, top: b.top, bottom: b.bottom }; });
+// Measured once its opening animation (a 4px slide) has finished, so a card that opened a few ms
+// later doesn't read as moved.
+const card = p => p.evaluate(async () => { const r = window.__hl; if (r.noteCardEl.hidden) return null; await Promise.all(r.noteCardEl.getAnimations({ subtree: true }).map(a => a.finished.catch(() => {}))); const b = r.noteCardEl.getBoundingClientRect(); return { text: r.cardText.textContent, hint: r.cardHint.textContent, top: b.top, bottom: b.bottom }; });
 const center = r => [(r.left + r.right) / 2, (r.top + r.bottom) / 2];
 
 async function delay(browser) {

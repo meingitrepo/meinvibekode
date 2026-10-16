@@ -218,7 +218,7 @@
 
         /* Note preview */
         .card { width: max-content; min-width: 160px; max-width: min(320px, calc(100vw - 16px)); padding: 12px; }
-        .card-text { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 240px; overflow: auto; }
+        .card-text { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 240px; overflow: auto; overscroll-behavior: contain; }
         .card-text a { color: var(--colorBrandForegroundLink); text-decoration: underline; border-radius: var(--borderRadiusMedium); outline: none; }
         .card-text a:hover { color: var(--colorBrandForegroundLinkHover); }
         .card-text a:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
@@ -264,7 +264,7 @@
                The corner handle resizes it (and the panel) for the current edit only. */
             display: block; box-sizing: border-box; width: 252px; min-width: 252px; margin: 0; padding: 5px 11px;
             min-height: 30px; max-width: min(640px, calc(100vw - 50px)); max-height: 60vh;   /* 30px: one line */
-            border: 0; outline: 0; resize: both; overflow-y: auto; background: transparent;
+            border: 0; outline: 0; resize: both; overflow-y: auto; overscroll-behavior: contain; background: transparent;
             color: var(--colorNeutralForeground1); font: inherit;
         }
         textarea::placeholder { color: var(--colorNeutralForeground4); opacity: 1; }

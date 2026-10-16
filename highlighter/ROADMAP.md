@@ -70,6 +70,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.25 | Two older fixes | An annotation in a tab panel the site keeps and puts back while it is out of view follows its text again when the page grows; dragging the selected text (as into a search box) no longer leaves its annotations unmarked |
 | 8.26 | Notes on click | A note card opens only while one annotation is selected by clicking it (no longer on hover), stays at its badge while scrolling, and comes back after its note is edited; meanwhile its note badge turns green (#107C10, #54B054 on dark pages) |
 | 8.27 | Follows site restyles | Annotations follow their text when the site itself changes font size, padding or theme without the page changing size (a style or class set on any element, a stylesheet added, edited or removed); only those near the screen are looked at then |
+| 8.28 | Wheel stays in notes | Scrolling over the note editor or a note card never scrolls the page: the note stops at its top and bottom, and the wheel over the rest of the panel or over a short note does nothing (Ctrl+wheel still zooms) |
 
 ## Next, roughly in order
 

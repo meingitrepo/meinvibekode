@@ -119,6 +119,18 @@
     // annotation's.
     uiRoot.addEventListener('mouseover', e => { hoveredWrapper = noteCardEl.contains(e.target) ? cardWrapper : null; });
 
+    // The wheel over the note card or the editor never scrolls the page: their text boxes stop at
+    // their ends (overscroll-behavior: contain), and anywhere else on them, or over a note too short
+    // to scroll, the wheel is dropped. Ctrl+wheel still zooms.
+    function keepWheel(e) {
+        if (e.ctrlKey) return;
+        const box = e.target.closest('.card-text, textarea');
+        if (box && box.scrollHeight > box.clientHeight) return;
+        if (e.cancelable) e.preventDefault();
+    }
+    noteCardEl.addEventListener('wheel', keepWheel, { passive: false });
+    editorEl.addEventListener('wheel', keepWheel, { passive: false });
+
     cardEdit.addEventListener('click', () => {
         const w = cardWrapper;
         hideNoteCard();

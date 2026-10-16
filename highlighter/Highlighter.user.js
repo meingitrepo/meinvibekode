@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.29
+// @version      8.30
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -44,6 +44,9 @@
  *   J / K                 jump to the next / previous annotation (shows its note, if any)
  *   Z                     undo
  *   Shift+Z or Y          redo
+ *   Shift+K               shortcut keys off / on, on every site. While on, every Alt key outside a
+ *                         field is the highlighter's alone: the site's own Alt shortcuts (such as
+ *                         Wikipedia's) don't run. Off, the site gets them back and ours do nothing.
  *
  * Clicking an annotation selects it: a dashed box goes around all of it. Ctrl+click
  * adds one or takes it out again; Shift+click selects all of them from the last one selected to
@@ -124,7 +127,7 @@
     const UI_ATTR = 'data-highlighter-ui';
     const WRAPPER_SELECTOR = `span[${WRAPPER_ATTR}]`;
     const IGNORED_TEXT_SELECTOR = 'script, style, noscript, textarea';
-    const SETTINGS_KEY = 'rnh:settings';       // per-site on/off, toolbar on/off; every other stored key is a page
+    const SETTINGS_KEY = 'rnh:settings';       // per-site on/off, toolbar and keys on/off; every other stored key is a page
                                                // ('rnh' is the old name, RoughNotation Highlighter: kept so saved settings stay)
 
     const DRAW_IN_MS = 200;                    // a new annotation draws in over this long
@@ -2192,6 +2195,20 @@
         GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
     }
 
+    // --- The shortcut keys on/off (Alt+Shift+K), for every site at once ---
+
+    // Read afresh each time, so a switch made in another tab counts here too.
+    function keysSwitchedOff() {
+        return readSettings().keysOff === true;
+    }
+
+    function setKeysSwitchedOff(off) {
+        const settings = readSettings();
+        if (off) settings.keysOff = true;
+        else delete settings.keysOff;
+        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+    }
+
     // --- Selection toolbar on/off (Alt+T), for every site at once ---
 
     // Read afresh each time, so a switch made in another tab counts here too.
@@ -3169,10 +3186,11 @@
 
     const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD', 'Delete']);
 
-    // Sites' access keys (accesskey="z": Wikipedia's Alt+Z, Alt+Shift+Z, ...) go off in Chrome
-    // before any keydown handler sees the letter, so they can't be stopped there. While Alt is
-    // held they are taken off the page instead; a key ours has nothing to do with then gets the
-    // site's access key back (see replayAccessKey), so each key does one thing.
+    // While our keys are on (Alt+Shift+K switches them), every Alt key outside a field is ours
+    // alone: the site's own Alt shortcuts never run, whether we use the key or not. Its access
+    // keys (accesskey="z": Wikipedia's Alt+Z, Alt+Shift+Z, ...) go off in Chrome before any
+    // keydown handler sees the letter, so while Alt is held they are taken off the page.
+    // Browser keys (Alt+Left, Alt+D, ...) are left alone: nothing is prevented unless we act.
     let heldAccessKeys = null;   // [[element, its accesskey]] while Alt is down
 
     function holdAccessKeys() {
@@ -3187,38 +3205,38 @@
         heldAccessKeys = null;
     }
 
-    // The element the site's access key for this key press is on, if the site has one.
-    function siteAccessKey(e) {
-        if (!heldAccessKeys || e.key.length !== 1) return null;
-        const letter = e.key.toLowerCase();
-        const hit = heldAccessKeys.find(([el, key]) => key.toLowerCase() === letter && el.isConnected);
-        return hit ? hit[0] : null;
+    // An Alt key the site's handlers don't get: not AltGr (Ctrl+Alt) typing, not in a field or
+    // in our own panels.
+    function isSiteAltKey(e) {
+        return e.altKey && !e.ctrlKey && !e.metaKey && !isUiEvent(e) && !isEditableTarget(e);
     }
 
-    // Does what Chrome does for the site's access key: focuses the element and clicks it, fields
-    // only focused.
-    function replayAccessKey(e) {
-        const el = siteAccessKey(e);
-        if (!el) return;
-        e.preventDefault();
-        el.focus();
-        if (!el.matches('textarea, select, input:not([type=button], [type=submit], [type=reset], [type=image], [type=checkbox], [type=radio], [type=file], [type=color])')) el.click();
+    function toggleKeysSwitch() {
+        const off = !keysSwitchedOff();
+        setKeysSwitchedOff(off);
+        if (off) releaseAccessKeys();
+        showToast(off ? 'Shortcut keys off: the sites get their Alt keys back. Alt+Shift+K turns them on.'
+            : 'Shortcut keys on: Alt keys are the highlighter\'s, not the sites\'.');
+        refreshMenu();
     }
 
-    function onKeyUp(e) {
-        if (e.key === 'Alt') releaseAccessKeys();
-    }
-
-    // Each Alt key is either ours or the site's, never both: ours only when it has something to
-    // do and the site's own handlers haven't taken it (one listening on window before us, or an
-    // access key that went off because Alt was pressed outside the page); otherwise the site's.
     function onKeyDown(e) {
+        if (e.altKey && e.shiftKey && e.code === 'KeyK' && !e.ctrlKey && !e.metaKey && !e.repeat) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleKeysSwitch();
+            return;
+        }
+        if (e.altKey && keysSwitchedOff()) return;
         if (e.key === 'Alt' && !e.ctrlKey && !e.metaKey) holdAccessKeys();
-        if (e.altKey && e.defaultPrevented) return;
         ourKey(e);
-        if (!e.altKey) return;
-        if (!e.defaultPrevented) replayAccessKey(e);
-        else if (!isUiEvent(e)) e.stopPropagation();   // used: the page's own Alt shortcuts stay out of it
+        if (isSiteAltKey(e)) e.stopImmediatePropagation();
+    }
+
+    // The rest of an Alt key press stays away from the site too.
+    function onKeyUpOrPress(e) {
+        if (e.type === 'keyup' && e.key === 'Alt') releaseAccessKeys();
+        if (isSiteAltKey(e) && !keysSwitchedOff()) e.stopImmediatePropagation();
     }
 
     function ourKey(e) {
@@ -3229,10 +3247,7 @@
             return;
         }
         // Everything saved covers the page: the page's keys wait until it closes.
-        if (!everythingEl.hidden && e.code !== 'KeyO') {
-            if (e.altKey && siteAccessKey(e)) e.preventDefault();
-            return;
-        }
+        if (!everythingEl.hidden && e.code !== 'KeyO') return;
         if (selectedGroupKey(e)) return;
         // Esc turns the pen off, unless it is meant for a panel or a field.
         if (e.key === 'Escape' && penKey && !editor && !isUiEvent(e) && !isEditableTarget(e)) {
@@ -3287,11 +3302,11 @@
 
         if (code === 'KeyN') {
             if (e.shiftKey) return;
+            e.preventDefault();
             const group = selected ? null : pointedGroup();
-            if (selected || group) e.preventDefault();
             if (selected) noteSelection(active);
             else if (group) openNoteEditor(group);
-            else if (!siteAccessKey(e)) showToast('To add a note, select some text or point at an annotation, then press Alt+N.');
+            else showToast('To add a note, select some text or point at an annotation, then press Alt+N.');
             return;
         }
 
@@ -3312,7 +3327,6 @@
         // D on one annotation with a note deletes the note first; Delete erases it all at once.
         if (code === 'KeyD' || code === 'Delete') {
             if (e.shiftKey) {
-                if (!pageCounts().total) return;   // nothing to clear: the page's key
                 e.preventDefault();
                 clearPageAnnotations();
                 return;
@@ -6063,7 +6077,8 @@
         // On window, in the capture phase: the earliest point a page script can listen, so a
         // site's own key handlers can't swallow the shortcuts first.
         listen(window, 'keydown', onKeyDown, true);
-        listen(window, 'keyup', onKeyUp, true);
+        listen(window, 'keyup', onKeyUpOrPress, true);
+        listen(window, 'keypress', onKeyUpOrPress, true);
         listen(window, 'blur', releaseAccessKeys);
         teardown.push(releaseAccessKeys);
         listen(document, 'mousedown', onMouseDown);
@@ -6201,6 +6216,11 @@
             items.push([!canRelabel ? 'Turn toolbar on/off'
                 : toolbarSwitchedOff() ? 'Turn toolbar on' : 'Turn toolbar off',
                 () => { if (running) toggleToolbarSwitch(); }]);
+        }
+        if (shown) {
+            items.push([!canRelabel ? 'Turn shortcut keys on/off'
+                : keysSwitchedOff() ? 'Turn shortcut keys on' : 'Turn shortcut keys off',
+                () => { if (running) toggleKeysSwitch(); }]);
         }
         const site = location.hostname || (location.protocol === 'file:' ? 'local files' : siteId());
         if (!canRelabel) items.push([`Turn on/off for ${site}`, toggleSite]);

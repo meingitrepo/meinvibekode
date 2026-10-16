@@ -23,7 +23,7 @@
     const UI_ATTR = 'data-highlighter-ui';
     const WRAPPER_SELECTOR = `span[${WRAPPER_ATTR}]`;
     const IGNORED_TEXT_SELECTOR = 'script, style, noscript, textarea';
-    const SETTINGS_KEY = 'rnh:settings';       // per-site on/off, toolbar on/off; every other stored key is a page
+    const SETTINGS_KEY = 'rnh:settings';       // per-site on/off, toolbar and keys on/off; every other stored key is a page
                                                // ('rnh' is the old name, RoughNotation Highlighter: kept so saved settings stay)
 
     const DRAW_IN_MS = 200;                    // a new annotation draws in over this long

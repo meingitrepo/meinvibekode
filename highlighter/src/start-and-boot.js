@@ -66,7 +66,8 @@
         // On window, in the capture phase: the earliest point a page script can listen, so a
         // site's own key handlers can't swallow the shortcuts first.
         listen(window, 'keydown', onKeyDown, true);
-        listen(window, 'keyup', onKeyUp, true);
+        listen(window, 'keyup', onKeyUpOrPress, true);
+        listen(window, 'keypress', onKeyUpOrPress, true);
         listen(window, 'blur', releaseAccessKeys);
         teardown.push(releaseAccessKeys);
         listen(document, 'mousedown', onMouseDown);
@@ -204,6 +205,11 @@
             items.push([!canRelabel ? 'Turn toolbar on/off'
                 : toolbarSwitchedOff() ? 'Turn toolbar on' : 'Turn toolbar off',
                 () => { if (running) toggleToolbarSwitch(); }]);
+        }
+        if (shown) {
+            items.push([!canRelabel ? 'Turn shortcut keys on/off'
+                : keysSwitchedOff() ? 'Turn shortcut keys on' : 'Turn shortcut keys off',
+                () => { if (running) toggleKeysSwitch(); }]);
         }
         const site = location.hostname || (location.protocol === 'file:' ? 'local files' : siteId());
         if (!canRelabel) items.push([`Turn on/off for ${site}`, toggleSite]);

@@ -72,6 +72,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.27 | Follows site restyles | Annotations follow their text when the site itself changes font size, padding or theme without the page changing size (a style or class set on any element, a stylesheet added, edited or removed); only those near the screen are looked at then |
 | 8.28 | Wheel stays in notes | Scrolling over the note editor or a note card never scrolls the page: the note stops at its top and bottom, and the wheel over the rest of the panel or over a short note does nothing (Ctrl+wheel still zooms) |
 | 8.29 | No clashes with site keys | An Alt key a site also uses (its access keys, as on Wikipedia, or its own Alt shortcuts) does one thing, never both: ours when it has something to act on (text selected, an annotation pointed at or clicked, something to undo, annotations to jump to or clear), else the site's. Alt+O, Alt+Shift+O, Alt+P, Alt+T and Alt+V (with annotations) stay ours; no keys changed |
+| 8.30 | Site Alt keys off | While the shortcut keys are on, every Alt key outside a field is the highlighter's alone: the site's access keys (Wikipedia's) and its own Alt shortcuts never run, used by us or not (replaces 8.29's "the site's when ours has nothing to do"). Alt+Shift+K, and the menu, turn our keys off and on for every site; off, the sites get their Alt keys back. Browser keys (Alt+Left, Alt+D) are untouched |
 
 ## Next, roughly in order
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.29
+// @version      8.30
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -44,6 +44,9 @@
  *   J / K                 jump to the next / previous annotation (shows its note, if any)
  *   Z                     undo
  *   Shift+Z or Y          redo
+ *   Shift+K               shortcut keys off / on, on every site. While on, every Alt key outside a
+ *                         field is the highlighter's alone: the site's own Alt shortcuts (such as
+ *                         Wikipedia's) don't run. Off, the site gets them back and ours do nothing.
  *
  * Clicking an annotation selects it: a dashed box goes around all of it. Ctrl+click
  * adds one or takes it out again; Shift+click selects all of them from the last one selected to

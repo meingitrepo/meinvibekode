@@ -332,6 +332,20 @@
         GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
     }
 
+    // --- The shortcut keys on/off (Alt+Shift+K), for every site at once ---
+
+    // Read afresh each time, so a switch made in another tab counts here too.
+    function keysSwitchedOff() {
+        return readSettings().keysOff === true;
+    }
+
+    function setKeysSwitchedOff(off) {
+        const settings = readSettings();
+        if (off) settings.keysOff = true;
+        else delete settings.keysOff;
+        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+    }
+
     // --- Selection toolbar on/off (Alt+T), for every site at once ---
 
     // Read afresh each time, so a switch made in another tab counts here too.

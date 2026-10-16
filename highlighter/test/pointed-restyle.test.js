@@ -43,7 +43,14 @@ async function hoverEl(p, sel, dx = 0.25) {
   await p.mouse.move(b.x + Math.min(b.width * dx, 60), b.y + b.height / 2, { steps: 2 });
   await p.waitForTimeout(80);
 }
-const watchPrevented = p => p.evaluate(() => { window.__prev = []; document.addEventListener('keydown', e => window.__prev.push([e.code, e.defaultPrevented])); });
+// Every Alt key is stopped before the page's listeners (8.30), so it is read where the script
+// stops it; keys that do reach the page are read there.
+const watchPrevented = p => p.evaluate(() => {
+  window.__prev = [];
+  const stop = KeyboardEvent.prototype.stopImmediatePropagation;
+  KeyboardEvent.prototype.stopImmediatePropagation = function () { if (this.type === 'keydown') window.__prev.push([this.code, this.defaultPrevented]); return stop.call(this); };
+  document.addEventListener('keydown', e => window.__prev.push([e.code, e.defaultPrevented]));
+});
 const lastPrevented = p => p.evaluate(() => (window.__prev[window.__prev.length - 1] || [])[1]);
 const results = [];
 const check = (name, ok, info) => results.push([name, ok, info]);
@@ -108,9 +115,9 @@ async function noTarget(browser) {
   await L.altKey(p, '1');
   const s = await state(p);
   check('pointing at plain text: Alt+1 changes nothing', keysOf(s, 'gA').join() === 'h' && keysOf(s, 'gB').join() === 'u', s);
-  check('pointing at plain text: the key stays the page\'s', (await lastPrevented(p)) === false, null);
+  check('pointing at plain text: the key is not prevented', (await lastPrevented(p)) === false, null);
   await L.altKey(p, 'd');
-  check('pointing at plain text: Alt+D changes nothing and stays the page\'s', (await state(p)).length === 2 && (await lastPrevented(p)) === false, null);
+  check('pointing at plain text: Alt+D changes nothing and is not prevented', (await state(p)).length === 2 && (await lastPrevented(p)) === false, null);
   // The mouse leaves the window from an annotation.
   await hover(p, 'gA');
   await p.evaluate(() => document.querySelector('[data-highlighter-group="gA"]').dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: null })));
@@ -127,7 +134,7 @@ async function hidden(browser) {
   await L.altKey(p, '2');
   let s = await state(p);
   check('hidden: Alt+2 on a pointed annotation does nothing', keysOf(s, 'gA').join() === 'h' && (await p.evaluate(() => window.__hl.annotationsHidden)) === true, s);
-  check('hidden: the key stays the page\'s', (await lastPrevented(p)) === false, null);
+  check('hidden: the key is not prevented', (await lastPrevented(p)) === false, null);
   await L.altKey(p, 'd');
   check('hidden: Alt+D on it does nothing', keysOf(await state(p), 'gA').join() === 'h', await state(p));
   await L.altKey(p, 'n');

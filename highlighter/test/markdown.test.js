@@ -7,8 +7,8 @@ const HTML = `<!doctype html><html><head><title>T3</title></head><body style="fo
 (async () => {
   const browser = await L.launch();
   const { ctx, page } = await L.open(browser, { html: HTML, url: 'https://example.test/a?utm_source=x#section' });
-  // Alt+J with no annotations: not prevented
-  const prevented = await page.evaluate(() => { let p = null; document.addEventListener('keydown', e => { p = e.defaultPrevented; }, { once: true }); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyJ', altKey: true, bubbles: true })); document.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyJ', altKey: true, bubbles: true })); return p; });
+  // Alt+J with no annotations: not prevented (the browser's own keys keep working)
+  const prevented = await page.evaluate(() => { const e = new KeyboardEvent('keydown', { code: 'KeyJ', altKey: true, bubbles: true, cancelable: true }); document.dispatchEvent(e); return e.defaultPrevented; });
   L.check('Alt+J without annotations not prevented', prevented === false, prevented);
   await L.selStr(page, '#p1', 'one mid link end ital');
   await L.altKey(page, 'h');

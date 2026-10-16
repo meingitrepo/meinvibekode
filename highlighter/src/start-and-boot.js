@@ -66,6 +66,9 @@
         // On window, in the capture phase: the earliest point a page script can listen, so a
         // site's own key handlers can't swallow the shortcuts first.
         listen(window, 'keydown', onKeyDown, true);
+        listen(window, 'keyup', onKeyUp, true);
+        listen(window, 'blur', releaseAccessKeys);
+        teardown.push(releaseAccessKeys);
         listen(document, 'mousedown', onMouseDown);
         listen(document, 'mouseover', onMouseOver, true);
         listen(document, 'mouseout', onMouseOut, true);

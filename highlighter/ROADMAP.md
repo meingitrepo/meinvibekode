@@ -86,6 +86,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.41 | Pinning a shown note without a flash | Clicking the badge of a note already open from hovering pins it in place; it no longer fades out and back in |
 | 8.42 | Note badge colors by state | The badge keeps its annotation's color normally; a selected annotation's badge, and one whose note is being added or edited, takes the dashed outline's color (black, white on dark), and editing a note draws that outline around its annotation without the toolbar; a pinned note's badge is the note blue. Those three use the old dot colors |
 | 8.43 | Selections no longer hide annotations; the editor keeps its outline; Edit opens in the pinned card's place | Fixed: after selecting text over an annotation, it stayed hidden until the next selection (8.42 reused a function name). While the note editor is open its annotation keeps the dashed outline whatever is clicked, selected or Esc'd; Edit on a pinned (or dragged) note opens the editor where that card was |
+| 8.44 | While a note is edited, its badge doesn't pin and other annotations don't select | Clicking the edited note's badge does nothing (its note is already open in the editor); clicking another annotation neither selects it nor draws its dashed outline. Other badges still pin |
 
 ## Next, roughly in order
 

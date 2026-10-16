@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.43
+// @version      8.44
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -4510,6 +4510,7 @@
         const mark = e.button || annotationsHidden ? null : markNear(e.clientX, e.clientY);
         if (!mark) return false;
         if (pinnedCards.has(mark)) { unpinNoteCard(mark); return true; }
+        if (editor && editor.group === mark.getAttribute(GROUP_ATTR)) return true;   // its note is open in the editor
         const shown = sameCard(mark);
         showNoteCard(mark);
         const card = noteCardEl.cloneNode(true);
@@ -5379,6 +5380,7 @@
         if (isUiEvent(e)) return;   // the note card, the toast's Undo: the selection stays
         if (onBadgeClick(e)) return;   // pins or unpins its note, nothing more
         const group = clickedGroup(e);
+        if (group && editor) return;   // while a note is edited, clicking annotations selects nothing
         if (!group || getActiveRange()) { clearSelectedGroups(); return; }
         if (e.ctrlKey) {
             setSelectedGroups(selectedGroups.includes(group) ? selectedGroups.filter(g => g !== group) : selectedGroups.concat(group));

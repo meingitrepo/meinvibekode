@@ -121,7 +121,9 @@ async function pin(browser) {
   await p.evaluate(() => getSelection().removeAllRanges());
   const bn = (await L.rects(p, '#p3', 'beta note'))[0];
   await p.mouse.click(bn.left + 3, (bn.top + bn.bottom) / 2); await p.waitForTimeout(100);
-  check('clicking another annotation selects it beside the editor\'s', await p.evaluate(() => window.__hl.selectedGroups.slice().sort().join() === 'gA,gB'), await p.evaluate(() => window.__hl.selectedGroups));
+  check('clicking another annotation does not select it while editing', await outlined() && (await p.evaluate(() => window.__hl.selectBoxesEl.querySelectorAll('.select-box').length)) === 1, await p.evaluate(() => window.__hl.selectedGroups));
+  await p.mouse.click(bx, by); await p.waitForTimeout(50);
+  check('clicking the edited note\'s badge does not pin it', (await pins()).length === 0 && !(await fill('gA')) && !(await p.evaluate(() => window.__hl.editorEl.hidden)), await pins());
   await p.keyboard.press('Escape'); await p.waitForTimeout(50);
   check('Esc still discards it', await p.evaluate(() => window.__hl.editorEl.hidden), null);
   check('no page errors', p.__errors.length === 0, p.__errors);

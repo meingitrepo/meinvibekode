@@ -112,6 +112,7 @@
         const mark = e.button || annotationsHidden ? null : markNear(e.clientX, e.clientY);
         if (!mark) return false;
         if (pinnedCards.has(mark)) { unpinNoteCard(mark); return true; }
+        if (editor && editor.group === mark.getAttribute(GROUP_ATTR)) return true;   // its note is open in the editor
         const shown = sameCard(mark);
         showNoteCard(mark);
         const card = noteCardEl.cloneNode(true);

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.24
+// @version      8.25
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -1558,6 +1558,16 @@
         }, { rootMargin: '200px', threshold: 0 })
         : { observe() {}, unobserve() {} };
 
+    // A wrapper already on the page kept as a restored annotation (see absorbDuplicate), for
+    // instance a kept tab panel put back out of view: followed again, and seen afresh by the observer.
+    function trackShown(w) {
+        if (shownWrappers.has(w) || !annotationMap.has(w)) return;
+        shownWrappers.add(w);
+        snapshotRect(w);
+        visibilityObserver.unobserve(w);
+        visibilityObserver.observe(w);
+    }
+
     // Lets go of the wrappers the site took off the page (also every second, so a page that keeps
     // re-rendering doesn't keep the old ones alive); one it puts back is added again when the
     // observer sees it.
@@ -2223,10 +2233,11 @@
         const wrappers = candidateWrappers(range).filter(w => w.getAttribute(STYLE_ATTR) === record.key);
         if (!wrappers.length) return false;
         const notes = new Set(wrappers.map(w => w.getAttribute(NOTE_ATTR) || ''));
-        if (!record.note || (notes.size === 1 && notes.has(record.note))) return true;
+        if (!record.note || (notes.size === 1 && notes.has(record.note))) { wrappers.forEach(trackShown); return true; }
         const groups = new Set(wrappers.map(w => w.getAttribute(GROUP_ATTR)));
         if (groups.size !== 1 || notes.size !== 1 || !notes.has('')) return false;
         setGroupNote(Array.from(groups)[0], record.note);
+        wrappers.forEach(trackShown);
         return true;
     }
 
@@ -5952,6 +5963,7 @@
         listen(document, 'selectionchange', updateSelectionVisibility);
         listen(document, 'mousedown', onSelectionPress, true);
         listen(document, 'mouseup', updateSelectionVisibility, true);
+        listen(document, 'dragend', updateSelectionVisibility, true);   // a drag of the selected text ends without a mouseup
         // On window, in the capture phase: the earliest point a page script can listen, so a
         // site's own key handlers can't swallow the shortcuts first.
         listen(window, 'keydown', onKeyDown, true);

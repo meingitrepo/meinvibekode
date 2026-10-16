@@ -362,6 +362,16 @@
         }, { rootMargin: '200px', threshold: 0 })
         : { observe() {}, unobserve() {} };
 
+    // A wrapper already on the page kept as a restored annotation (see absorbDuplicate), for
+    // instance a kept tab panel put back out of view: followed again, and seen afresh by the observer.
+    function trackShown(w) {
+        if (shownWrappers.has(w) || !annotationMap.has(w)) return;
+        shownWrappers.add(w);
+        snapshotRect(w);
+        visibilityObserver.unobserve(w);
+        visibilityObserver.observe(w);
+    }
+
     // Lets go of the wrappers the site took off the page (also every second, so a page that keeps
     // re-rendering doesn't keep the old ones alive); one it puts back is added again when the
     // observer sees it.

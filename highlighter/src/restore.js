@@ -54,10 +54,11 @@
         const wrappers = candidateWrappers(range).filter(w => w.getAttribute(STYLE_ATTR) === record.key);
         if (!wrappers.length) return false;
         const notes = new Set(wrappers.map(w => w.getAttribute(NOTE_ATTR) || ''));
-        if (!record.note || (notes.size === 1 && notes.has(record.note))) return true;
+        if (!record.note || (notes.size === 1 && notes.has(record.note))) { wrappers.forEach(trackShown); return true; }
         const groups = new Set(wrappers.map(w => w.getAttribute(GROUP_ATTR)));
         if (groups.size !== 1 || notes.size !== 1 || !notes.has('')) return false;
         setGroupNote(Array.from(groups)[0], record.note);
+        wrappers.forEach(trackShown);
         return true;
     }
 

@@ -62,6 +62,7 @@
         listen(document, 'selectionchange', updateSelectionVisibility);
         listen(document, 'mousedown', onSelectionPress, true);
         listen(document, 'mouseup', updateSelectionVisibility, true);
+        listen(document, 'dragend', updateSelectionVisibility, true);   // a drag of the selected text ends without a mouseup
         // On window, in the capture phase: the earliest point a page script can listen, so a
         // site's own key handlers can't swallow the shortcuts first.
         listen(window, 'keydown', onKeyDown, true);

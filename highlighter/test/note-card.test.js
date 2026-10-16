@@ -57,7 +57,7 @@ async function delay(browser) {
   await ctx.close();
 }
 
-// 8.34: clicking a badge keeps its note open, the badge black like the selection outline; a click elsewhere lets it go.
+// 8.34: clicking a badge keeps its note open, the badge black like the selection outline; a click elsewhere (8.35: or Esc) lets it go.
 async function pin(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store });
   const fill = () => p.evaluate(() => { const m = document.querySelector('[data-highlighter-note-pin]'); return m && getComputedStyle(m, '::after').backgroundColor; });
@@ -76,6 +76,8 @@ async function pin(browser) {
   check('and the badge is blue again', (await fill()) === null, await fill());
   await p.mouse.click(bx, by); await p.waitForTimeout(50); await p.mouse.click(bx, by); await p.waitForTimeout(50);
   check('clicking the pinned badge again hides it', (await card(p)) === null, await card(p));
+  await p.mouse.click(bx, by); await p.waitForTimeout(50); await p.keyboard.press('Escape'); await p.waitForTimeout(50);
+  check('Esc hides a pinned note', (await card(p)) === null && (await fill()) === null, await card(p));
   check('no page errors', p.__errors.length === 0, p.__errors);
   await ctx.close();
 }

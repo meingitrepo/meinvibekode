@@ -77,6 +77,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.32 | Note on badge hover | Back to 8.25: the note badge is always blue (#0F6CBD, #479EF5 on dark) and the note card opens by resting the pointer on or within 8px of the badge, no longer on the rest of the annotation, and not by clicking it (replaces 8.26 and 8.31). J/K and panel jumps still show the note |
 | 8.33 | Note card unsticks | Fixed 8.32: the note card stayed open after moving from the badge into the card and out again, or after a J/K or panel jump, until the page scrolled; it now hides once the mouse is off the card and every badge |
 | 8.34 | Pin a note by its badge | Clicking a note badge keeps its note open (moving away or hovering other badges no longer closes it; it follows the badge on scroll) and turns the badge the dashed selection outline's color (black, white on dark pages); a click anywhere else on the page, or on the badge again, closes it. The click no longer selects the annotation |
+| 8.35 | Esc closes a pinned note | Esc now also closes a note pinned by clicking its badge (8.34) |
 
 ## Next, roughly in order
 

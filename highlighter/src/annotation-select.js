@@ -31,8 +31,10 @@
     }
 
     function setSelectedGroups(groups) {
+        // The note editor's annotation keeps its outline until the editor closes.
+        if (editor && !groups.includes(editor.group)) { groups = [editor.group].concat(groups); editor.wasSelected = false; }
         selectedGroups = Array.from(new Set(groups));
-        selectBoxes.forEach(({ el }, g) => { if (!selectedGroups.includes(g)) { el.remove(); selectBoxes.delete(g); unmarkSelected(g); } });
+        selectBoxes.forEach(({ el }, g) => { if (!selectedGroups.includes(g)) { el.remove(); selectBoxes.delete(g); unmarkNoteSelect(g); } });
         if (!selectedGroups.length) { clearSelectedGroups(); return; }
         selectedGroups.forEach(g => {
             if (selectBoxes.has(g)) return;
@@ -57,16 +59,17 @@
     }
 
     function clearSelectedGroups() {
+        if (editor) { if (selectedGroups.join() !== editor.group) setSelectedGroups([]); return; }   // all but the editor's (see setSelectedGroups)
         selectedGroups = [];
         cancelAnimationFrame(selectFrame);
         selectFrame = 0;
-        selectBoxes.forEach(({ el }, g) => { el.remove(); unmarkSelected(g); });
+        selectBoxes.forEach(({ el }, g) => { el.remove(); unmarkNoteSelect(g); });
         selectBoxes.clear();
         selectWrappers = null;
         if (toolbarGroups) hideToolbar();
     }
 
-    function unmarkSelected(group) {
+    function unmarkNoteSelect(group) {
         groupWrappers(group).forEach(w => w.removeAttribute(NOTE_SELECT_ATTR));
     }
 
@@ -209,7 +212,7 @@
         if (!selectedGroups.length) return;
         const wrappersOf = wrappersOfGroups(selectedGroups);
         const rects = new Map(selectedGroups.map(g => [g, groupClientRects(g, wrappersOf.get(g))]));
-        const gone = selectedGroups.filter(g => !rects.get(g).length);
+        const gone = selectedGroups.filter(g => !rects.get(g).length && !(editor && editor.group === g));
         if (gone.length) {
             setSelectedGroups(selectedGroups.filter(g => !gone.includes(g)));
             if (!selectedGroups.length) return;
@@ -218,6 +221,7 @@
         const layer = selectHost.getBoundingClientRect();
         selectedGroups.forEach(g => {
             const box = selectBoxes.get(g);
+            if (!rects.get(g).length) { box.el.hidden = true; return; }   // the editor's, while its text is hidden or redrawn
             const wrappers = wrappersOf.get(g);
             const mark = wrappers.find(w => w.hasAttribute(NOTE_MARK_ATTR));
             // Its badge in the outline's color; set here so it follows a redraw that replaced the piece.

@@ -124,7 +124,14 @@
         const [edit, del] = card.querySelectorAll('.card-actions button');
         const act = fn => () => { unpinNoteCard(mark); if (mark.isConnected) fn(mark.getAttribute(GROUP_ATTR)); };
         [edit, del].forEach(b => addLabelTip(b, b.dataset.label, b.dataset.shortcut, () => true));   // a copy has no listeners
-        edit.addEventListener('click', act(openNoteEditor));
+        // The editor opens in the pinned card's place, wherever it was dragged.
+        edit.addEventListener('click', () => {
+            const at = { left: card.style.left, top: card.style.top };
+            act(openNoteEditor)();
+            if (!editor || editor.group !== mark.getAttribute(GROUP_ATTR)) return;
+            Object.assign(editorEl.style, at);
+            editor.side = null;
+        });
         del.addEventListener('click', act(deleteGroupNote));
         card.addEventListener('wheel', keepWheel, { passive: false });
         dragByHandle(card, card.querySelector('.card-footer'), () => true);

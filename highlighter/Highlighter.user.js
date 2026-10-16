@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.18
+// @version      8.19
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3345,7 +3345,9 @@
         @media (pointer: coarse) { .toolbar .btn-icon { width: 40px; height: 40px; } }
 
         /* Tooltip */
-        .tip { max-width: 240px; padding: 4px 11px 6px; font-size: 12px; line-height: 16px; border-radius: var(--borderRadiusMedium); pointer-events: none; }
+        /* One line, kept inside the view: nowrap measures the tip at its full width wherever it last
+           stood, so placePanel() can move it in from the edge instead of the edge squeezing it. */
+        .tip { white-space: nowrap; max-width: calc(100vw - 8px); overflow: hidden; text-overflow: ellipsis; padding: 4px 11px 6px; font-size: 12px; line-height: 16px; border-radius: var(--borderRadiusMedium); pointer-events: none; }
         .tip .kbd { margin-left: 8px; color: var(--colorNeutralForeground3); }
 
         /* Panels (note preview, note editor, toast) all have 12px padding. Their 24px icon buttons
@@ -3443,8 +3445,6 @@
         .page-meta { flex: none; font-size: 12px; color: var(--colorNeutralForeground3); }
         .page-items { padding-left: 20px; }
         a.item-main { text-decoration: none; }
-        /* A message while the annotations panel is open sits beside it, not on it. */
-        @media (min-width: 720px) { .toast.beside-panel { right: 364px; } }
 
         /* Annotations panel: a Fluent Drawer-like panel along the right edge, above the page. */
         .panel {
@@ -5185,7 +5185,6 @@
             const focused = document.activeElement;
             panelReturnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
             panelEl.hidden = false;
-            toastEl.classList.add('beside-panel');
             panelSignature = '';
         }
         renderPanel();
@@ -5201,7 +5200,6 @@
         hideLabelTip();
         releaseFocus(panelEl);
         panelEl.hidden = true;
-        toastEl.classList.remove('beside-panel');
         panelList.replaceChildren();
         panelSignature = '';
         panelItems = [];

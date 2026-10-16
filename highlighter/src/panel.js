@@ -96,7 +96,6 @@
             const focused = document.activeElement;
             panelReturnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
             panelEl.hidden = false;
-            toastEl.classList.add('beside-panel');
             panelSignature = '';
         }
         renderPanel();
@@ -112,7 +111,6 @@
         hideLabelTip();
         releaseFocus(panelEl);
         panelEl.hidden = true;
-        toastEl.classList.remove('beside-panel');
         panelList.replaceChildren();
         panelSignature = '';
         panelItems = [];

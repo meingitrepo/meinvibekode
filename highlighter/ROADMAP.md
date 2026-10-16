@@ -61,6 +61,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.16 | D erases | Alt+D erases (the selection's annotations, or the one pointed at), Alt+Shift+D clears the page; Backspace no longer does, the Delete keys stay. Alt+D (or D on a clicked one) on a single annotation with a note deletes the note first, then the annotation; several clicked ones are erased at once. In the open note editor, Delete deletes the note once there is no text after the caret. Tooltips name the keys (note card Delete: Alt+D; eraser on one clicked annotation with a note: Alt+Delete) |
 | 8.17 | Note card at the badge | The note card opens at the note badge (end of the annotation's last line) and stays put while the pointer moves between the annotation's lines; if the badge is out of view it opens next to the line under the pointer |
 | 8.18 | Gap around the note badge | The dashed outline of a selected annotation leaves a small gap around its note badge instead of running over it |
+| 8.19 | Panel toasts and tooltips | Toasts stay in the bottom-right corner while the Alt+O panel is open (they no longer move left of it); tooltips stay on one line and inside the window near its edge |
 
 ## Next, roughly in order
 

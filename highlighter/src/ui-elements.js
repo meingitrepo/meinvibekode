@@ -160,6 +160,20 @@
         return { left: left - page.left, top: top - page.top };
     }
 
+    // Pressing `handle` (not one of its buttons) and moving drags `panel`; `start()` returns
+    // false to refuse.
+    function dragByHandle(panel, handle, start) {
+        handle.addEventListener('pointerdown', e => {
+            if (e.button || e.target.closest('button') || !start()) return;
+            e.preventDefault();
+            const dx = parseFloat(panel.style.left) - e.clientX, dy = parseFloat(panel.style.top) - e.clientY;
+            const move = m => { panel.style.left = `${m.clientX + dx}px`; panel.style.top = `${m.clientY + dy}px`; };
+            handle.setPointerCapture(e.pointerId);
+            handle.addEventListener('pointermove', move);
+            handle.addEventListener('lostpointercapture', () => handle.removeEventListener('pointermove', move), { once: true });
+        });
+    }
+
     function placeInPage(panel, top, left) {
         const at = inPage({ left, top });
         panel.style.top = `${Math.round(at.top)}px`;

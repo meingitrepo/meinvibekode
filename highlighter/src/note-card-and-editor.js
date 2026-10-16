@@ -6,6 +6,7 @@
     let cardHideTimer = null;
     let cardShowTimer = null;
     let pinnedMark = null;        // the badge clicked to keep its note open (see onBadgeClick)
+    let cardDragged = false;      // the pinned card was moved by its footer, so it no longer follows the badge
 
     // A note's text with its web addresses as links, opened in a new tab. Punctuation right after
     // an address (a full stop, a closing bracket the address didn't open) stays outside the link.
@@ -109,20 +110,38 @@
         if (pinnedMark) pinnedMark.removeAttribute(NOTE_PIN_ATTR);
         pinnedMark = null;
         nearMark = undefined;
+        cardDragged = false;
+        noteCardEl.removeAttribute('data-pinned');
     }
 
     // A click on a note badge keeps its note open, the badge in the selection outline's color,
-    // until the next click anywhere else on the page (or on the badge again). True if it was one.
+    // until that badge is clicked again or Esc is pressed; clicks elsewhere leave it open. True
+    // if it was a badge.
     function onBadgeClick(e) {
         const mark = e.button || annotationsHidden || editor ? null : markNear(e.clientX, e.clientY);
+        if (!mark) return false;
         const was = pinnedMark;
         if (was) hideNoteCard();
-        if (!mark || mark === was) return !!mark;
+        if (mark === was) return true;
         showNoteCard(mark);
         pinnedMark = mark;
         mark.setAttribute(NOTE_PIN_ATTR, '');
+        noteCardEl.setAttribute('data-pinned', '');
         return true;
     }
+
+    // A pinned card moves by its footer, the editor by its header; where it is dropped it stays
+    // in the page, scrolling with it.
+    dragByHandle(noteCardEl, noteCardEl.querySelector('.card-footer'), () => {
+        if (!pinnedMark) return false;
+        cardDragged = true;
+        return true;
+    });
+    dragByHandle(editorEl, editorEl.querySelector('.editor-header'), () => {
+        if (!editor) return false;
+        editor.side = null;   // moved, it no longer grows upward from where it opened
+        return true;
+    });
 
     function onMouseOver(e) {
         // Moving into the card keeps it open; nearMark forgotten, the next move off it starts the hide.
@@ -134,7 +153,7 @@
     function onMouseMove(e) {
         if (isUiEvent(e)) return;
         pointer = { x: e.clientX, y: e.clientY };
-        if (pinnedMark) return;   // a pinned note stays until a click elsewhere
+        if (pinnedMark) return;   // a pinned note stays until its badge is clicked again, or Esc
         const mark = annotationsHidden || editor ? null : markNear(e.clientX, e.clientY);
         if (mark === nearMark) return;
         nearMark = mark;

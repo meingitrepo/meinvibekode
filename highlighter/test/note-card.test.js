@@ -57,7 +57,8 @@ async function delay(browser) {
   await ctx.close();
 }
 
-// 8.34: clicking a badge keeps its note open, the badge black like the selection outline; a click elsewhere (8.35: or Esc) lets it go.
+// 8.34: clicking a badge keeps its note open, the badge black like the selection outline; clicking it again or Esc (8.35) lets it go.
+// 8.38: clicks elsewhere keep it; the pinned card drags by its footer, the editor by its header.
 async function pin(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store });
   const fill = () => p.evaluate(() => { const m = document.querySelector('[data-highlighter-note-pin]'); return m && getComputedStyle(m, '::after').backgroundColor; });
@@ -72,10 +73,30 @@ async function pin(browser) {
   await p.mouse.move(...await L.badge(p, 'gB')); await p.waitForTimeout(450);
   check('hovering another badge does not switch it', (await card(p) || {}).text === 'Note A', await card(p));
   await p.mouse.click(5, 300); await p.waitForTimeout(50);
-  check('a click elsewhere hides it', (await card(p)) === null, await card(p));
-  check('and the badge is blue again', (await fill()) === null, await fill());
-  await p.mouse.click(bx, by); await p.waitForTimeout(50); await p.mouse.click(bx, by); await p.waitForTimeout(50);
-  check('clicking the pinned badge again hides it', (await card(p)) === null, await card(p));
+  check('a click elsewhere keeps it', (await card(p) || {}).text === 'Note A' && (await fill()) === 'rgb(0, 0, 0)', await card(p));
+  const rect = sel => p.evaluate(s => { const b = window.__hl.uiRoot.querySelector(s).getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; }, sel);
+  const drag = async (sel, dx, dy) => { const h = await rect(sel); await p.mouse.move(h.x + 4, h.y + h.h / 2); await p.mouse.down(); await p.mouse.move(h.x + 4 + dx, h.y + h.h / 2 + dy, { steps: 5 }); await p.mouse.up(); };
+  const c0 = await rect('.card');
+  await drag('.card-footer', 60, 80);
+  const c1 = await rect('.card');
+  check('the pinned card drags by its footer', Math.abs(c1.x - c0.x - 60) < 2 && Math.abs(c1.y - c0.y - 80) < 2, { c0, c1 });
+  await p.evaluate(() => { document.body.style.paddingBottom = '2000px'; });
+  await p.mouse.move(5, 300); await p.mouse.wheel(0, 40); await p.waitForTimeout(150);
+  const c2 = await rect('.card');
+  check('and stays where dropped in the page when scrolling', Math.abs(c2.x - c1.x) < 2 && Math.abs(c1.y - c2.y - 40) < 3, { c1, c2 });
+  await p.mouse.wheel(0, -40); await p.waitForTimeout(150);
+  await p.mouse.click(bx, by); await p.waitForTimeout(50);
+  check('clicking the pinned badge again hides it', (await card(p)) === null && (await fill()) === null, await card(p));
+  await p.mouse.click(bx, by); await p.waitForTimeout(50);
+  await p.evaluate(() => window.__hl.uiRoot.querySelector('.card-actions button').click());
+  await L.until(p, () => !window.__hl.editorEl.hidden);
+  await p.evaluate(() => Promise.all(window.__hl.editorEl.getAnimations({ subtree: true }).map(a => a.finished.catch(() => {}))));
+  const e0 = await rect('.editor');
+  await drag('.editor-header', -30, 50);
+  const e1 = await rect('.editor');
+  check('the editor drags by its header', Math.abs(e1.x - e0.x + 30) < 2 && Math.abs(e1.y - e0.y - 50) < 2, { e0, e1 });
+  check('and stays open', await p.evaluate(() => !window.__hl.editorEl.hidden), null);
+  await p.keyboard.press('Escape'); await p.waitForTimeout(50);
   await p.mouse.click(bx, by); await p.waitForTimeout(50); await p.keyboard.press('Escape'); await p.waitForTimeout(50);
   check('Esc hides a pinned note', (await card(p)) === null && (await fill()) === null, await card(p));
   check('no page errors', p.__errors.length === 0, p.__errors);

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.37
+// @version      8.38
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3673,6 +3673,7 @@
         .card-text a { color: var(--colorBrandForegroundLink); text-decoration: underline; border-radius: var(--borderRadiusMedium); outline: none; }
         .card-text a:hover { color: var(--colorBrandForegroundLinkHover); }
         .card-text a:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
+        .card[data-pinned] .card-footer, .editor-header { cursor: move; user-select: none; }
         .card-footer { display: flex; align-items: center; gap: 12px; margin: 8px -4px -4px 0; }
         .card-hint { flex: 1; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
         .card-actions { display: flex; gap: 4px; }
@@ -3977,6 +3978,20 @@
     function inPage({ left, top }) {
         const page = uiHost.getBoundingClientRect();
         return { left: left - page.left, top: top - page.top };
+    }
+
+    // Pressing `handle` (not one of its buttons) and moving drags `panel`; `start()` returns
+    // false to refuse.
+    function dragByHandle(panel, handle, start) {
+        handle.addEventListener('pointerdown', e => {
+            if (e.button || e.target.closest('button') || !start()) return;
+            e.preventDefault();
+            const dx = parseFloat(panel.style.left) - e.clientX, dy = parseFloat(panel.style.top) - e.clientY;
+            const move = m => { panel.style.left = `${m.clientX + dx}px`; panel.style.top = `${m.clientY + dy}px`; };
+            handle.setPointerCapture(e.pointerId);
+            handle.addEventListener('pointermove', move);
+            handle.addEventListener('lostpointercapture', () => handle.removeEventListener('pointermove', move), { once: true });
+        });
     }
 
     function placeInPage(panel, top, left) {
@@ -4362,6 +4377,7 @@
     let cardHideTimer = null;
     let cardShowTimer = null;
     let pinnedMark = null;        // the badge clicked to keep its note open (see onBadgeClick)
+    let cardDragged = false;      // the pinned card was moved by its footer, so it no longer follows the badge
 
     // A note's text with its web addresses as links, opened in a new tab. Punctuation right after
     // an address (a full stop, a closing bracket the address didn't open) stays outside the link.
@@ -4465,20 +4481,38 @@
         if (pinnedMark) pinnedMark.removeAttribute(NOTE_PIN_ATTR);
         pinnedMark = null;
         nearMark = undefined;
+        cardDragged = false;
+        noteCardEl.removeAttribute('data-pinned');
     }
 
     // A click on a note badge keeps its note open, the badge in the selection outline's color,
-    // until the next click anywhere else on the page (or on the badge again). True if it was one.
+    // until that badge is clicked again or Esc is pressed; clicks elsewhere leave it open. True
+    // if it was a badge.
     function onBadgeClick(e) {
         const mark = e.button || annotationsHidden || editor ? null : markNear(e.clientX, e.clientY);
+        if (!mark) return false;
         const was = pinnedMark;
         if (was) hideNoteCard();
-        if (!mark || mark === was) return !!mark;
+        if (mark === was) return true;
         showNoteCard(mark);
         pinnedMark = mark;
         mark.setAttribute(NOTE_PIN_ATTR, '');
+        noteCardEl.setAttribute('data-pinned', '');
         return true;
     }
+
+    // A pinned card moves by its footer, the editor by its header; where it is dropped it stays
+    // in the page, scrolling with it.
+    dragByHandle(noteCardEl, noteCardEl.querySelector('.card-footer'), () => {
+        if (!pinnedMark) return false;
+        cardDragged = true;
+        return true;
+    });
+    dragByHandle(editorEl, editorEl.querySelector('.editor-header'), () => {
+        if (!editor) return false;
+        editor.side = null;   // moved, it no longer grows upward from where it opened
+        return true;
+    });
 
     function onMouseOver(e) {
         // Moving into the card keeps it open; nearMark forgotten, the next move off it starts the hide.
@@ -4490,7 +4524,7 @@
     function onMouseMove(e) {
         if (isUiEvent(e)) return;
         pointer = { x: e.clientX, y: e.clientY };
-        if (pinnedMark) return;   // a pinned note stays until a click elsewhere
+        if (pinnedMark) return;   // a pinned note stays until its badge is clicked again, or Esc
         const mark = annotationsHidden || editor ? null : markNear(e.clientX, e.clientY);
         if (mark === nearMark) return;
         nearMark = mark;
@@ -5791,7 +5825,7 @@
     addLabelTip(panelClose, 'Close', 'Alt+O', () => true);
     panelCopy.addEventListener('click', () => { renderPanel(); copyAnnotations(panelItems); });
     panelClose.addEventListener('click', closePanel);
-    panelEl.addEventListener('mouseenter', () => { if (cardWrapper) hideNoteCard(); });
+    panelEl.addEventListener('mouseenter', () => { if (cardWrapper && !pinnedMark) hideNoteCard(); });
     panelFilter.addEventListener('input', () => renderPanel());
     // Pressing a button keeps the page's text selection (for Attach to selection).
     panelEl.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
@@ -6114,7 +6148,7 @@
         if (uiFrame) return;
         uiFrame = requestAnimationFrame(() => {
             uiFrame = 0;
-            if (pinnedMark && cardWrapper) placePanel(noteCardEl, noteCardAnchor(cardWrapper), true);   // a pinned note follows its badge
+            if (pinnedMark && cardWrapper) { if (!cardDragged) placePanel(noteCardEl, noteCardAnchor(cardWrapper), true); }   // a pinned note follows its badge until dragged
             else if (!noteCardEl.hidden) hideNoteCard();
             hideLabelTip();
             if (!toolbarEl.hidden) placeToolbar();

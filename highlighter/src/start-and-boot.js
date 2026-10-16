@@ -23,7 +23,7 @@
         if (uiFrame) return;
         uiFrame = requestAnimationFrame(() => {
             uiFrame = 0;
-            if (pinnedMark && cardWrapper) placePanel(noteCardEl, noteCardAnchor(cardWrapper), true);   // a pinned note follows its badge
+            if (pinnedMark && cardWrapper) { if (!cardDragged) placePanel(noteCardEl, noteCardAnchor(cardWrapper), true); }   // a pinned note follows its badge until dragged
             else if (!noteCardEl.hidden) hideNoteCard();
             hideLabelTip();
             if (!toolbarEl.hidden) placeToolbar();

@@ -229,6 +229,7 @@
         .card-text a { color: var(--colorBrandForegroundLink); text-decoration: underline; border-radius: var(--borderRadiusMedium); outline: none; }
         .card-text a:hover { color: var(--colorBrandForegroundLinkHover); }
         .card-text a:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
+        .card[data-pinned] .card-footer, .editor-header { cursor: move; user-select: none; }
         .card-footer { display: flex; align-items: center; gap: 12px; margin: 8px -4px -4px 0; }
         .card-hint { flex: 1; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
         .card-actions { display: flex; gap: 4px; }

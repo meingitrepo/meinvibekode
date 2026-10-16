@@ -255,7 +255,7 @@
     addLabelTip(panelClose, 'Close', 'Alt+O', () => true);
     panelCopy.addEventListener('click', () => { renderPanel(); copyAnnotations(panelItems); });
     panelClose.addEventListener('click', closePanel);
-    panelEl.addEventListener('mouseenter', () => { if (cardWrapper && !pinnedMark) hideNoteCard(); });
+    panelEl.addEventListener('mouseenter', () => { if (cardWrapper) hideNoteCard(); });
     panelFilter.addEventListener('input', () => renderPanel());
     // Pressing a button keeps the page's text selection (for Attach to selection).
     panelEl.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });

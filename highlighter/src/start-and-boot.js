@@ -5,7 +5,6 @@
         if (isUiEvent(e)) return;
         pointerIsDown = true;
         hideToolbar();
-        if (editor) cancelEditor();   // clicking away discards the changes; only Save saves
     }
 
     function onPointerUp(e) {
@@ -23,8 +22,7 @@
         if (uiFrame) return;
         uiFrame = requestAnimationFrame(() => {
             uiFrame = 0;
-            if (pinnedMark && cardWrapper) { if (!cardDragged) placePanel(noteCardEl, noteCardAnchor(cardWrapper), true); }   // a pinned note follows its badge until dragged
-            else if (!noteCardEl.hidden) hideNoteCard();
+            if (!noteCardEl.hidden) hideNoteCard();
             hideLabelTip();
             if (!toolbarEl.hidden) placeToolbar();
             if (editor) followEditorAnchor();
@@ -36,6 +34,7 @@
     function resetUi({ keepRestore = false } = {}) {
         hideToolbar();
         hideNoteCard();
+        unpinNoteCard();
         clearSelectedGroups();
         closeEditor();
         if (!(keepRestore && toastKeep)) hideToast();

@@ -35,7 +35,7 @@
     // Labels and tooltips are added with addLabelTip() further down.
     const noteSave = fluentButton({ icon: fluentIcon('save_20_regular') });
     const noteDelete = fluentButton({ icon: fluentIcon('delete_20_regular') });
-    // Save (or Enter) saves, Delete deletes, and anything else (clicking outside, Esc)
+    // Save (or Enter) saves, Delete deletes, and Esc (or opening another note)
     // discards the changes.
     const editorEl = makeEl('div', { class: 'surface editor', role: 'dialog', 'aria-labelledby': 'highlighter-note-title', hidden: '' }, [
         makeEl('div', { class: 'editor-header' }, [editorTitle, makeEl('div', { class: 'editor-actions' }, [noteSave, noteDelete])]),

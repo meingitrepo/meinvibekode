@@ -310,7 +310,7 @@
         annotationsHidden = hidden;
         hideStyle.media = hidden ? 'all' : 'not all';
         textColorStyle.media = hidden ? 'not all' : 'all';
-        if (hidden) hideNoteCard();
+        if (hidden) { hideNoteCard(); unpinNoteCard(); }
         else if (toastRun === showAnnotations) hideToast();   // "Annotations hidden" is no longer true
     }
 

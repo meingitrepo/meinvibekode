@@ -49,6 +49,7 @@
             if (marked !== w.hasAttribute(NOTE_MARK_ATTR)) w.toggleAttribute(NOTE_MARK_ATTR, marked);
         });
         noteMarks = null;   // looked up again by markNear
+        prunePinnedCards();
         schedulePanelRefresh();
     }
 

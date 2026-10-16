@@ -81,6 +81,7 @@ The code lives in `src/` and `build.js` joins it into `Highlighter.user.js` (see
 | 8.36 | Panels scroll with the text | The selection toolbar, the note card, the note editor and tooltips now sit in the page instead of the window, so they move with their text in the same frame while scrolling instead of a frame late (as the dashed selection outline since 8.21). Inside scrolling boxes on a page they still follow a frame late |
 | 8.37 | Note editor like the note card | The add/edit note panel opens where the note card does (centred on the note badge), is as wide as the card at its widest (320px) and its note box grows to the card's height (12 lines) before scrolling; its corner handle can still make it wider, never narrower. Scrollbars in our panels follow our light/dark theme (they were white in dark mode) |
 | 8.38 | Pinned notes stay; drag note panels | A note pinned by its badge (8.34) no longer closes on clicks elsewhere, only on its badge again or Esc. The pinned note card moves by dragging its footer, the note editor by its header; dropped, they stay in that spot of the page and scroll with it |
+| 8.39 | Several pinned notes; editor stays | Any number of notes can be pinned by their badges at once (Esc closes the last pinned); a pinned note now scrolls away with its badge instead of jumping beside the annotation; clicking outside the note editor no longer discards it (Save, Esc or opening another note closes it) |
 
 ## Next, roughly in order
 

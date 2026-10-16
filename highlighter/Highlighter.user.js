@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.38
+// @version      8.39
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -642,7 +642,7 @@
         annotationsHidden = hidden;
         hideStyle.media = hidden ? 'all' : 'not all';
         textColorStyle.media = hidden ? 'not all' : 'all';
-        if (hidden) hideNoteCard();
+        if (hidden) { hideNoteCard(); unpinNoteCard(); }
         else if (toastRun === showAnnotations) hideToast();   // "Annotations hidden" is no longer true
     }
 
@@ -3250,7 +3250,9 @@
         // Everything saved covers the page: the page's keys wait until it closes.
         if (!everythingEl.hidden && e.code !== 'KeyO') return;
         // Esc closes a note pinned by clicking its badge.
-        if (e.key === 'Escape' && pinnedMark && !e.altKey) { hideNoteCard(); return; }
+        // Esc with focus out of the note editor (it stays open on clicks outside) still discards it.
+        if (e.key === 'Escape' && editor && !isUiEvent(e) && !e.altKey) { cancelEditor(); return; }
+        if (e.key === 'Escape' && pinnedCards.size && !e.altKey) { unpinNoteCard(Array.from(pinnedCards.keys()).pop()); return; }
         if (selectedGroupKey(e)) return;
         // Esc turns the pen off, unless it is meant for a panel or a field.
         if (e.key === 'Escape' && penKey && !editor && !isUiEvent(e) && !isEditableTarget(e)) {
@@ -3431,6 +3433,7 @@
             if (marked !== w.hasAttribute(NOTE_MARK_ATTR)) w.toggleAttribute(NOTE_MARK_ATTR, marked);
         });
         noteMarks = null;   // looked up again by markNear
+        prunePinnedCards();
         schedulePanelRefresh();
     }
 
@@ -3855,7 +3858,7 @@
     // Labels and tooltips are added with addLabelTip() further down.
     const noteSave = fluentButton({ icon: fluentIcon('save_20_regular') });
     const noteDelete = fluentButton({ icon: fluentIcon('delete_20_regular') });
-    // Save (or Enter) saves, Delete deletes, and anything else (clicking outside, Esc)
+    // Save (or Enter) saves, Delete deletes, and Esc (or opening another note)
     // discards the changes.
     const editorEl = makeEl('div', { class: 'surface editor', role: 'dialog', 'aria-labelledby': 'highlighter-note-title', hidden: '' }, [
         makeEl('div', { class: 'editor-header' }, [editorTitle, makeEl('div', { class: 'editor-actions' }, [noteSave, noteDelete])]),
@@ -4376,8 +4379,7 @@
     let cardWrapper = null;
     let cardHideTimer = null;
     let cardShowTimer = null;
-    let pinnedMark = null;        // the badge clicked to keep its note open (see onBadgeClick)
-    let cardDragged = false;      // the pinned card was moved by its footer, so it no longer follows the badge
+    const pinnedCards = new Map();   // badge (its wrapper) -> the copy of its note card kept open (see onBadgeClick)
 
     // A note's text with its web addresses as links, opened in a new tab. Punctuation right after
     // an address (a full stop, a closing bracket the address didn't open) stays outside the link.
@@ -4456,7 +4458,6 @@
         clearTimeout(cardHideTimer);
         clearTimeout(cardShowTimer);
         if (sameCard(wrapper)) return;
-        unpinNoteCard();
         ensureUi(wrapper.hasAttribute(DARK_ATTR));
         cardWrapper = wrapper;
         cardText.replaceChildren(...noteNodes(wrapper.getAttribute(NOTE_ATTR) || ''));
@@ -4474,40 +4475,53 @@
         releaseFocus(noteCardEl);
         noteCardEl.hidden = true;
         cardWrapper = null;
-        unpinNoteCard();
     }
 
-    function unpinNoteCard() {
-        if (pinnedMark) pinnedMark.removeAttribute(NOTE_PIN_ATTR);
-        pinnedMark = null;
-        nearMark = undefined;
-        cardDragged = false;
-        noteCardEl.removeAttribute('data-pinned');
-    }
-
-    // A click on a note badge keeps its note open, the badge in the selection outline's color,
-    // until that badge is clicked again or Esc is pressed; clicks elsewhere leave it open. True
-    // if it was a badge.
+    // A click on a note badge keeps its note open in a copy of the card, placed where the card
+    // was, the badge in the selection outline's color, until that badge is clicked again or Esc
+    // closes the last one pinned; clicks elsewhere leave it open, and any number can be pinned.
+    // The copy is in the page layer, so it scrolls with the text; dragged by its footer, it
+    // stays where dropped. True if the click was on a badge.
     function onBadgeClick(e) {
-        const mark = e.button || annotationsHidden || editor ? null : markNear(e.clientX, e.clientY);
+        const mark = e.button || annotationsHidden ? null : markNear(e.clientX, e.clientY);
         if (!mark) return false;
-        const was = pinnedMark;
-        if (was) hideNoteCard();
-        if (mark === was) return true;
+        if (pinnedCards.has(mark)) { unpinNoteCard(mark); return true; }
         showNoteCard(mark);
-        pinnedMark = mark;
+        const card = noteCardEl.cloneNode(true);
+        card.setAttribute('data-pinned', '');
+        hideNoteCard();
+        noteCardEl.after(card);
+        pinnedCards.set(mark, card);
         mark.setAttribute(NOTE_PIN_ATTR, '');
-        noteCardEl.setAttribute('data-pinned', '');
+        const [edit, del] = card.querySelectorAll('.card-actions button');
+        const act = fn => () => { unpinNoteCard(mark); if (mark.isConnected) fn(mark.getAttribute(GROUP_ATTR)); };
+        [edit, del].forEach(b => addLabelTip(b, b.dataset.label, b.dataset.shortcut, () => true));   // a copy has no listeners
+        edit.addEventListener('click', act(openNoteEditor));
+        del.addEventListener('click', act(deleteGroupNote));
+        card.addEventListener('wheel', keepWheel, { passive: false });
+        dragByHandle(card, card.querySelector('.card-footer'), () => true);
         return true;
     }
 
-    // A pinned card moves by its footer, the editor by its header; where it is dropped it stays
-    // in the page, scrolling with it.
-    dragByHandle(noteCardEl, noteCardEl.querySelector('.card-footer'), () => {
-        if (!pinnedMark) return false;
-        cardDragged = true;
-        return true;
-    });
+    // `mark` omitted: every pinned note.
+    function unpinNoteCard(mark) {
+        (mark ? [mark] : Array.from(pinnedCards.keys())).forEach(m => {
+            const card = pinnedCards.get(m);
+            if (!card) return;
+            releaseFocus(card);
+            hideLabelTip();
+            card.remove();
+            m.removeAttribute(NOTE_PIN_ATTR);
+            pinnedCards.delete(m);
+        });
+    }
+
+    // A pinned note whose badge is gone (note deleted, annotation erased or redrawn) closes.
+    function prunePinnedCards() {
+        pinnedCards.forEach((card, m) => { if (!m.isConnected || !m.hasAttribute(NOTE_MARK_ATTR)) unpinNoteCard(m); });
+    }
+
+    // The editor moves by its header; where it is dropped it stays in the page, scrolling with it.
     dragByHandle(editorEl, editorEl.querySelector('.editor-header'), () => {
         if (!editor) return false;
         editor.side = null;   // moved, it no longer grows upward from where it opened
@@ -4524,8 +4538,8 @@
     function onMouseMove(e) {
         if (isUiEvent(e)) return;
         pointer = { x: e.clientX, y: e.clientY };
-        if (pinnedMark) return;   // a pinned note stays until its badge is clicked again, or Esc
-        const mark = annotationsHidden || editor ? null : markNear(e.clientX, e.clientY);
+        let mark = annotationsHidden || editor ? null : markNear(e.clientX, e.clientY);
+        if (pinnedCards.has(mark)) mark = null;   // its note is open already
         if (mark === nearMark) return;
         nearMark = mark;
         if (mark) {
@@ -4709,7 +4723,7 @@
                 focusNoteInput();
                 return;
             }
-            cancelEditor();   // one note at a time; like clicking outside, moving on discards
+            cancelEditor();   // one note at a time; moving on discards
         }
         const wrappers = groupWrappers(group);
         if (!wrappers.length) return;
@@ -5825,7 +5839,7 @@
     addLabelTip(panelClose, 'Close', 'Alt+O', () => true);
     panelCopy.addEventListener('click', () => { renderPanel(); copyAnnotations(panelItems); });
     panelClose.addEventListener('click', closePanel);
-    panelEl.addEventListener('mouseenter', () => { if (cardWrapper && !pinnedMark) hideNoteCard(); });
+    panelEl.addEventListener('mouseenter', () => { if (cardWrapper) hideNoteCard(); });
     panelFilter.addEventListener('input', () => renderPanel());
     // Pressing a button keeps the page's text selection (for Attach to selection).
     panelEl.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
@@ -6130,7 +6144,6 @@
         if (isUiEvent(e)) return;
         pointerIsDown = true;
         hideToolbar();
-        if (editor) cancelEditor();   // clicking away discards the changes; only Save saves
     }
 
     function onPointerUp(e) {
@@ -6148,8 +6161,7 @@
         if (uiFrame) return;
         uiFrame = requestAnimationFrame(() => {
             uiFrame = 0;
-            if (pinnedMark && cardWrapper) { if (!cardDragged) placePanel(noteCardEl, noteCardAnchor(cardWrapper), true); }   // a pinned note follows its badge until dragged
-            else if (!noteCardEl.hidden) hideNoteCard();
+            if (!noteCardEl.hidden) hideNoteCard();
             hideLabelTip();
             if (!toolbarEl.hidden) placeToolbar();
             if (editor) followEditorAnchor();
@@ -6161,6 +6173,7 @@
     function resetUi({ keepRestore = false } = {}) {
         hideToolbar();
         hideNoteCard();
+        unpinNoteCard();
         clearSelectedGroups();
         closeEditor();
         if (!(keepRestore && toastKeep)) hideToast();

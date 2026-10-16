@@ -22,12 +22,14 @@ const recGone2 = () => rec('//*[@id="p4"]', GONE2, 'delta four', { group: 'gD' }
 const recLate = () => rec('//*[@id="late"]', LATE, 'epsilon five', { group: 'gE' });
 const addLate = p => p.evaluate(t => { const d = document.createElement('div'); d.id = 'late'; d.textContent = t; document.getElementById('slot').appendChild(d); }, LATE);
 // Watches the toast from now for `ms`, returns the texts it showed.
-async function watchToast(p, ms) {
+// The messages shown within ms, or until one matches `stop` (so its button can be clicked while it is up).
+async function watchToast(p, ms, stop) {
   const seen = [];
   const end = Date.now() + ms;
   while (Date.now() < end) {
     const t = await L.toast(p);
     if (t && seen[seen.length - 1] !== t) seen.push(t);
+    if (t && stop && stop.test(t)) break;
     await p.waitForTimeout(250);
   }
   return seen;
@@ -46,7 +48,7 @@ async function scenarioNotice(browser) {
   await p.waitForTimeout(3000);
   check('menu: not registered again while nothing changes', (await p.evaluate(() => window.__menuLog)) === regs, regs);
   check('no notice during the first window', (await L.toast(p)) === null, await L.toast(p));
-  const seen = await watchToast(p, 13000);   // until ~18.5 s after load
+  const seen = await watchToast(p, 13000, /Show$/);   // until ~18.5 s after load
   check('notice after the first window', seen.includes('Couldn\'t find 1x annotation · Show'), seen);
   check('miss counted once', (await storedOf(p, KEY, 'gC'))[0].misses === 1, await storedOf(p, KEY, 'gC'));
   // Show: the panel, at "Not found"
@@ -89,9 +91,12 @@ async function scenarioEditor(browser) {
   await p.waitForTimeout(11000);
   await L.selStr(p, '#p1', 'alpha one'); await L.altKey(p, 'KeyN'); await p.waitForTimeout(200);
   await p.keyboard.type('a draft');
-  const seen = await watchToast(p, 6500);
+  await L.until(p, () => /Couldn't find/.test(window.__hl.toastText.textContent) && !window.__hl.toastEl.hidden, null, 6500);
+  const seen = [await L.toast(p)];
   check('editor: notice shown while writing a note', seen.includes('Couldn\'t find 1x annotation · Show'), seen);
-  const st = await p.evaluate(() => { const r = window.__hl; r.toastAction.click(); return { editor: !!r.editor, draft: r.noteInput.value, panel: !r.panelEl.hidden }; });
+  await p.evaluate(() => window.__hl.toastAction.click());
+  await L.until(p, () => !window.__hl.panelEl.hidden);
+  const st = await p.evaluate(() => { const r = window.__hl; return { editor: !!r.editor, draft: r.noteInput.value, panel: !r.panelEl.hidden }; });
   check('editor: Show leaves the note being written open', st.editor && st.draft === 'a draft' && st.panel, st);
   await ctx.close();
 }
@@ -103,10 +108,11 @@ async function scenarioLate(browser) {
   check('late: watcher in its light phase after the window', w0 && w0.slow && !w0.all, w0);
   check('late: counted as missed once', (await storedOf(p, KEY, 'gE'))[0].misses === 1, await storedOf(p, KEY, 'gE'));
   await p.waitForTimeout(3000);
-  const t0 = Date.now();
+  // Timed inside the page (from the text's arrival to its wrapper's), so slow test round trips don't count.
+  await p.evaluate(() => { window.__t0 = performance.now(); new MutationObserver((ms, mo) => {
+    if (document.querySelector('[data-highlighter-group="gE"]')) { window.__placed = performance.now() - window.__t0; mo.disconnect(); } }).observe(document.body, { childList: true, subtree: true }); });
   await addLate(p);
-  let placed = -1;
-  for (let i = 0; i < 20; i++) { await p.waitForTimeout(250); if ((await L.wr(p)).some(x => x.g === 'gE')) { placed = Date.now() - t0; break; } }
+  const placed = await p.waitForFunction(() => window.__placed, null, { timeout: 6000, polling: 100 }).then(h => h.jsonValue(), () => -1);
   check('late: text arriving after the window gets its annotation within ~2.5 s', placed > 0 && placed < 3000, placed);
   await p.waitForTimeout(500);
   const st = await storedOf(p, KEY, 'gE');

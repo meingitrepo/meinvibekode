@@ -56,9 +56,11 @@ ${filler(40)}
   await page.keyboard.press('Escape');
   // click item -> scroll + flash
   await page.evaluate(() => window.scrollTo(0, 0));
+  // The flash is noted when it starts, since a slow machine may end it before the scroll stops.
+  await page.evaluate(() => { window.__flashed = false; new MutationObserver(() => { window.__flashed = true; }).observe(document, { attributes: true, subtree: true, attributeFilter: ['data-highlighter-flash'] }); });
   await page.evaluate(() => { const el = Array.from(window.__hl.panelList.querySelectorAll('[data-group]')).find(e => e.querySelector('.item-text').textContent === 'quick brown fox'); el.querySelector('.item-main').click(); });
-  await page.waitForTimeout(900);
-  const fl = await page.evaluate(() => { const w = window.__hl.allWrappers().find(w => w.textContent === 'quick brown fox'); const r = w.getBoundingClientRect(); return { top: r.top, flash: window.__hl.getSvg(w).hasAttribute('data-highlighter-flash'), y: scrollY }; });
+  await page.waitForTimeout(100); await L.scrolled(page);
+  const fl = await page.evaluate(() => { const w = window.__hl.allWrappers().find(w => w.textContent === 'quick brown fox'); const r = w.getBoundingClientRect(); return { top: r.top, flash: window.__flashed, y: scrollY }; });
   L.check('click scrolls and flashes', fl.top > 100 && fl.top < 600 && fl.flash && fl.y > 300, fl);
   // copy markdown
   await page.evaluate(() => window.__hl.panelCopy.click()); await page.waitForTimeout(100);
@@ -80,12 +82,13 @@ ${filler(40)}
   L.check('panel updates note', it.find(i => i.text === 'three four').note === 'Numbers', it);
   // delete from panel
   await page.evaluate(() => { const el = Array.from(window.__hl.panelList.querySelectorAll('[data-group]')).find(e => e.querySelector('.item-text').textContent === 'three four'); el.querySelector('[data-act="delete"]').click(); });
-  await page.waitForTimeout(200);
+  await L.until(page, () => !Array.from(window.__hl.panelList.querySelectorAll('.item-text')).some(e => e.textContent === 'three four'));
   it = await L.items(page);
   L.check('delete', !it.some(i => i.text === 'three four') && (await L.toast(page)) === 'Erased 1x annotation · Undo', [it.length, await L.toast(page)]);
   st = await L.stored(page);
   L.check('delete stored', !st.some(r => r.text === 'three four'), st.length);
-  await page.evaluate(() => window.__hl.toastAction.click()); await page.waitForTimeout(200);
+  await page.evaluate(() => window.__hl.toastAction.click());
+  await L.until(page, () => Array.from(window.__hl.panelList.querySelectorAll('.item-text')).some(e => e.textContent === 'three four'));
   it = await L.items(page);
   L.check('undo brings it back to panel', it.some(i => i.text === 'three four'), it.length);
   // attach missing to selection

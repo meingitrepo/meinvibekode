@@ -29,6 +29,7 @@ const state = p => p.evaluate(() => window.__hl.allWrappers().map(w => {
 }));
 const keysOf = (s, g) => s.filter(w => w.g === g).map(w => w.k);
 async function hover(p, group, i = 0) {
+  await L.until(p, ([g, i]) => window.__hl.allWrappers().filter(w => w.getAttribute('data-highlighter-group') === g)[i], [group, i]);
   const r = await p.evaluate(([g, i]) => {
     const ws = window.__hl.allWrappers().filter(w => w.getAttribute('data-highlighter-group') === g);
     const rect = ws[i].getClientRects()[0];
@@ -161,15 +162,18 @@ async function jumpFallback(browser) {
 async function noteCard(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store: storeOf(recA()) });
   await hover(p, 'gA');
-  await p.waitForTimeout(400);
-  const card = await p.evaluate(() => { const c = window.__hl.noteCardEl; if (c.hidden) return null; const r = c.getBoundingClientRect(); return { x: r.left + 20, y: r.top + 10 }; });
+  await L.until(p, () => !window.__hl.noteCardEl.hidden);
+  // Measured once its opening slide has finished.
+  const card = await p.evaluate(async () => { const c = window.__hl.noteCardEl; if (c.hidden) return null; await Promise.all(c.getAnimations({ subtree: true }).map(a => a.finished.catch(() => {}))); const r = c.getBoundingClientRect(); return { x: r.left + 20, y: r.top + 10 }; });
   check('setup: the note card shows', !!card, card);
   if (card) {
-    await p.mouse.move(card.x, card.y, { steps: 3 }); await p.waitForTimeout(100);
+    await p.mouse.move(card.x, card.y); await p.waitForTimeout(100);
     await L.altKey(p, '1');
+    await L.until(p, () => window.__hl.allWrappers().some(w => w.getAttribute('data-style-key') === 'h2'), null, 2000);
     const s = await state(p);
     check('mouse on the note card: Alt+1 restyles its annotation', keysOf(s, 'gA').join() === 'h2' && s[0].n === 'my note', s);
     await L.altKey(p, '1');
+    await L.until(p, () => !window.__hl.allWrappers().length && window.__hl.noteCardEl.hidden, null, 2000);
     check('and its own style removes it, closing the card', (await state(p)).length === 0 && (await p.evaluate(() => window.__hl.noteCardEl.hidden)), { s: await state(p) });
   }
   await ctx.close();
@@ -205,6 +209,7 @@ async function legacyWaiting(browser) {
   const placed = rec('//*[@id="p2"]', P2, 'other words', {});
   delete placed.group;
   const { ctx, page: p } = await L.open(browser, { html: HTML, store: storeOf(placed) });
+  await L.until(p, () => window.__hl.allWrappers().length);
   const g = (await state(p))[0].g;
   await hover(p, g);
   await L.altKey(p, '2');

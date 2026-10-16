@@ -56,7 +56,7 @@ async function main(browser) {
   await clickHead(p, 1);
   await p.evaluate(() => window.scrollTo(0, 2000));
   await p.evaluate(() => Array.from(window.__hl.everythingList.querySelectorAll('a.item-main')).find(a => a.textContent.includes('alpha passage')).click());
-  await p.waitForTimeout(900);
+  await p.waitForTimeout(100); await L.scrolled(p);
   const vis = await p.evaluate(() => { const r = document.getElementById('p1').getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; });
   check('a quote from this page closes it and scrolls to the passage', (await state(p)) === null && vis, vis);
   // menu

@@ -6,6 +6,7 @@
 //   node run.js panel note      only files whose name contains one of these words
 //   HL_SCRIPT=other.user.js     test another build
 //   HL_JOBS=3                   files run at once (default 6)
+//   HL_CPU=6                    pages run 6x slower (finds checks that rely on a fast machine)
 // Needs Playwright with Chromium (npm install playwright && npx playwright install chromium).
 'use strict';
 const { spawn, execFileSync } = require('child_process');

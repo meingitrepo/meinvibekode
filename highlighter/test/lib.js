@@ -38,6 +38,8 @@ async function open(browser, opts) {
   const { html, store = {}, scheme = 'light', url = 'https://example.test/a', viewport = { width: 1100, height: 700 }, wait = 800, routes = null, hidden = null } = opts;
   const ctx = await browser.newContext({ colorScheme: scheme, viewport, deviceScaleFactor: +(process.env.DSF || 1) });
   const page = await ctx.newPage();
+  // HL_CPU=6 runs the page's CPU 6x slower, to find checks that only pass on a fast machine.
+  if (+process.env.HL_CPU > 1) await (await ctx.newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: +process.env.HL_CPU });
   page.__errors = [];
   page.on('pageerror', e => page.__errors.push('PAGEERR ' + e.message));
   page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') page.__errors.push(`[${m.type()}] ${m.text()}`); });
@@ -55,6 +57,8 @@ async function open(browser, opts) {
   // as a userscript manager would.
   if (opts.headers) await page.evaluate(`0;${SRC}`); else await page.addScriptTag({ content: SRC });
   await page.waitForTimeout(wait);
+  // On a slow machine the stored annotations can take longer than `wait` to come back.
+  if (/^\[\s*\{/.test(store[url])) await until(page, () => window.__hl && window.__hl.allWrappers().length, null, 3000);
   return { ctx, page };
 }
 // Selects [str] (or from the first occurrence of str to the end of endStr) inside the element; backward = focus at the start.
@@ -94,7 +98,12 @@ const menu = page => page.evaluate(() => Object.keys(window.__menu || {}));
 const items = page => page.evaluate(() => Array.from(window.__hl.panelList.children).map(el => el.dataset.group ? { g: el.dataset.group, missing: el.classList.contains('missing'), text: el.querySelector('.item-text').textContent, note: (el.querySelector('.item-note') || {}).textContent, meta: el.querySelector('.item-meta').textContent } : { label: el.textContent }));
 // Closes the browser and exits with the number of failed checks (see run.js).
 async function done(browser) { await browser.close(); console.log(fails ? `FAILS ${fails}` : 'ALL PASS'); process.exit(fails ? 1 : 0); }
-module.exports = { items, done, setHidden, menu, launch, open, selStr, altKey, toast, wr, stored, toolbar, check, get fails() { return fails; } };
+// Waits until fn(arg) is true in the page (false after `timeout` ms), for checks on work the script does later.
+const until = (page, fn, arg, timeout = 5000) => page.waitForFunction(fn, arg, { timeout, polling: 50 }).then(() => true, () => false);
+// Waits until the page has stopped scrolling (scroll position unchanged for 250 ms), e.g. after a smooth scroll.
+const scrolled = page => until(page, () => { const y = scrollY, now = performance.now();
+  if (window.__scrollY !== y) { window.__scrollY = y; window.__scrollAt = now; } return now - window.__scrollAt >= 250; });
+module.exports = { until, scrolled, items, done, setHidden, menu, launch, open, selStr, altKey, toast, wr, stored, toolbar, check, get fails() { return fails; } };
 // 7.32: the viewport rectangles of `str` inside `sel` (one per line), for real mouse input.
 module.exports.rects = (page, sel, str) => page.evaluate(([sel, str]) => {
   const el = document.querySelector(sel); const a = el.textContent.indexOf(str);

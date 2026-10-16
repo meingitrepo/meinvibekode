@@ -7,8 +7,12 @@
         return b;
     }
 
+    // Placed in the page rather than the window (as selectHost below): the toolbar, note card,
+    // editor and tooltip are positioned in it, so they scroll with the text in the same frame
+    // instead of following it a frame late. The other panels are fixed to the window. Window
+    // wide, so panels get the same room to lay out as in the window.
     const uiHost = makeEl('div', { [UI_ATTR]: '' });
-    uiHost.style.cssText = 'all: initial !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 0 !important; height: 0 !important; z-index: 2147483647 !important;';
+    uiHost.style.cssText = 'all: initial !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 0 !important; z-index: 2147483647 !important;';
     const uiRoot = uiHost.attachShadow({ mode: 'closed' });
 
     const toolbarEl = makeEl('div', { class: 'surface toolbar', role: 'toolbar', 'aria-label': 'Annotate selection', hidden: '' });
@@ -146,8 +150,19 @@
         if (preferBelow && below + h > vh - 4 && above >= 4) side = 'above';
         if (!preferBelow && above < 4) side = 'below';
         const left = Math.max(4, Math.min(rect.left + rect.width / 2 - w / 2, vw - w - 4));
-        panel.style.top = `${Math.round(side === 'below' ? below : above)}px`;
-        panel.style.left = `${Math.round(left)}px`;
+        placeInPage(panel, side === 'below' ? below : above, left);
         return side;
+    }
+
+    // A point of the window in page terms (see uiHost), and a panel put there.
+    function inPage({ left, top }) {
+        const page = uiHost.getBoundingClientRect();
+        return { left: left - page.left, top: top - page.top };
+    }
+
+    function placeInPage(panel, top, left) {
+        const at = inPage({ left, top });
+        panel.style.top = `${Math.round(at.top)}px`;
+        panel.style.left = `${Math.round(at.left)}px`;
     }
 

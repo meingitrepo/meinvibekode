@@ -242,7 +242,7 @@
         const rect = editorAnchorRect();
         if (!rect) return;
         editor.side = placePanel(editorEl, rect, true);
-        editor.anchor = { left: rect.left, top: rect.top };
+        editor.anchor = inPage(rect);
         editor.bottom = parseFloat(editorEl.style.top) + editorEl.offsetHeight;   // not the rect: the fade-in shifts it
     }
 
@@ -254,12 +254,13 @@
             if (!waitingRecords(editor.group).length) cancelEditor();
             return;
         }
-        const dx = rect.left - editor.anchor.left;
-        const dy = rect.top - editor.anchor.top;
-        if (!dx && !dy) return;
+        const at = inPage(rect);
+        const dx = at.left - editor.anchor.left;
+        const dy = at.top - editor.anchor.top;
+        if (!dx && !dy) return;   // page scrolling alone moves nothing: the editor is in the page
         editorEl.style.left = `${parseFloat(editorEl.style.left) + dx}px`;
         editorEl.style.top = `${parseFloat(editorEl.style.top) + dy}px`;
-        editor.anchor = { left: rect.left, top: rect.top };
+        editor.anchor = at;
         editor.bottom += dy;
     }
 

@@ -243,8 +243,7 @@
         const onScreen = Math.max(4, Math.min(side === 'below' ? below : above, vh - h - 4));
         const top = Math.max(above, Math.min(onScreen, below));
         const left = Math.max(4, Math.min(rect.left + rect.width / 2 - w / 2, vw - w - 4));
-        toolbarEl.style.top = `${Math.round(top)}px`;
-        toolbarEl.style.left = `${Math.round(left)}px`;
+        placeInPage(toolbarEl, top, left);
         toolbarSide = side;
     }
 

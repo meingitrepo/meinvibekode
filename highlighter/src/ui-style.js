@@ -155,6 +155,8 @@
             box-shadow: var(--shadow8);
             animation: highlighter-enter var(--durationNormal) var(--curveDecelerateMid);
         }
+        /* In the page, not the window: they scroll with their text (see uiHost). */
+        .surface.toolbar, .surface.tip, .surface.card, .surface.editor { position: absolute; }
         @keyframes highlighter-enter { from { opacity: 0; transform: translateY(4px); } }
 
         .icon { display: block; flex: none; fill: currentColor; }

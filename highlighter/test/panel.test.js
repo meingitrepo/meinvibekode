@@ -37,6 +37,14 @@ ${filler(40)}
   let it = await L.items(page);
   L.check('panel opens with 5 on-page + missing section', !(await page.evaluate(() => window.__hl.panelEl.hidden)) && it.filter(i => i.g && !i.missing).length === 5 && it.some(i => i.label && /Not found/.test(i.label)) && it.some(i => i.missing && i.text === 'Gone forever'), it);
   L.check('order and meta', it[0].text === 'beta' && /Yellow highlight · added /.test(it[0].meta) && it[1].text === 'three four' && it[2].note === 'Fox note #animals', it.slice(0, 3));
+  // ticking / clicking a row outlines it on the page
+  await page.evaluate(() => { const q = i => window.__hl.panelList.querySelectorAll('[data-act="check"]')[i]; q(0).click(); q(1).click(); });
+  L.check('ticked rows are selected on the page', await page.evaluate(() => window.__hl.selectedGroups.length === 2 && window.__hl.selectBoxesEl.querySelectorAll(".select-box").length === 2), null);
+  await page.evaluate(() => window.__hl.panelList.querySelectorAll('[data-act="check"]')[0].click());
+  L.check('unticking drops its outline', await page.evaluate(() => window.__hl.selectedGroups.length === 1), null);
+  await page.evaluate(() => window.__hl.panelList.querySelector('[data-act="check"]:checked').click());
+  await page.evaluate(() => window.__hl.panelList.querySelectorAll('[data-act="jump"]')[2].click());
+  L.check('clicked row is selected on the page', await page.evaluate(() => window.__hl.selectedGroups.length === 1), null);
   L.check('missing has date from group id', it.find(i => i.missing).meta.includes('added'), it.find(i => i.missing));
   const count = await page.evaluate(() => window.__hl.panelCount.textContent);
   L.check('count', count === '5', count);

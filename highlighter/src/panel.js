@@ -293,12 +293,18 @@
     panelSelectAll.addEventListener('click', () => {
         const none = panelSelectAll.dataset.all === 'true';
         panelItems.forEach(a => { if (none) panelChecked.delete(a.group); else panelChecked.add(a.group); });
+        selectPanelTicked();
         renderPanel();
     });
     panelEl.addEventListener('mouseenter', () => { if (cardWrapper) hideNoteCard(); });
     panelFilter.addEventListener('input', () => renderPanel());
     // Pressing a button keeps the page's text selection (for Attach to selection).
     panelEl.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
+
+    // The ticked annotations get the same dashed outline on the page as clicking them does.
+    function selectPanelTicked() {
+        setSelectedGroups(panelItems.map(a => a.group).filter(g => panelChecked.has(g) && groupWrappers(g).length));
+    }
 
     panelList.addEventListener('click', e => {
         const button = e.target.closest('[data-act]');
@@ -309,9 +315,11 @@
             case 'jump':
                 syncLocation();
                 jumpToGroup(group);
+                setSelectedGroups([group]);
                 break;
             case 'check':
                 if (button.checked) panelChecked.add(group); else panelChecked.delete(group);
+                selectPanelTicked();
                 renderPanel();
                 break;
             case 'forget': forgetAnnotation(group); break;

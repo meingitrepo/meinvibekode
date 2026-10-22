@@ -195,10 +195,12 @@
         panelSelectAll.replaceChildren(fluentIcon(allTicked ? 'select_all_off_20_regular' : 'select_all_on_20_regular'));
         panelSelectAll.setAttribute('aria-label', allTicked ? 'Select none' : 'Select all');
         panelSelectAll.dataset.label = allTicked ? 'Select none' : 'Select all';
+        panelSelectAll.dataset.shortcut = 'Shift+click inverts';
         panelCopy.dataset.label = ticked ? 'Copy selected as Markdown' : 'Copy as Markdown';
         panelCopy.setAttribute('aria-label', panelCopy.dataset.label);
         hideLabelTip();
-        panelCount.textContent = terms.length ? `${shown.length} of ${present.length}` : String(present.length);
+        const total = terms.length ? `${shown.length} of ${present.length}` : String(present.length);
+        panelCount.textContent = ticked ? `${ticked}/${shown.length}${terms.length ? ` of ${present.length}` : ''}` : total;
         const children = [];
         if (!present.length && !missing.length) {
             children.push(makeEl('div', { class: 'empty', text: 'No annotations on this page yet. Select some text and press Alt+H to highlight it.' }));
@@ -283,9 +285,13 @@
         deleteGroups(groups);
         renderPanel();
     });
-    panelSelectAll.addEventListener('click', () => {
+    // Click: all, or none when all are ticked. Shift+click: invert.
+    panelSelectAll.addEventListener('click', e => {
         const none = panelSelectAll.dataset.all === 'true';
-        panelItems.forEach(a => { if (none) panelChecked.delete(a.group); else panelChecked.add(a.group); });
+        panelItems.forEach(a => {
+            const on = e.shiftKey ? !panelChecked.has(a.group) : !none;
+            if (on) panelChecked.add(a.group); else panelChecked.delete(a.group);
+        });
         renderPanel();
     });
     panelEl.addEventListener('mouseenter', () => { if (cardWrapper) hideNoteCard(); });

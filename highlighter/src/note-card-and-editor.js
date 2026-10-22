@@ -97,7 +97,7 @@
     function hideNoteCard() {
         clearTimeout(cardHideTimer);
         clearTimeout(cardShowTimer);
-        if (!noteCardEl.hidden) hideLabelTip();   // its Edit button's tip goes with it
+        if (!noteCardEl.hidden) hideLabelTip();   // its Pin button's tip goes with it
         releaseFocus(noteCardEl);
         noteCardEl.hidden = true;
         cardWrapper = null;
@@ -120,16 +120,13 @@
         noteCardEl.after(card);
         pinnedCards.set(mark, card);
         mark.setAttribute(NOTE_PIN_ATTR, '');
-        const [pin, edit, del] = card.querySelectorAll('.card-actions button');
-        const act = fn => () => { unpinNoteCard(mark); if (mark.isConnected) fn(mark.getAttribute(GROUP_ATTR)); };
+        const pin = card.querySelector('.card-actions button');
         pin.replaceChildren(fluentIcon('pin_20_filled'));
         pin.dataset.label = 'Unpin note';
         pin.setAttribute('aria-label', 'Unpin note');
         pin.setAttribute('aria-pressed', 'true');
-        [pin, edit, del].forEach(b => addLabelTip(b, b.dataset.label, b.dataset.shortcut, () => true));   // a copy has no listeners
+        addLabelTip(pin, pin.dataset.label, pin.dataset.shortcut, () => true);   // a copy has no listeners
         pin.addEventListener('click', () => unpinNoteCard(mark));
-        edit.addEventListener('click', act(openNoteEditor));
-        del.addEventListener('click', act(deleteGroupNote));
         card.addEventListener('wheel', keepWheel, { passive: false });
         dragByHandle(card, card.querySelector('.card-footer'), () => true);
     }
@@ -216,18 +213,6 @@
     editorEl.addEventListener('wheel', keepWheel, { passive: false });
 
     cardPin.addEventListener('click', pinNoteCard);
-
-    cardEdit.addEventListener('click', () => {
-        const w = cardWrapper;
-        hideNoteCard();
-        if (w && w.isConnected) openNoteEditor(w.getAttribute(GROUP_ATTR));
-    });
-
-    cardDelete.addEventListener('click', () => {
-        const w = cardWrapper;
-        hideNoteCard();
-        if (w && w.isConnected) deleteGroupNote(w.getAttribute(GROUP_ATTR));
-    });
 
     function groupHasNote(group) {
         return groupWrappers(group).some(w => w.getAttribute(NOTE_ATTR));

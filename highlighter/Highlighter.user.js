@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.61
+// @version      8.62
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3905,12 +3905,10 @@
     // The 16px pencil: the 20px one spans its box corner to corner and looks bigger than Save
     // and Delete; Fluent's 16px drawing has the same ink size as Save (14px) at full line weight.
     const cardPin = fluentButton({ icon: fluentIcon('pin_20_regular') });
-    const cardEdit = fluentButton({ icon: fluentIcon('edit_20_regular') });
-    const cardDelete = fluentButton({ icon: fluentIcon('eraser_20_regular') });
     const cardHint = makeEl('span', { class: 'card-hint' });   // the date it was added (see showNoteCard)
     const noteCardEl = makeEl('div', { class: 'surface card', hidden: '' }, [
         cardText,
-        makeEl('div', { class: 'card-footer' }, [cardHint, makeEl('div', { class: 'card-actions' }, [cardPin, cardEdit, cardDelete])])
+        makeEl('div', { class: 'card-footer' }, [cardHint, makeEl('div', { class: 'card-actions' }, [cardPin])])
     ]);
 
     const editorTitle = makeEl('div', { class: 'editor-title', id: 'highlighter-note-title' });
@@ -4165,8 +4163,6 @@
     addLabelTip(noteDelete, 'Delete note', 'Delete', () => false);
     // The note preview sits below its text, so its tip goes below too, off the text.
     addLabelTip(cardPin, 'Pin note', '', () => true);
-    addLabelTip(cardEdit, 'Edit note', 'Alt+N', () => true);
-    addLabelTip(cardDelete, 'Delete note', 'Alt+D', () => true);   // D on the annotation deletes its note first
     addLabelTip(penOff, 'Turn off the pen', 'Esc', () => true);
 
     function toolbarDivider() {
@@ -4543,7 +4539,7 @@
     function hideNoteCard() {
         clearTimeout(cardHideTimer);
         clearTimeout(cardShowTimer);
-        if (!noteCardEl.hidden) hideLabelTip();   // its Edit button's tip goes with it
+        if (!noteCardEl.hidden) hideLabelTip();   // its Pin button's tip goes with it
         releaseFocus(noteCardEl);
         noteCardEl.hidden = true;
         cardWrapper = null;
@@ -4566,16 +4562,13 @@
         noteCardEl.after(card);
         pinnedCards.set(mark, card);
         mark.setAttribute(NOTE_PIN_ATTR, '');
-        const [pin, edit, del] = card.querySelectorAll('.card-actions button');
-        const act = fn => () => { unpinNoteCard(mark); if (mark.isConnected) fn(mark.getAttribute(GROUP_ATTR)); };
+        const pin = card.querySelector('.card-actions button');
         pin.replaceChildren(fluentIcon('pin_20_filled'));
         pin.dataset.label = 'Unpin note';
         pin.setAttribute('aria-label', 'Unpin note');
         pin.setAttribute('aria-pressed', 'true');
-        [pin, edit, del].forEach(b => addLabelTip(b, b.dataset.label, b.dataset.shortcut, () => true));   // a copy has no listeners
+        addLabelTip(pin, pin.dataset.label, pin.dataset.shortcut, () => true);   // a copy has no listeners
         pin.addEventListener('click', () => unpinNoteCard(mark));
-        edit.addEventListener('click', act(openNoteEditor));
-        del.addEventListener('click', act(deleteGroupNote));
         card.addEventListener('wheel', keepWheel, { passive: false });
         dragByHandle(card, card.querySelector('.card-footer'), () => true);
     }
@@ -4662,18 +4655,6 @@
     editorEl.addEventListener('wheel', keepWheel, { passive: false });
 
     cardPin.addEventListener('click', pinNoteCard);
-
-    cardEdit.addEventListener('click', () => {
-        const w = cardWrapper;
-        hideNoteCard();
-        if (w && w.isConnected) openNoteEditor(w.getAttribute(GROUP_ATTR));
-    });
-
-    cardDelete.addEventListener('click', () => {
-        const w = cardWrapper;
-        hideNoteCard();
-        if (w && w.isConnected) deleteGroupNote(w.getAttribute(GROUP_ATTR));
-    });
 
     function groupHasNote(group) {
         return groupWrappers(group).some(w => w.getAttribute(NOTE_ATTR));

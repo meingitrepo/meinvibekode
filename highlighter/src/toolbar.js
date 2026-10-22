@@ -90,8 +90,6 @@
     addLabelTip(noteDelete, 'Delete note', 'Delete', () => false);
     // The note preview sits below its text, so its tip goes below too, off the text.
     addLabelTip(cardPin, 'Pin note', '', () => true);
-    addLabelTip(cardEdit, 'Edit note', 'Alt+N', () => true);
-    addLabelTip(cardDelete, 'Delete note', 'Alt+D', () => true);   // D on the annotation deletes its note first
     addLabelTip(penOff, 'Turn off the pen', 'Esc', () => true);
 
     function toolbarDivider() {

@@ -19,7 +19,6 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   await L.altKey(page, 'd');
   L.check('first Alt+D deletes the note, keeps the annotation', (await get('bravo')) && !(await get('bravo')).n, await get('bravo'));
   L.check('with its toast', (await L.toast(page)) === 'Deleted note · Undo', await L.toast(page));
-  L.check('the note card\'s Delete names Alt+D', await page.evaluate(() => window.__hl.cardDelete.getAttribute('aria-label')) === 'Delete note (Alt+D)', null);
   await L.altKey(page, 'd');
   L.check('second Alt+D erases it', !(await get('bravo')), await L.wr(page));
   // Alt+Delete erases at once, note and all.

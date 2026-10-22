@@ -36,7 +36,7 @@ async function delay(browser) {
   const c = await card(p);
   check('the card shows after resting near the badge', c && c.text === 'Note A', c);
   check('its footer has the date', c && /^Added .*2026/.test(c.hint), c);
-  check('and a Delete button', await p.evaluate(() => !window.__hl.noteCardEl.hidden && window.__hl.cardDelete.getAttribute('aria-label') === 'Delete note (Alt+D)'), null);
+  check('and only a pin button', await p.evaluate(() => !window.__hl.noteCardEl.hidden && window.__hl.noteCardEl.querySelectorAll('.card-actions button').length === 1), null);
   await p.mouse.move(...await L.badge(p, 'gB'));   // straight there: with steps it would cross the long note
   await p.waitForTimeout(80);
   const c2 = await card(p);
@@ -89,9 +89,9 @@ async function pin(browser) {
   await p.keyboard.press('Escape'); await p.waitForTimeout(50);
   ps = await pins();
   check('Esc closes the last one pinned', ps.length === 1 && ps[0].text === 'Note A' && (await fill('gB')) == null, ps);
-  const eb = await rect('.card[data-pinned] .card-actions button:nth-child(2)');
+  const eb = await rect('.card[data-pinned] .card-actions button');
   await p.mouse.move(eb.x + eb.w / 2, eb.y + eb.h / 2); await p.waitForTimeout(400);
-  check('a pinned card\'s buttons have their tooltips', await p.evaluate(() => !window.__hl.labelTipEl.hidden && window.__hl.labelTipEl.textContent.startsWith('Edit note')), await p.evaluate(() => window.__hl.labelTipEl.textContent));
+  check('a pinned card\'s buttons have their tooltips', await p.evaluate(() => !window.__hl.labelTipEl.hidden && window.__hl.labelTipEl.textContent.startsWith('Unpin note')), await p.evaluate(() => window.__hl.labelTipEl.textContent));
   const c0 = (await pins())[0];
   await drag('.card[data-pinned] .card-footer', 60, 80);
   const c1 = (await pins())[0];
@@ -100,10 +100,12 @@ async function pin(browser) {
   check('the pinned card\'s pin button closes it', (await pins()).length === 0 && (await fill('gA')) == null, await pins());
   await hoverPin('gA');
   await drag('.card[data-pinned] .card-footer', 40, 60);
-  await p.evaluate(() => window.__hl.uiRoot.querySelector('.card[data-pinned] .card-actions button:nth-child(2)').click());
+  const an = (await L.rects(p, '#p1', 'alpha note'))[0];
+  await p.mouse.move(an.left + 3, (an.top + an.bottom) / 2); await p.waitForTimeout(200);
+  await L.altKey(p, 'n');
   await L.until(p, () => !window.__hl.editorEl.hidden);
   await p.evaluate(() => Promise.all(window.__hl.editorEl.getAnimations({ subtree: true }).map(a => a.finished.catch(() => {}))));
-  check('Edit on a pinned note opens the editor', (await pins()).length === 0, await pins());
+  check('opening the editor closes the pinned card', (await pins()).length === 0, await pins());
   const e0 = await rect('.editor');
   await drag('.editor-header', -30, 50);
   const e1 = await rect('.editor');
@@ -144,7 +146,9 @@ async function placement(browser) {
 async function del(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store });
   await p.mouse.move(...await L.badge(p, 'gA')); await p.waitForTimeout(500);
-  await p.evaluate(() => window.__hl.cardDelete.click()); await p.waitForTimeout(150);
+  const an = (await L.rects(p, '#p1', 'alpha note'))[0];
+  await p.mouse.move(an.left + 3, (an.top + an.bottom) / 2); await p.waitForTimeout(200);
+  await L.altKey(p, 'd'); await p.waitForTimeout(150);
   let w = (await L.wr(p)).filter(x => x.g === 'gA');
   check('Delete removes the note and keeps the annotation', w.length === 1 && !w[0].n && (await card(p)) === null, w);
   check('with an Undo message', (await L.toast(p)) === 'Deleted note · Undo', await L.toast(p));

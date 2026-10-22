@@ -23,12 +23,10 @@
     // The 16px pencil: the 20px one spans its box corner to corner and looks bigger than Save
     // and Delete; Fluent's 16px drawing has the same ink size as Save (14px) at full line weight.
     const cardPin = fluentButton({ icon: fluentIcon('pin_20_regular') });
-    const cardEdit = fluentButton({ icon: fluentIcon('edit_20_regular') });
-    const cardDelete = fluentButton({ icon: fluentIcon('eraser_20_regular') });
     const cardHint = makeEl('span', { class: 'card-hint' });   // the date it was added (see showNoteCard)
     const noteCardEl = makeEl('div', { class: 'surface card', hidden: '' }, [
         cardText,
-        makeEl('div', { class: 'card-footer' }, [cardHint, makeEl('div', { class: 'card-actions' }, [cardPin, cardEdit, cardDelete])])
+        makeEl('div', { class: 'card-footer' }, [cardHint, makeEl('div', { class: 'card-actions' }, [cardPin])])
     ]);
 
     const editorTitle = makeEl('div', { class: 'editor-title', id: 'highlighter-note-title' });

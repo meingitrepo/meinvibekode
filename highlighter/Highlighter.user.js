@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.53
+// @version      8.54
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3771,7 +3771,7 @@
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
         .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
         .everything-box { position: relative; display: flex; flex-direction: column; width: min(720px, 100%); max-height: 100%; padding: 16px 0 0; }
-        .everything-box .panel-header { margin: -4px 12px 8px 16px; }
+        .everything-box .panel-header { margin: -8px 8px 8px 16px; }
         .everything-box .field { flex: none; margin: 0 16px 8px; }
         .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 12px 12px; overscroll-behavior: contain; }
         .page-head {

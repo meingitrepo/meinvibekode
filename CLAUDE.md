@@ -1,9 +1,30 @@
-# meinvibecode
+# CLAUDE.md (Meinvibecode)
 
-- `highlighter/Highlighter.user.js` is a built file (its @updateURL points at it). Edit `highlighter/src/*.js` instead, then run `node build.js` in `highlighter/` and commit both; `node build.js --check` must say "up to date".
-- The parts in `src/` are joined as-is, in the order of `PARTS` in `build.js`; together they form one IIFE (`config.js` opens it, `start-and-boot.js` closes it), so every part shares one scope.
-- Plans and what has shipped: `highlighter/ROADMAP.md`. Bump `@version` in `src/header.js` for each release.
-- The repo is private, so Violentmonkey updates come from a secret gist: `.github/workflows/gist-mirror.yml` copies the built file there on each push to main that changes it, once the tests pass, and rewrites its @updateURL/@downloadURL to the gist (secrets `GIST_TOKEN`, `GIST_ID`). It also writes the same file as `RoughNotationHighlighter.user.js`, the gist name before 7.45, so copies installed from that URL still update. The header's raw.githubusercontent URLs are only what the repo copy says.
-- Tests: `node highlighter/test/run.js` (Playwright 1.56.1 + Chromium; `run.js word` runs only matching files). Run the files related to a change; the gist-mirror Action runs all of them on every push and PR touching `highlighter/`, and on main publishes to the gist only when they pass. Remove checks for retired behaviour rather than skipping them.
-- To release (after Mhmd's PUSH), run `highlighter/release.sh "Theme" "What's in it" "Commit message"` in ONE Bash call: it commits, fetches, rebases, picks `@version`, adds the ROADMAP row, builds, checks and pushes (retrying on rejection). Don't bump `@version`, edit ROADMAP.md or commit the built file yourself. If it stops on a conflict or on files main also changed, resolve keeping both sides, rerun related tests and run it again. What it does by hand, for reference:
-- Several threads push to main at once. Right before pushing: `git fetch origin main`, rebase onto `origin/main`, then pick `@version` as one above main's (re-check it after the rebase, since another thread may have taken yours), add your ROADMAP row under that number, run `node build.js` and `node build.js --check`, rerun your related tests if the rebase pulled in changes to the same files, and push. If the push is rejected, repeat from the fetch; never force-push main. The Action fails if a push changes the built file without raising `@version`, and only the run for the newest main commit writes the gist.
+Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows only (Chrome/Edge/Firefox). Repo: meingitrepo/meinvibecode (private).
+
+## Working rules
+- Plan first. Ask Mhmd for any missing detail in one short batched question. Never assume anything unnecessary. Do only what is asked, nothing extra.
+- Never push, open PRs or make branches on your own. Finish, commit locally, show the result, ask "Reply PUSH to push it to main." Only the word PUSH authorises a push. Never force-push main.
+- After PUSH run ONE Bash call: `highlighter/release.sh "Theme" "What's in it" "Commit message"`. Never bump @version, edit ROADMAP.md or commit the built file by hand. On conflict: keep BOTH sides, rerun related tests, rerun the script, mention the merged-in change. After pushing just say it's pushed.
+- One task per thread; new thread per follow-up/revert. Open-ended "find problems" asks: one ranking thread that fixes nothing, then one short thread per item Mhmd picks.
+- Economy: batch independent commands in one Bash call, no subagents, at most one review pass, status updates at milestones only.
+
+## Invariants (violating these is expensive)
+- Edit only `highlighter/src/*.js`, then `node build.js` in `highlighter/`; `node build.js --check` must say "up to date". Never edit the built .user.js.
+- Keep storage key `rnh:settings` and page keys unchanged (renaming loses saved data). Never change @namespace.
+- Don't "fix" raw URLs in `src/header.js`: `.github/workflows/gist-mirror.yml` rewrites them for the gist.
+- The mirror fails if the built file changes without a higher @version; release.sh handles it.
+
+## Lessons
+- Read `highlighter/LESSONS.md` in full at thread start (kept short on purpose).
+- At the end of a task, if something non-obvious cost time or tokens, propose ONE line for it to Mhmd. Add it only if he approves, in the same local commit as the task, so it ships with the next PUSH (no separate push). Never add task logs or release notes there.
+
+## Reading
+- Grep src/ first, read only the line ranges needed. Never read the built .user.js or all of src.
+- ROADMAP.md: read only the "Next" section by heading, not line numbers: `awk '/^#+ .*Next/{f=1;next} /^#+ /{f=0} f' highlighter/ROADMAP.md`
+
+## Tests
+- `node highlighter/test/run.js <word>` (Playwright 1.56.1 + Chromium, `NODE_PATH=/opt/node22/lib/node_modules`).
+- Run only suites related to the change; no full run before PUSH.
+- Before asking PUSH on a behaviour change, grep `highlighter/test` for the changed feature/keys/colors; update tests expecting old behaviour; remove checks for retired behaviour rather than skipping.
+- Action tests are paused (test job `if: false`, mirror `needs: test` commented out). Re-enable by undoing both. Reason paused: each push waited about 2 minutes for the test job (CI time, not Claude tokens).

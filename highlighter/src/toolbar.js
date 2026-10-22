@@ -175,9 +175,10 @@
     }
 
     // The toolbar for annotations selected by clicking them (see setSelectedGroups), placed by
-    // their dashed boxes. The style all of them have shows pressed and removes them, as with a
+    // their dashed boxes (a single one; none for several). The style all of them have shows pressed and removes them, as with a
     // selection; the others restyle them, and they stay selected with the toolbar over them.
     function showGroupToolbar(groups) {
+        if (groups.length > 1) return false;   // several selected: outlines only, no toolbar
         const byGroup = wrappersOfGroups(groups);
         const wrappers = groups.flatMap(g => byGroup.get(g) || []);
         if (!wrappers.length || !groupRect(groups)) return false;

@@ -24,21 +24,19 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   await click('echo', 'Shift');
   L.check('shift+click again from the anchor (hotel), just that span', JSON.stringify(await sel()) === '["echo","hotel"]', await sel());
   let t = await L.toolbar(page);
-  L.check('toolbar for several', t && t.buttons.some(x => x.label === 'Erase 2x annotations'), t && t.buttons.map(x => x.label));
+  L.check('no toolbar for several', !t, t && t.buttons.map(x => x.label));
   await page.keyboard.press('Digit1'); await page.waitForTimeout(200);
   let w = await L.wr(page);
   L.check('2 restyles all selected', ['echo', 'hotel'].every(s => w.find(x => x.t === s).k === 'h2') && w.find(x => x.t === 'kilo').k === 'h', w);
   await L.altKey(page, 'KeyZ');
   w = await L.wr(page);
   L.check('one undo restores all styles', ['echo', 'hotel', 'kilo'].every(s => w.find(x => x.t === s).k === 'h'), w);
-  // reselect and delete via toolbar
-  await click('echo'); await click('kilo', 'Control');
-  t = await L.toolbar(page);
-  const i = await page.evaluate(() => Array.from(window.__hl.toolbarEl.querySelectorAll('button')).findIndex(b => b.dataset.label === 'Erase 2x annotations'));
-  L.check('toolbar remove label', i >= 0, t && t.buttons.map(x => x.label));
-  await page.evaluate(i => window.__hl.toolbarEl.querySelectorAll('button')[i].click(), i); await page.waitForTimeout(300);
+  // reselect two, then one: the toolbar is back only for a single selection
+  await click('echo'); await click('kilo', 'Control'); await page.waitForTimeout(350);
+  L.check('no toolbar after Ctrl+click adds a second', !(await L.toolbar(page)) && (await boxes()) === 2, await L.toolbar(page));
+  await L.altKey(page, 'd'); await page.waitForTimeout(300);
   w = await L.wr(page);
-  L.check('toolbar removes both', !w.some(x => x.t === 'echo' || x.t === 'kilo') && w.length === 3, w);
+  L.check('Alt+D removes both', !w.some(x => x.t === 'echo' || x.t === 'kilo') && w.length === 3, w);
   L.check('toast says 2', /^Erased 2x annotations · Undo$/.test(await L.toast(page) || ''), await L.toast(page));
   await L.altKey(page, 'KeyZ');
   L.check('one undo brings both back', (await L.wr(page)).length === 5, await L.wr(page));
@@ -60,8 +58,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   await page.keyboard.press('Escape'); await page.waitForTimeout(300);
   // own style pressed when all same: select bravo+kilo (both yellow), press 1 -> removes both
   await click('bravo'); await click('kilo', 'Control');
-  t = await L.toolbar(page);
-  L.check('common style pressed', t && t.buttons.some(x => x.label === 'Erase yellow highlight' && x.pressed === 'true'), t && t.buttons);
+  L.check('no toolbar for two yellow', !(await L.toolbar(page)), null);
   await page.keyboard.press('Digit3'); await page.waitForTimeout(200);
   L.check('own style removes both', (await L.wr(page)).length === 3, await L.wr(page));
   await L.altKey(page, 'KeyZ');

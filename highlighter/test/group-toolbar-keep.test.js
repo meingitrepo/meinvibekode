@@ -32,13 +32,12 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   // multi: Ctrl+click the second, restyle both by key
   const q = await pt('#q');
   await page.keyboard.down('Control'); await page.mouse.click(q.x, q.y); await page.keyboard.up('Control'); await page.waitForTimeout(350);
-  await watch(); await page.keyboard.press('KeyS'); await page.waitForTimeout(500);
-  hid = await stop();
-  L.check('multi key restyle: toolbar never hidden', hid === 0, hid);
+  await page.keyboard.press('KeyS'); await page.waitForTimeout(500);
   L.check('multi: both still selected', (await page.evaluate(() => window.__hl.selectedGroups.length)) === 2, null);
-  // the style both have removes them: toolbar goes, as it should
+  L.check('multi: no toolbar', !(await L.toolbar(page)), null);
+  // the style both have removes them
   await page.keyboard.press('KeyS'); await page.waitForTimeout(400);
-  L.check('removing hides toolbar', !(await L.toolbar(page)) && (await L.wr(page)).length === 0, null);
+  L.check('removing leaves no toolbar', !(await L.toolbar(page)) && (await L.wr(page)).length === 0, null);
   L.check('no page errors', page.__errors.length === 0, page.__errors);
   await b.close();
   console.log(L.fails ? `${L.fails} FAILED` : 'ALL PASS'); process.exit(L.fails ? 1 : 0);

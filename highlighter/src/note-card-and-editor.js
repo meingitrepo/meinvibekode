@@ -167,7 +167,7 @@
             scheduleNoteCard(mark);
         } else {
             clearTimeout(cardShowTimer);
-            if (cardWrapper && !selectionCard) {   // a card shown with the selection toolbar goes with it
+            if (cardWrapper) {
                 clearTimeout(cardHideTimer);
                 cardHideTimer = setTimeout(hideNoteCard, 250);
             }

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.68
+// @version      8.69
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -4278,13 +4278,6 @@
         });
         toolbarGroups = groups;
         toolbarRange = null;
-        // A single selected annotation with a note shows its note card too, for as long as the toolbar.
-        const noted = groups.length === 1 && !editor && !annotationsHidden && wrappers.find(w => w.hasAttribute(NOTE_ATTR));
-        if (noted && !Array.from(pinnedCards.keys()).some(m => m.getAttribute(GROUP_ATTR) === groups[0])) {
-            const had = !noteCardEl.hidden;
-            showNoteCard(noted);
-            if (!had && !noteCardEl.hidden) selectionCard = true;
-        }
         toolbarAnchor = { getBoundingClientRect: () => groupRect(groups) || { top: 0, left: 0, bottom: 0, right: 0, width: 0, height: 0 } };
         toolbarEl.hidden = false;
         placeToolbar();
@@ -4364,10 +4357,7 @@
     toolbarEl.addEventListener('focusin', stopToolbarIdle);
     toolbarEl.addEventListener('focusout', e => { if (!toolbarEl.contains(e.relatedTarget)) startToolbarIdle(); });
 
-    let selectionCard = false;   // the note card was opened by the selection toolbar (see showGroupToolbar)
-
     function hideToolbar() {
-        if (selectionCard) { selectionCard = false; hideNoteCard(); }
         clearTimeout(toolbarTimer);
         stopToolbarIdle();
         hideLabelTip();
@@ -4618,7 +4608,7 @@
             scheduleNoteCard(mark);
         } else {
             clearTimeout(cardShowTimer);
-            if (cardWrapper && !selectionCard) {   // a card shown with the selection toolbar goes with it
+            if (cardWrapper) {
                 clearTimeout(cardHideTimer);
                 cardHideTimer = setTimeout(hideNoteCard, 250);
             }

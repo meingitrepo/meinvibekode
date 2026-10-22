@@ -71,14 +71,6 @@ ${filler(40)}
   L.check('markdown context for repeated', /text=Here%2E?|text=[^)]*Repeated%20words[^)]*/.test(md) && md.includes('-,Repeated%20words') === false, md);
   const tst = await L.toast(page);
   L.check('copy toast', tst === 'Copied 5x annotations', tst);
-  // edit note from panel
-  await page.evaluate(() => { const el = Array.from(window.__hl.panelList.querySelectorAll('[data-group]')).find(e => e.querySelector('.item-text').textContent === 'three four'); el.querySelector('[data-act="note"]').click(); });
-  await page.waitForTimeout(200);
-  const ed = await page.evaluate(() => !!window.__hl.editor && !window.__hl.editorEl.hidden);
-  L.check('edit opens editor', ed);
-  await page.keyboard.type('Numbers'); await page.keyboard.press('Enter'); await page.waitForTimeout(200);
-  it = await L.items(page);
-  L.check('panel updates note', it.find(i => i.text === 'three four').note === 'Numbers', it);
   // delete from panel
   await page.evaluate(() => { const el = Array.from(window.__hl.panelList.querySelectorAll('[data-group]')).find(e => e.querySelector('.item-text').textContent === 'three four'); el.querySelector('[data-act="delete"]').click(); });
   await L.until(page, () => !Array.from(window.__hl.panelList.querySelectorAll('.item-text')).some(e => e.textContent === 'three four'));

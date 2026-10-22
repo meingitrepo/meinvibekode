@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.52
+// @version      8.53
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -5869,7 +5869,6 @@
             actions.append(attach, panelButton('delete_20_regular', 'Forget annotation', 'forget'));
         } else {
             actions.append(
-                panelButton('note_edit_20_regular', a.note ? 'Edit note' : 'Add note', 'note'),
                 panelButton('eraser_20_regular', 'Erase annotation', 'delete'));
         }
         const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, [main, actions]);
@@ -5897,14 +5896,6 @@
                 syncLocation();
                 jumpToGroup(group);
                 break;
-            case 'note': {
-                syncLocation();
-                const first = groupWrappers(group)[0];
-                if (!first) return;
-                if (!isInView(first)) first.scrollIntoView({ block: 'center', inline: 'nearest' });
-                openNoteEditor(group, { returnFocus: button });
-                break;
-            }
             case 'delete': deleteAnnotation(group); break;
             case 'forget': forgetAnnotation(group); break;
             case 'attach': attachToSelection(group); break;

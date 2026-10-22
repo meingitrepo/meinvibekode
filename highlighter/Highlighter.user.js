@@ -3573,6 +3573,7 @@
         --colorStrokeFocus1: #ffffff;
         --colorStrokeFocus2: #000000;
         --colorTransparentStroke: transparent;
+        --colorBackgroundOverlay: rgba(0, 0, 0, 0.4);
         --shadow8: 0 0 2px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.14);
         --borderRadiusMedium: 4px;
         --borderRadiusXLarge: 8px;
@@ -3610,6 +3611,7 @@
         --colorBrandForegroundLinkPressed: #2886de;
         --colorStrokeFocus1: #000000;
         --colorStrokeFocus2: #ffffff;
+        --colorBackgroundOverlay: rgba(0, 0, 0, 0.5);
         --shadow8: 0 0 2px rgba(0, 0, 0, 0.24), 0 4px 8px rgba(0, 0, 0, 0.28);
         --toolbarDivider: #666666;
         --colorScheme: dark;
@@ -3772,7 +3774,7 @@
         .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 12px; border-radius: 999px; }
         .pen-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
-        .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: rgba(0, 0, 0, 0.4); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
+        .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
         .everything-box { position: relative; display: flex; flex-direction: column; width: min(720px, 100%); max-height: 100%; padding: 16px 0 0; }
         .everything-box .panel-header { margin: -4px 12px 8px 16px; }
         .everything-box .field { flex: none; margin: 0 16px 8px; }

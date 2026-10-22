@@ -38,11 +38,11 @@ async function editor(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML });
   await L.selStr(p, '#p1', 'Plain words'); await L.altKey(p, 'n'); await p.waitForTimeout(200);
   const seq = [await focused(p)];
-  for (let i = 0; i < 5; i++) { await p.keyboard.press('Tab'); seq.push(await focused(p)); }
-  check('Tab goes round the editor and never leaves it', seq[0] === 'input' && !seq.includes('after') && !seq.includes(null) && seq[4] === 'input', seq);
+  for (let i = 0; i < 4; i++) { await p.keyboard.press('Tab'); seq.push(await focused(p)); }
+  check('Tab goes round the editor and never leaves it', seq[0] === 'input' && !seq.includes('after') && !seq.includes(null) && seq[3] === 'input', seq);   // Save is disabled with nothing to save, so it is skipped
   await p.keyboard.press('Shift+Tab');
   const back = await focused(p);
-  check('Shift+Tab from the first button goes back round to the note', seq[5] !== 'input' && back === 'input', { at: seq[5], back });
+  check('Shift+Tab from the first button goes back round to the note', seq[4] !== 'input' && back === 'input', { at: seq[4], back });
   check('the editor is still open', await p.evaluate(() => !!window.__hl.editor), null);
   await ctx.close();
 }

@@ -313,14 +313,9 @@
         return clipNote(noteInput.value.trim());
     }
 
-    // Save turns red while the note differs from what is saved.
+    // Save is disabled while the note is the same as what is saved.
     function updateSaveState() {
-        const dirty = !!editor && noteDraft() !== editor.original;
-        if (dirty === noteSave.classList.contains('dirty')) return;
-        noteSave.classList.toggle('dirty', dirty);
-        noteSave.dataset.label = dirty ? 'Save note (unsaved changes)' : 'Save note';
-        noteSave.setAttribute('aria-label', `${noteSave.dataset.label} (Enter)`);
-        hideLabelTip();   // a tip already showing has the old label
+        noteSave.disabled = !editor || noteDraft() === editor.original;
     }
 
     // A drag of the resize handle starts on the textarea and changes its inline size.

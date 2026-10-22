@@ -76,6 +76,7 @@
     const LIGHT_TOKENS = `
         --colorNeutralForeground1: #242424;
         --colorNeutralForeground2: #424242;
+        --colorNeutralForegroundDisabled: #bdbdbd;
         --colorNeutralForeground2Hover: #242424;
         --colorNeutralForeground2BrandHover: #0f6cbd;
         --colorNeutralForeground2BrandPressed: #115ea3;
@@ -115,6 +116,7 @@
     const DARK_TOKENS = `
         --colorNeutralForeground1: #ffffff;
         --colorNeutralForeground2: #d6d6d6;
+        --colorNeutralForegroundDisabled: #5c5c5c;
         --colorNeutralForeground2Hover: #ffffff;
         --colorNeutralForeground2BrandHover: #479ef5;
         --colorNeutralForeground2BrandPressed: #2886de;
@@ -193,8 +195,9 @@
         .btn-subtle:hover .icon { color: var(--colorNeutralForeground2BrandHover); }
         .btn-subtle:active .icon { color: var(--colorNeutralForeground2BrandPressed); }
         .btn:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 0; box-shadow: inset 0 0 0 1px var(--colorStrokeFocus1); }
-        /* The note editor's Save while the note has unsaved changes. */
-        .btn-subtle.dirty:not(:active) .icon { color: var(--colorPaletteRedForeground1); }
+        /* Fluent's disabled subtle button: the note editor's Save while there is nothing to save. */
+        .btn-subtle:disabled, .btn-subtle:disabled:hover, .btn-subtle:disabled:active { background: transparent; color: var(--colorNeutralForegroundDisabled); cursor: not-allowed; }
+        .btn-subtle:disabled .icon, .btn-subtle:disabled:hover .icon, .btn-subtle:disabled:active .icon { color: var(--colorNeutralForegroundDisabled); }
 
         /* Annotations selected by clicking them: a dashed outline around their lines' shape,
            black, or white on a dark page. */

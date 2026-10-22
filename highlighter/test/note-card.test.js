@@ -120,7 +120,7 @@ async function pin(browser) {
   const bn = (await L.rects(p, '#p3', 'beta note'))[0];
   await p.mouse.click(bn.left + 3, (bn.top + bn.bottom) / 2); await p.waitForTimeout(100);
   check('clicking another annotation does not select it while editing', await outlined() && (await p.evaluate(() => window.__hl.selectBoxesEl.querySelectorAll('.select-box').length)) === 1, await p.evaluate(() => window.__hl.selectedGroups));
-  check('the save icon is red with unsaved changes', await p.evaluate(() => getComputedStyle(window.__hl.uiRoot.querySelector('.editor .btn .icon')).color === 'rgb(177, 14, 28)'), null);
+  check('Save is enabled with unsaved changes', await p.evaluate(() => !window.__hl.uiRoot.querySelector('.editor .btn').disabled), null);
   await p.keyboard.press('Escape'); await p.waitForTimeout(50);
   check('Esc still discards it', await p.evaluate(() => window.__hl.editorEl.hidden), null);
   check('no page errors', p.__errors.length === 0, p.__errors);

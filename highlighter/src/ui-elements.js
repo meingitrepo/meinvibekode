@@ -24,7 +24,7 @@
     // and Delete; Fluent's 16px drawing has the same ink size as Save (14px) at full line weight.
     const cardPin = fluentButton({ icon: fluentIcon('pin_20_regular') });
     const cardEdit = fluentButton({ icon: fluentIcon('edit_20_regular') });
-    const cardDelete = fluentButton({ icon: fluentIcon('delete_20_regular') });
+    const cardDelete = fluentButton({ icon: fluentIcon('eraser_20_regular') });
     const cardHint = makeEl('span', { class: 'card-hint' });   // the date it was added (see showNoteCard)
     const noteCardEl = makeEl('div', { class: 'surface card', hidden: '' }, [
         cardText,

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.56
+// @version      8.57
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3547,6 +3547,7 @@
     const LIGHT_TOKENS = `
         --colorNeutralForeground1: #242424;
         --colorNeutralForeground2: #424242;
+        --colorNeutralForegroundDisabled: #bdbdbd;
         --colorNeutralForeground2Hover: #242424;
         --colorNeutralForeground2BrandHover: #0f6cbd;
         --colorNeutralForeground2BrandPressed: #115ea3;
@@ -3586,6 +3587,7 @@
     const DARK_TOKENS = `
         --colorNeutralForeground1: #ffffff;
         --colorNeutralForeground2: #d6d6d6;
+        --colorNeutralForegroundDisabled: #5c5c5c;
         --colorNeutralForeground2Hover: #ffffff;
         --colorNeutralForeground2BrandHover: #479ef5;
         --colorNeutralForeground2BrandPressed: #2886de;
@@ -3664,8 +3666,9 @@
         .btn-subtle:hover .icon { color: var(--colorNeutralForeground2BrandHover); }
         .btn-subtle:active .icon { color: var(--colorNeutralForeground2BrandPressed); }
         .btn:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 0; box-shadow: inset 0 0 0 1px var(--colorStrokeFocus1); }
-        /* The note editor's Save while the note has unsaved changes. */
-        .btn-subtle.dirty:not(:active) .icon { color: var(--colorPaletteRedForeground1); }
+        /* Fluent's disabled subtle button: the note editor's Save while there is nothing to save. */
+        .btn-subtle:disabled, .btn-subtle:disabled:hover, .btn-subtle:disabled:active { background: transparent; color: var(--colorNeutralForegroundDisabled); cursor: not-allowed; }
+        .btn-subtle:disabled .icon, .btn-subtle:disabled:hover .icon, .btn-subtle:disabled:active .icon { color: var(--colorNeutralForegroundDisabled); }
 
         /* Annotations selected by clicking them: a dashed outline around their lines' shape,
            black, or white on a dark page. */
@@ -3871,7 +3874,7 @@
     // and Delete; Fluent's 16px drawing has the same ink size as Save (14px) at full line weight.
     const cardPin = fluentButton({ icon: fluentIcon('pin_20_regular') });
     const cardEdit = fluentButton({ icon: fluentIcon('edit_20_regular') });
-    const cardDelete = fluentButton({ icon: fluentIcon('delete_20_regular') });
+    const cardDelete = fluentButton({ icon: fluentIcon('eraser_20_regular') });
     const cardHint = makeEl('span', { class: 'card-hint' });   // the date it was added (see showNoteCard)
     const noteCardEl = makeEl('div', { class: 'surface card', hidden: '' }, [
         cardText,
@@ -4715,14 +4718,9 @@
         return clipNote(noteInput.value.trim());
     }
 
-    // Save turns red while the note differs from what is saved.
+    // Save is disabled while the note is the same as what is saved.
     function updateSaveState() {
-        const dirty = !!editor && noteDraft() !== editor.original;
-        if (dirty === noteSave.classList.contains('dirty')) return;
-        noteSave.classList.toggle('dirty', dirty);
-        noteSave.dataset.label = dirty ? 'Save note (unsaved changes)' : 'Save note';
-        noteSave.setAttribute('aria-label', `${noteSave.dataset.label} (Enter)`);
-        hideLabelTip();   // a tip already showing has the old label
+        noteSave.disabled = !editor || noteDraft() === editor.original;
     }
 
     // A drag of the resize handle starts on the textarea and changes its inline size.

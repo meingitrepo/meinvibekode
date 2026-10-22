@@ -1,5 +1,5 @@
-    // A Fluent Button. appearance: 'subtle' and size: 'small' are the only ones the UI uses.
-    function fluentButton({ text = '', icon = null, appearance = 'subtle', size = 'small', label = '' }) {
+    // A Fluent Button. appearance: 'subtle' and size: 'medium' are the only ones the UI uses.
+    function fluentButton({ text = '', icon = null, appearance = 'subtle', size = 'medium', label = '' }) {
         const b = makeEl('button', { type: 'button', class: `btn btn-${appearance} btn-${size}${text ? '' : ' btn-icon'}` });
         if (icon) b.appendChild(icon);
         if (text) b.appendChild(makeEl('span', { text }));

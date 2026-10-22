@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.50
+// @version      8.51
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3645,20 +3645,19 @@
         .icon-20 { width: 20px; height: 20px; }
         .icon-16 { width: 16px; height: 16px; }
 
-        /* Button: Fluent's subtle appearance, size small (24px), the same in the toolbar and the
-           panels, so every icon has the same padding (2px), hover square and spacing (icons 6px
-           apart). The user prefers this tighter spacing to the 32px medium size. */
+        /* Button: Fluent's subtle appearance, size medium (32px), the same in the toolbar and the
+           panels, so every icon has the same padding (6px), hover square and spacing. */
         .btn {
             box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
-            gap: 4px; min-width: 64px; height: 24px; margin: 0; padding: 0 8px;
+            gap: 6px; min-width: 64px; height: 32px; margin: 0; padding: 0 12px;
             border: 1px solid transparent; border-radius: var(--borderRadiusMedium);
-            font-family: inherit; font-size: 12px; line-height: 16px; font-weight: 400;
+            font-family: inherit; font-size: 14px; line-height: 20px; font-weight: 400;
             cursor: pointer; outline: none; user-select: none; -webkit-tap-highlight-color: transparent;
             transition: background-color var(--durationFaster) var(--curveEasyEase),
                         border-color var(--durationFaster) var(--curveEasyEase),
                         color var(--durationFaster) var(--curveEasyEase);
         }
-        .btn-icon { min-width: 0; width: 24px; padding: 0; }
+        .btn-icon { min-width: 0; width: 32px; padding: 0; }
         .btn-subtle { background: transparent; color: var(--colorNeutralForeground2); }
         /* A style the selected text already has: Fluent's subtle ToggleButton, checked. */
         .btn-subtle[aria-pressed="true"] { background: var(--colorSubtleBackgroundSelected); color: var(--colorNeutralForeground2Hover); }
@@ -3681,9 +3680,8 @@
         /* Toolbar */
         /* Matched to Edge's PDF selection toolbar: 8px corners, a lighter shadow, and longer,
            darker separators. */
-        /* 8px padding: buttons 8px and icons 10px from the edges, as in the panels; with 24px
-           buttons that keeps the toolbar Edge's height (about 42px). */
-        .toolbar { display: flex; align-items: center; gap: 2px; padding: 8px; }
+        /* 4px padding: with 32px buttons the toolbar is 40px high, close to Edge's (about 42px). */
+        .toolbar { display: flex; align-items: center; gap: 2px; padding: 4px; }
         /* Idle fade-out (see TOOLBAR_IDLE_MS). Pointing at the toolbar brings it back at once. */
         .toolbar.fading { opacity: 0; transition: opacity var(--durationSlow) var(--curveEasyEase); }
         .divider { flex: none; width: 1px; height: 24px; margin: 0 4px; background: var(--toolbarDivider); }
@@ -3695,10 +3693,9 @@
         .tip { white-space: nowrap; max-width: calc(100vw - 8px); overflow: hidden; text-overflow: ellipsis; padding: 4px 11px 6px; font-size: 12px; line-height: 16px; border-radius: var(--borderRadiusMedium); pointer-events: none; }
         .tip .kbd { margin-left: 8px; color: var(--colorNeutralForeground3); }
 
-        /* Panels (note preview, note editor, toast) all have 12px padding. Their 24px icon buttons
-           are pulled out by 4px with negative margins, so, as on the toolbar (8px padding), every
-           button sits 8px from the panel's edges, every icon 10px, and neighbouring buttons are
-           2px apart. */
+        /* Panels (note preview, note editor, toast) all have 12px padding. Their 32px icon buttons
+           are pulled out by 4px with negative margins, so every button sits 8px from the panel's
+           edges, every icon 14px, and neighbouring buttons are 2px apart. */
 
         /* Note preview */
         .card { width: max-content; min-width: 160px; max-width: min(320px, calc(100vw - 16px)); padding: 12px; }
@@ -3707,7 +3704,7 @@
         .card-text a:hover { color: var(--colorBrandForegroundLinkHover); }
         .card-text a:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
         .card[data-pinned] .card-footer { cursor: move; user-select: none; }
-        .card-footer { display: flex; align-items: center; gap: 12px; margin: 8px -4px -4px 0; }
+        .card-footer { display: flex; align-items: center; gap: 12px; margin: 4px -4px -8px 0; }
         .card-hint { flex: 1; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
         .card-actions { display: flex; gap: 4px; }
 
@@ -3715,7 +3712,7 @@
         /* As wide as its note box, which starts 292px wide (a 320px panel, the note preview at its
            widest) and can be dragged wider, never narrower. */
         .editor { max-width: calc(100vw - 16px); padding: 12px; }
-        .editor-header { display: flex; align-items: center; justify-content: space-between; min-height: 24px; margin: -4px -4px 8px 0; }
+        .editor-header { display: flex; align-items: center; justify-content: space-between; min-height: 32px; margin: -8px -4px 4px 0; }
         /* Save and Delete, icon only, at the top right. */
         .editor-actions { display: flex; align-items: center; gap: 2px; }
         .editor-title { font-weight: 600; }
@@ -3798,7 +3795,7 @@
             top: 8px; left: auto; right: 8px; display: flex; flex-direction: column;
             width: min(340px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
         }
-        .panel-header { display: flex; align-items: center; gap: 8px; min-height: 24px; margin: -4px 8px 8px 12px; }
+        .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }
         .panel-title { font-weight: 600; }
         .panel-count { flex: 1; color: var(--colorNeutralForeground3); }
         .panel-actions { display: flex; align-items: center; gap: 2px; }
@@ -3851,8 +3848,8 @@
         }
     `;
 
-    // A Fluent Button. appearance: 'subtle' and size: 'small' are the only ones the UI uses.
-    function fluentButton({ text = '', icon = null, appearance = 'subtle', size = 'small', label = '' }) {
+    // A Fluent Button. appearance: 'subtle' and size: 'medium' are the only ones the UI uses.
+    function fluentButton({ text = '', icon = null, appearance = 'subtle', size = 'medium', label = '' }) {
         const b = makeEl('button', { type: 'button', class: `btn btn-${appearance} btn-${size}${text ? '' : ' btn-icon'}` });
         if (icon) b.appendChild(icon);
         if (text) b.appendChild(makeEl('span', { text }));

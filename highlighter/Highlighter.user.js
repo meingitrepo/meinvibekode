@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.48
+// @version      8.49
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
 // @match        file:///*
 // @noframes
-// @downloadURL  https://raw.githubusercontent.com/meingitrepo/meinvibecode/main/highlighter/Highlighter.user.js
-// @updateURL    https://raw.githubusercontent.com/meingitrepo/meinvibecode/main/highlighter/Highlighter.user.js
+// @downloadURL  https://raw.githubusercontent.com/meingitrepo/meinvibekode/main/highlighter/Highlighter.user.js
+// @updateURL    https://raw.githubusercontent.com/meingitrepo/meinvibekode/main/highlighter/Highlighter.user.js
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_listValues

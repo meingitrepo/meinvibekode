@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.60
+// @version      8.61
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -5149,7 +5149,8 @@
 
     // --- Selecting annotations by clicking them ---
 
-    // A plain click on an annotation (not a drag, not on a link or a control inside it) selects
+    // A plain click on an annotation (not a drag, not on a link or a control inside it; the pen
+    // being on makes no difference, as a click selects no text for it to draw on) selects
     // it and draws a dashed outline around its lines; Ctrl+click adds one to the
     // selection or takes it out, and Shift+click selects the annotations from the one selected
     // last to the one clicked, in reading order, and no others. While annotations are selected
@@ -5399,7 +5400,7 @@
     function clickedGroup(e) {
         const target = e.target instanceof Element ? e.target : null;
         const w = target && target.closest(WRAPPER_SELECTOR);
-        if (!w || e.button !== 0 || e.altKey || annotationsHidden || penKey || target.closest(CLICK_THROUGH_SELECTOR)) return null;
+        if (!w || e.button !== 0 || e.altKey || annotationsHidden || target.closest(CLICK_THROUGH_SELECTOR)) return null;
         return w.getAttribute(GROUP_ATTR);
     }
 

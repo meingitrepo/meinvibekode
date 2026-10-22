@@ -470,7 +470,7 @@
 
     // Only Save saves, but text closed without saving can be brought back from the toast. For a
     // new note, `records` is the highlight that was made for it, which comes back too.
-    function offerDraft({ group, draft, records }, message = 'Note not saved', icon = 'note_edit_20_regular') {
+    function offerDraft({ group, draft, records }, message = 'Note not saved', icon = 'edit_20_regular') {
         showToast(message, {
             icon,
             action: { label: 'Restore', keep: true, run: () => restoreDraft(group, draft, records) }

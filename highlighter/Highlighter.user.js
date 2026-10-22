@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.70
+// @version      8.71
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3588,6 +3588,7 @@
         --durationSlow: 300ms;
         --curveEasyEase: cubic-bezier(0.33, 0, 0.67, 1);
         --curveDecelerateMid: cubic-bezier(0.1, 0.9, 0.2, 1);
+        --curveAccelerateMid: cubic-bezier(0.9, 0.1, 1, 0.2);
         --colorScheme: light;
     `;
     const DARK_TOKENS = `
@@ -3629,7 +3630,11 @@
         :host([data-theme="dark"]) { ${DARK_TOKENS} }
         .panel[data-theme="light"], .toast[data-theme="light"], .pen[data-theme="light"], .everything[data-theme="light"] { ${LIGHT_TOKENS} }
         .panel[data-theme="dark"], .toast[data-theme="dark"], .pen[data-theme="dark"], .everything[data-theme="dark"] { ${DARK_TOKENS} }
-        [hidden] { display: none !important; }
+        [hidden]:not(.surface) { display: none !important; }
+        /* Surfaces fade out rather than vanish: display flips last (allow-discrete), so the hidden attribute
+           still takes effect at once for scripts. */
+        .surface { transition: opacity var(--durationNormal) var(--curveAccelerateMid), transform var(--durationNormal) var(--curveAccelerateMid), display var(--durationNormal) allow-discrete; }
+        .surface[hidden] { display: none; opacity: 0; transform: translateY(4px); pointer-events: none; }
         /* Scrollbars (note box, card text, lists) follow our theme, not the page's. Set here, not on
            :host: the host's inline all: initial !important would reset it. */
         .surface, .everything { color-scheme: var(--colorScheme); }
@@ -3868,7 +3873,7 @@
         .missing .item-actions { opacity: 1; padding: 0 4px 6px 6px; }
 
         @media (prefers-reduced-motion: reduce) {
-            .surface { animation: none; }
+            .surface { animation: none; transition: none; }
             .btn, .field::after, .toolbar.fading { transition: none; }
         }
         @media (forced-colors: active) {

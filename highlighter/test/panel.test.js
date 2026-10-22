@@ -72,7 +72,12 @@ ${filler(40)}
   const tst = await L.toast(page);
   L.check('copy toast', tst === 'Copied 5x annotations', tst);
   // delete from panel
-  await page.evaluate(() => { const el = Array.from(window.__hl.panelList.querySelectorAll('[data-group]')).find(e => e.querySelector('.item-text').textContent === 'three four'); el.querySelector('[data-act="delete"]').click(); });
+  const ui = await page.evaluate(() => { const h = window.__hl; return { eraseOff: h.panelErase.disabled, none: !h.panelSelectAll.checked && !h.panelSelectAll.indeterminate }; });
+  L.check('eraser disabled with nothing selected', ui.eraseOff && ui.none, ui);
+  await page.evaluate(() => { const el = Array.from(window.__hl.panelList.querySelectorAll('[data-group]')).find(e => e.querySelector('.item-text').textContent === 'three four'); el.querySelector('[data-act="check"]').click(); });
+  const one = await page.evaluate(() => { const h = window.__hl; return { eraseOff: h.panelErase.disabled, mixed: h.panelSelectAll.indeterminate }; });
+  L.check('one ticked: eraser on, select-all mixed', !one.eraseOff && one.mixed, one);
+  await page.evaluate(() => window.__hl.panelErase.click());
   await L.until(page, () => !Array.from(window.__hl.panelList.querySelectorAll('.item-text')).some(e => e.textContent === 'three four'));
   it = await L.items(page);
   L.check('delete', !it.some(i => i.text === 'three four') && (await L.toast(page)) === 'Erased 1x annotation · Undo', [it.length, await L.toast(page)]);
@@ -82,6 +87,17 @@ ${filler(40)}
   await L.until(page, () => Array.from(window.__hl.panelList.querySelectorAll('.item-text')).some(e => e.textContent === 'three four'));
   it = await L.items(page);
   L.check('undo brings it back to panel', it.some(i => i.text === 'three four'), it.length);
+  // select all, then erase several in one step
+  await page.evaluate(() => window.__hl.panelSelectAll.click());
+  const all = await page.evaluate(() => { const h = window.__hl; const n = h.panelList.querySelectorAll('.item:not(.missing) .check').length; return { n, ticked: h.panelList.querySelectorAll('.item .check:checked').length, all: h.panelSelectAll.checked }; });
+  L.check('select all ticks every row', all.n > 1 && all.ticked === all.n && all.all, all);
+  await page.evaluate(() => window.__hl.panelErase.click());
+  await L.until(page, () => !window.__hl.panelList.querySelector('.item:not(.missing)'));
+  L.check('erase all selected is one undo step', new RegExp(`^Erased ${all.n}x annotations · Undo$`).test(await L.toast(page) || ''), await L.toast(page));
+  await page.evaluate(() => window.__hl.toastAction.click());
+  await L.until(page, () => window.__hl.panelList.querySelectorAll('.item:not(.missing)').length > 1);
+  const restored = await page.evaluate(() => ({ off: window.__hl.panelErase.disabled, ticked: window.__hl.panelList.querySelectorAll('.item .check:checked').length }));
+  L.check('undo restores them, unticked', restored.off && restored.ticked === 0, restored);
   // attach missing to selection
   await L.selStr(page, '#p5', 'never shows');
   await page.evaluate(() => { const el = window.__hl.panelList.querySelector('.missing'); el.querySelector('[data-act="attach"]').click(); });

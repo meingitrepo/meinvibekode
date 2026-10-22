@@ -92,6 +92,9 @@
         --colorNeutralStrokeAccessible: #616161;
         --colorNeutralStrokeAccessibleHover: #575757;
         --colorCompoundBrandStroke: #0f6cbd;
+        --colorCompoundBrandBackground: #0f6cbd;
+        --colorCompoundBrandBackgroundHover: #0c3b5e;
+        --colorNeutralForegroundOnBrand: #ffffff;
         --colorBrandForeground1: #0f6cbd;
         --colorPaletteRedForeground1: #b10e1c;
         --colorBrandForegroundLink: #115ea3;
@@ -132,6 +135,9 @@
         --colorNeutralStrokeAccessible: #adadad;
         --colorNeutralStrokeAccessibleHover: #bdbdbd;
         --colorCompoundBrandStroke: #479ef5;
+        --colorCompoundBrandBackground: #479ef5;
+        --colorCompoundBrandBackgroundHover: #62abf5;
+        --colorNeutralForegroundOnBrand: #ffffff;
         --colorBrandForeground1: #479ef5;
         --colorPaletteRedForeground1: #dc626d;
         --colorBrandForegroundLink: #479ef5;
@@ -339,6 +345,28 @@
         .panel-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .section-title { margin: 8px 4px 4px; font-size: 12px; line-height: 16px; font-weight: 600; color: var(--colorNeutralForeground3); }
         .empty { margin: 4px 4px 8px; color: var(--colorNeutralForeground3); }
+        /* Fluent's checkbox: a 16px square, the brand color with a check mark (or, for some of
+           the rows, a smaller square) when on. */
+        .check {
+            appearance: none; flex: none; position: relative; width: 16px; height: 16px; margin: 0; cursor: pointer;
+            border: 1px solid var(--colorNeutralStrokeAccessible); border-radius: var(--borderRadiusSmall); background: transparent;
+            box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent;
+        }
+        .check:hover { border-color: var(--colorNeutralStrokeAccessibleHover); }
+        .check:checked { border-color: var(--colorCompoundBrandBackground); background: var(--colorCompoundBrandBackground); }
+        .check:checked:hover { border-color: var(--colorCompoundBrandBackgroundHover); background: var(--colorCompoundBrandBackgroundHover); }
+        .check:checked::after {
+            content: ""; position: absolute; inset: 0; background: var(--colorNeutralForegroundOnBrand);
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M9.76 3.2c.3.29.32.76.04 1.06l-4.25 4.5a.75.75 0 0 1-1.08.02L2.22 6.53a.75.75 0 0 1 1.06-1.06l1.7 1.7L8.7 3.24a.75.75 0 0 1 1.06-.04'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M9.76 3.2c.3.29.32.76.04 1.06l-4.25 4.5a.75.75 0 0 1-1.08.02L2.22 6.53a.75.75 0 0 1 1.06-1.06l1.7 1.7L8.7 3.24a.75.75 0 0 1 1.06-.04'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
+        }
+        .check:indeterminate { border-color: var(--colorCompoundBrandBackground); }
+        .check:indeterminate::after { content: ""; position: absolute; inset: 3px; border-radius: 1px; background: var(--colorCompoundBrandBackground); }
+        .check:indeterminate:hover { border-color: var(--colorCompoundBrandBackgroundHover); }
+        .check:disabled { cursor: not-allowed; border-color: var(--colorNeutralForegroundDisabled); }
+        .check:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 1px; }
+        .panel-header .check { margin-right: 0; }
+        .item .check { margin: 10px 0 0 4px; }
         .item { display: flex; align-items: flex-start; border-radius: var(--borderRadiusMedium); }
         .item:hover { background: var(--colorSubtleBackgroundHover); }
         /* The annotation itself: a button that scrolls to it. The bar at its left is its color. */

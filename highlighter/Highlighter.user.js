@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.57
+// @version      8.58
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3563,6 +3563,9 @@
         --colorNeutralStrokeAccessible: #616161;
         --colorNeutralStrokeAccessibleHover: #575757;
         --colorCompoundBrandStroke: #0f6cbd;
+        --colorCompoundBrandBackground: #0f6cbd;
+        --colorCompoundBrandBackgroundHover: #0c3b5e;
+        --colorNeutralForegroundOnBrand: #ffffff;
         --colorBrandForeground1: #0f6cbd;
         --colorPaletteRedForeground1: #b10e1c;
         --colorBrandForegroundLink: #115ea3;
@@ -3603,6 +3606,9 @@
         --colorNeutralStrokeAccessible: #adadad;
         --colorNeutralStrokeAccessibleHover: #bdbdbd;
         --colorCompoundBrandStroke: #479ef5;
+        --colorCompoundBrandBackground: #479ef5;
+        --colorCompoundBrandBackgroundHover: #62abf5;
+        --colorNeutralForegroundOnBrand: #ffffff;
         --colorBrandForeground1: #479ef5;
         --colorPaletteRedForeground1: #dc626d;
         --colorBrandForegroundLink: #479ef5;
@@ -3810,6 +3816,28 @@
         .panel-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .section-title { margin: 8px 4px 4px; font-size: 12px; line-height: 16px; font-weight: 600; color: var(--colorNeutralForeground3); }
         .empty { margin: 4px 4px 8px; color: var(--colorNeutralForeground3); }
+        /* Fluent's checkbox: a 16px square, the brand color with a check mark (or, for some of
+           the rows, a smaller square) when on. */
+        .check {
+            appearance: none; flex: none; position: relative; width: 16px; height: 16px; margin: 0; cursor: pointer;
+            border: 1px solid var(--colorNeutralStrokeAccessible); border-radius: var(--borderRadiusSmall); background: transparent;
+            box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent;
+        }
+        .check:hover { border-color: var(--colorNeutralStrokeAccessibleHover); }
+        .check:checked { border-color: var(--colorCompoundBrandBackground); background: var(--colorCompoundBrandBackground); }
+        .check:checked:hover { border-color: var(--colorCompoundBrandBackgroundHover); background: var(--colorCompoundBrandBackgroundHover); }
+        .check:checked::after {
+            content: ""; position: absolute; inset: 0; background: var(--colorNeutralForegroundOnBrand);
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M9.76 3.2c.3.29.32.76.04 1.06l-4.25 4.5a.75.75 0 0 1-1.08.02L2.22 6.53a.75.75 0 0 1 1.06-1.06l1.7 1.7L8.7 3.24a.75.75 0 0 1 1.06-.04'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M9.76 3.2c.3.29.32.76.04 1.06l-4.25 4.5a.75.75 0 0 1-1.08.02L2.22 6.53a.75.75 0 0 1 1.06-1.06l1.7 1.7L8.7 3.24a.75.75 0 0 1 1.06-.04'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
+        }
+        .check:indeterminate { border-color: var(--colorCompoundBrandBackground); }
+        .check:indeterminate::after { content: ""; position: absolute; inset: 3px; border-radius: 1px; background: var(--colorCompoundBrandBackground); }
+        .check:indeterminate:hover { border-color: var(--colorCompoundBrandBackgroundHover); }
+        .check:disabled { cursor: not-allowed; border-color: var(--colorNeutralForegroundDisabled); }
+        .check:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 1px; }
+        .panel-header .check { margin-right: 0; }
+        .item .check { margin: 10px 0 0 4px; }
         .item { display: flex; align-items: flex-start; border-radius: var(--borderRadiusMedium); }
         .item:hover { background: var(--colorSubtleBackgroundHover); }
         /* The annotation itself: a button that scrolls to it. The bar at its left is its color. */
@@ -3902,6 +3930,9 @@
 
     // The annotations panel (see openPanel). Its list is built by renderPanel.
     const panelCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });
+    const panelErase = fluentButton({ icon: fluentIcon('eraser_20_regular') });
+    panelErase.disabled = true;
+    const panelSelectAll = makeEl('input', { type: 'checkbox', class: 'check', 'aria-label': 'Select all annotations' });
     const panelCopy = fluentButton({ icon: fluentIcon('copy_20_regular') });
     const panelClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const panelFilter = makeEl('input', { type: 'search', placeholder: 'Filter by text or note', 'aria-label': 'Filter annotations by text or note', spellcheck: 'false', autocomplete: 'off' });
@@ -3910,8 +3941,8 @@
     const panelList = makeEl('div', { class: 'panel-list' });
     const panelEl = makeEl('div', { class: 'surface panel', role: 'complementary', 'aria-label': 'Annotations', hidden: '' }, [
         makeEl('div', { class: 'panel-header' }, [
-            makeEl('div', { class: 'panel-title', text: 'Annotations' }), panelCount,
-            makeEl('div', { class: 'panel-actions' }, [panelCopy, panelClose])
+            panelSelectAll, makeEl('div', { class: 'panel-title', text: 'Annotations' }), panelCount,
+            makeEl('div', { class: 'panel-actions' }, [panelErase, panelCopy, panelClose])
         ]),
         makeEl('div', { class: 'field' }, [searchIcon, panelFilter]),
         panelList
@@ -5707,6 +5738,7 @@
     let panelItems = [];          // the annotations on the page the list shows, for Copy
     let panelCounts = '';         // see notePanelChanges
     let panelReturnFocus = null;
+    const panelChecked = new Set();   // the groups ticked in the list; the eraser in the header erases them
 
     function setPanelTheme(dark) {
         panelEl.setAttribute('data-theme', dark ? 'dark' : 'light');
@@ -5741,6 +5773,7 @@
         panelList.replaceChildren();
         panelSignature = '';
         panelItems = [];
+        panelChecked.clear();
         const back = panelReturnFocus;
         panelReturnFocus = null;
         if (hadFocus && back && back.isConnected && typeof back.focus === 'function') back.focus({ preventScroll: true });
@@ -5798,7 +5831,10 @@
         const shownElsewhere = elsewhere.filter(a => matchesFilter(a, terms));
         const dark = panelEl.getAttribute('data-theme') === 'dark';
         const describe = a => [a.group, a.key, a.paragraphs, a.note, a.time, a.page];
-        const signature = JSON.stringify([dark, terms, present.length, missing.length, elsewhere.length,
+        // Only what the list shows can stay ticked, so the eraser never takes what is out of sight.
+        const shownGroups = new Set(shown.map(a => a.group));
+        panelChecked.forEach(g => { if (!shownGroups.has(g)) panelChecked.delete(g); });
+        const signature = JSON.stringify([dark, terms, Array.from(panelChecked), present.length, missing.length, elsewhere.length,
             shown.map(describe), shownMissing.map(describe), shownElsewhere.map(describe)]);
         panelItems = shown;
         if (signature === panelSignature) return;
@@ -5809,6 +5845,11 @@
         const keep = active && panelList.contains(active)
             ? { group: active.closest('[data-group]').dataset.group, act: active.dataset.act } : null;
 
+        const ticked = shown.filter(a => panelChecked.has(a.group)).length;
+        panelErase.disabled = !ticked;
+        panelSelectAll.disabled = !shown.length;
+        panelSelectAll.checked = !!shown.length && ticked === shown.length;
+        panelSelectAll.indeterminate = ticked > 0 && ticked < shown.length;
         hideLabelTip();
         panelCount.textContent = terms.length ? `${shown.length} of ${present.length}` : String(present.length);
         const children = [];
@@ -5862,16 +5903,17 @@
         main.appendChild(makeEl('div', { class: 'item-meta', text: meta }));
         main.style.setProperty('--swatch', resolveStyle(a.key, dark).color);
         const actions = makeEl('div', { class: 'item-actions' });
+        let check = null;
         if (missing) {
             const attach = fluentButton({ text: 'Attach to selection' });
             attach.dataset.act = 'attach';
             attach.title = 'Select the text this annotation belongs to on the page, then click here';
             actions.append(attach, panelButton('delete_20_regular', 'Forget annotation', 'forget'));
         } else {
-            actions.append(
-                panelButton('eraser_20_regular', 'Erase annotation', 'delete'));
+            check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-label': 'Select annotation' });
+            check.checked = panelChecked.has(a.group);
         }
-        const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, [main, actions]);
+        const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, check ? [check, main] : [main, actions]);
         item.dataset.group = a.group;
         return item;
     }
@@ -5881,6 +5923,19 @@
     addLabelTip(panelClose, 'Close', 'Alt+O', () => true);
     panelCopy.addEventListener('click', () => { renderPanel(); copyAnnotations(panelItems); });
     panelClose.addEventListener('click', closePanel);
+    addLabelTip(panelErase, 'Erase selected annotations', '', () => true);
+    addLabelTip(panelSelectAll, 'Select all', '', () => true);
+    panelErase.addEventListener('click', () => {
+        if (!running) return;
+        const groups = panelItems.map(a => a.group).filter(g => panelChecked.has(g));
+        panelChecked.clear();
+        deleteGroups(groups);
+        renderPanel();
+    });
+    panelSelectAll.addEventListener('change', () => {
+        panelItems.forEach(a => { if (panelSelectAll.checked) panelChecked.add(a.group); else panelChecked.delete(a.group); });
+        renderPanel();
+    });
     panelEl.addEventListener('mouseenter', () => { if (cardWrapper) hideNoteCard(); });
     panelFilter.addEventListener('input', () => renderPanel());
     // Pressing a button keeps the page's text selection (for Attach to selection).
@@ -5896,7 +5951,10 @@
                 syncLocation();
                 jumpToGroup(group);
                 break;
-            case 'delete': deleteAnnotation(group); break;
+            case 'check':
+                if (button.checked) panelChecked.add(group); else panelChecked.delete(group);
+                renderPanel();
+                break;
             case 'forget': forgetAnnotation(group); break;
             case 'attach': attachToSelection(group); break;
         }

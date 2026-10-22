@@ -80,6 +80,7 @@
     let panelItems = [];          // the annotations on the page the list shows, for Copy
     let panelCounts = '';         // see notePanelChanges
     let panelReturnFocus = null;
+    const panelChecked = new Set();   // the groups ticked in the list; the eraser in the header erases them
 
     function setPanelTheme(dark) {
         panelEl.setAttribute('data-theme', dark ? 'dark' : 'light');
@@ -114,6 +115,7 @@
         panelList.replaceChildren();
         panelSignature = '';
         panelItems = [];
+        panelChecked.clear();
         const back = panelReturnFocus;
         panelReturnFocus = null;
         if (hadFocus && back && back.isConnected && typeof back.focus === 'function') back.focus({ preventScroll: true });
@@ -171,7 +173,10 @@
         const shownElsewhere = elsewhere.filter(a => matchesFilter(a, terms));
         const dark = panelEl.getAttribute('data-theme') === 'dark';
         const describe = a => [a.group, a.key, a.paragraphs, a.note, a.time, a.page];
-        const signature = JSON.stringify([dark, terms, present.length, missing.length, elsewhere.length,
+        // Only what the list shows can stay ticked, so the eraser never takes what is out of sight.
+        const shownGroups = new Set(shown.map(a => a.group));
+        panelChecked.forEach(g => { if (!shownGroups.has(g)) panelChecked.delete(g); });
+        const signature = JSON.stringify([dark, terms, Array.from(panelChecked), present.length, missing.length, elsewhere.length,
             shown.map(describe), shownMissing.map(describe), shownElsewhere.map(describe)]);
         panelItems = shown;
         if (signature === panelSignature) return;
@@ -182,6 +187,11 @@
         const keep = active && panelList.contains(active)
             ? { group: active.closest('[data-group]').dataset.group, act: active.dataset.act } : null;
 
+        const ticked = shown.filter(a => panelChecked.has(a.group)).length;
+        panelErase.disabled = !ticked;
+        panelSelectAll.disabled = !shown.length;
+        panelSelectAll.checked = !!shown.length && ticked === shown.length;
+        panelSelectAll.indeterminate = ticked > 0 && ticked < shown.length;
         hideLabelTip();
         panelCount.textContent = terms.length ? `${shown.length} of ${present.length}` : String(present.length);
         const children = [];
@@ -235,16 +245,17 @@
         main.appendChild(makeEl('div', { class: 'item-meta', text: meta }));
         main.style.setProperty('--swatch', resolveStyle(a.key, dark).color);
         const actions = makeEl('div', { class: 'item-actions' });
+        let check = null;
         if (missing) {
             const attach = fluentButton({ text: 'Attach to selection' });
             attach.dataset.act = 'attach';
             attach.title = 'Select the text this annotation belongs to on the page, then click here';
             actions.append(attach, panelButton('delete_20_regular', 'Forget annotation', 'forget'));
         } else {
-            actions.append(
-                panelButton('eraser_20_regular', 'Erase annotation', 'delete'));
+            check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-label': 'Select annotation' });
+            check.checked = panelChecked.has(a.group);
         }
-        const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, [main, actions]);
+        const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, check ? [check, main] : [main, actions]);
         item.dataset.group = a.group;
         return item;
     }
@@ -254,6 +265,19 @@
     addLabelTip(panelClose, 'Close', 'Alt+O', () => true);
     panelCopy.addEventListener('click', () => { renderPanel(); copyAnnotations(panelItems); });
     panelClose.addEventListener('click', closePanel);
+    addLabelTip(panelErase, 'Erase selected annotations', '', () => true);
+    addLabelTip(panelSelectAll, 'Select all', '', () => true);
+    panelErase.addEventListener('click', () => {
+        if (!running) return;
+        const groups = panelItems.map(a => a.group).filter(g => panelChecked.has(g));
+        panelChecked.clear();
+        deleteGroups(groups);
+        renderPanel();
+    });
+    panelSelectAll.addEventListener('change', () => {
+        panelItems.forEach(a => { if (panelSelectAll.checked) panelChecked.add(a.group); else panelChecked.delete(a.group); });
+        renderPanel();
+    });
     panelEl.addEventListener('mouseenter', () => { if (cardWrapper) hideNoteCard(); });
     panelFilter.addEventListener('input', () => renderPanel());
     // Pressing a button keeps the page's text selection (for Attach to selection).
@@ -269,7 +293,10 @@
                 syncLocation();
                 jumpToGroup(group);
                 break;
-            case 'delete': deleteAnnotation(group); break;
+            case 'check':
+                if (button.checked) panelChecked.add(group); else panelChecked.delete(group);
+                renderPanel();
+                break;
             case 'forget': forgetAnnotation(group); break;
             case 'attach': attachToSelection(group); break;
         }

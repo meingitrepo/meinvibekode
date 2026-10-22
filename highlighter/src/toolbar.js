@@ -86,6 +86,7 @@
 
     // The note editor's header buttons: tips above them, flipping below near the top of the view.
     addLabelTip(noteSave, 'Save note', 'Enter', () => false);
+    addLabelTip(noteDiscard, 'Discard changes', 'Esc', () => false);
     addLabelTip(noteDelete, 'Delete note', 'Delete', () => false);
     // The note preview sits below its text, so its tip goes below too, off the text.
     addLabelTip(cardPin, 'Pin note', '', () => true);

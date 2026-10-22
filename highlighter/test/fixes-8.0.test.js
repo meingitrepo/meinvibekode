@@ -45,7 +45,7 @@ const L = require('./lib');
     await page.keyboard.type('a note'); await page.keyboard.press('Enter'); await page.waitForTimeout(200);
     L.check('Enter in the text box saves', (await L.wr(page))[0].n === 'a note', await L.wr(page));
     await L.selStr(page, '#p', 'bravo'); await L.altKey(page, 'n'); await page.waitForTimeout(200);
-    await page.keyboard.press('Tab'); await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab'); await page.keyboard.press('Tab'); await page.keyboard.press('Tab');
     const focused = await page.evaluate(() => window.__hl.uiRoot.activeElement && window.__hl.uiRoot.activeElement.dataset.label);
     L.check('setup: Delete note has focus', focused === 'Delete note', focused);
     await page.keyboard.press('Enter'); await page.waitForTimeout(300);

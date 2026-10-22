@@ -3882,11 +3882,12 @@
     const noteInput = makeEl('textarea', { maxlength: String(NOTE_MAX_LENGTH), 'aria-labelledby': 'highlighter-note-title', placeholder: 'Start typing here...' });
     // Labels and tooltips are added with addLabelTip() further down.
     const noteSave = fluentButton({ icon: fluentIcon('save_20_regular') });
+    const noteDiscard = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const noteDelete = fluentButton({ icon: fluentIcon('delete_20_regular') });
-    // Save (or Enter) saves, Delete deletes, and Esc (or opening another note)
-    // discards the changes.
+    // Save (or Enter) saves, Discard (or Esc, or opening another note) discards the changes,
+    // and Delete deletes.
     const editorEl = makeEl('div', { class: 'surface editor', role: 'dialog', 'aria-labelledby': 'highlighter-note-title', hidden: '' }, [
-        makeEl('div', { class: 'editor-header' }, [editorTitle, makeEl('div', { class: 'editor-actions' }, [noteSave, noteDelete])]),
+        makeEl('div', { class: 'editor-header' }, [editorTitle, makeEl('div', { class: 'editor-actions' }, [noteSave, noteDiscard, noteDelete])]),
         makeEl('div', { class: 'field' }, [noteInput]),
         makeEl('div', { class: 'field-hint', text: 'Enter to save, Esc to cancel' })
     ]);
@@ -4116,6 +4117,7 @@
 
     // The note editor's header buttons: tips above them, flipping below near the top of the view.
     addLabelTip(noteSave, 'Save note', 'Enter', () => false);
+    addLabelTip(noteDiscard, 'Discard changes', 'Esc', () => false);
     addLabelTip(noteDelete, 'Delete note', 'Delete', () => false);
     // The note preview sits below its text, so its tip goes below too, off the text.
     addLabelTip(cardPin, 'Pin note', '', () => true);
@@ -4895,6 +4897,7 @@
     }
 
     noteSave.addEventListener('click', () => saveEditor());
+    noteDiscard.addEventListener('click', () => cancelEditor());
     // An existing note is removed (its annotation stays), with Undo; a new one is dropped along
     // with the highlight that was made for it, and what was typed in it can be restored, both.
     noteDelete.addEventListener('click', () => {
@@ -4920,7 +4923,7 @@
             noteDelete.click();
         } else if (e.key === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {
             // Tab and Shift+Tab go round the editor's controls instead of leaving it.
-            const stops = [noteSave, noteDelete, noteInput].filter(el => !el.hidden && !el.disabled);
+            const stops = [noteSave, noteDiscard, noteDelete, noteInput].filter(el => !el.hidden && !el.disabled);
             const i = stops.indexOf(uiRoot.activeElement);
             e.preventDefault();
             stops[i < 0 ? 0 : (i + (e.shiftKey ? -1 : 1) + stops.length) % stops.length].focus();

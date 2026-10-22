@@ -495,6 +495,7 @@
     }
 
     noteSave.addEventListener('click', () => saveEditor());
+    noteDiscard.addEventListener('click', () => cancelEditor());
     // An existing note is removed (its annotation stays), with Undo; a new one is dropped along
     // with the highlight that was made for it, and what was typed in it can be restored, both.
     noteDelete.addEventListener('click', () => {
@@ -520,7 +521,7 @@
             noteDelete.click();
         } else if (e.key === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {
             // Tab and Shift+Tab go round the editor's controls instead of leaving it.
-            const stops = [noteSave, noteDelete, noteInput].filter(el => !el.hidden && !el.disabled);
+            const stops = [noteSave, noteDiscard, noteDelete, noteInput].filter(el => !el.hidden && !el.disabled);
             const i = stops.indexOf(uiRoot.activeElement);
             e.preventDefault();
             stops[i < 0 ? 0 : (i + (e.shiftKey ? -1 : 1) + stops.length) % stops.length].focus();

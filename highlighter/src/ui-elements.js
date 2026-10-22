@@ -35,11 +35,12 @@
     const noteInput = makeEl('textarea', { maxlength: String(NOTE_MAX_LENGTH), 'aria-labelledby': 'highlighter-note-title', placeholder: 'Start typing here...' });
     // Labels and tooltips are added with addLabelTip() further down.
     const noteSave = fluentButton({ icon: fluentIcon('save_20_regular') });
+    const noteDiscard = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const noteDelete = fluentButton({ icon: fluentIcon('delete_20_regular') });
-    // Save (or Enter) saves, Delete deletes, and Esc (or opening another note)
-    // discards the changes.
+    // Save (or Enter) saves, Discard (or Esc, or opening another note) discards the changes,
+    // and Delete deletes.
     const editorEl = makeEl('div', { class: 'surface editor', role: 'dialog', 'aria-labelledby': 'highlighter-note-title', hidden: '' }, [
-        makeEl('div', { class: 'editor-header' }, [editorTitle, makeEl('div', { class: 'editor-actions' }, [noteSave, noteDelete])]),
+        makeEl('div', { class: 'editor-header' }, [editorTitle, makeEl('div', { class: 'editor-actions' }, [noteSave, noteDiscard, noteDelete])]),
         makeEl('div', { class: 'field' }, [noteInput]),
         makeEl('div', { class: 'field-hint', text: 'Enter to save, Esc to cancel' })
     ]);

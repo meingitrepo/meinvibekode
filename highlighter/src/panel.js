@@ -190,8 +190,13 @@
         const ticked = shown.filter(a => panelChecked.has(a.group)).length;
         panelErase.disabled = !ticked;
         panelSelectAll.disabled = !shown.length;
-        panelSelectAll.checked = !!shown.length && ticked === shown.length;
-        panelSelectAll.indeterminate = ticked > 0 && ticked < shown.length;
+        const allTicked = !!shown.length && ticked === shown.length;
+        panelSelectAll.dataset.all = String(allTicked);
+        panelSelectAll.replaceChildren(fluentIcon(allTicked ? 'select_all_off_20_regular' : 'select_all_on_20_regular'));
+        panelSelectAll.setAttribute('aria-label', allTicked ? 'Select none' : 'Select all');
+        panelSelectAll.dataset.label = allTicked ? 'Select none' : 'Select all';
+        panelCopy.dataset.label = ticked ? 'Copy selected as Markdown' : 'Copy as Markdown';
+        panelCopy.setAttribute('aria-label', panelCopy.dataset.label);
         hideLabelTip();
         panelCount.textContent = terms.length ? `${shown.length} of ${present.length}` : String(present.length);
         const children = [];
@@ -255,15 +260,19 @@
             check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-label': 'Select annotation' });
             check.checked = panelChecked.has(a.group);
         }
-        const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, check ? [check, main] : [main, actions]);
+        const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, check ? [main, check] : [main, actions]);
         item.dataset.group = a.group;
         return item;
     }
 
     panelList.setAttribute('role', 'list');
-    addLabelTip(panelCopy, 'Copy as Markdown', '', () => true);
     addLabelTip(panelClose, 'Close', 'Alt+O', () => true);
-    panelCopy.addEventListener('click', () => { renderPanel(); copyAnnotations(panelItems); });
+    addLabelTip(panelCopy, 'Copy as Markdown', '', () => true);
+    panelCopy.addEventListener('click', () => {
+        renderPanel();
+        const ticked = panelItems.filter(a => panelChecked.has(a.group));
+        copyAnnotations(ticked.length ? ticked : panelItems);
+    });
     panelClose.addEventListener('click', closePanel);
     addLabelTip(panelErase, 'Erase selected annotations', '', () => true);
     addLabelTip(panelSelectAll, 'Select all', '', () => true);
@@ -274,8 +283,9 @@
         deleteGroups(groups);
         renderPanel();
     });
-    panelSelectAll.addEventListener('change', () => {
-        panelItems.forEach(a => { if (panelSelectAll.checked) panelChecked.add(a.group); else panelChecked.delete(a.group); });
+    panelSelectAll.addEventListener('click', () => {
+        const none = panelSelectAll.dataset.all === 'true';
+        panelItems.forEach(a => { if (none) panelChecked.delete(a.group); else panelChecked.add(a.group); });
         renderPanel();
     });
     panelEl.addEventListener('mouseenter', () => { if (cardWrapper) hideNoteCard(); });

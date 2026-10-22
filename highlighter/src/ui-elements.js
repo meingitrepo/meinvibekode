@@ -54,7 +54,7 @@
     const panelCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });
     const panelErase = fluentButton({ icon: fluentIcon('eraser_20_regular') });
     panelErase.disabled = true;
-    const panelSelectAll = makeEl('input', { type: 'checkbox', class: 'check', 'aria-label': 'Select all annotations' });
+    const panelSelectAll = fluentButton({ icon: fluentIcon('select_all_on_20_regular') });
     const panelCopy = fluentButton({ icon: fluentIcon('copy_20_regular') });
     const panelClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const panelFilter = makeEl('input', { type: 'search', placeholder: 'Filter by text or note', 'aria-label': 'Filter annotations by text or note', spellcheck: 'false', autocomplete: 'off' });
@@ -63,8 +63,8 @@
     const panelList = makeEl('div', { class: 'panel-list' });
     const panelEl = makeEl('div', { class: 'surface panel', role: 'complementary', 'aria-label': 'Annotations', hidden: '' }, [
         makeEl('div', { class: 'panel-header' }, [
-            panelSelectAll, makeEl('div', { class: 'panel-title', text: 'Annotations' }), panelCount,
-            makeEl('div', { class: 'panel-actions' }, [panelErase, panelCopy, panelClose])
+            makeEl('div', { class: 'panel-title', text: 'Annotations' }), panelCount,
+            makeEl('div', { class: 'panel-actions' }, [panelSelectAll, panelErase, panelCopy, panelClose])
         ]),
         makeEl('div', { class: 'field' }, [searchIcon, panelFilter]),
         panelList

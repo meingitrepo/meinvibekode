@@ -72,11 +72,13 @@ ${filler(40)}
   const tst = await L.toast(page);
   L.check('copy toast', tst === 'Copied 5x annotations', tst);
   // delete from panel
-  const ui = await page.evaluate(() => { const h = window.__hl; return { eraseOff: h.panelErase.disabled, none: !h.panelSelectAll.checked && !h.panelSelectAll.indeterminate }; });
+  const ui = await page.evaluate(() => { const h = window.__hl; return { eraseOff: h.panelErase.disabled, none: h.panelSelectAll.dataset.all === 'false' }; });
   L.check('eraser disabled with nothing selected', ui.eraseOff && ui.none, ui);
   await page.evaluate(() => { const el = Array.from(window.__hl.panelList.querySelectorAll('[data-group]')).find(e => e.querySelector('.item-text').textContent === 'three four'); el.querySelector('[data-act="check"]').click(); });
-  const one = await page.evaluate(() => { const h = window.__hl; return { eraseOff: h.panelErase.disabled, mixed: h.panelSelectAll.indeterminate }; });
-  L.check('one ticked: eraser on, select-all mixed', !one.eraseOff && one.mixed, one);
+  const one = await page.evaluate(() => { const h = window.__hl; return { eraseOff: h.panelErase.disabled, mixed: h.panelSelectAll.dataset.all === 'false' }; });
+  L.check('one ticked: eraser on, select-all still offers all', !one.eraseOff && one.mixed, one);
+  await page.evaluate(() => window.__hl.panelCopy.click()); await page.waitForTimeout(100);
+  L.check('copy respects the selection', (await L.toast(page)) === 'Copied 1x annotation', await L.toast(page));
   await page.evaluate(() => window.__hl.panelErase.click());
   await L.until(page, () => !Array.from(window.__hl.panelList.querySelectorAll('.item-text')).some(e => e.textContent === 'three four'));
   it = await L.items(page);
@@ -89,7 +91,7 @@ ${filler(40)}
   L.check('undo brings it back to panel', it.some(i => i.text === 'three four'), it.length);
   // select all, then erase several in one step
   await page.evaluate(() => window.__hl.panelSelectAll.click());
-  const all = await page.evaluate(() => { const h = window.__hl; const n = h.panelList.querySelectorAll('.item:not(.missing) .check').length; return { n, ticked: h.panelList.querySelectorAll('.item .check:checked').length, all: h.panelSelectAll.checked }; });
+  const all = await page.evaluate(() => { const h = window.__hl; const n = h.panelList.querySelectorAll('.item:not(.missing) .check').length; return { n, ticked: h.panelList.querySelectorAll('.item .check:checked').length, all: h.panelSelectAll.dataset.all === 'true' }; });
   L.check('select all ticks every row', all.n > 1 && all.ticked === all.n && all.all, all);
   await page.evaluate(() => window.__hl.panelErase.click());
   await L.until(page, () => !window.__hl.panelList.querySelector('.item:not(.missing)'));

@@ -110,7 +110,7 @@
         openNoteEditor(created[0].getAttribute(GROUP_ATTR), { step: undoStack[undoStack.length - 1] });
     }
 
-    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD', 'Delete']);
+    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD']);
 
     // While our keys are on (Alt+Shift+K switches them), every Alt key outside a field is ours
     // alone: the site's own Alt shortcuts never run, whether we use the key or not. Its access
@@ -254,8 +254,8 @@
             return;
         }
 
-        // D on one annotation with a note deletes the note first; Delete erases it all at once.
-        if (code === 'KeyD' || code === 'Delete') {
+        // D on one annotation with a note deletes the note first.
+        if (code === 'KeyD') {
             if (e.shiftKey) {
                 e.preventDefault();
                 clearPageAnnotations();
@@ -265,7 +265,7 @@
             if (!selected && !group) return;
             e.preventDefault();
             if (selected) removeInSelection(active);
-            else if (code === 'KeyD' && groupHasNote(group)) deleteGroupNote(group);
+            else if (groupHasNote(group)) deleteGroupNote(group);
             else deleteAnnotation(group);
             return;
         }

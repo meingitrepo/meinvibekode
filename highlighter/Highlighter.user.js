@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.64
+// @version      8.65
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3209,7 +3209,7 @@
         openNoteEditor(created[0].getAttribute(GROUP_ATTR), { step: undoStack[undoStack.length - 1] });
     }
 
-    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD', 'Delete']);
+    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD']);
 
     // While our keys are on (Alt+Shift+K switches them), every Alt key outside a field is ours
     // alone: the site's own Alt shortcuts never run, whether we use the key or not. Its access
@@ -3353,8 +3353,8 @@
             return;
         }
 
-        // D on one annotation with a note deletes the note first; Delete erases it all at once.
-        if (code === 'KeyD' || code === 'Delete') {
+        // D on one annotation with a note deletes the note first.
+        if (code === 'KeyD') {
             if (e.shiftKey) {
                 e.preventDefault();
                 clearPageAnnotations();
@@ -3364,7 +3364,7 @@
             if (!selected && !group) return;
             e.preventDefault();
             if (selected) removeInSelection(active);
-            else if (code === 'KeyD' && groupHasNote(group)) deleteGroupNote(group);
+            else if (groupHasNote(group)) deleteGroupNote(group);
             else deleteAnnotation(group);
             return;
         }
@@ -4274,8 +4274,7 @@
             note: after(() => openNoteEditor(groups[0])),
             remove: after(() => deleteGroups(groups)),
             removeLabel: groups.length > 1 ? `Erase ${groups.length}x annotations` : 'Erase annotation',
-            // D on a single one with a note deletes only the note; Delete erases it all.
-            removeKey: groups.length === 1 && note ? 'Alt+Delete' : 'Alt+D'
+            removeKey: 'Alt+D'
         });
         toolbarGroups = groups;
         toolbarRange = null;
@@ -5444,7 +5443,7 @@
         } else if (e.code === 'KeyD' && groups.length === 1 && groupHasNote(groups[0])) {
             deleteGroupNote(groups[0]);   // the note first, then (D again) the annotation
             refreshGroupToolbar();
-        } else if (e.code === 'Delete' || e.code === 'KeyD') {
+        } else if (e.code === 'KeyD') {
             deleteGroups(groups);
         } else if (e.code === 'KeyN') {
             openNoteEditor(groups[0]);
@@ -5656,7 +5655,7 @@
         if (editor) cancelEditor({ offer: editor.group !== group });
     }
 
-    // Removes the whole annotation, also from the keyboard (Alt+D or Alt+Delete, or its own style, with
+    // Removes the whole annotation, also from the keyboard (Alt+D, or its own style, with
     // the mouse on it).
     function deleteAnnotation(group) {
         syncLocation();

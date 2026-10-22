@@ -21,18 +21,20 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   L.check('with its toast', (await L.toast(page)) === 'Deleted note · Undo', await L.toast(page));
   await L.altKey(page, 'd');
   L.check('second Alt+D erases it', !(await get('bravo')), await L.wr(page));
-  // Alt+Delete erases at once, note and all.
+  // Alt+Delete is no longer a shortcut; Alt+D twice erases echo (note first).
   p = await pos('echo'); await page.mouse.move(p.x, p.y); await page.waitForTimeout(200);
   await L.altKey(page, 'Delete');
-  L.check('Alt+Delete erases it at once', !(await get('echo')), await L.wr(page));
-  await L.altKey(page, 'KeyZ'); await L.altKey(page, 'KeyZ');
+  L.check('Alt+Delete does nothing', (await get('echo')) && (await get('echo')).n === 'note echo', await get('echo'));
+  await L.altKey(page, 'd'); await L.altKey(page, 'd');
+  L.check('Alt+D twice erases it', !(await get('echo')), await L.wr(page));
+  await L.altKey(page, 'KeyZ'); await L.altKey(page, 'KeyZ'); await L.altKey(page, 'KeyZ');
   L.check('undo brings echo back, bravo without its note', (await get('echo')).n === 'note echo' && (await get('bravo')) && !(await get('bravo')).n, await L.wr(page));
   // Clicked: one with a note loses the note first; several erase at once.
   await page.mouse.move(900, 650);
   const click = async (t, mod) => { const q = await pos(t); if (mod) await page.keyboard.down(mod); await page.mouse.click(q.x, q.y); if (mod) await page.keyboard.up(mod); await page.waitForTimeout(350); };
   const eraserTip = () => page.evaluate(() => { const b = Array.from(window.__hl.toolbarEl.querySelectorAll('button')).find(b => /^Erase (annotation|\d)/.test(b.dataset.label)); return b && b.getAttribute('aria-label'); });
   await click('hotel');
-  L.check('eraser tip on one with a note names Alt+Delete', (await eraserTip()) === 'Erase annotation (Alt+Delete)', await eraserTip());
+  L.check('eraser tip on one with a note names Alt+D', (await eraserTip()) === 'Erase annotation (Alt+D)', await eraserTip());
   await page.keyboard.press('d'); await page.waitForTimeout(200);
   L.check('D on one selected deletes its note', (await get('hotel')) && !(await get('hotel')).n, await get('hotel'));
   L.check('then the eraser tip names Alt+D', (await eraserTip()) === 'Erase annotation (Alt+D)', await eraserTip());

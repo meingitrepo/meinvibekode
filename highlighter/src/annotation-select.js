@@ -314,7 +314,7 @@
         } else if (e.code === 'KeyD' && groups.length === 1 && groupHasNote(groups[0])) {
             deleteGroupNote(groups[0]);   // the note first, then (D again) the annotation
             refreshGroupToolbar();
-        } else if (e.code === 'Delete' || e.code === 'KeyD') {
+        } else if (e.code === 'KeyD') {
             deleteGroups(groups);
         } else if (e.code === 'KeyN') {
             openNoteEditor(groups[0]);

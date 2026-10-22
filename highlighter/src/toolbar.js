@@ -201,8 +201,7 @@
             note: after(() => openNoteEditor(groups[0])),
             remove: after(() => deleteGroups(groups)),
             removeLabel: groups.length > 1 ? `Erase ${groups.length}x annotations` : 'Erase annotation',
-            // D on a single one with a note deletes only the note; Delete erases it all.
-            removeKey: groups.length === 1 && note ? 'Alt+Delete' : 'Alt+D'
+            removeKey: 'Alt+D'
         });
         toolbarGroups = groups;
         toolbarRange = null;

@@ -29,8 +29,8 @@ keyboard layouts.
 | Alt+U | Underline |
 | Alt+S | Strike through |
 | Alt+N | Add or edit a note |
-| Alt+Backspace or Alt+Delete | Remove annotations from the selected text, or the annotation under the mouse |
-| Alt+Shift+Backspace or Alt+Shift+Delete | Remove every annotation on the page |
+| Alt+D | Remove annotations from the selected text, or the annotation under the mouse |
+| Alt+Shift+D | Remove every annotation on the page |
 | Alt+V | Hide or show all annotations |
 | Alt+T | Selection toolbar off or on, for every site |
 | Alt+P | Pen on or off |

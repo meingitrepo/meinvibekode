@@ -87,3 +87,4 @@ Every release, newest last. release.sh appends a row here. What is planned next 
 | 8.44 | While a note is edited, its badge doesn't pin and other annotations don't select | Clicking the edited note's badge does nothing (its note is already open in the editor); clicking another annotation neither selects it nor draws its dashed outline. Other badges still pin |
 | 8.45 | Docs | Add LESSONS.md |
 | 8.46 | Docs | Shipped roadmap rows moved to ROADMAP-SHIPPED.md; release.sh appends there |
+| 8.47 | CI | Quick build and syntax gate on every push; mirror waits for it |

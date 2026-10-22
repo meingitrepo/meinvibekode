@@ -27,4 +27,4 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - `node highlighter/test/run.js <word>` (Playwright 1.56.1 + Chromium, `NODE_PATH=/opt/node22/lib/node_modules`).
 - Run only suites related to the change; no full run before PUSH.
 - Before asking PUSH on a behaviour change, grep `highlighter/test` for the changed feature/keys/colors; update tests expecting old behaviour; remove checks for retired behaviour rather than skipping.
-- Action tests are paused (test job `if: false`, mirror `needs: test` commented out). Re-enable by undoing both. Reason paused: each push waited about 2 minutes for the test job (CI time, not Claude tokens).
+- CI runs only a quick gate on every push (`node build.js --check` + `node --check` on the built file, seconds) and the mirror `needs` it. The full Playwright suite is local-only (CI run was ~2 min per push).

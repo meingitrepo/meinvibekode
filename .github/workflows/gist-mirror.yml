@@ -1,11 +1,11 @@
-# Runs the highlighter's tests on every push and pull request that touches it. On main, once
+# Runs a quick check (build up to date + syntax) on every push and pull request that touches it. On main, once
 # they pass, copies the built userscript to a secret gist, because Violentmonkey cannot
 # fetch updates from this private repo. The copy's @updateURL/@downloadURL are
 # rewritten to the gist's raw URL, so installs from the gist update from the gist.
 # The same file also goes to the gist as RoughNotationHighlighter.user.js, its name before 7.45,
 # so copies installed from that URL keep updating (to the new URL, after one update).
 # Needs repo secrets GIST_TOKEN (classic token with "gist" scope, or fine-grained with Gists: read and write) and GIST_ID.
-name: Test, then mirror userscript to gist
+name: Check, then mirror userscript to gist
 
 on:
   push:
@@ -15,30 +15,26 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Quick gate (seconds): the built file is up to date and has valid syntax. The full
+  # Playwright suite is not run in CI (too slow per push); run it locally with
+  # `node highlighter/test/run.js <word>`.
   test:
-    # Paused by Mhmd's request (2026-10-16). To turn tests back on: delete this `if: false`
-    # and uncomment `needs: test` in the mirror job.
-    if: false
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    defaults:
-      run:
-        working-directory: highlighter/test
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-      - name: Install Playwright and Chromium
-        run: |
-          npm install --no-save --no-package-lock playwright@1.56.1
-          npx playwright install --with-deps --only-shell chromium
-      - name: Run the tests
-        run: node run.js
+      - name: Built file is up to date
+        working-directory: highlighter
+        run: node build.js --check
+      - name: Built file has valid syntax
+        run: node --check highlighter/Highlighter.user.js
 
-  # Only for main (once the tests pass, while they are on).
+  # Only for main (once the quick check passes).
   mirror:
-    # needs: test
+    needs: test
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     steps:

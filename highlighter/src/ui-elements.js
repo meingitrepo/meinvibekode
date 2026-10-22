@@ -80,7 +80,7 @@
     const everythingSelectAll = fluentButton({ icon: fluentIcon('select_all_on_20_regular') });
     const everythingCopy = fluentButton({ icon: fluentIcon('copy_20_regular') });
     everythingCopy.disabled = true;
-    const everythingForget = fluentButton({ icon: fluentIcon('delete_20_regular') });
+    const everythingForget = fluentButton({ icon: fluentIcon('eraser_20_regular') });
     everythingForget.disabled = true;
     const everythingClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const everythingFilter = makeEl('input', { type: 'search', placeholder: 'Search every page\'s annotations and notes', 'aria-label': 'Search saved annotations', spellcheck: 'false', autocomplete: 'off' });

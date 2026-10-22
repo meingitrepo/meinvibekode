@@ -121,9 +121,9 @@
                 pendingRecords = pendingRecords.filter(r => !here.includes(recordOwner(r)));
             });
             // Undo covers only this page, so it is offered only when nothing else was forgotten.
-            if (!elsewhere.size) { offerUndo(doneText('Forgot', selected.length), step, 'delete_20_regular'); return; }
+            if (!elsewhere.size) { offerUndo(doneText('Forgot', selected.length), step, 'eraser_20_regular'); return; }
         }
-        showToast(doneText('Forgot', selected.length), { icon: 'delete_20_regular' });
+        showToast(doneText('Forgot', selected.length), { icon: 'eraser_20_regular' });
     }
 
     function renderEverything() {

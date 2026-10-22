@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.62
+// @version      8.63
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3962,7 +3962,7 @@
     const everythingSelectAll = fluentButton({ icon: fluentIcon('select_all_on_20_regular') });
     const everythingCopy = fluentButton({ icon: fluentIcon('copy_20_regular') });
     everythingCopy.disabled = true;
-    const everythingForget = fluentButton({ icon: fluentIcon('delete_20_regular') });
+    const everythingForget = fluentButton({ icon: fluentIcon('eraser_20_regular') });
     everythingForget.disabled = true;
     const everythingClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const everythingFilter = makeEl('input', { type: 'search', placeholder: 'Search every page\'s annotations and notes', 'aria-label': 'Search saved annotations', spellcheck: 'false', autocomplete: 'off' });
@@ -6121,9 +6121,9 @@
                 pendingRecords = pendingRecords.filter(r => !here.includes(recordOwner(r)));
             });
             // Undo covers only this page, so it is offered only when nothing else was forgotten.
-            if (!elsewhere.size) { offerUndo(doneText('Forgot', selected.length), step, 'delete_20_regular'); return; }
+            if (!elsewhere.size) { offerUndo(doneText('Forgot', selected.length), step, 'eraser_20_regular'); return; }
         }
-        showToast(doneText('Forgot', selected.length), { icon: 'delete_20_regular' });
+        showToast(doneText('Forgot', selected.length), { icon: 'eraser_20_regular' });
     }
 
     function renderEverything() {

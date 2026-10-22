@@ -56,6 +56,7 @@
     panelErase.disabled = true;
     const panelSelectAll = fluentButton({ icon: fluentIcon('select_all_on_20_regular') });
     const panelCopy = fluentButton({ icon: fluentIcon('copy_20_regular') });
+    panelCopy.disabled = true;
     const panelClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const panelFilter = makeEl('input', { type: 'search', placeholder: 'Filter by text or note', 'aria-label': 'Filter annotations by text or note', spellcheck: 'false', autocomplete: 'off' });
     const searchIcon = fluentIcon('search_20_regular');
@@ -64,7 +65,7 @@
     const panelEl = makeEl('div', { class: 'surface panel', role: 'complementary', 'aria-label': 'Annotations', hidden: '' }, [
         makeEl('div', { class: 'panel-header' }, [
             makeEl('div', { class: 'panel-title', text: 'Annotations' }), panelCount,
-            makeEl('div', { class: 'panel-actions' }, [panelSelectAll, panelErase, panelCopy, panelClose])
+            makeEl('div', { class: 'panel-actions' }, [panelSelectAll, panelCopy, panelErase, panelClose])
         ]),
         makeEl('div', { class: 'field' }, [searchIcon, panelFilter]),
         panelList
@@ -78,6 +79,11 @@
 
     // Everything saved (Alt+Shift+O, see openEverything): a dialog over the dimmed page.
     const everythingCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });
+    const everythingSelectAll = fluentButton({ icon: fluentIcon('select_all_on_20_regular') });
+    const everythingCopy = fluentButton({ icon: fluentIcon('copy_20_regular') });
+    everythingCopy.disabled = true;
+    const everythingForget = fluentButton({ icon: fluentIcon('delete_20_regular') });
+    everythingForget.disabled = true;
     const everythingClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const everythingFilter = makeEl('input', { type: 'search', placeholder: 'Search every page\'s annotations and notes', 'aria-label': 'Search saved annotations', spellcheck: 'false', autocomplete: 'off' });
     const everythingIcon = fluentIcon('search_20_regular');
@@ -87,7 +93,7 @@
         makeEl('div', { class: 'surface everything-box', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'All saved annotations' }, [
             makeEl('div', { class: 'panel-header' }, [
                 makeEl('div', { class: 'panel-title', text: 'All annotations' }), everythingCount,
-                makeEl('div', { class: 'panel-actions' }, [everythingClose])
+                makeEl('div', { class: 'panel-actions' }, [everythingSelectAll, everythingCopy, everythingForget, everythingClose])
             ]),
             makeEl('div', { class: 'field' }, [everythingIcon, everythingFilter]),
             everythingList

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.59
+// @version      8.60
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3838,7 +3838,10 @@
         .check:indeterminate:hover { border-color: var(--colorCompoundBrandBackgroundHover); }
         .check:disabled { cursor: not-allowed; border-color: var(--colorNeutralForegroundDisabled); }
         .check:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 1px; }
-        .item .check { margin: 10px 8px 0 4px; }
+        .item .check { margin: 10px 8px 0 4px; opacity: 0; }
+        .item:hover .check, .item .check:checked, .item .check:focus-visible { opacity: 1; }
+        @media (hover: none) { .item .check { opacity: 1; } }
+        .everything .item .check { margin: 10px 4px 0 8px; }
         .item { display: flex; align-items: flex-start; border-radius: var(--borderRadiusMedium); }
         .item:hover { background: var(--colorSubtleBackgroundHover); }
         /* The annotation itself: a button that scrolls to it. The bar at its left is its color. */
@@ -3935,6 +3938,7 @@
     panelErase.disabled = true;
     const panelSelectAll = fluentButton({ icon: fluentIcon('select_all_on_20_regular') });
     const panelCopy = fluentButton({ icon: fluentIcon('copy_20_regular') });
+    panelCopy.disabled = true;
     const panelClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const panelFilter = makeEl('input', { type: 'search', placeholder: 'Filter by text or note', 'aria-label': 'Filter annotations by text or note', spellcheck: 'false', autocomplete: 'off' });
     const searchIcon = fluentIcon('search_20_regular');
@@ -3943,7 +3947,7 @@
     const panelEl = makeEl('div', { class: 'surface panel', role: 'complementary', 'aria-label': 'Annotations', hidden: '' }, [
         makeEl('div', { class: 'panel-header' }, [
             makeEl('div', { class: 'panel-title', text: 'Annotations' }), panelCount,
-            makeEl('div', { class: 'panel-actions' }, [panelSelectAll, panelErase, panelCopy, panelClose])
+            makeEl('div', { class: 'panel-actions' }, [panelSelectAll, panelCopy, panelErase, panelClose])
         ]),
         makeEl('div', { class: 'field' }, [searchIcon, panelFilter]),
         panelList
@@ -3957,6 +3961,11 @@
 
     // Everything saved (Alt+Shift+O, see openEverything): a dialog over the dimmed page.
     const everythingCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });
+    const everythingSelectAll = fluentButton({ icon: fluentIcon('select_all_on_20_regular') });
+    const everythingCopy = fluentButton({ icon: fluentIcon('copy_20_regular') });
+    everythingCopy.disabled = true;
+    const everythingForget = fluentButton({ icon: fluentIcon('delete_20_regular') });
+    everythingForget.disabled = true;
     const everythingClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const everythingFilter = makeEl('input', { type: 'search', placeholder: 'Search every page\'s annotations and notes', 'aria-label': 'Search saved annotations', spellcheck: 'false', autocomplete: 'off' });
     const everythingIcon = fluentIcon('search_20_regular');
@@ -3966,7 +3975,7 @@
         makeEl('div', { class: 'surface everything-box', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'All saved annotations' }, [
             makeEl('div', { class: 'panel-header' }, [
                 makeEl('div', { class: 'panel-title', text: 'All annotations' }), everythingCount,
-                makeEl('div', { class: 'panel-actions' }, [everythingClose])
+                makeEl('div', { class: 'panel-actions' }, [everythingSelectAll, everythingCopy, everythingForget, everythingClose])
             ]),
             makeEl('div', { class: 'field' }, [everythingIcon, everythingFilter]),
             everythingList
@@ -5847,16 +5856,7 @@
             ? { group: active.closest('[data-group]').dataset.group, act: active.dataset.act } : null;
 
         const ticked = shown.filter(a => panelChecked.has(a.group)).length;
-        panelErase.disabled = !ticked;
-        panelSelectAll.disabled = !shown.length;
-        const allTicked = !!shown.length && ticked === shown.length;
-        panelSelectAll.dataset.all = String(allTicked);
-        panelSelectAll.replaceChildren(fluentIcon(allTicked ? 'select_all_off_20_regular' : 'select_all_on_20_regular'));
-        panelSelectAll.setAttribute('aria-label', allTicked ? 'Select none' : 'Select all');
-        panelSelectAll.dataset.label = allTicked ? 'Select none' : 'Select all';
-        panelCopy.dataset.label = ticked ? 'Copy selected as Markdown' : 'Copy as Markdown';
-        panelCopy.setAttribute('aria-label', panelCopy.dataset.label);
-        hideLabelTip();
+        syncSelectionButtons(panelSelectAll, panelCopy, panelErase, ticked, shown.length);
         const total = terms.length ? `${shown.length} of ${present.length}` : String(present.length);
         panelCount.textContent = ticked ? `${ticked}/${shown.length}${terms.length ? ` of ${present.length}` : ''}` : total;
         const children = [];
@@ -5882,6 +5882,20 @@
             (target || panelFilter).focus({ preventScroll: true });
             hideLabelTip();   // focusing it again is no reason to show its tooltip
         }
+    }
+
+    // The header's select all/none, copy and erase (or forget) buttons of either panel: copy and
+    // erase wait for something ticked, and select all turns into select none once all are.
+    function syncSelectionButtons(selectAll, copy, erase, ticked, total) {
+        selectAll.disabled = !total;
+        const allTicked = !!total && ticked === total;
+        selectAll.dataset.all = String(allTicked);
+        selectAll.replaceChildren(fluentIcon(allTicked ? 'select_all_off_20_regular' : 'select_all_on_20_regular'));
+        selectAll.setAttribute('aria-label', allTicked ? 'Select none' : 'Select all');
+        selectAll.dataset.label = allTicked ? 'Select none' : 'Select all';
+        copy.disabled = !ticked;
+        erase.disabled = !ticked;
+        hideLabelTip();
     }
 
     function panelButton(icon, label, act) {
@@ -5927,11 +5941,11 @@
 
     panelList.setAttribute('role', 'list');
     addLabelTip(panelClose, 'Close', 'Alt+O', () => true);
-    addLabelTip(panelCopy, 'Copy as Markdown', '', () => true);
+    addLabelTip(panelCopy, 'Copy selected as Markdown', '', () => true);
     panelCopy.addEventListener('click', () => {
         renderPanel();
         const ticked = panelItems.filter(a => panelChecked.has(a.group));
-        copyAnnotations(ticked.length ? ticked : panelItems);
+        if (ticked.length) copyAnnotations(ticked);
     });
     panelClose.addEventListener('click', closePanel);
     addLabelTip(panelErase, 'Erase selected annotations', '', () => true);
@@ -6010,6 +6024,8 @@
     let everythingPages = [];
     let everythingToggled = new Set();   // pages opened by a click (closed by one, while searching)
     let everythingReturnFocus = null;
+    let everythingChecked = new Set();   // ticked annotations, as `${page key}\n${group}`
+    let everythingShown = [];            // [{ id, page, item }]: what the search shows, in every page, open or not
 
     // [{ key, url, host, path, time, items: [{ group, key, note, time, text, url }] }], newest first.
     function savedPages() {
@@ -6056,6 +6072,7 @@
             hideNoteCard();
             everythingFilter.value = '';
             everythingToggled = new Set();
+            everythingChecked = new Set();
         }
         everythingPages = savedPages();
         everythingEl.hidden = false;
@@ -6070,6 +6087,8 @@
         everythingEl.hidden = true;
         everythingList.replaceChildren();
         everythingPages = [];
+        everythingChecked = new Set();
+        everythingShown = [];
         const back = everythingReturnFocus;
         everythingReturnFocus = null;
         if (back && back.isConnected && typeof back.focus === 'function') back.focus({ preventScroll: true });
@@ -6080,17 +6099,66 @@
         else closeEverything();
     }
 
+    const everythingId = (p, a) => `${p.key}\n${a.group}`;
+
+    // The ticked annotations as Markdown: each page's address as a heading, then its quotes
+    // linked to their passages, with their notes.
+    function savedMarkdown(selected) {
+        const byPage = new Map();
+        selected.forEach(s => { if (!byPage.has(s.page)) byPage.set(s.page, []); byPage.get(s.page).push(s.item); });
+        const out = [];
+        byPage.forEach((items, p) => {
+            out.push(`${out.length ? '\n' : ''}## [${markdownText(p.host + p.path)}](${markdownUrl(p.key)})`);
+            items.forEach(a => {
+                out.push('', `> ${markdownText(a.text)} [↗](${markdownUrl(a.url)})`);
+                if (a.note) out.push('', a.note);
+            });
+        });
+        return out.join('\n') + '\n';
+    }
+
+    // Takes the ticked annotations out of storage. Those of this page go the way the annotations
+    // panel's Erase and Forget do (Undo included); the others are simply deleted.
+    function forgetSaved(selected) {
+        const here = selected.filter(s => s.page.key === currentKey).map(s => s.item.group);
+        const elsewhere = new Map();
+        selected.forEach(s => {
+            if (s.page.key === currentKey) return;
+            if (!elsewhere.has(s.page.key)) elsewhere.set(s.page.key, new Set());
+            elsewhere.get(s.page.key).add(s.item.group);
+        });
+        elsewhere.forEach((groups, key) => {
+            const rest = (readRecords(key) || []).filter(r => !groups.has(recordOwner(r)));
+            if (rest.length) GM_setValue(key, JSON.stringify(rest)); else GM_deleteValue(key);
+        });
+        if (here.length) {
+            syncLocation();
+            const live = here.filter(g => groupWrappers(g).length);
+            const step = runUndoable(() => {
+                live.forEach(g => unwrapMany(groupWrappers(g)));
+                pendingRecords = pendingRecords.filter(r => !here.includes(recordOwner(r)));
+            });
+            // Undo covers only this page, so it is offered only when nothing else was forgotten.
+            if (!elsewhere.size) { offerUndo(doneText('Forgot', selected.length), step, 'delete_20_regular'); return; }
+        }
+        showToast(doneText('Forgot', selected.length), { icon: 'delete_20_regular' });
+    }
+
     function renderEverything() {
         const terms = everythingFilter.value.toLowerCase().split(/\s+/).filter(Boolean);
         const matches = s => terms.every(t => s.includes(t));
         const dark = everythingEl.getAttribute('data-theme') === 'dark';
         const rows = [];
-        let shownItems = 0;
-        everythingPages.forEach(p => {
+        const visible = everythingPages.map(p => {
             const pageHit = terms.length > 0 && matches(`${p.host} ${p.path}`.toLowerCase());
-            const items = !terms.length || pageHit ? p.items : p.items.filter(a => matches(`${a.text}\n${a.note}`.toLowerCase()));
-            if (!items.length) return;
-            shownItems += items.length;
+            return { p, items: !terms.length || pageHit ? p.items : p.items.filter(a => matches(`${a.text}\n${a.note}`.toLowerCase())) };
+        }).filter(v => v.items.length);
+        const shownItems = visible.reduce((n, v) => n + v.items.length, 0);
+        // Only what the search shows can stay ticked, so forgetting never takes what is out of sight.
+        everythingShown = visible.flatMap(v => v.items.map(a => ({ id: everythingId(v.p, a), page: v.p, item: a })));
+        const shownIds = new Set(everythingShown.map(s => s.id));
+        everythingChecked.forEach(id => { if (!shownIds.has(id)) everythingChecked.delete(id); });
+        visible.forEach(({ p, items }) => {
             // Pages start closed, and opened while searching; a click turns that round.
             const open = everythingToggled.has(p.key) !== terms.length > 0;
             const head = makeEl('button', { type: 'button', class: 'page-head', 'aria-expanded': String(open), 'data-key': p.key }, [
@@ -6107,26 +6175,66 @@
                     if (a.note) link.appendChild(makeEl('div', { class: 'item-note', text: a.note }));
                     link.appendChild(makeEl('div', { class: 'item-meta', text: [styleLabel(a.key), a.time ? `added ${formatDate(a.time)}` : ''].filter(Boolean).join(' · ') }));
                     link.style.setProperty('--swatch', resolveStyle(a.key, dark).color);
-                    list.appendChild(makeEl('div', { class: 'item' }, [link]));
+                    const check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-label': 'Select annotation' });
+                    check.checked = everythingChecked.has(everythingId(p, a));
+                    list.appendChild(makeEl('div', { class: 'item' }, [check, link]));
                 });
                 section.appendChild(list);
             }
             rows.push(section);
         });
         const total = everythingPages.reduce((n, p) => n + p.items.length, 0);
-        everythingCount.textContent = terms.length
-            ? `${shownItems} of ${annotationsText(total)}`
-            : `${annotationsText(total)} on ${everythingPages.length} ${everythingPages.length === 1 ? 'page' : 'pages'}`;
+        const ticked = everythingChecked.size;
+        syncSelectionButtons(everythingSelectAll, everythingCopy, everythingForget, ticked, shownItems);
+        everythingCount.textContent = ticked
+            ? `${ticked}/${shownItems}${terms.length ? ` of ${total}` : ''}`
+            : terms.length
+                ? `${shownItems} of ${annotationsText(total)}`
+                : `${annotationsText(total)} on ${everythingPages.length} ${everythingPages.length === 1 ? 'page' : 'pages'}`;
         if (!rows.length) rows.push(makeEl('div', { class: 'empty', text: total ? 'Nothing matches.' : 'No annotations saved yet.' }));
         everythingList.replaceChildren(...rows);
     }
 
     everythingFilter.addEventListener('input', () => { everythingToggled = new Set(); renderEverything(); });
     everythingClose.addEventListener('click', closeEverything);
+    addLabelTip(everythingSelectAll, 'Select all', '', () => true);
+    addLabelTip(everythingCopy, 'Copy selected as Markdown', '', () => true);
+    addLabelTip(everythingForget, 'Forget selected annotations', '', () => true);
+    everythingSelectAll.addEventListener('click', () => {
+        const none = everythingSelectAll.dataset.all === 'true';
+        everythingShown.forEach(s => { if (none) everythingChecked.delete(s.id); else everythingChecked.add(s.id); });
+        renderEverything();
+    });
+    everythingCopy.addEventListener('click', () => {
+        const selected = everythingShown.filter(s => everythingChecked.has(s.id));
+        if (!selected.length) return;
+        writeClipboard(savedMarkdown(selected)).then(
+            () => showToast(doneText('Copied', selected.length), { icon: 'copy_20_regular' }),
+            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy to the clipboard.'); });
+    });
+    everythingForget.addEventListener('click', () => {
+        if (!running) return;
+        const selected = everythingShown.filter(s => everythingChecked.has(s.id));
+        if (!selected.length) return;
+        everythingChecked = new Set();
+        forgetSaved(selected);
+        everythingPages = savedPages();
+        renderEverything();
+    });
+    // Pressing a button leaves the page's text selection alone, as in the annotations panel.
+    everythingEl.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
     addLabelTip(everythingClose, 'Close', 'Esc', () => true);
     // Clicking the dimmed page around it closes it.
     everythingEl.addEventListener('mousedown', e => { if (e.target === everythingEl) closeEverything(); });
     everythingList.addEventListener('click', e => {
+        const box = e.target.closest('input.check');
+        if (box) {
+            const link = box.closest('.item').querySelector('a.item-main');
+            const id = `${link.dataset.key}\n${link.dataset.group}`;
+            if (box.checked) everythingChecked.add(id); else everythingChecked.delete(id);
+            renderEverything();
+            return;
+        }
         const head = e.target.closest('.page-head');
         if (head) {
             const key = head.dataset.key;

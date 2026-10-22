@@ -188,16 +188,7 @@
             ? { group: active.closest('[data-group]').dataset.group, act: active.dataset.act } : null;
 
         const ticked = shown.filter(a => panelChecked.has(a.group)).length;
-        panelErase.disabled = !ticked;
-        panelSelectAll.disabled = !shown.length;
-        const allTicked = !!shown.length && ticked === shown.length;
-        panelSelectAll.dataset.all = String(allTicked);
-        panelSelectAll.replaceChildren(fluentIcon(allTicked ? 'select_all_off_20_regular' : 'select_all_on_20_regular'));
-        panelSelectAll.setAttribute('aria-label', allTicked ? 'Select none' : 'Select all');
-        panelSelectAll.dataset.label = allTicked ? 'Select none' : 'Select all';
-        panelCopy.dataset.label = ticked ? 'Copy selected as Markdown' : 'Copy as Markdown';
-        panelCopy.setAttribute('aria-label', panelCopy.dataset.label);
-        hideLabelTip();
+        syncSelectionButtons(panelSelectAll, panelCopy, panelErase, ticked, shown.length);
         const total = terms.length ? `${shown.length} of ${present.length}` : String(present.length);
         panelCount.textContent = ticked ? `${ticked}/${shown.length}${terms.length ? ` of ${present.length}` : ''}` : total;
         const children = [];
@@ -223,6 +214,20 @@
             (target || panelFilter).focus({ preventScroll: true });
             hideLabelTip();   // focusing it again is no reason to show its tooltip
         }
+    }
+
+    // The header's select all/none, copy and erase (or forget) buttons of either panel: copy and
+    // erase wait for something ticked, and select all turns into select none once all are.
+    function syncSelectionButtons(selectAll, copy, erase, ticked, total) {
+        selectAll.disabled = !total;
+        const allTicked = !!total && ticked === total;
+        selectAll.dataset.all = String(allTicked);
+        selectAll.replaceChildren(fluentIcon(allTicked ? 'select_all_off_20_regular' : 'select_all_on_20_regular'));
+        selectAll.setAttribute('aria-label', allTicked ? 'Select none' : 'Select all');
+        selectAll.dataset.label = allTicked ? 'Select none' : 'Select all';
+        copy.disabled = !ticked;
+        erase.disabled = !ticked;
+        hideLabelTip();
     }
 
     function panelButton(icon, label, act) {
@@ -268,11 +273,11 @@
 
     panelList.setAttribute('role', 'list');
     addLabelTip(panelClose, 'Close', 'Alt+O', () => true);
-    addLabelTip(panelCopy, 'Copy as Markdown', '', () => true);
+    addLabelTip(panelCopy, 'Copy selected as Markdown', '', () => true);
     panelCopy.addEventListener('click', () => {
         renderPanel();
         const ticked = panelItems.filter(a => panelChecked.has(a.group));
-        copyAnnotations(ticked.length ? ticked : panelItems);
+        if (ticked.length) copyAnnotations(ticked);
     });
     panelClose.addEventListener('click', closePanel);
     addLabelTip(panelErase, 'Erase selected annotations', '', () => true);

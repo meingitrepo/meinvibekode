@@ -61,8 +61,11 @@ ${filler(40)}
   await page.waitForTimeout(100); await L.scrolled(page);
   const fl = await page.evaluate(() => { const w = window.__hl.allWrappers().find(w => w.textContent === 'quick brown fox'); const r = w.getBoundingClientRect(); return { top: r.top, flash: window.__flashed, y: scrollY }; });
   L.check('click scrolls and flashes', fl.top > 100 && fl.top < 600 && fl.flash && fl.y > 300, fl);
-  // copy markdown
-  await page.evaluate(() => window.__hl.panelCopy.click()); await page.waitForTimeout(100);
+  // copy markdown: grayed out until something is ticked
+  L.check('copy disabled with nothing ticked', await page.evaluate(() => window.__hl.panelCopy.disabled), null);
+  const order = await page.evaluate(() => Array.from(window.__hl.panelSelectAll.parentElement.children).map(b => b === window.__hl.panelSelectAll ? 's' : b === window.__hl.panelCopy ? 'c' : b === window.__hl.panelErase ? 'e' : 'x').join(''));
+  L.check('header order select/copy/erase/close', order === 'scex', order);
+  await page.evaluate(() => { window.__hl.panelSelectAll.click(); window.__hl.panelCopy.click(); }); await page.waitForTimeout(100);
   const md = await page.evaluate(() => window.__clip);
   console.log(md);
   L.check('markdown header', md.startsWith('## [Test (page) \\[one\\]](https://example.test/a)'), md.split('\n')[0]);
@@ -71,6 +74,9 @@ ${filler(40)}
   L.check('markdown context for repeated', /text=Here%2E?|text=[^)]*Repeated%20words[^)]*/.test(md) && md.includes('-,Repeated%20words') === false, md);
   const tst = await L.toast(page);
   L.check('copy toast', tst === 'Copied 5x annotations', tst);
+  await page.evaluate(() => window.__hl.panelSelectAll.click());
+  const hid = await page.evaluate(() => { const c = window.__hl.panelList.querySelector('.item .check'); return getComputedStyle(c).opacity; });
+  L.check('tick box hidden until the row is hovered', hid === '0', hid);
   // delete from panel
   const ui = await page.evaluate(() => { const h = window.__hl; return { eraseOff: h.panelErase.disabled, none: h.panelSelectAll.dataset.all === 'false' }; });
   L.check('eraser disabled with nothing selected', ui.eraseOff && ui.none, ui);

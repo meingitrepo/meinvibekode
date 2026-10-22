@@ -59,6 +59,25 @@ async function main(browser) {
   await p.waitForTimeout(100); await L.scrolled(p);
   const vis = await p.evaluate(() => { const r = document.getElementById('p1').getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; });
   check('a quote from this page closes it and scrolls to the passage', (await state(p)) === null && vis, vis);
+  // selection: ticks on the left, header select/copy/forget/close
+  await L.altKey(p, 'o', true);
+  await clickHead(p, 0);
+  const hdr = await p.evaluate(() => { const r = window.__hl; const kids = Array.from(r.everythingSelectAll.parentElement.children);
+    const item = r.everythingList.querySelector('.item'); return { order: kids.map(b => [r.everythingSelectAll, r.everythingCopy, r.everythingForget, r.everythingClose].indexOf(b)).join(''),
+      copyOff: r.everythingCopy.disabled, forgetOff: r.everythingForget.disabled, checkFirst: item.firstElementChild.classList.contains('check') }; });
+  check('header order select/copy/forget/close, copy grayed, tick on the left', hdr.order === '0123' && hdr.copyOff && hdr.forgetOff && hdr.checkFirst, hdr);
+  await p.evaluate(() => window.__hl.everythingSelectAll.click());
+  const sel = await p.evaluate(() => ({ n: window.__hl.everythingCount.textContent, copyOn: !window.__hl.everythingCopy.disabled }));
+  check('select all ticks everything, count and copy follow', sel.n === '4/4' && sel.copyOn, sel);
+  await p.evaluate(() => window.__hl.everythingSelectAll.click());
+  await p.evaluate(() => window.__hl.everythingList.querySelector('.item .check').click());
+  await p.evaluate(() => window.__hl.everythingCopy.click()); await p.waitForTimeout(100);
+  const md = await p.evaluate(() => window.__clip);
+  check('copy writes the ticked quote with its page heading', /^## \[other\.test\/blog\/post\-one\]\(https:\/\/other\.test\/blog\/post-one\)\n\n> The quick brown fox jumps \[↗\]/.test(md || ''), md);
+  await p.evaluate(() => window.__hl.everythingForget.click()); await p.waitForTimeout(150);
+  const left = await state(p);
+  check('forget removes it from storage and the list', left && left.count === '3 annotations on 3 pages' && !left.pages[0].items.some(i => i.text === 'The quick brown fox jumps'), left);
+  await p.keyboard.press('Escape');
   // menu
   check('the menu has it', (await L.menu(p)).includes('Search all pages'), await L.menu(p));
   // clicking the backdrop closes

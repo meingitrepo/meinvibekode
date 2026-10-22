@@ -367,7 +367,10 @@
         .check:indeterminate:hover { border-color: var(--colorCompoundBrandBackgroundHover); }
         .check:disabled { cursor: not-allowed; border-color: var(--colorNeutralForegroundDisabled); }
         .check:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 1px; }
-        .item .check { margin: 10px 8px 0 4px; }
+        .item .check { margin: 10px 8px 0 4px; opacity: 0; }
+        .item:hover .check, .item .check:checked, .item .check:focus-visible { opacity: 1; }
+        @media (hover: none) { .item .check { opacity: 1; } }
+        .everything .item .check { margin: 10px 4px 0 8px; }
         .item { display: flex; align-items: flex-start; border-radius: var(--borderRadiusMedium); }
         .item:hover { background: var(--colorSubtleBackgroundHover); }
         /* The annotation itself: a button that scrolls to it. The bar at its left is its color. */

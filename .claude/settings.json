@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**/*)",
+      "Read(./**/vendor/**/*)",
+      "Read(./**/dist/**/*)",
+      "Read(./**/build/**/*)",
+      "Read(./**/out/**/*)",
+      "Read(./**/.next/**/*)",
+      "Read(./**/coverage/**/*)",
+      "Read(./**/__pycache__/**/*)",
+      "Read(./**/*.min.js)",
+      "Read(./**/*.map)",
+      "Read(./**/*.generated.*)",
+      "Read(./**/*.pb.go)",
+      "Read(./**/package-lock.json)",
+      "Read(./**/yarn.lock)",
+      "Read(./**/pnpm-lock.yaml)",
+      "Read(./**/poetry.lock)",
+      "Read(./**/Cargo.lock)",
+      "Read(./**/*.log)",
+      "Read(./**/*.sqlite)",
+      "Read(./**/*.db)",
+      "Read(./**/*.csv)",
+      "Read(./**/*.parquet)",
+      "Read(./**/*.zip)",
+      "Read(./**/*.tar.gz)",
+      "Read(./**/*.png)",
+      "Read(./**/*.jpg)",
+      "Read(./**/*.mp4)",
+      "Read(./**/*.pdf)"
+    ]
+  }
+}

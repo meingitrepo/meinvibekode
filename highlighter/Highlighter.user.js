@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.49
+// @version      8.50
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3511,6 +3511,8 @@
         text_strikethrough_20_regular: 'M6.53 4.03A6 6 0 0 1 10 3a6.2 6.2 0 0 1 4.9 2.2.5.5 0 0 1-.8.6A5.2 5.2 0 0 0 10 4c-1.15 0-2.18.35-2.9.85C6.36 5.35 6 5.98 6 6.5c0 .9.43 1.48 1.17 1.93q.54.32 1.25.57H6.23A3 3 0 0 1 5 6.5c0-.98.64-1.86 1.53-2.47M16.5 10a.5.5 0 0 1 0 1h-2.73A3 3 0 0 1 15 13.5c0 1.23-.72 2.12-1.68 2.68-.94.56-2.16.82-3.32.82a7 7 0 0 1-2.9-.48 4.6 4.6 0 0 1-2.02-1.74.5.5 0 0 1 .84-.56c.45.68.96 1.11 1.58 1.38.64.28 1.44.4 2.5.4 1.03 0 2.06-.24 2.82-.68.74-.44 1.18-1.05 1.18-1.82 0-.9-.43-1.48-1.17-1.93q-.54-.32-1.25-.57H3.5a.5.5 0 0 1 0-1z',
         note_edit_20_regular: 'M3 14.18A3 3 0 0 0 6 17h2l.06-.35.16-.65H5.85A2 2 0 0 1 4 14v-4h3.18A3 3 0 0 0 10 7V4h4.15A2 2 0 0 1 16 6v2q.52-.02 1 .13V5.82A3 3 0 0 0 14 3H9.45a2 2 0 0 0-1.24.59L3.59 8.2l-.12.13A2 2 0 0 0 3 9.62v4.56M7 9H4.22l.07-.09L8.91 4.3 9 4.22v2.93A2 2 0 0 1 7 9m2.98 5.38 4.83-4.83a1.87 1.87 0 1 1 2.64 2.64l-4.83 4.83a2 2 0 0 1-1.02.58l-1.5.37a.9.9 0 0 1-1.07-1.07l.37-1.5q.15-.6.58-1.02',
         save_20_regular: 'M3 5c0-1.1.9-2 2-2h8.38a2 2 0 0 1 1.41.59l1.62 1.62A2 2 0 0 1 17 6.62V15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1v-4.5c0-.83.67-1.5 1.5-1.5h7c.83 0 1.5.67 1.5 1.5V16a1 1 0 0 0 1-1V6.62a1 1 0 0 0-.3-.7L14.1 4.28a1 1 0 0 0-.71-.29H13v2.5c0 .83-.67 1.5-1.5 1.5h-4A1.5 1.5 0 0 1 6 6.5V4zm2 0v2.5c0 .28.22.5.5.5h4a.5.5 0 0 0 .5-.5V4zm7 12v-4.5a.5.5 0 0 0-.5-.5h-7a.5.5 0 0 0-.5.5V16z',
+        pin_16_regular: 'M10.06 2.45a1.5 1.5 0 0 0-2.39.35L5.65 6.59l-2.8.94a.5.5 0 0 0-.2.82l2.14 2.15-2.64 2.65L2 14l.85-.15 2.65-2.64 2.15 2.14a.5.5 0 0 0 .82-.2l.94-2.8 3.78-2.03a1.5 1.5 0 0 0 .35-2.38zm-1.5.82a.5.5 0 0 1 .8-.12l3.48 3.5a.5.5 0 0 1-.12.8l-3.96 2.1a.5.5 0 0 0-.23.3l-.75 2.22-3.85-3.85 2.23-.75a.5.5 0 0 0 .28-.23z',
+        pin_16_filled: 'M10.06 2.45a1.5 1.5 0 0 0-2.39.35L5.65 6.59l-2.8.94a.5.5 0 0 0-.2.82l2.14 2.15-2.64 2.65L2 14l.85-.15 2.65-2.64 2.15 2.14a.5.5 0 0 0 .82-.2l.94-2.8 3.78-2.03a1.5 1.5 0 0 0 .35-2.38z',
         edit_16_regular: 'M14.24 1.76a2.6 2.6 0 0 0-3.71 0L2.66 9.64q-.57.57-.78 1.35l-.86 3.39a.5.5 0 0 0 .6.6l3.39-.86q.78-.21 1.35-.78l7.88-7.87a2.6 2.6 0 0 0 0-3.7m-3 .71a1.62 1.62 0 1 1 2.29 2.3l-.78.77-2.3-2.29zM9.75 3.96l2.3 2.29-6.4 6.39q-.37.37-.89.5l-2.57.67.66-2.57q.14-.52.51-.9z',
         eraser_20_regular: 'M11.2 2.44a1.5 1.5 0 0 1 2.12 0l4.24 4.24a1.5 1.5 0 0 1 0 2.12L9.36 17h5.14a.5.5 0 1 1 0 1H7.82a1.5 1.5 0 0 1-1.14-.44l-4.24-4.24a1.5 1.5 0 0 1 0-2.12zm1.41.7a.5.5 0 0 0-.7 0L5.53 9.52l4.95 4.95 6.36-6.36a.5.5 0 0 0 0-.71zM9.78 15.18l-4.95-4.95-1.69 1.69a.5.5 0 0 0 0 .7l4.25 4.25c.2.2.5.2.7 0z',
         delete_20_regular: 'M8.5 4h3a1.5 1.5 0 0 0-3 0m-1 0a2.5 2.5 0 0 1 5 0h5a.5.5 0 0 1 0 1h-1.05l-1.2 10.34A3 3 0 0 1 12.27 18H7.73a3 3 0 0 1-2.98-2.66L3.55 5H2.5a.5.5 0 0 1 0-1zM5.74 15.23A2 2 0 0 0 7.73 17h4.54a2 2 0 0 0 1.99-1.77L15.44 5H4.56zM8.5 7.5c.28 0 .5.22.5.5v6a.5.5 0 0 1-1 0V8c0-.28.22-.5.5-.5M12 8a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z',
@@ -3535,7 +3537,7 @@
         const size = /_16_/.test(name) ? 16 : 20;
         const svg = svgEl('svg', { class: `icon icon-${size}`, viewBox: `0 0 ${size} ${size}`, 'aria-hidden': 'true', focusable: 'false' });
         under.forEach(s => svg.appendChild(s));
-        svg.appendChild(svgEl('path', { d: FLUENT_ICONS[name] }));
+        svg.appendChild(svgEl('path', { d: FLUENT_ICONS[name], }));
         over.forEach(s => svg.appendChild(s));
         return svg;
     }
@@ -3564,6 +3566,7 @@
         --colorNeutralStrokeAccessibleHover: #575757;
         --colorCompoundBrandStroke: #0f6cbd;
         --colorBrandForeground1: #0f6cbd;
+        --colorPaletteRedForeground1: #b10e1c;
         --colorBrandForegroundLink: #115ea3;
         --colorBrandForegroundLinkHover: #0f548c;
         --colorBrandForegroundLinkPressed: #0c3b5e;
@@ -3601,6 +3604,7 @@
         --colorNeutralStrokeAccessibleHover: #bdbdbd;
         --colorCompoundBrandStroke: #479ef5;
         --colorBrandForeground1: #479ef5;
+        --colorPaletteRedForeground1: #dc626d;
         --colorBrandForegroundLink: #479ef5;
         --colorBrandForegroundLinkHover: #62abf5;
         --colorBrandForegroundLinkPressed: #2886de;
@@ -3663,7 +3667,7 @@
         .btn-subtle:active .icon { color: var(--colorNeutralForeground2BrandPressed); }
         .btn:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 0; box-shadow: inset 0 0 0 1px var(--colorStrokeFocus1); }
         /* The note editor's Save while the note has unsaved changes. */
-        .btn-subtle.dirty:not(:active) .icon { color: var(--colorBrandForeground1); }
+        .btn-subtle.dirty:not(:active) .icon { color: var(--colorPaletteRedForeground1); }
 
         /* Annotations selected by clicking them: a dashed outline around their lines' shape,
            black, or white on a dark page. */
@@ -3700,7 +3704,7 @@
         .card-text a { color: var(--colorBrandForegroundLink); text-decoration: underline; border-radius: var(--borderRadiusMedium); outline: none; }
         .card-text a:hover { color: var(--colorBrandForegroundLinkHover); }
         .card-text a:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
-        .card[data-pinned] .card-footer, .editor-header { cursor: move; user-select: none; }
+        .card[data-pinned] .card-footer { cursor: move; user-select: none; }
         .card-footer { display: flex; align-items: center; gap: 12px; margin: 8px -4px -4px 0; }
         .card-hint { flex: 1; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
         .card-actions { display: flex; gap: 4px; }
@@ -3869,12 +3873,13 @@
     // Icon only, like the note editor's Save and Delete; its tooltip is added with addLabelTip().
     // The 16px pencil: the 20px one spans its box corner to corner and looks bigger than Save
     // and Delete; Fluent's 16px drawing has the same ink size as Save (14px) at full line weight.
+    const cardPin = fluentButton({ icon: fluentIcon('pin_16_regular') });
     const cardEdit = fluentButton({ icon: fluentIcon('edit_16_regular') });
     const cardDelete = fluentButton({ icon: fluentIcon('delete_16_regular') });
     const cardHint = makeEl('span', { class: 'card-hint' });   // the date it was added (see showNoteCard)
     const noteCardEl = makeEl('div', { class: 'surface card', hidden: '' }, [
         cardText,
-        makeEl('div', { class: 'card-footer' }, [cardHint, makeEl('div', { class: 'card-actions' }, [cardEdit, cardDelete])])
+        makeEl('div', { class: 'card-footer' }, [cardHint, makeEl('div', { class: 'card-actions' }, [cardPin, cardEdit, cardDelete])])
     ]);
 
     const editorTitle = makeEl('div', { class: 'editor-title', id: 'highlighter-note-title' });
@@ -4117,6 +4122,7 @@
     addLabelTip(noteSave, 'Save note', 'Enter', () => false);
     addLabelTip(noteDelete, 'Delete note', 'Delete', () => false);
     // The note preview sits below its text, so its tip goes below too, off the text.
+    addLabelTip(cardPin, 'Pin note', '', () => true);
     addLabelTip(cardEdit, 'Edit note', 'Alt+N', () => true);
     addLabelTip(cardDelete, 'Delete note', 'Alt+D', () => true);   // D on the annotation deletes its note first
     addLabelTip(penOff, 'Turn off the pen', 'Esc', () => true);
@@ -4403,7 +4409,7 @@
     let cardWrapper = null;
     let cardHideTimer = null;
     let cardShowTimer = null;
-    const pinnedCards = new Map();   // badge (its wrapper) -> the copy of its note card kept open (see onBadgeClick)
+    const pinnedCards = new Map();   // badge (its wrapper) -> the copy of its note card kept open (see pinNoteCard)
 
     // A note's text with its web addresses as links, opened in a new tab. Punctuation right after
     // an address (a full stop, a closing bracket the address didn't open) stays outside the link.
@@ -4501,40 +4507,35 @@
         cardWrapper = null;
     }
 
-    // A click on a note badge keeps its note open in a copy of the card, placed where the card
-    // was, the badge in the selection outline's color, until that badge is clicked again or Esc
-    // closes the last one pinned; clicks elsewhere leave it open, and any number can be pinned.
-    // The copy is in the page layer, so it scrolls with the text; dragged by its footer, it
-    // stays where dropped. True if the click was on a badge.
-    function onBadgeClick(e) {
-        const mark = e.button || annotationsHidden ? null : markNear(e.clientX, e.clientY);
-        if (!mark) return false;
-        if (pinnedCards.has(mark)) { unpinNoteCard(mark); return true; }
-        if (editor && editor.group === mark.getAttribute(GROUP_ATTR)) return true;   // its note is open in the editor
-        const shown = sameCard(mark);
-        showNoteCard(mark);
+    // The pin button of a note card keeps its note open in a copy of the card, placed where the
+    // card was, the badge in the selection outline's color, until the copy's pin button is
+    // pressed again or Esc closes the last one pinned; clicks elsewhere leave it open, and any
+    // number can be pinned. The copy is in the page layer, so it scrolls with the text; dragged
+    // by its footer, it stays where dropped.
+    function pinNoteCard() {
+        const w = cardWrapper;
+        const mark = w && w.isConnected && (w.hasAttribute(NOTE_MARK_ATTR) ? w
+            : groupWrappers(w.getAttribute(GROUP_ATTR)).find(m => m.hasAttribute(NOTE_MARK_ATTR)));
+        if (!mark || pinnedCards.has(mark)) return;
         const card = noteCardEl.cloneNode(true);
         card.setAttribute('data-pinned', '');
-        if (shown) card.style.animation = 'none';   // the hover card already on screen just stays; no second fade-in
+        card.style.animation = 'none';   // the hover card already on screen just stays; no second fade-in
         hideNoteCard();
         noteCardEl.after(card);
         pinnedCards.set(mark, card);
         mark.setAttribute(NOTE_PIN_ATTR, '');
-        const [edit, del] = card.querySelectorAll('.card-actions button');
+        const [pin, edit, del] = card.querySelectorAll('.card-actions button');
         const act = fn => () => { unpinNoteCard(mark); if (mark.isConnected) fn(mark.getAttribute(GROUP_ATTR)); };
-        [edit, del].forEach(b => addLabelTip(b, b.dataset.label, b.dataset.shortcut, () => true));   // a copy has no listeners
-        // The editor opens in the pinned card's place, wherever it was dragged.
-        edit.addEventListener('click', () => {
-            const at = { left: card.style.left, top: card.style.top };
-            act(openNoteEditor)();
-            if (!editor || editor.group !== mark.getAttribute(GROUP_ATTR)) return;
-            Object.assign(editorEl.style, at);
-            editor.side = null;
-        });
+        pin.replaceChildren(fluentIcon('pin_16_filled'));
+        pin.dataset.label = 'Unpin note';
+        pin.setAttribute('aria-label', 'Unpin note');
+        pin.setAttribute('aria-pressed', 'true');
+        [pin, edit, del].forEach(b => addLabelTip(b, b.dataset.label, b.dataset.shortcut, () => true));   // a copy has no listeners
+        pin.addEventListener('click', () => unpinNoteCard(mark));
+        edit.addEventListener('click', act(openNoteEditor));
         del.addEventListener('click', act(deleteGroupNote));
         card.addEventListener('wheel', keepWheel, { passive: false });
         dragByHandle(card, card.querySelector('.card-footer'), () => true);
-        return true;
     }
 
     // `mark` omitted: every pinned note.
@@ -4554,13 +4555,6 @@
     function prunePinnedCards() {
         pinnedCards.forEach((card, m) => { if (!m.isConnected || !m.hasAttribute(NOTE_MARK_ATTR)) unpinNoteCard(m); });
     }
-
-    // The editor moves by its header; where it is dropped it stays in the page, scrolling with it.
-    dragByHandle(editorEl, editorEl.querySelector('.editor-header'), () => {
-        if (!editor) return false;
-        editor.side = null;   // moved, it no longer grows upward from where it opened
-        return true;
-    });
 
     function onMouseOver(e) {
         // Moving into the card keeps it open; nearMark forgotten, the next move off it starts the hide.
@@ -4624,6 +4618,8 @@
     }
     noteCardEl.addEventListener('wheel', keepWheel, { passive: false });
     editorEl.addEventListener('wheel', keepWheel, { passive: false });
+
+    cardPin.addEventListener('click', pinNoteCard);
 
     cardEdit.addEventListener('click', () => {
         const w = cardWrapper;
@@ -4721,7 +4717,7 @@
         return clipNote(noteInput.value.trim());
     }
 
-    // Save turns brand blue while the note differs from what is saved.
+    // Save turns red while the note differs from what is saved.
     function updateSaveState() {
         const dirty = !!editor && noteDraft() !== editor.original;
         if (dirty === noteSave.classList.contains('dirty')) return;
@@ -4763,6 +4759,7 @@
         if (!wrappers.length) return;
         hideToolbar();
         hideNoteCard();
+        pinnedCards.forEach((card, m) => { if (m.getAttribute(GROUP_ATTR) === group) unpinNoteCard(m); });   // the editor takes its place
         ensureUi(wrappers[0].hasAttribute(DARK_ATTR));
         const original = wrappers[0].getAttribute(NOTE_ATTR) || '';
         const focused = document.activeElement;
@@ -5378,7 +5375,6 @@
 
     function onDocumentClick(e) {
         if (isUiEvent(e)) return;   // the note card, the toast's Undo: the selection stays
-        if (onBadgeClick(e)) return;   // pins or unpins its note, nothing more
         const group = clickedGroup(e);
         if (group && editor) return;   // while a note is edited, clicking annotations selects nothing
         if (!group || getActiveRange()) { clearSelectedGroups(); return; }

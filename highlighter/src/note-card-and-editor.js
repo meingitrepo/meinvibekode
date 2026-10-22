@@ -5,7 +5,7 @@
     let cardWrapper = null;
     let cardHideTimer = null;
     let cardShowTimer = null;
-    const pinnedCards = new Map();   // badge (its wrapper) -> the copy of its note card kept open (see onBadgeClick)
+    const pinnedCards = new Map();   // badge (its wrapper) -> the copy of its note card kept open (see pinNoteCard)
 
     // A note's text with its web addresses as links, opened in a new tab. Punctuation right after
     // an address (a full stop, a closing bracket the address didn't open) stays outside the link.
@@ -103,40 +103,35 @@
         cardWrapper = null;
     }
 
-    // A click on a note badge keeps its note open in a copy of the card, placed where the card
-    // was, the badge in the selection outline's color, until that badge is clicked again or Esc
-    // closes the last one pinned; clicks elsewhere leave it open, and any number can be pinned.
-    // The copy is in the page layer, so it scrolls with the text; dragged by its footer, it
-    // stays where dropped. True if the click was on a badge.
-    function onBadgeClick(e) {
-        const mark = e.button || annotationsHidden ? null : markNear(e.clientX, e.clientY);
-        if (!mark) return false;
-        if (pinnedCards.has(mark)) { unpinNoteCard(mark); return true; }
-        if (editor && editor.group === mark.getAttribute(GROUP_ATTR)) return true;   // its note is open in the editor
-        const shown = sameCard(mark);
-        showNoteCard(mark);
+    // The pin button of a note card keeps its note open in a copy of the card, placed where the
+    // card was, the badge in the selection outline's color, until the copy's pin button is
+    // pressed again or Esc closes the last one pinned; clicks elsewhere leave it open, and any
+    // number can be pinned. The copy is in the page layer, so it scrolls with the text; dragged
+    // by its footer, it stays where dropped.
+    function pinNoteCard() {
+        const w = cardWrapper;
+        const mark = w && w.isConnected && (w.hasAttribute(NOTE_MARK_ATTR) ? w
+            : groupWrappers(w.getAttribute(GROUP_ATTR)).find(m => m.hasAttribute(NOTE_MARK_ATTR)));
+        if (!mark || pinnedCards.has(mark)) return;
         const card = noteCardEl.cloneNode(true);
         card.setAttribute('data-pinned', '');
-        if (shown) card.style.animation = 'none';   // the hover card already on screen just stays; no second fade-in
+        card.style.animation = 'none';   // the hover card already on screen just stays; no second fade-in
         hideNoteCard();
         noteCardEl.after(card);
         pinnedCards.set(mark, card);
         mark.setAttribute(NOTE_PIN_ATTR, '');
-        const [edit, del] = card.querySelectorAll('.card-actions button');
+        const [pin, edit, del] = card.querySelectorAll('.card-actions button');
         const act = fn => () => { unpinNoteCard(mark); if (mark.isConnected) fn(mark.getAttribute(GROUP_ATTR)); };
-        [edit, del].forEach(b => addLabelTip(b, b.dataset.label, b.dataset.shortcut, () => true));   // a copy has no listeners
-        // The editor opens in the pinned card's place, wherever it was dragged.
-        edit.addEventListener('click', () => {
-            const at = { left: card.style.left, top: card.style.top };
-            act(openNoteEditor)();
-            if (!editor || editor.group !== mark.getAttribute(GROUP_ATTR)) return;
-            Object.assign(editorEl.style, at);
-            editor.side = null;
-        });
+        pin.replaceChildren(fluentIcon('pin_16_filled'));
+        pin.dataset.label = 'Unpin note';
+        pin.setAttribute('aria-label', 'Unpin note');
+        pin.setAttribute('aria-pressed', 'true');
+        [pin, edit, del].forEach(b => addLabelTip(b, b.dataset.label, b.dataset.shortcut, () => true));   // a copy has no listeners
+        pin.addEventListener('click', () => unpinNoteCard(mark));
+        edit.addEventListener('click', act(openNoteEditor));
         del.addEventListener('click', act(deleteGroupNote));
         card.addEventListener('wheel', keepWheel, { passive: false });
         dragByHandle(card, card.querySelector('.card-footer'), () => true);
-        return true;
     }
 
     // `mark` omitted: every pinned note.
@@ -156,13 +151,6 @@
     function prunePinnedCards() {
         pinnedCards.forEach((card, m) => { if (!m.isConnected || !m.hasAttribute(NOTE_MARK_ATTR)) unpinNoteCard(m); });
     }
-
-    // The editor moves by its header; where it is dropped it stays in the page, scrolling with it.
-    dragByHandle(editorEl, editorEl.querySelector('.editor-header'), () => {
-        if (!editor) return false;
-        editor.side = null;   // moved, it no longer grows upward from where it opened
-        return true;
-    });
 
     function onMouseOver(e) {
         // Moving into the card keeps it open; nearMark forgotten, the next move off it starts the hide.
@@ -226,6 +214,8 @@
     }
     noteCardEl.addEventListener('wheel', keepWheel, { passive: false });
     editorEl.addEventListener('wheel', keepWheel, { passive: false });
+
+    cardPin.addEventListener('click', pinNoteCard);
 
     cardEdit.addEventListener('click', () => {
         const w = cardWrapper;
@@ -323,7 +313,7 @@
         return clipNote(noteInput.value.trim());
     }
 
-    // Save turns brand blue while the note differs from what is saved.
+    // Save turns red while the note differs from what is saved.
     function updateSaveState() {
         const dirty = !!editor && noteDraft() !== editor.original;
         if (dirty === noteSave.classList.contains('dirty')) return;
@@ -365,6 +355,7 @@
         if (!wrappers.length) return;
         hideToolbar();
         hideNoteCard();
+        pinnedCards.forEach((card, m) => { if (m.getAttribute(GROUP_ATTR) === group) unpinNoteCard(m); });   // the editor takes its place
         ensureUi(wrappers[0].hasAttribute(DARK_ATTR));
         const original = wrappers[0].getAttribute(NOTE_ATTR) || '';
         const focused = document.activeElement;

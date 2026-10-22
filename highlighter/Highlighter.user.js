@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.73
+// @version      8.74
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3630,11 +3630,11 @@
         :host([data-theme="dark"]) { ${DARK_TOKENS} }
         .panel[data-theme="light"], .toast[data-theme="light"], .pen[data-theme="light"], .everything[data-theme="light"] { ${LIGHT_TOKENS} }
         .panel[data-theme="dark"], .toast[data-theme="dark"], .pen[data-theme="dark"], .everything[data-theme="dark"] { ${DARK_TOKENS} }
-        [hidden]:not(.surface) { display: none !important; }
+        [hidden]:not(.surface), .tip[hidden] { display: none !important; }
         /* Surfaces fade out rather than vanish: display flips last (allow-discrete), so the hidden attribute
            still takes effect at once for scripts. */
-        .surface { transition: opacity var(--durationNormal) var(--curveAccelerateMid), transform var(--durationNormal) var(--curveAccelerateMid), display var(--durationNormal) allow-discrete; }
-        .surface[hidden] { display: none; opacity: 0; transform: translateY(4px); pointer-events: none; }
+        .surface:not(.tip) { transition: opacity var(--durationNormal) var(--curveAccelerateMid), transform var(--durationNormal) var(--curveAccelerateMid), display var(--durationNormal) allow-discrete; }
+        .surface:not(.tip)[hidden] { display: none; opacity: 0; transform: translateY(4px); pointer-events: none; }
         /* Scrollbars (note box, card text, lists) follow our theme, not the page's. Set here, not on
            :host: the host's inline all: initial !important would reset it. */
         .surface, .everything { color-scheme: var(--colorScheme); }

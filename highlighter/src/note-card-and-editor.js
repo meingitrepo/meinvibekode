@@ -122,7 +122,7 @@
         mark.setAttribute(NOTE_PIN_ATTR, '');
         const [pin, edit, del] = card.querySelectorAll('.card-actions button');
         const act = fn => () => { unpinNoteCard(mark); if (mark.isConnected) fn(mark.getAttribute(GROUP_ATTR)); };
-        pin.replaceChildren(fluentIcon('pin_16_filled'));
+        pin.replaceChildren(fluentIcon('pin_20_filled'));
         pin.dataset.label = 'Unpin note';
         pin.setAttribute('aria-label', 'Unpin note');
         pin.setAttribute('aria-pressed', 'true');

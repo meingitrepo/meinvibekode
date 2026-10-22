@@ -22,9 +22,9 @@
     // Icon only, like the note editor's Save and Delete; its tooltip is added with addLabelTip().
     // The 16px pencil: the 20px one spans its box corner to corner and looks bigger than Save
     // and Delete; Fluent's 16px drawing has the same ink size as Save (14px) at full line weight.
-    const cardPin = fluentButton({ icon: fluentIcon('pin_16_regular') });
-    const cardEdit = fluentButton({ icon: fluentIcon('edit_16_regular') });
-    const cardDelete = fluentButton({ icon: fluentIcon('delete_16_regular') });
+    const cardPin = fluentButton({ icon: fluentIcon('pin_20_regular') });
+    const cardEdit = fluentButton({ icon: fluentIcon('edit_20_regular') });
+    const cardDelete = fluentButton({ icon: fluentIcon('delete_20_regular') });
     const cardHint = makeEl('span', { class: 'card-hint' });   // the date it was added (see showNoteCard)
     const noteCardEl = makeEl('div', { class: 'surface card', hidden: '' }, [
         cardText,
@@ -69,7 +69,7 @@
     // The pen (Alt+P, see setPen): a pill at the top of the view while it is on.
     let penIcon = fluentIcon('highlight_20_regular');   // replaced by the pen's style
     const penText = makeEl('span', { class: 'pen-text' });
-    const penOff = fluentButton({ icon: fluentIcon('dismiss_16_regular') });
+    const penOff = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const penEl = makeEl('div', { class: 'surface pen', role: 'status', hidden: '' }, [penIcon, penText, penOff]);
 
     // Everything saved (Alt+Shift+O, see openEverything): a dialog over the dimmed page.

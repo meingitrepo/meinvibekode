@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.67
+// @version      8.68
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3775,8 +3775,8 @@
         .link:hover { color: var(--colorBrandForegroundLinkHover); text-decoration: underline; }
         .link:active { color: var(--colorBrandForegroundLinkPressed); text-decoration: underline; }
         .link:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 1px; }
-        /* The pen's pill, centred at the top of the view. */
-        .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 12px; border-radius: 999px; }
+        /* The pen's bar, centred at the top of the view. */
+        .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 12px; }
         .pen-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
         .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }

@@ -13,10 +13,6 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Edit only `highlighter/src/*.js`, then `node build.js` in `highlighter/`; `node build.js --check` must say "up to date". Never edit the built .user.js.
 - Keep storage key `rnh:settings` and page keys unchanged (renaming loses saved data). Never change @namespace.
 
-## Lessons
-- Read `highlighter/LESSONS.md` in full at thread start (kept short on purpose).
-- At the end of a task, if something non-obvious cost time or tokens, propose ONE line for it to Mhmd. Add it only if he approves, in the same local commit as the task, so it ships with the next PUSH (no separate push). Never add task logs or release notes there.
-
 ## Reading
 - Grep src/ first, read only the line ranges needed. Never read the built .user.js or all of src.
 

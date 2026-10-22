@@ -63,8 +63,8 @@
     const panelList = makeEl('div', { class: 'panel-list' });
     const panelEl = makeEl('div', { class: 'surface panel', role: 'complementary', 'aria-label': 'Annotations', hidden: '' }, [
         makeEl('div', { class: 'panel-header' }, [
-            makeEl('div', { class: 'panel-title', text: 'Annotations' }), panelSelectAll, panelCount,
-            makeEl('div', { class: 'panel-actions' }, [panelErase, panelCopy, panelClose])
+            makeEl('div', { class: 'panel-title', text: 'Annotations' }), panelCount,
+            makeEl('div', { class: 'panel-actions' }, [panelSelectAll, panelErase, panelCopy, panelClose])
         ]),
         makeEl('div', { class: 'field' }, [searchIcon, panelFilter]),
         panelList

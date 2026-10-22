@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.58
+// @version      8.59
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3515,6 +3515,8 @@
         edit_20_regular: 'M17.18 2.93a2.97 2.97 0 0 0-4.26-.06l-9.37 9.38q-.5.5-.66 1.2l-.88 3.94a.5.5 0 0 0 .6.6l3.93-.87c.46-.1.9-.34 1.23-.68l9.36-9.36a2.97 2.97 0 0 0 .05-4.15m-3.55.65a1.97 1.97 0 1 1 2.8 2.8l-.68.66-2.8-2.79zm-1.38 1.38 2.8 2.8-7.99 7.97q-.31.31-.74.41l-3.16.7.7-3.18q.1-.41.4-.7z',
         eraser_20_regular: 'M11.2 2.44a1.5 1.5 0 0 1 2.12 0l4.24 4.24a1.5 1.5 0 0 1 0 2.12L9.36 17h5.14a.5.5 0 1 1 0 1H7.82a1.5 1.5 0 0 1-1.14-.44l-4.24-4.24a1.5 1.5 0 0 1 0-2.12zm1.41.7a.5.5 0 0 0-.7 0L5.53 9.52l4.95 4.95 6.36-6.36a.5.5 0 0 0 0-.71zM9.78 15.18l-4.95-4.95-1.69 1.69a.5.5 0 0 0 0 .7l4.25 4.25c.2.2.5.2.7 0z',
         delete_20_regular: 'M8.5 4h3a1.5 1.5 0 0 0-3 0m-1 0a2.5 2.5 0 0 1 5 0h5a.5.5 0 0 1 0 1h-1.05l-1.2 10.34A3 3 0 0 1 12.27 18H7.73a3 3 0 0 1-2.98-2.66L3.55 5H2.5a.5.5 0 0 1 0-1zM5.74 15.23A2 2 0 0 0 7.73 17h4.54a2 2 0 0 0 1.99-1.77L15.44 5H4.56zM8.5 7.5c.28 0 .5.22.5.5v6a.5.5 0 0 1-1 0V8c0-.28.22-.5.5-.5M12 8a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z',
+        select_all_on_20_regular: 'M12.33 6.62c.2.18.22.5.04.7l-3.5 4a.5.5 0 0 1-.73.03l-2-2a.5.5 0 1 1 .7-.7l1.63 1.62 3.15-3.6c.18-.2.5-.23.7-.05M3 6a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3zm3-2a2 2 0 0 0-2 2v6c0 1.1.9 2 2 2h6a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm-.25 12c.55.61 1.35 1 2.24 1h4.5a4.5 4.5 0 0 0 4.5-4.5V8c0-.88-.38-1.68-.99-2.23V11q0 .15-.01.3v1.2a3.5 3.5 0 0 1-3.5 3.5h-1.43l-.06.01z',
+        select_all_off_20_regular: 'M6 3a3 3 0 0 0-3 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3zM4 6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm3.99 11c-.89 0-1.69-.39-2.24-1h5.25q.03 0 .05-.01h1.44a3.5 3.5 0 0 0 3.5-3.5v-1.2q.01-.15.01-.3V5.77c.61.55.99 1.35.99 2.23v4.5a4.5 4.5 0 0 1-4.5 4.5z',
         copy_20_regular: 'M7 7H5.5C4.67 7 4 7.67 4 8.5v6c0 .83.67 1.5 1.5 1.5h4c.65 0 1.2-.42 1.41-1h1.04a2.5 2.5 0 0 1-2.45 2h-4A2.5 2.5 0 0 1 3 14.5v-6A2.5 2.5 0 0 1 5.5 6H7zm7.5-4A2.5 2.5 0 0 1 17 5.5v6a2.5 2.5 0 0 1-2.5 2.5h-4A2.5 2.5 0 0 1 8 11.5v-6A2.5 2.5 0 0 1 10.5 3zm-4 1C9.67 4 9 4.67 9 5.5v6c0 .83.67 1.5 1.5 1.5h4c.83 0 1.5-.67 1.5-1.5v-6c0-.83-.67-1.5-1.5-1.5z',
         dismiss_20_regular: 'm4.09 4.22.06-.07a.5.5 0 0 1 .63-.06l.07.06L10 9.29l5.15-5.14a.5.5 0 0 1 .63-.06l.07.06c.18.17.2.44.06.63l-.06.07L10.71 10l5.14 5.15c.18.17.2.44.06.63l-.06.07a.5.5 0 0 1-.63.06l-.07-.06L10 10.71l-5.15 5.14a.5.5 0 0 1-.63.06l-.07-.06a.5.5 0 0 1-.06-.63l.06-.07L9.29 10 4.15 4.85a.5.5 0 0 1-.06-.63l.06-.07z',
         chevron_down_16_regular: 'M3.15 5.65c.2-.2.5-.2.7 0L8 9.79l4.15-4.14a.5.5 0 0 1 .7.7l-4.5 4.5a.5.5 0 0 1-.7 0l-4.5-4.5a.5.5 0 0 1 0-.7',
@@ -3820,8 +3822,8 @@
            the rows, a smaller square) when on. */
         .check {
             appearance: none; flex: none; position: relative; width: 16px; height: 16px; margin: 0; cursor: pointer;
-            border: 1px solid var(--colorNeutralStrokeAccessible); border-radius: var(--borderRadiusSmall); background: transparent;
-            box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent;
+            border: 1px solid var(--colorNeutralStrokeAccessible); border-radius: var(--borderRadiusMedium); background: transparent;
+            transition: background-color 100ms, border-color 100ms; box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent;
         }
         .check:hover { border-color: var(--colorNeutralStrokeAccessibleHover); }
         .check:checked { border-color: var(--colorCompoundBrandBackground); background: var(--colorCompoundBrandBackground); }
@@ -3836,8 +3838,7 @@
         .check:indeterminate:hover { border-color: var(--colorCompoundBrandBackgroundHover); }
         .check:disabled { cursor: not-allowed; border-color: var(--colorNeutralForegroundDisabled); }
         .check:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 1px; }
-        .panel-header .check { margin-right: 0; }
-        .item .check { margin: 10px 0 0 4px; }
+        .item .check { margin: 10px 8px 0 4px; }
         .item { display: flex; align-items: flex-start; border-radius: var(--borderRadiusMedium); }
         .item:hover { background: var(--colorSubtleBackgroundHover); }
         /* The annotation itself: a button that scrolls to it. The bar at its left is its color. */
@@ -3932,7 +3933,7 @@
     const panelCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });
     const panelErase = fluentButton({ icon: fluentIcon('eraser_20_regular') });
     panelErase.disabled = true;
-    const panelSelectAll = makeEl('input', { type: 'checkbox', class: 'check', 'aria-label': 'Select all annotations' });
+    const panelSelectAll = fluentButton({ icon: fluentIcon('select_all_on_20_regular') });
     const panelCopy = fluentButton({ icon: fluentIcon('copy_20_regular') });
     const panelClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const panelFilter = makeEl('input', { type: 'search', placeholder: 'Filter by text or note', 'aria-label': 'Filter annotations by text or note', spellcheck: 'false', autocomplete: 'off' });
@@ -3941,8 +3942,8 @@
     const panelList = makeEl('div', { class: 'panel-list' });
     const panelEl = makeEl('div', { class: 'surface panel', role: 'complementary', 'aria-label': 'Annotations', hidden: '' }, [
         makeEl('div', { class: 'panel-header' }, [
-            panelSelectAll, makeEl('div', { class: 'panel-title', text: 'Annotations' }), panelCount,
-            makeEl('div', { class: 'panel-actions' }, [panelErase, panelCopy, panelClose])
+            makeEl('div', { class: 'panel-title', text: 'Annotations' }), panelCount,
+            makeEl('div', { class: 'panel-actions' }, [panelSelectAll, panelErase, panelCopy, panelClose])
         ]),
         makeEl('div', { class: 'field' }, [searchIcon, panelFilter]),
         panelList
@@ -5848,10 +5849,16 @@
         const ticked = shown.filter(a => panelChecked.has(a.group)).length;
         panelErase.disabled = !ticked;
         panelSelectAll.disabled = !shown.length;
-        panelSelectAll.checked = !!shown.length && ticked === shown.length;
-        panelSelectAll.indeterminate = ticked > 0 && ticked < shown.length;
+        const allTicked = !!shown.length && ticked === shown.length;
+        panelSelectAll.dataset.all = String(allTicked);
+        panelSelectAll.replaceChildren(fluentIcon(allTicked ? 'select_all_off_20_regular' : 'select_all_on_20_regular'));
+        panelSelectAll.setAttribute('aria-label', allTicked ? 'Select none' : 'Select all');
+        panelSelectAll.dataset.label = allTicked ? 'Select none' : 'Select all';
+        panelCopy.dataset.label = ticked ? 'Copy selected as Markdown' : 'Copy as Markdown';
+        panelCopy.setAttribute('aria-label', panelCopy.dataset.label);
         hideLabelTip();
-        panelCount.textContent = terms.length ? `${shown.length} of ${present.length}` : String(present.length);
+        const total = terms.length ? `${shown.length} of ${present.length}` : String(present.length);
+        panelCount.textContent = ticked ? `${ticked}/${shown.length}${terms.length ? ` of ${present.length}` : ''}` : total;
         const children = [];
         if (!present.length && !missing.length) {
             children.push(makeEl('div', { class: 'empty', text: 'No annotations on this page yet. Select some text and press Alt+H to highlight it.' }));
@@ -5913,15 +5920,19 @@
             check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-label': 'Select annotation' });
             check.checked = panelChecked.has(a.group);
         }
-        const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, check ? [check, main] : [main, actions]);
+        const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, check ? [main, check] : [main, actions]);
         item.dataset.group = a.group;
         return item;
     }
 
     panelList.setAttribute('role', 'list');
-    addLabelTip(panelCopy, 'Copy as Markdown', '', () => true);
     addLabelTip(panelClose, 'Close', 'Alt+O', () => true);
-    panelCopy.addEventListener('click', () => { renderPanel(); copyAnnotations(panelItems); });
+    addLabelTip(panelCopy, 'Copy as Markdown', '', () => true);
+    panelCopy.addEventListener('click', () => {
+        renderPanel();
+        const ticked = panelItems.filter(a => panelChecked.has(a.group));
+        copyAnnotations(ticked.length ? ticked : panelItems);
+    });
     panelClose.addEventListener('click', closePanel);
     addLabelTip(panelErase, 'Erase selected annotations', '', () => true);
     addLabelTip(panelSelectAll, 'Select all', '', () => true);
@@ -5932,8 +5943,10 @@
         deleteGroups(groups);
         renderPanel();
     });
-    panelSelectAll.addEventListener('change', () => {
-        panelItems.forEach(a => { if (panelSelectAll.checked) panelChecked.add(a.group); else panelChecked.delete(a.group); });
+    // All, or none when all are ticked.
+    panelSelectAll.addEventListener('click', () => {
+        const none = panelSelectAll.dataset.all === 'true';
+        panelItems.forEach(a => { if (none) panelChecked.delete(a.group); else panelChecked.add(a.group); });
         renderPanel();
     });
     panelEl.addEventListener('mouseenter', () => { if (cardWrapper) hideNoteCard(); });

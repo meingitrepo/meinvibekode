@@ -89,15 +89,9 @@ ${filler(40)}
   await L.until(page, () => Array.from(window.__hl.panelList.querySelectorAll('.item-text')).some(e => e.textContent === 'three four'));
   it = await L.items(page);
   L.check('undo brings it back to panel', it.some(i => i.text === 'three four'), it.length);
-  // invert with Shift+click: the count shows how many are ticked
-  const inv = await page.evaluate(async () => {
-    const h = window.__hl, n = h.panelList.querySelectorAll('.item:not(.missing)').length;
-    h.panelList.querySelector('.item .check').click();
-    const one = h.panelCount.textContent;
-    h.panelSelectAll.dispatchEvent(new MouseEvent('click', { shiftKey: true, bubbles: true }));
-    return { n, one, after: h.panelCount.textContent, ticked: h.panelList.querySelectorAll('.item .check:checked').length };
-  });
-  L.check('count shows ticked/total, Shift+click inverts', inv.one === `1/${inv.n}` && inv.ticked === inv.n - 1 && inv.after === `${inv.n - 1}/${inv.n}`, inv);
+  // the count shows how many are ticked
+  const cnt = await page.evaluate(() => { const h = window.__hl; h.panelList.querySelector('.item .check').click(); const n = h.panelList.querySelectorAll('.item:not(.missing)').length; return { n, one: h.panelCount.textContent }; });
+  L.check('count shows ticked/total', cnt.one === `1/${cnt.n}`, cnt);
   await page.evaluate(() => window.__hl.panelSelectAll.click());
   await page.evaluate(() => window.__hl.panelSelectAll.click());
   // select all, then erase several in one step

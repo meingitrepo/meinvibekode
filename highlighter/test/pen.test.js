@@ -98,9 +98,25 @@ async function dark(browser) {
   await ctx.close();
 }
 
+async function staleSelectionFromPanel(browser) {
+  const { ctx, page: p } = await L.open(browser, { html: HTML });
+  await L.selStr(p, '#p1', 'plain words');
+  await L.altKey(p, '1');
+  await L.altKey(p, 'o');
+  await p.evaluate(() => window.__hl.panelEl.querySelector('[data-act="jump"]').click());
+  await p.waitForTimeout(300);
+  await p.mouse.click(5, 5); await p.waitForTimeout(100);
+  await L.altKey(p, 'p');
+  await p.mouse.move(5, 5);
+  await L.altKey(p, 'u');
+  const w = await L.wr(p);
+  check('with the panel open and nothing selected, a style key changes the pen, not an annotation', w.length === 1 && w[0].k === 'h2' && (await pill(p)) === 'Pen: underline', { w, pill: await pill(p), sel: await p.evaluate(() => window.__hl.selectedGroups.length) });
+  await ctx.close();
+}
+
 (async () => {
   const browser = await L.launch();
-  await Promise.all([basics, startsWithLast, keyboardAndFields, restyleStillWorks, dark].map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
+  await Promise.all([basics, startsWithLast, keyboardAndFields, restyleStillWorks, staleSelectionFromPanel, dark].map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
   await browser.close();
   let fails = 0;
   results.forEach(([name, ok, info]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' :: ' + JSON.stringify(info)}`); if (!ok) fails++; });

@@ -48,7 +48,7 @@
 
     // What the keys act on when no text is selected: the annotation selected by clicking it, else
     // the one under the mouse (or under the note card the mouse is on), else the one jumped to
-    // last while it is in view. Null if none.
+    // last while it is in view (not with the pen on). Null if none.
     function pointedGroup() {
         if (selectedGroups.length) return selectedInOrder()[0];   // clicked (see setSelectedGroups)
         let w = hoveredWrapper;
@@ -58,6 +58,7 @@
             w = hoveredWrapper = el && el !== uiHost ? el.closest(WRAPPER_SELECTOR) : null;
         }
         if (w && w.isConnected) return w.getAttribute(GROUP_ATTR);
+        if (penKey) return null;   // the pen's style keys never reach one that is only jumped to
         return jumpGroup && groupWrappers(jumpGroup).some(isInView) ? jumpGroup : null;
     }
 

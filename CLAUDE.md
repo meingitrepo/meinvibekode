@@ -1,6 +1,6 @@
 # CLAUDE.md (Meinvibecode)
 
-Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows only (Chrome/Edge/Firefox). Repo: meingitrepo/meinvibecode (private).
+Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows only (Chrome/Edge/Firefox). Repo: meingitrepo/meinvibekode.
 
 ## Working rules
 - Plan first. Ask Mhmd for any missing detail in one short batched question. Never assume anything unnecessary. Do only what is asked, nothing extra.
@@ -12,8 +12,6 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 ## Invariants (violating these is expensive)
 - Edit only `highlighter/src/*.js`, then `node build.js` in `highlighter/`; `node build.js --check` must say "up to date". Never edit the built .user.js.
 - Keep storage key `rnh:settings` and page keys unchanged (renaming loses saved data). Never change @namespace.
-- Don't "fix" raw URLs in `src/header.js`: `.github/workflows/gist-mirror.yml` rewrites them for the gist.
-- The mirror fails if the built file changes without a higher @version; release.sh handles it.
 
 ## Lessons
 - Read `highlighter/LESSONS.md` in full at thread start (kept short on purpose).
@@ -26,4 +24,4 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - `node highlighter/test/run.js <word>` (Playwright 1.56.1 + Chromium, `NODE_PATH=/opt/node22/lib/node_modules`).
 - Run only suites related to the change; no full run before PUSH.
 - Before asking PUSH on a behaviour change, grep `highlighter/test` for the changed feature/keys/colors; update tests expecting old behaviour; remove checks for retired behaviour rather than skipping.
-- CI runs only a quick gate on every push (`node build.js --check` + `node --check` on the built file, seconds) and the mirror `needs` it. The full Playwright suite is local-only (CI run was ~2 min per push).
+- CI runs only a quick gate on every push (`node build.js --check` + `node --check` on the built file, seconds). The full Playwright suite is local-only (CI run was ~2 min per push).

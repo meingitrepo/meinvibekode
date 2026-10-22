@@ -1,0 +1,26 @@
+# Quick check (build up to date + syntax) on every push and pull request that touches the highlighter.
+name: Check
+
+on:
+  push:
+    paths: [highlighter/**, .github/workflows/check.yml]
+  pull_request:
+    paths: [highlighter/**, .github/workflows/check.yml]
+  workflow_dispatch:
+
+jobs:
+  # Quick gate (seconds). The full Playwright suite is not run in CI (too slow per push);
+  # run it locally with `node highlighter/test/run.js <word>`.
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Built file is up to date
+        working-directory: highlighter
+        run: node build.js --check
+      - name: Built file has valid syntax
+        run: node --check highlighter/Highlighter.user.js

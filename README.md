@@ -13,13 +13,8 @@ so they come back the next time you open the page.
 
 1. Install a userscript manager such as [Violentmonkey](https://violentmonkey.github.io/) or
    [Tampermonkey](https://www.tampermonkey.net/).
-2. Open `Highlighter.user.js` in the private gist this repository publishes to (the gist's "Raw"
-   link) and confirm the install.
-
-The repository is private, so the manager can't read updates from it. Instead, each push to `main`
-runs the tests and, once they pass, the [gist mirror Action](.github/workflows/gist-mirror.yml)
-copies the built script to the gist with its update URL pointing there. Installed copies get it on
-the manager's next update check.
+2. Open the [raw script](https://raw.githubusercontent.com/meingitrepo/meinvibekode/main/highlighter/Highlighter.user.js)
+   and confirm the install. Installed copies update from the same URL on the manager's next update check.
 
 ### Use
 

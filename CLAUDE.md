@@ -21,3 +21,6 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Run only suites related to the change; no full run before PUSH.
 - Before asking PUSH on a behaviour change, grep `highlighter/test` for the changed feature/keys/colors; update tests expecting old behaviour; remove checks for retired behaviour rather than skipping.
 - CI runs only a quick gate on every push (`node build.js --check` + `node --check` on the built file, seconds). The full Playwright suite is local-only (CI run was ~2 min per push).
+
+## Automation candidates
+- At the end of every reply, flag any step you repeated in the task or that recurs across tasks and costs tokens (rebases, builds, test runs, screenshots, version bumps, greps for the same thing, etc.) as a candidate for a script like `release.sh`, with a one-line script idea. Don't build it unasked; Mhmd picks.

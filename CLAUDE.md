@@ -24,3 +24,4 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 
 ## Automation candidates
 - At the end of every reply, flag any step you repeated in the task or that recurs across tasks and costs tokens (rebases, builds, test runs, screenshots, version bumps, greps for the same thing, etc.) as a candidate for a script like `release.sh`, with a one-line script idea. Don't build it unasked; Mhmd picks.
+- Scripts in `highlighter/tools/`: `build.sh` (build+check), `tests-for.sh <keyword>` (find and run suites mentioning it; sets NODE_PATH), `stale-checks.sh <old-term>` (test lines for retired behaviour), `preflight.sh` (build, diffstat, release.sh line), `shot.sh <out.png> [light|dark] [js]` (playground screenshot). Use them instead of redoing these steps by hand.

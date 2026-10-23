@@ -70,7 +70,7 @@
         });
         const sel = window.getSelection();
         if (sel) sel.removeAllRanges();
-        if (!created.length) showToast('Couldn\'t annotate that text', { intent: 'warning', icon: 'warning_20_regular', body: 'Try selecting it again.' });
+        if (!created.length) showToast('Couldn\'t annotate that text', { intent: 'error', icon: 'error_circle_20_regular', body: 'Try selecting it again.' });
     }
 
     // --- Annotations panel (Alt+O) ---

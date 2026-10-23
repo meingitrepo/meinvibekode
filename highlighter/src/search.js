@@ -206,7 +206,7 @@
         if (!selected.length) return;
         writeClipboard(savedMarkdown(selected)).then(
             () => showToast(doneText('copied', selected.length), { icon: 'checkmark_20_regular', intent: 'success' }),
-            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'warning', icon: 'warning_20_regular', body: 'The browser blocked clipboard access.' }); });
+            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'error_circle_20_regular', body: 'The browser blocked clipboard access.' }); });
     });
     everythingForget.addEventListener('click', () => {
         if (!running) return;

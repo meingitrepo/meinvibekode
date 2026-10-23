@@ -53,6 +53,8 @@
         search_20_regular: 'M13.73 14.44a6.5 6.5 0 1 1 .7-.7l3.42 3.4a.5.5 0 0 1-.63.77l-.07-.06zm-.71-.71A5.5 5.5 0 0 0 15 9.5a5.5 5.5 0 1 0-1.98 4.23',
         eye_off_20_regular: 'M2.85 2.15a.5.5 0 1 0-.7.7l3.5 3.5a8 8 0 0 0-3.37 5.05.5.5 0 1 0 .98.2 7 7 0 0 1 3.1-4.53l1.6 1.59a3.5 3.5 0 1 0 4.88 4.89l4.3 4.3a.5.5 0 0 0 .71-.7zm9.27 10.68a2.5 2.5 0 1 1-3.45-3.45zm-2-4.83 3.38 3.38A3.5 3.5 0 0 0 10.12 8M10 6q-.86 0-1.67.21l-.8-.8A8 8 0 0 1 10 5c3.7 0 6.94 2.67 7.72 6.4a.5.5 0 0 1-.98.2A7 7 0 0 0 10 6',
         warning_20_regular: 'M10 2.5a1.5 1.5 0 0 1 1.32.79l6.5 12A1.5 1.5 0 0 1 16.5 17.5h-13a1.5 1.5 0 0 1-1.32-2.21l6.5-12A1.5 1.5 0 0 1 10 2.5m0 1a.5.5 0 0 0-.44.26l-6.5 12a.5.5 0 0 0 .44.74h13a.5.5 0 0 0 .44-.74l-6.5-12A.5.5 0 0 0 10 3.5M10 7.5c.28 0 .5.22.5.5v4a.5.5 0 0 1-1 0V8c0-.28.22-.5.5-.5m0 7a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5',
+        arrow_undo_20_regular: 'M7.85 3.15c.2.2.2.5 0 .7L4.71 7H11.5a5.5 5.5 0 1 1 0 11H8a.5.5 0 0 1 0-1h3.5a4.5 4.5 0 1 0 0-9H4.7l3.15 3.15a.5.5 0 1 1-.7.7l-4-4a.5.5 0 0 1 0-.7l4-4c.2-.2.5-.2.7 0',
+        error_circle_20_regular: 'M10 2a8 8 0 1 1 0 16 8 8 0 0 1 0-16m0 1a7 7 0 1 0 0 14 7 7 0 0 0 0-14m0 8.5a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5M10 6c.28 0 .5.22.5.5v4a.5.5 0 0 1-1 0v-4c0-.28.22-.5.5-.5',
         info_20_regular: 'M10.5 8.91a.5.5 0 0 0-1 .09v4.6a.5.5 0 0 0 1-.1V8.91m.3-2.16a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0M18 10a8 8 0 1 0-16 0 8 8 0 0 0 16 0M3 10a7 7 0 1 1 14 0 7 7 0 0 1-14 0'
     };
 
@@ -311,15 +313,20 @@
         .toast .icon { color: var(--colorNeutralForeground3); }
         .toast[data-intent="success"] > .icon { color: var(--colorPaletteGreenForeground1); }
         .toast[data-intent="warning"] > .icon { color: var(--colorPaletteDarkOrangeForeground1); }
+        .toast[data-intent="error"] > .icon { color: var(--colorPaletteRedForeground1); }
+        .toast > .icon { width: 16px; height: 16px; margin-top: 2px; }
+        .toast-action-icon { position: relative; }
+        .toast-action-icon > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 600; }
-        .toast-body { margin-top: 2px; color: var(--colorNeutralForeground2); }
+        .toast-body { padding-top: 6px; color: var(--colorNeutralForeground1); }
         .toast-body[hidden] { display: none; }
-        .toast .btn-icon { margin: -6px -6px -6px 0; }
+        .toast .btn-icon { margin: -6px 0; }
+        .toast .btn-icon:last-child { margin-right: -6px; }
         /* The toast's action (Undo, Restore): a Fluent Link, as in Fluent's Toast. */
         .link {
             flex: none; margin: 0 0 0 4px; padding: 0; border: 0; border-radius: var(--borderRadiusMedium);
-            background: none; font: inherit; color: var(--colorBrandForegroundLink);
+            background: none; font: inherit; color: var(--colorBrandForeground1);
             cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent;
         }
         .link:hover { color: var(--colorBrandForegroundLinkHover); text-decoration: underline; }

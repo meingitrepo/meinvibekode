@@ -47,7 +47,7 @@
     const toastText = makeEl('div', { class: 'toast-text' });
     const toastBody = makeEl('div', { class: 'toast-body', hidden: '' });
     const toastContent = makeEl('div', { class: 'toast-content' }, [toastText, toastBody]);
-    const toastAction = makeEl('button', { type: 'button', class: 'link', hidden: '' });
+    const toastAction = makeEl('button', { type: 'button', class: 'link', hidden: '' });   // a text link, or an icon button (see showToast)
     const toastDismiss = fluentButton({ icon: fluentIcon('dismiss_20_regular'), label: 'Dismiss' });
     const toastEl = makeEl('div', { class: 'surface toast', role: 'status', hidden: '' }, [toastIcon, toastContent, toastAction, toastDismiss]);
 

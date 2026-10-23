@@ -29,7 +29,11 @@
         toastKey = currentKey;
         toastKeep = !!(action && action.keep);
         toastKeepsEditor = !!(action && action.keepEditor);
-        toastAction.textContent = action ? action.label : '';
+        // An action with an icon (Undo) is an icon button beside Dismiss; its label stays for screen readers.
+        toastAction.className = action && action.icon ? 'btn btn-subtle btn-medium btn-icon toast-action-icon' : 'link';
+        toastAction.replaceChildren(...(action && action.icon ? [fluentIcon(action.icon), makeEl('span', { text: action.label })] : action ? [action.label] : []));
+        if (action && action.icon) { toastAction.title = action.label; toastAction.setAttribute('aria-label', action.label); }
+        else { toastAction.removeAttribute('title'); toastAction.removeAttribute('aria-label'); }
         toastAction.hidden = !action;
         toastEl.hidden = true;
         void toastEl.offsetWidth;   // restart the entrance animation
@@ -41,7 +45,7 @@
     function startToastTimer(ms) {
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => {
-            if (toastEl.matches(':hover') || toastEl.contains(uiRoot.activeElement)) startToastTimer(2000);
+            if (toastEl.matches(':hover') || toastEl.contains(uiRoot.activeElement) || !document.hasFocus()) startToastTimer(2000);   // paused while the window is blurred
             else hideToast();
         }, ms);
     }

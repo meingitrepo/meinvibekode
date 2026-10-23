@@ -1,0 +1,13 @@
+{
+  "https://example.test/a": [
+    { "xpath": "//*[@id=\"s1\"]", "startOffset": 2, "length": 10, "key": "h", "text": "Short text", "prefix": "S1", "suffix": "", "group": "g1", "added": 1790000000000, "note": "Good example for the #docs" },
+    { "xpath": "//*[@id=\"s2\"]", "startOffset": 2, "length": 10, "key": "u", "text": "Paragraphs", "prefix": "S2", "suffix": "", "group": "g2", "added": 1790000100000 }
+  ],
+  "https://docs.example.org/guide/getting-started": [
+    { "xpath": "/p", "startOffset": 0, "length": 10, "key": "h2", "text": "Install the extension, then open any page", "group": "g3", "added": 1789000000000, "note": "Start here" },
+    { "xpath": "/p", "startOffset": 0, "length": 10, "key": "u", "text": "Alt+O lists the annotations on this page", "group": "g4", "added": 1788900000000 }
+  ],
+  "https://blog.sample.net/2026/notes-on-reading": [
+    { "xpath": "/p", "startOffset": 0, "length": 10, "key": "h", "text": "Slow reading beats fast skimming", "group": "g5", "added": 1787000000000, "note": "Quote for the essay" }
+  ]
+}

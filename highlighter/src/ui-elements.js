@@ -160,10 +160,11 @@
         const vh = window.innerHeight;
         const above = rect.top - h - gap;
         const below = rect.bottom + gap;
-        let side = preferBelow ? 'below' : 'above';
-        if (preferBelow && below + h > vh - 4 && above >= 4) side = 'above';
-        if (!preferBelow && above < 4) side = 'below';
         const left = Math.max(4, Math.min(rect.left + rect.width / 2 - w / 2, vw - w - 4));
+        const covered = top => touchesCover(left, top, w, h);   // over the page's header or the like
+        let side = preferBelow ? 'below' : 'above';
+        if (preferBelow && (below + h > vh - 4 || covered(below)) && above >= 4 && !covered(above)) side = 'above';
+        if (!preferBelow && (above < 4 || covered(above)) && !covered(below)) side = 'below';
         placeInPage(panel, side === 'below' ? below : above, left);
         return side;
     }
@@ -172,6 +173,42 @@
     function inPage({ left, top }) {
         const page = uiHost.getBoundingClientRect();
         return { left: left - page.left, top: top - page.top };
+    }
+
+    // The page's own fixed and sticky parts (headers, sidebars, banners) in the window: what the
+    // page draws over its text. Our layers sit above everything, so whatever is anchored to text
+    // checks these to stay out from over them. Found by sampling the window's edges and a grid
+    // with elementFromPoint; kept for the frame.
+    let coverCache = null;
+    function pageCovers() {
+        if (coverCache) return coverCache;
+        const vw = document.documentElement.clientWidth || window.innerWidth;
+        const vh = window.innerHeight;
+        const found = new Set();
+        for (const fx of [2, 0.25, 0.5, 0.75, vw - 2]) {
+            for (const fy of [2, 0.25, 0.5, 0.75, vh - 2]) {
+                let el = document.elementFromPoint(fx < 1 ? fx * vw : fx, fy < 1 ? fy * vh : fy);
+                while (el && el !== document.body && el !== document.documentElement) {
+                    if (el.hasAttribute(UI_ATTR)) break;
+                    const position = getComputedStyle(el).position;
+                    if (position === 'fixed' || position === 'sticky') { found.add(el); break; }
+                    el = el.parentElement;
+                }
+            }
+        }
+        const rects = Array.from(found, el => el.getBoundingClientRect()).filter(r => r.width && r.height);
+        coverCache = rects.filter(r => !rects.some(o => o !== r && o.left <= r.left && o.top <= r.top && o.right >= r.right && o.bottom >= r.bottom));
+        requestAnimationFrame(() => { coverCache = null; });
+        return coverCache;
+    }
+
+    // True if `r` (window coordinates) lies wholly under one of the page's fixed or sticky parts.
+    function isCovered(r) {
+        return pageCovers().some(c => c.left <= r.left + 1 && c.top <= r.top + 1 && c.right >= r.right - 1 && c.bottom >= r.bottom - 1);
+    }
+
+    function touchesCover(left, top, width, height) {
+        return pageCovers().some(c => c.left < left + width && c.right > left && c.top < top + height && c.bottom > top);
     }
 
     // Pressing `handle` (not one of its buttons) and moving drags `panel`; `start()` returns

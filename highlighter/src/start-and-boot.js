@@ -25,6 +25,7 @@
             if (!noteCardEl.hidden) hideNoteCard();
             hideLabelTip();
             if (!toolbarEl.hidden) placeToolbar();
+            pinnedCards.forEach((card, m) => { card.style.visibility = isCovered(m.getBoundingClientRect()) ? 'hidden' : ''; });
             if (editor) followEditorAnchor();
         });
     }

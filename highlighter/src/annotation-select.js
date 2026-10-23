@@ -243,8 +243,19 @@
                 else box.path.removeAttribute('mask');
             }
             box.el.hidden = false;
+            clipOutCovers(box.el);
         });
         selectFrame = requestAnimationFrame(followSelectBoxes);
+    }
+
+    // The part of a dashed box that lies under the page's header or the like is cut away, as the
+    // text is not seen there.
+    function clipOutCovers(el) {
+        const r = el.getBoundingClientRect();
+        const hit = pageCovers().filter(c => c.left < r.right && c.right > r.left && c.top < r.bottom && c.bottom > r.top);
+        const clip = hit.length ? `path(evenodd, 'M-10 -10H${r.width + 10}V${r.height + 10}H-10Z${hit.map(c =>
+            `M${c.left - r.left} ${c.top - r.top}h${c.width}v${c.height}h${-c.width}Z`).join('')}')` : '';
+        if (el.style.clipPath !== clip) el.style.clipPath = clip;
     }
 
     // Where a click would select: the annotation's group, or null for a click that isn't one.

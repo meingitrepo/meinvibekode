@@ -234,7 +234,8 @@
         const gap = 8;
         const above = rect.top - h - gap;
         const below = rect.bottom + gap;
-        const fits = top => top >= 4 && top + h <= vh - 4;
+        const left = Math.max(4, Math.min(rect.left + rect.width / 2 - w / 2, vw - w - 4));
+        const fits = top => top >= 4 && top + h <= vh - 4 && !touchesCover(left, top, w, h);
         let side = lastPointerType === 'touch' ? 'below' : 'above';
         const flipped = side === 'below' ? 'above' : 'below';
         if (!fits(side === 'below' ? below : above) && fits(flipped === 'below' ? below : above)) side = flipped;
@@ -242,8 +243,9 @@
         // staying at its top or bottom edge.
         const onScreen = Math.max(4, Math.min(side === 'below' ? below : above, vh - h - 4));
         const top = Math.max(above, Math.min(onScreen, below));
-        const left = Math.max(4, Math.min(rect.left + rect.width / 2 - w / 2, vw - w - 4));
         placeInPage(toolbarEl, top, left);
+        // Hidden while its text is under the page's header or the like, or it has nowhere else to go.
+        toolbarEl.style.visibility = isCovered(rect) || touchesCover(left, top, w, h) ? 'hidden' : '';
         toolbarSide = side;
     }
 

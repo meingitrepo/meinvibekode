@@ -2,7 +2,7 @@
 # Releases the local highlighter change to main in one go, after Mhmd's PUSH:
 # commit (if needed), fetch, rebase, pick @version as main's + 1,
 # build, check, push; on a rejected push it starts again from the fetch.
-# Usage: highlighter/release.sh "Theme" "What's in it" "Commit message (body and trailers allowed)"
+# Usage: highlighter/tools/release.sh "Theme" "What's in it" "Commit message (body and trailers allowed)"
 # Don't bump @version or commit the built file yourself; this does it.
 set -euo pipefail
 [ $# -eq 3 ] || { echo 'usage: release.sh "Theme" "What'"'"'s in it" "Commit message"'; exit 2; }

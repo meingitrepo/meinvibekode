@@ -151,7 +151,7 @@ async function del(browser) {
   await L.altKey(p, 'd'); await p.waitForTimeout(150);
   let w = (await L.wr(p)).filter(x => x.g === 'gA');
   check('Delete removes the note and keeps the annotation', w.length === 1 && !w[0].n && (await card(p)) === null, w);
-  check('with an Undo message', (await L.toast(p)) === 'Deleted note · Undo', await L.toast(p));
+  check('with an Undo message', (await L.toast(p)) === 'Note deleted · Undo', await L.toast(p));
   const s = (await L.stored(p)).find(r => r.group === 'gA');
   check('and it is saved', s && !s.note, s);
   await L.altKey(p, 'z');

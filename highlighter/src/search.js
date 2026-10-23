@@ -121,9 +121,9 @@
                 pendingRecords = pendingRecords.filter(r => !here.includes(recordOwner(r)));
             });
             // Undo covers only this page, so it is offered only when nothing else was forgotten.
-            if (!elsewhere.size) { offerUndo(doneText('Forgot', selected.length), step, 'eraser_20_regular'); return; }
+            if (!elsewhere.size) { offerUndo(doneText('forgotten', selected.length), step, 'eraser_20_regular'); return; }
         }
-        showToast(doneText('Forgot', selected.length), { icon: 'eraser_20_regular' });
+        showToast(doneText('forgotten', selected.length), { icon: 'eraser_20_regular' });
     }
 
     function renderEverything() {
@@ -205,7 +205,7 @@
         const selected = everythingShown.filter(s => everythingChecked.has(s.id));
         if (!selected.length) return;
         writeClipboard(savedMarkdown(selected)).then(
-            () => showToast(doneText('Copied', selected.length), { icon: 'checkmark_20_regular', intent: 'success' }),
+            () => showToast(doneText('copied', selected.length), { icon: 'checkmark_20_regular', intent: 'success' }),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'warning', icon: 'warning_20_regular', body: 'The browser blocked clipboard access.' }); });
     });
     everythingForget.addEventListener('click', () => {

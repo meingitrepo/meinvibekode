@@ -107,7 +107,7 @@ async function multiPiece(browser) {
   await L.altKey(p, 'd');
   s = await state(p);
   check('Alt+D on it removes every piece', !s.some(w => w.g === g) && keysOf(s, 'gA').join() === 'h', s);
-  check('Undo toast for the removal', (await L.toast(p)) === 'Erased 1x annotation · Undo', await L.toast(p));
+  check('Undo toast for the removal', (await L.toast(p)) === '1 annotation erased · Undo', await L.toast(p));
   await ctx.close();
 }
 

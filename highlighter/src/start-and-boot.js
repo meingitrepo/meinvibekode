@@ -187,7 +187,7 @@
     }
 
     // Grouped as: look and copy, switches, then what deletes (the page's, then every page's).
-    // Labels are verb first, counts as in the toasts ("Clear 2x annotations"). The command to
+    // Labels are verb first, counts as in the toasts ("Clear 2 annotations"). The command to
     // forget missing annotations is there only when some are missing. The commands are
     // registered again only when a label changes. A manager that can't take a command back
     // keeps the first set, with fixed labels; its commands check the current state.
@@ -222,8 +222,8 @@
             } else {
                 const { total } = pageCounts();
                 const missing = countAnnotations(missingRecords());
-                if (missing) items.push([`${doneText('Forget', missing)} not found`, forgetMissingAnnotations]);
-                if (total) items.push([`${doneText('Clear', total)} on this page`, clearPageAnnotations]);
+                if (missing) items.push([`Forget ${annotationsText(missing)} not found`, forgetMissingAnnotations]);
+                if (total) items.push([`Clear ${annotationsText(total)} on this page`, clearPageAnnotations]);
             }
         }
         items.push(['Delete all saved annotations…', clearAllSaved]);

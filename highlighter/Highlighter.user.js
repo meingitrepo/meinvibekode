@@ -2544,7 +2544,7 @@
         if (document.hidden) { noticeDue = true; return; }
         noticedKeys.add(currentKey);
         if (!toastEl.hidden && toastRun) return;
-        showToast(doneText('Couldn\'t find', missing), { icon: 'warning_20_regular', intent: 'warning', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
+        showToast(doneText('not found', missing), { icon: 'warning_20_regular', intent: 'warning', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
     }
 
     function restoreHighlights() {
@@ -3021,9 +3021,9 @@
         return n === 1 ? '1 annotation' : `${n} annotations`;
     }
 
-    // Toasts say only what happened and to how many, verb first, as "Erased 2x annotations".
+    // Toasts say what happened, as Fluent's do: "2 annotations erased".
     function doneText(verb, n) {
-        return `${verb} ${n}x ${n === 1 ? 'annotation' : 'annotations'}`;
+        return `${annotationsText(n)} ${verb}`;
     }
 
     function applyState(state) {
@@ -3070,7 +3070,7 @@
             unwrapAll();
         });
         startLateWatcher();
-        offerUndo(doneText('Cleared', n), step);
+        offerUndo(doneText('cleared', n), step);
         if (unsaved) offerDraft(unsaved);
     }
 
@@ -3093,7 +3093,7 @@
             pendingRecords = pendingRecords.filter(r => !missing.includes(r));
         });
         startLateWatcher();
-        offerUndo(doneText('Forgot', n), step, 'delete_20_regular');
+        offerUndo(doneText('forgotten', n), step, 'delete_20_regular');
         if (unsaved) offerDraft(unsaved);
     }
 
@@ -3135,7 +3135,7 @@
         const step = overlaps.length ? runUndoable(() => eraseOverlaps(overlaps)) : null;
         sel.removeAllRanges();
         // Annotations erased only in part count too.
-        offerUndo(doneText('Erased', new Set(overlaps.map(o => o.group)).size), step);
+        offerUndo(doneText('erased', new Set(overlaps.map(o => o.group)).size), step);
     }
 
     // What the keys act on when no text is selected: the annotation selected by clicking it, else
@@ -4755,7 +4755,7 @@
         syncLocation();
         if (editor) cancelEditor();
         const changed = runUndoable(() => setGroupNote(group, ''));
-        offerUndo('Deleted note', changed, 'delete_20_regular');
+        offerUndo('Note deleted', changed, 'delete_20_regular');
     }
 
     // --- Note editor ---
@@ -4933,7 +4933,7 @@
         }
         if (text !== original) {
             const changed = runUndoable(() => setGroupNote(group, text));
-            if (!text) offerUndo('Deleted note', changed, 'delete_20_regular');
+            if (!text) offerUndo('Note deleted', changed, 'delete_20_regular');
         }
     }
 
@@ -4948,7 +4948,7 @@
             return;
         }
         const changed = runUndoable(() => waiting.forEach(r => { r.note = text || undefined; }));
-        if (!text) offerUndo('Deleted note', changed, 'delete_20_regular');
+        if (!text) offerUndo('Note deleted', changed, 'delete_20_regular');
     }
 
     // Returns the unsaved text, if any, as { group, draft, records } (see offerDraft), which
@@ -5013,7 +5013,7 @@
     // with the highlight that was made for it, and what was typed in it can be restored, both.
     noteDelete.addEventListener('click', () => {
         const unsaved = editor && editor.step && noteDraft() ? cancelEditor({ offer: false }) : null;
-        if (unsaved) { offerDraft(unsaved, 'Deleted note', 'delete_20_regular'); return; }
+        if (unsaved) { offerDraft(unsaved, 'Note deleted', 'delete_20_regular'); return; }
         noteInput.value = '';
         saveEditor();
     });
@@ -5543,7 +5543,7 @@
             live.forEach(g => unwrapMany(groupWrappers(g)));
             pendingRecords = pendingRecords.filter(r => !live.includes(recordOwner(r)));
         });
-        offerUndo(doneText('Erased', live.length), step);
+        offerUndo(doneText('erased', live.length), step);
     }
 
     // The keys for the selected annotations, with or without Alt (see onKeyDown). True if used.
@@ -5758,7 +5758,7 @@
             return;
         }
         writeClipboard(markdown).then(
-            () => showToast(doneText('Copied', list.length), { icon: 'checkmark_20_regular', intent: 'success' }),
+            () => showToast(doneText('copied', list.length), { icon: 'checkmark_20_regular', intent: 'success' }),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'warning', icon: 'warning_20_regular', body: 'The browser blocked clipboard access.' }); });
     }
 
@@ -5780,7 +5780,7 @@
             unwrapMany(groupWrappers(group));
             pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group);
         });
-        offerUndo(doneText('Erased', 1), step);
+        offerUndo(doneText('erased', 1), step);
     }
 
     function forgetAnnotation(group) {
@@ -5788,7 +5788,7 @@
         closeNoteForPanel(group);
         if (!pendingRecords.some(r => recordOwner(r) === group)) return;
         const step = runUndoable(() => { pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group); });
-        offerUndo(doneText('Forgot', 1), step, 'delete_20_regular');
+        offerUndo(doneText('forgotten', 1), step, 'delete_20_regular');
     }
 
     // Re-anchors a saved annotation that can't be found to the text selected now. It keeps its
@@ -6245,9 +6245,9 @@
                 pendingRecords = pendingRecords.filter(r => !here.includes(recordOwner(r)));
             });
             // Undo covers only this page, so it is offered only when nothing else was forgotten.
-            if (!elsewhere.size) { offerUndo(doneText('Forgot', selected.length), step, 'eraser_20_regular'); return; }
+            if (!elsewhere.size) { offerUndo(doneText('forgotten', selected.length), step, 'eraser_20_regular'); return; }
         }
-        showToast(doneText('Forgot', selected.length), { icon: 'eraser_20_regular' });
+        showToast(doneText('forgotten', selected.length), { icon: 'eraser_20_regular' });
     }
 
     function renderEverything() {
@@ -6329,7 +6329,7 @@
         const selected = everythingShown.filter(s => everythingChecked.has(s.id));
         if (!selected.length) return;
         writeClipboard(savedMarkdown(selected)).then(
-            () => showToast(doneText('Copied', selected.length), { icon: 'checkmark_20_regular', intent: 'success' }),
+            () => showToast(doneText('copied', selected.length), { icon: 'checkmark_20_regular', intent: 'success' }),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'warning', icon: 'warning_20_regular', body: 'The browser blocked clipboard access.' }); });
     });
     everythingForget.addEventListener('click', () => {
@@ -6659,7 +6659,7 @@
     }
 
     // Grouped as: look and copy, switches, then what deletes (the page's, then every page's).
-    // Labels are verb first, counts as in the toasts ("Clear 2x annotations"). The command to
+    // Labels are verb first, counts as in the toasts ("Clear 2 annotations"). The command to
     // forget missing annotations is there only when some are missing. The commands are
     // registered again only when a label changes. A manager that can't take a command back
     // keeps the first set, with fixed labels; its commands check the current state.
@@ -6694,8 +6694,8 @@
             } else {
                 const { total } = pageCounts();
                 const missing = countAnnotations(missingRecords());
-                if (missing) items.push([`${doneText('Forget', missing)} not found`, forgetMissingAnnotations]);
-                if (total) items.push([`${doneText('Clear', total)} on this page`, clearPageAnnotations]);
+                if (missing) items.push([`Forget ${annotationsText(missing)} not found`, forgetMissingAnnotations]);
+                if (total) items.push([`Clear ${annotationsText(total)} on this page`, clearPageAnnotations]);
             }
         }
         items.push(['Delete all saved annotations…', clearAllSaved]);

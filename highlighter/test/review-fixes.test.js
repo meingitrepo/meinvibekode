@@ -55,7 +55,7 @@ const clickWrapper = async (page, i = 0) => {
     await page.keyboard.type('my words'); await page.keyboard.press('Delete'); await page.waitForTimeout(300);
     w = await L.wr(page);
     L.check('Delete on a new note: its highlight goes', w.length === 1, w);
-    L.check('with Restore offered', (await L.toast(page)) === 'Deleted note · Restore', await L.toast(page));
+    L.check('with Restore offered', (await L.toast(page)) === 'Note deleted · Restore', await L.toast(page));
     await page.evaluate(() => window.__hl.toastAction.click()); await page.waitForTimeout(300);
     const back = await page.evaluate(() => ({ open: !!window.__hl.editor, text: window.__hl.noteInput.value }));
     L.check('Restore: highlight and text back, editor open', (await L.wr(page)).length === 2 && back.open && back.text === 'my words', back);

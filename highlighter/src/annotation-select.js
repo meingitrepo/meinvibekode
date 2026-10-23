@@ -315,7 +315,7 @@
             live.forEach(g => unwrapMany(groupWrappers(g)));
             pendingRecords = pendingRecords.filter(r => !live.includes(recordOwner(r)));
         });
-        offerUndo(doneText('Erased', live.length), step);
+        offerUndo(doneText('erased', live.length), step);
     }
 
     // The keys for the selected annotations, with or without Alt (see onKeyDown). True if used.

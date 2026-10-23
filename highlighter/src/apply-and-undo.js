@@ -238,9 +238,9 @@
         return n === 1 ? '1 annotation' : `${n} annotations`;
     }
 
-    // Toasts say only what happened and to how many, verb first, as "Erased 2x annotations".
+    // Toasts say what happened, as Fluent's do: "2 annotations erased".
     function doneText(verb, n) {
-        return `${verb} ${n}x ${n === 1 ? 'annotation' : 'annotations'}`;
+        return `${annotationsText(n)} ${verb}`;
     }
 
     function applyState(state) {
@@ -287,7 +287,7 @@
             unwrapAll();
         });
         startLateWatcher();
-        offerUndo(doneText('Cleared', n), step);
+        offerUndo(doneText('cleared', n), step);
         if (unsaved) offerDraft(unsaved);
     }
 
@@ -310,7 +310,7 @@
             pendingRecords = pendingRecords.filter(r => !missing.includes(r));
         });
         startLateWatcher();
-        offerUndo(doneText('Forgot', n), step, 'delete_20_regular');
+        offerUndo(doneText('forgotten', n), step, 'delete_20_regular');
         if (unsaved) offerDraft(unsaved);
     }
 

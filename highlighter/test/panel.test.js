@@ -81,7 +81,7 @@ ${filler(40)}
   L.check('markdown escapes', md.includes('> \\*star\\* and \\_under\\_'), md);
   L.check('markdown context for repeated', /text=Here%2E?|text=[^)]*Repeated%20words[^)]*/.test(md) && md.includes('-,Repeated%20words') === false, md);
   const tst = await L.toast(page);
-  L.check('copy toast', tst === 'Copied 5x annotations', tst);
+  L.check('copy toast', tst === '5 annotations copied', tst);
   await page.evaluate(() => window.__hl.panelSelectAll.click());
   const hid = await page.evaluate(() => { const c = window.__hl.panelList.querySelector('.item .check'); return getComputedStyle(c).opacity; });
   L.check('tick box hidden until the row is hovered', hid === '0', hid);
@@ -92,11 +92,11 @@ ${filler(40)}
   const one = await page.evaluate(() => { const h = window.__hl; return { eraseOff: h.panelErase.disabled, mixed: h.panelSelectAll.dataset.all === 'false' }; });
   L.check('one ticked: eraser on, select-all still offers all', !one.eraseOff && one.mixed, one);
   await page.evaluate(() => window.__hl.panelCopy.click()); await page.waitForTimeout(100);
-  L.check('copy respects the selection', (await L.toast(page)) === 'Copied 1x annotation', await L.toast(page));
+  L.check('copy respects the selection', (await L.toast(page)) === '1 annotation copied', await L.toast(page));
   await page.evaluate(() => window.__hl.panelErase.click());
   await L.until(page, () => !Array.from(window.__hl.panelList.querySelectorAll('.item-text')).some(e => e.textContent === 'three four'));
   it = await L.items(page);
-  L.check('delete', !it.some(i => i.text === 'three four') && (await L.toast(page)) === 'Erased 1x annotation · Undo', [it.length, await L.toast(page)]);
+  L.check('delete', !it.some(i => i.text === 'three four') && (await L.toast(page)) === '1 annotation erased · Undo', [it.length, await L.toast(page)]);
   st = await L.stored(page);
   L.check('delete stored', !st.some(r => r.text === 'three four'), st.length);
   await page.evaluate(() => window.__hl.toastAction.click());
@@ -114,7 +114,7 @@ ${filler(40)}
   L.check('select all ticks every row', all.n > 1 && all.ticked === all.n && all.all, all);
   await page.evaluate(() => window.__hl.panelErase.click());
   await L.until(page, () => !window.__hl.panelList.querySelector('.item:not(.missing)'));
-  L.check('erase all selected is one undo step', new RegExp(`^Erased ${all.n}x annotations · Undo$`).test(await L.toast(page) || ''), await L.toast(page));
+  L.check('erase all selected is one undo step', new RegExp(`^${all.n} annotations erased · Undo$`).test(await L.toast(page) || ''), await L.toast(page));
   await page.evaluate(() => window.__hl.toastAction.click());
   await L.until(page, () => window.__hl.panelList.querySelectorAll('.item:not(.missing)').length > 1);
   const restored = await page.evaluate(() => ({ off: window.__hl.panelErase.disabled, ticked: window.__hl.panelList.querySelectorAll('.item .check:checked').length }));
@@ -146,7 +146,7 @@ ${filler(40)}
   await page.evaluate(() => window.__hl.panelList.querySelector('.missing [data-act="forget"]').click());
   await page.waitForTimeout(150);
   st = await L.stored(page);
-  L.check('forget', !st.some(r => r.text === 'Gone forever') && /^Forgot 1x annotation · Undo$/.test(await L.toast(page)), st.length);
+  L.check('forget', !st.some(r => r.text === 'Gone forever') && /^1 annotation forgotten · Undo$/.test(await L.toast(page)), st.length);
   // close with Alt+O
   await L.altKey(page, 'o');
   L.check('Alt+O closes', await page.evaluate(() => window.__hl.panelEl.hidden));

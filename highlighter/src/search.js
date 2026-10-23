@@ -126,6 +126,7 @@
         showToast(doneText('forgotten', selected.length), { icon: 'eraser_20_regular' });
     }
 
+    let everythingItemSeq = 0;
     function renderEverything() {
         const terms = everythingFilter.value.toLowerCase().split(/\s+/).filter(Boolean);
         const matches = s => terms.every(t => s.includes(t));
@@ -153,11 +154,11 @@
                 const list = makeEl('div', { class: 'page-items' });
                 items.forEach(a => {
                     const link = makeEl('a', { class: 'item-main', href: a.url, target: '_blank', rel: 'noopener', 'data-key': p.key, 'data-group': a.group },
-                        [makeEl('div', { class: 'item-text', text: a.text })]);
+                        [makeEl('div', { class: 'item-text', id: `rnh-ei-${++everythingItemSeq}`, text: a.text })]);
                     if (a.note) link.appendChild(makeEl('div', { class: 'item-note', text: a.note }));
                     link.appendChild(makeEl('div', { class: 'item-meta', text: [styleLabel(a.key), a.time ? `added ${formatDate(a.time)}` : ''].filter(Boolean).join(' · ') }));
                     link.style.setProperty('--swatch', resolveStyle(a.key, dark).color);
-                    const check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-label': 'Select annotation' });
+                    const check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-labelledby': link.firstChild.id });
                     check.checked = everythingChecked.has(everythingId(p, a));
                     list.appendChild(makeEl('div', { class: 'item' }, [check, link]));
                 });

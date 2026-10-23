@@ -248,11 +248,12 @@
         }
     }
 
+    let panelItemSeq = 0;
     function panelItem(a, dark, missing, elsewhere = false) {
         const meta = [styleLabel(a.key), a.time ? `added ${formatDate(a.time)}` : '', elsewhere ? `on ${pagePath(a.page)}` : '']
             .filter(Boolean).join(' · ');
         const main = makeEl(missing ? 'div' : 'button', missing ? { class: 'item-main' } : { type: 'button', class: 'item-main', 'data-act': 'jump' }, [
-            makeEl('div', { class: 'item-text', text: a.paragraphs.join(' ') })
+            makeEl('div', { class: 'item-text', id: `rnh-pi-${++panelItemSeq}`, text: a.paragraphs.join(' ') })
         ]);
         if (a.note) main.appendChild(makeEl('div', { class: 'item-note', text: a.note }));
         main.appendChild(makeEl('div', { class: 'item-meta', text: meta }));
@@ -265,7 +266,7 @@
             attach.title = 'Select the text this annotation belongs to on the page, then click here';
             actions.append(attach, panelButton('delete_20_regular', 'Forget annotation', 'forget'));
         } else {
-            check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-label': 'Select annotation' });
+            check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-labelledby': main.firstChild.id });
             check.checked = panelChecked.has(a.group);
         }
         const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, check ? [main, check] : [main, actions]);

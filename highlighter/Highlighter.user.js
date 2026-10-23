@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.92
+// @version      8.93
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -6034,11 +6034,12 @@
         }
     }
 
+    let panelItemSeq = 0;
     function panelItem(a, dark, missing, elsewhere = false) {
         const meta = [styleLabel(a.key), a.time ? `added ${formatDate(a.time)}` : '', elsewhere ? `on ${pagePath(a.page)}` : '']
             .filter(Boolean).join(' · ');
         const main = makeEl(missing ? 'div' : 'button', missing ? { class: 'item-main' } : { type: 'button', class: 'item-main', 'data-act': 'jump' }, [
-            makeEl('div', { class: 'item-text', text: a.paragraphs.join(' ') })
+            makeEl('div', { class: 'item-text', id: `rnh-pi-${++panelItemSeq}`, text: a.paragraphs.join(' ') })
         ]);
         if (a.note) main.appendChild(makeEl('div', { class: 'item-note', text: a.note }));
         main.appendChild(makeEl('div', { class: 'item-meta', text: meta }));
@@ -6051,7 +6052,7 @@
             attach.title = 'Select the text this annotation belongs to on the page, then click here';
             actions.append(attach, panelButton('delete_20_regular', 'Forget annotation', 'forget'));
         } else {
-            check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-label': 'Select annotation' });
+            check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-labelledby': main.firstChild.id });
             check.checked = panelChecked.has(a.group);
         }
         const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, check ? [main, check] : [main, actions]);
@@ -6272,6 +6273,7 @@
         showToast(doneText('forgotten', selected.length), { icon: 'eraser_20_regular' });
     }
 
+    let everythingItemSeq = 0;
     function renderEverything() {
         const terms = everythingFilter.value.toLowerCase().split(/\s+/).filter(Boolean);
         const matches = s => terms.every(t => s.includes(t));
@@ -6299,11 +6301,11 @@
                 const list = makeEl('div', { class: 'page-items' });
                 items.forEach(a => {
                     const link = makeEl('a', { class: 'item-main', href: a.url, target: '_blank', rel: 'noopener', 'data-key': p.key, 'data-group': a.group },
-                        [makeEl('div', { class: 'item-text', text: a.text })]);
+                        [makeEl('div', { class: 'item-text', id: `rnh-ei-${++everythingItemSeq}`, text: a.text })]);
                     if (a.note) link.appendChild(makeEl('div', { class: 'item-note', text: a.note }));
                     link.appendChild(makeEl('div', { class: 'item-meta', text: [styleLabel(a.key), a.time ? `added ${formatDate(a.time)}` : ''].filter(Boolean).join(' · ') }));
                     link.style.setProperty('--swatch', resolveStyle(a.key, dark).color);
-                    const check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-label': 'Select annotation' });
+                    const check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-labelledby': link.firstChild.id });
                     check.checked = everythingChecked.has(everythingId(p, a));
                     list.appendChild(makeEl('div', { class: 'item' }, [check, link]));
                 });

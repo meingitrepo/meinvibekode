@@ -37,6 +37,8 @@ ${filler(40)}
   let it = await L.items(page);
   L.check('panel opens with 5 on-page + missing section', !(await page.evaluate(() => window.__hl.panelEl.hidden)) && it.filter(i => i.g && !i.missing).length === 5 && it.some(i => i.label && /Not found/.test(i.label)) && it.some(i => i.missing && i.text === 'Gone forever'), it);
   L.check('order and meta', it[0].text === 'beta' && /Yellow highlight · added /.test(it[0].meta) && it[1].text === 'three four' && it[2].note === 'Fox note #animals', it.slice(0, 3));
+  const lab = await page.evaluate(() => Array.from(window.__hl.panelList.querySelectorAll('input.check')).map(c => { const e = c.getRootNode().getElementById(c.getAttribute('aria-labelledby')); return e && e.textContent; }));
+  L.check('each checkbox is named by its own text', lab.length === 5 && lab.every(Boolean) && new Set(lab).size === 5, lab);
   // ticking / clicking a row outlines it on the page
   await page.evaluate(() => { const q = i => window.__hl.panelList.querySelectorAll('[data-act="check"]')[i]; q(0).click(); q(1).click(); });
   L.check('ticked rows are selected on the page', await page.evaluate(() => window.__hl.selectedGroups.length === 2 && window.__hl.selectBoxesEl.querySelectorAll(".select-box").length === 2), null);

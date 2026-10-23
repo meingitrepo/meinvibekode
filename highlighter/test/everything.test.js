@@ -39,6 +39,8 @@ async function main(browser) {
   const fox = s.pages[0].items.find(i => i.text === 'The quick brown fox jumps');
   check('a click opens a page to its quotes and notes', s.pages[0].open === 'true' && s.pages[0].items.length === 2 && fox && fox.note === 'about #foxes', s.pages[0]);
   check('a quote links to its passage', fox && fox.href === 'https://other.test/blog/post-one#:~:text=The%20quick%20brown%20fox%20jumps', fox && fox.href);
+  const lab = await p.evaluate(() => Array.from(window.__hl.everythingList.querySelectorAll('input.check')).map(c => { const e = c.getRootNode().getElementById(c.getAttribute('aria-labelledby')); return e && e.textContent; }));
+  check('each checkbox is named by its own quote', lab.length === 2 && lab.every(Boolean) && new Set(lab).size === lab.length, lab);
   await p.evaluate(() => window.__hl.everythingFilter.focus());
   await p.keyboard.type('#foxes'); await p.waitForTimeout(100);
   s = await state(p);

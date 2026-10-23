@@ -3777,8 +3777,8 @@
         .link:active { color: var(--colorBrandForegroundLinkPressed); text-decoration: underline; }
         .link:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 1px; }
         /* The pen's bar, centred at the top of the view. */
-        .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 12px; }
-        .pen-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: 2px; padding: 4px; }
+        .pen-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
         .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
         .everything-box { position: relative; display: flex; flex-direction: column; width: min(720px, 100%); max-height: 100%; padding: 16px 0 0; }
@@ -3958,10 +3958,9 @@
     ]);
 
     // The pen (Alt+P, see setPen): a pill at the top of the view while it is on.
-    let penIcon = fluentIcon('highlight_20_regular');   // replaced by the pen's style
-    const penText = makeEl('span', { class: 'pen-text' });
+    const penText = makeEl('span', { class: 'pen-text' });   // the pen's state in words, for screen readers
     const penOff = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
-    const penEl = makeEl('div', { class: 'surface pen', role: 'status', hidden: '' }, [penIcon, penText, penOff]);
+    const penEl = makeEl('div', { class: 'surface pen', role: 'toolbar', 'aria-label': 'Pen', hidden: '' }, [penText, penOff]);
 
     // Everything saved (Alt+Shift+O, see openEverything): a dialog over the dimmed page.
     const everythingCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });   // the whole title, see setPanelTitle
@@ -4446,7 +4445,7 @@
     let penKey = null;            // the style the pen draws with while it is on, else null
     let lastStyleKey = null;      // the style chosen last for some text; the pen starts with it
 
-    // Turns the pen on with style `key`, or off (null). A pill at the top of the view shows it.
+    // Turns the pen on with style `key`, or off (null). A toolbar at the top of the view shows it.
     function setPen(key) {
         penKey = key && STYLES[key] ? key : null;
         if (!penKey) {
@@ -4455,13 +4454,17 @@
             penEl.hidden = true;
             return;
         }
-        // The pill has the page's theme, as the toast does.
+        // The bar has the page's theme, as the toast does.
         const dark = computeDarkMode();
         ensureUi(panelOpen() && uiDark !== null ? uiDark : dark);
         penEl.setAttribute('data-theme', dark ? 'dark' : 'light');
-        const icon = styleIcon(penKey, dark);
-        penIcon.replaceWith(icon);
-        penIcon = icon;
+        // One button per style: the pen's own shows pressed; clicking another changes the pen.
+        const tools = Object.keys(STYLES).filter(k => !STYLES[k].retired).map(k => {
+            const b = toolButton(styleIcon(k, dark), styleLabel(k), shortcutText(k), () => setPen(k), k === penKey);
+            b.tabIndex = k === penKey ? 0 : -1;
+            return b;
+        });
+        penEl.replaceChildren(...tools, toolbarDivider(), penText, penOff);
         penText.textContent = `Pen: ${styleLabel(penKey).toLowerCase()}`;
         penEl.hidden = false;
     }
@@ -4485,6 +4488,21 @@
     }
 
     penOff.addEventListener('click', () => setPen(null));
+
+    // Arrow keys, Home and End move between the pen toolbar's buttons, as in the selection toolbar.
+    penEl.addEventListener('keydown', e => {
+        if (e.altKey || e.ctrlKey || e.metaKey) return;
+        const buttons = Array.from(penEl.querySelectorAll('button'));
+        const i = buttons.indexOf(uiRoot.activeElement);
+        const to = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: buttons.length - 1 }[e.key];
+        if (i < 0 || to === undefined) return;
+        e.preventDefault();
+        e.stopPropagation();
+        buttons[i].tabIndex = -1;
+        const next = buttons[(to + buttons.length) % buttons.length];
+        next.tabIndex = 0;
+        next.focus();
+    });
     // --- Note card (shown when hovering an annotation that has a note) ---
 
     let hoveredWrapper = null;    // for the keys used without a selection (see pointedGroup)

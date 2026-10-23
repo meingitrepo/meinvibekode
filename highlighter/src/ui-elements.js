@@ -75,10 +75,9 @@
     ]);
 
     // The pen (Alt+P, see setPen): a pill at the top of the view while it is on.
-    let penIcon = fluentIcon('highlight_20_regular');   // replaced by the pen's style
-    const penText = makeEl('span', { class: 'pen-text' });
+    const penText = makeEl('span', { class: 'pen-text' });   // the pen's state in words, for screen readers
     const penOff = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
-    const penEl = makeEl('div', { class: 'surface pen', role: 'status', hidden: '' }, [penIcon, penText, penOff]);
+    const penEl = makeEl('div', { class: 'surface pen', role: 'toolbar', 'aria-label': 'Pen', hidden: '' }, [penText, penOff]);
 
     // Everything saved (Alt+Shift+O, see openEverything): a dialog over the dimmed page.
     const everythingCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });   // the whole title, see setPanelTitle

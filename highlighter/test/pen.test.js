@@ -25,6 +25,13 @@ async function basics(browser) {
   await p.mouse.dblclick((r.left + r.right) / 2, (r.top + r.bottom) / 2); await p.waitForTimeout(350);
   w = await L.wr(p);
   check('a double-clicked word is highlighted', w.some(x => x.t === 'reader' && x.k === 'h'), w);
+  // the pen bar's eraser tool: dragging over annotated text erases it
+  await p.evaluate(() => [...window.__hl.penEl.querySelectorAll('button')].find(b => b.dataset.label === 'Eraser').click());
+  check('the eraser button makes the pen erase', (await pill(p)) === 'Pen: eraser', await pill(p));
+  await L.drag(p, '#p1', 'several plain words');
+  w = await L.wr(p);
+  check('with the eraser, selecting annotated text erases it', !w.some(x => x.t.includes('several plain words')), w);
+  await p.evaluate(() => [...window.__hl.penEl.querySelectorAll('button')][2].click());
   await p.mouse.move(5, 5);
   await L.altKey(p, 'u');
   check('a style key with nothing selected or pointed at changes the pen', (await pill(p)) === 'Pen: underline', await pill(p));

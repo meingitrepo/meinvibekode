@@ -1,11 +1,12 @@
     // --- Pen (Alt+P): while it is on, every mouse selection is annotated straight away ---
 
     let penKey = null;            // the style the pen draws with while it is on, else null
+    const PEN_ERASER = 'eraser';  // the pen's key when it erases instead of drawing
     let lastStyleKey = null;      // the style chosen last for some text; the pen starts with it
 
     // Turns the pen on with style `key`, or off (null). A toolbar at the top of the view shows it.
     function setPen(key) {
-        penKey = key && STYLES[key] ? key : null;
+        penKey = key === PEN_ERASER || (key && STYLES[key]) ? key : null;
         if (!penKey) {
             if (!penEl.hidden) hideLabelTip();
             releaseFocus(penEl);
@@ -22,8 +23,12 @@
             b.tabIndex = k === penKey ? 0 : -1;
             return b;
         });
+        const eraser = toolButton(fluentIcon('eraser_20_regular'), 'Eraser', '', () => setPen(PEN_ERASER), penKey === PEN_ERASER);
+        eraser.tabIndex = penKey === PEN_ERASER ? 0 : -1;
+        tools.push(toolbarDivider(), eraser);
+        if (penKey !== PEN_ERASER && !tools.some(b => b.tabIndex === 0)) tools[0].tabIndex = 0;
         penEl.replaceChildren(...tools, toolbarDivider(), penText, penOff);
-        penText.textContent = `Pen: ${styleLabel(penKey).toLowerCase()}`;
+        penText.textContent = `Pen: ${penKey === PEN_ERASER ? 'eraser' : styleLabel(penKey).toLowerCase()}`;
         penEl.hidden = false;
     }
 
@@ -33,14 +38,15 @@
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
     }
 
-    // After a mouse selection with the pen on: the selected text gets the pen's style. The pen
-    // only adds, so text that already has its style (all of it) is left as it is.
+    // After a mouse selection with the pen on: the selected text gets the pen's style (or, with the
+    // eraser, loses its annotations). The pen only adds, so text that already has its style (all of it) is left as it is.
     function penStroke() {
         if (!penKey || !running || editor) return;
         const selected = toolbarSelection();
         const range = selected && cleanRange(selected);
         if (!range) return;
         const sel = window.getSelection();
+        if (penKey === PEN_ERASER) { removeInSelection({ sel, range: selected }); return; }
         if (selectionStyles(range, findOverlaps(range)).includes(penKey)) { sel.removeAllRanges(); return; }
         annotateSelection(penKey, { sel, range: selected });
     }

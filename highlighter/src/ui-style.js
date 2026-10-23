@@ -104,6 +104,7 @@
         --colorSubtleBackgroundSelected: #ebebeb;
         --colorNeutralStroke1: #d1d1d1;
         --colorNeutralStroke1Hover: #c7c7c7;
+        --colorNeutralStroke1Pressed: #b3b3b3;
         --colorNeutralStrokeAccessible: #616161;
         --colorNeutralStrokeAccessibleHover: #575757;
         --colorCompoundBrandStroke: #0f6cbd;
@@ -161,6 +162,7 @@
         --colorSubtleBackgroundSelected: #333333;
         --colorNeutralStroke1: #666666;
         --colorNeutralStroke1Hover: #757575;
+        --colorNeutralStroke1Pressed: #6b6b6b;
         --colorNeutralStrokeAccessible: #adadad;
         --colorNeutralStrokeAccessibleHover: #bdbdbd;
         --colorCompoundBrandStroke: #479ef5;
@@ -325,12 +327,15 @@
         /* The box's bottom edge (what the bottom border used to be). */
         .field::before { height: 1px; background: var(--colorNeutralStrokeAccessible); }
         .field:hover::before { background: var(--colorNeutralStrokeAccessibleHover); }
+        .field:active, .field:focus-within { border-color: var(--colorNeutralStroke1Pressed); }
+        .field:active::before, .field:focus-within::before { background: var(--colorNeutralStrokeAccessiblePressed); }
         /* Focus line: one solid 2px bar that grows from the center on focus, as in Fluent. */
         .field::after {
             height: 2px; background: var(--colorCompoundBrandStroke);
             transform: scaleX(0); transition: transform 50ms var(--curveEasyEase);
         }
         .field:focus-within::after { transform: scaleX(1); transition: transform var(--durationNormal) var(--curveDecelerateMax); }
+        .field:active::after { background: var(--colorCompoundBrandStrokePressed); }
         textarea {
             /* Height is set by sizeNoteInput(): NOTE_MIN_LINES to NOTE_MAX_LINES, then it scrolls.
                The corner handle resizes it (and the panel) for the current edit only. */
@@ -401,9 +406,9 @@
         .panel-count { flex: 1; color: var(--colorNeutralForeground3); }
         .panel-actions { display: flex; align-items: center; gap: 2px; }
         .panel .field { flex: none; margin: 0 12px 8px; padding-bottom: 0; }
-        .search-icon { position: absolute; left: 8px; top: 6px; color: var(--colorNeutralForeground3); pointer-events: none; }
+        .search-icon { position: absolute; left: 9px; top: 6px; color: var(--colorNeutralForeground3); pointer-events: none; }
         .field input {
-            display: block; box-sizing: border-box; width: 100%; height: 31px; margin: 0; padding: 0 10px 0 32px;
+            display: block; box-sizing: border-box; width: 100%; height: 31px; margin: 0; padding: 0 10px 0 33px;
             border: 0; outline: 0; background: transparent; color: var(--colorNeutralForeground1); font: inherit;
         }
         .field input::placeholder { color: var(--colorNeutralForeground4); opacity: 1; }

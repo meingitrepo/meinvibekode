@@ -221,9 +221,33 @@
         if (head) {
             const key = head.dataset.key;
             if (everythingToggled.has(key)) everythingToggled.delete(key); else everythingToggled.add(key);
-            renderEverything();
-            const again = Array.from(everythingList.querySelectorAll('.page-head')).find(h => h.dataset.key === key);
-            if (again) again.focus({ preventScroll: true });
+            const finish = () => {
+                renderEverything();
+                const again = Array.from(everythingList.querySelectorAll('.page-head')).find(h => h.dataset.key === key);
+                if (again) again.focus({ preventScroll: true });
+                return again;
+            };
+            const slide = (list, from, to, easing) => list.animate(
+                [{ height: `${from}px`, opacity: from ? 1 : 0 }, { height: `${to}px`, opacity: to ? 1 : 0 }],
+                { duration: 200, easing });
+            const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const old = head.nextElementSibling;
+            if (calm) { finish(); return; }
+            if (old) {
+                // Closing: slide the rows away, then drop them.
+                const h = old.offsetHeight;
+                old.style.overflow = 'hidden';
+                head.setAttribute('aria-expanded', 'false');
+                slide(old, h, 0, 'cubic-bezier(0.9, 0.1, 1, 0.2)').finished.then(finish, finish);
+                return;
+            }
+            const again = finish();
+            const fresh = again && again.nextElementSibling;
+            if (fresh) {
+                fresh.style.overflow = 'hidden';
+                const anim = slide(fresh, 0, fresh.offsetHeight, 'cubic-bezier(0.1, 0.9, 0.2, 1)');
+                anim.finished.then(() => { fresh.style.overflow = ''; }, () => { fresh.style.overflow = ''; });
+            }
             return;
         }
         const link = e.target.closest('a.item-main');

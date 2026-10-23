@@ -3630,10 +3630,14 @@
         :host([data-theme="dark"]) { ${DARK_TOKENS} }
         .panel[data-theme="light"], .toast[data-theme="light"], .pen[data-theme="light"], .everything[data-theme="light"] { ${LIGHT_TOKENS} }
         .panel[data-theme="dark"], .toast[data-theme="dark"], .pen[data-theme="dark"], .everything[data-theme="dark"] { ${DARK_TOKENS} }
-        [hidden]:not(.surface), .tip[hidden] { display: none !important; }
+        [hidden]:not(.surface):not(.everything), .tip[hidden] { display: none !important; }
         /* Surfaces fade out rather than vanish: display flips last (allow-discrete), so the hidden attribute
            still takes effect at once for scripts. */
         .surface:not(.tip) { transition: opacity var(--durationNormal) var(--curveAccelerateMid), transform var(--durationNormal) var(--curveAccelerateMid), display var(--durationNormal) allow-discrete; }
+        .everything { transition: opacity var(--durationNormal) var(--curveAccelerateMid), display var(--durationNormal) allow-discrete; }
+        .everything[hidden] { display: none; opacity: 0; pointer-events: none; }
+        .everything:not([hidden]) { animation: highlighter-fade var(--durationNormal) var(--curveDecelerateMid); }
+        @keyframes highlighter-fade { from { opacity: 0; } }
         .surface:not(.tip)[hidden] { display: none; opacity: 0; transform: translateY(4px); pointer-events: none; }
         /* Scrollbars (note box, card text, lists) follow our theme, not the page's. Set here, not on
            :host: the host's inline all: initial !important would reset it. */
@@ -3873,7 +3877,7 @@
         .missing .item-actions { opacity: 1; padding: 0 4px 6px 6px; }
 
         @media (prefers-reduced-motion: reduce) {
-            .surface { animation: none; transition: none; }
+            .surface, .everything { animation: none; transition: none; }
             .btn, .field::after, .toolbar.fading { transition: none; }
         }
         @media (forced-colors: active) {
@@ -6235,9 +6239,33 @@
         if (head) {
             const key = head.dataset.key;
             if (everythingToggled.has(key)) everythingToggled.delete(key); else everythingToggled.add(key);
-            renderEverything();
-            const again = Array.from(everythingList.querySelectorAll('.page-head')).find(h => h.dataset.key === key);
-            if (again) again.focus({ preventScroll: true });
+            const finish = () => {
+                renderEverything();
+                const again = Array.from(everythingList.querySelectorAll('.page-head')).find(h => h.dataset.key === key);
+                if (again) again.focus({ preventScroll: true });
+                return again;
+            };
+            const slide = (list, from, to, easing) => list.animate(
+                [{ height: `${from}px`, opacity: from ? 1 : 0 }, { height: `${to}px`, opacity: to ? 1 : 0 }],
+                { duration: 200, easing });
+            const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const old = head.nextElementSibling;
+            if (calm) { finish(); return; }
+            if (old) {
+                // Closing: slide the rows away, then drop them.
+                const h = old.offsetHeight;
+                old.style.overflow = 'hidden';
+                head.setAttribute('aria-expanded', 'false');
+                slide(old, h, 0, 'cubic-bezier(0.9, 0.1, 1, 0.2)').finished.then(finish, finish);
+                return;
+            }
+            const again = finish();
+            const fresh = again && again.nextElementSibling;
+            if (fresh) {
+                fresh.style.overflow = 'hidden';
+                const anim = slide(fresh, 0, fresh.offsetHeight, 'cubic-bezier(0.1, 0.9, 0.2, 1)');
+                anim.finished.then(() => { fresh.style.overflow = ''; }, () => { fresh.style.overflow = ''; });
+            }
             return;
         }
         const link = e.target.closest('a.item-main');

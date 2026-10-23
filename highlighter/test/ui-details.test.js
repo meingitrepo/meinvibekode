@@ -79,6 +79,9 @@ const tbRect = page => L.toolbar(page).then(t => t && t.rect);
     L.check('toolbar on a dark block is dark, the toast stays light', a.toast === 'light' && b.toast === 'light' && b.host === 'dark' && b.tb, { a, b });
     const toastBg = await page.evaluate(() => getComputedStyle(window.__hl.toastEl).backgroundColor);
     L.check('toast background light', toastBg === 'rgb(255, 255, 255)', toastBg);
+    // Fluent Toast: Foreground2 icon, focusable container
+    const tf = await page.evaluate(() => { const t = window.__hl.toastEl; return { icon: getComputedStyle(t.querySelector(':scope > .icon')).color, tab: t.getAttribute('tabindex') }; });
+    L.check('toast icon uses Foreground2, container is focusable', tf.icon === 'rgb(66, 66, 66)' && tf.tab === '-1', tf);
     await page.evaluate(() => getSelection().removeAllRanges());
     // gradient hero: dark colors
     await page.evaluate(() => document.querySelector('#hero').scrollIntoView());

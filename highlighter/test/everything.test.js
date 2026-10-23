@@ -31,7 +31,7 @@ async function main(browser) {
   await L.altKey(p, 'o', true);
   let s = await state(p);
   check('Alt+Shift+O opens it with every page, newest first', s && s.pages.map(x => x.head.split(/\d/)[0]).join('|') === 'other.test/blog/post-one|example.test/a|third.test/old', s);
-  check('the count says annotations and pages', s && s.count === '4 annotations on 3 pages', s && s.count);
+  check('the count says annotations and pages', s && s.count === '4 Annotations on 3 pages', s && s.count);
   check('pages start closed', s && s.pages.every(x => x.open === 'false' && !x.items.length), s);
   check('focus is in the search box', await p.evaluate(() => window.__hl.uiRoot.activeElement === window.__hl.everythingFilter), null);
   await clickHead(p, 0);
@@ -42,7 +42,7 @@ async function main(browser) {
   await p.evaluate(() => window.__hl.everythingFilter.focus());
   await p.keyboard.type('#foxes'); await p.waitForTimeout(100);
   s = await state(p);
-  check('searching finds notes on any page, opened', s.pages.length === 1 && s.pages[0].open === 'true' && s.pages[0].items.length === 1 && s.count === '1 of 4 annotations', s);
+  check('searching finds notes on any page, opened', s.pages.length === 1 && s.pages[0].open === 'true' && s.pages[0].items.length === 1 && s.count === '1 of 4 Annotations on 1 page', s);
   await p.evaluate(() => { const f = window.__hl.everythingFilter; f.value = 'third'; f.dispatchEvent(new Event('input')); });
   s = await state(p);
   check('searching a site name shows its page', s.pages.length === 1 && s.pages[0].items[0].text === 'ancient words', s);
@@ -68,7 +68,7 @@ async function main(browser) {
   check('header order select/copy/forget/close, copy grayed, tick on the left', hdr.order === '0123' && hdr.copyOff && hdr.forgetOff && hdr.checkFirst, hdr);
   await p.evaluate(() => window.__hl.everythingSelectAll.click());
   const sel = await p.evaluate(() => ({ n: window.__hl.everythingCount.textContent, copyOn: !window.__hl.everythingCopy.disabled }));
-  check('select all ticks everything, count and copy follow', sel.n === '4/4' && sel.copyOn, sel);
+  check('select all ticks everything, count and copy follow', sel.n === '4 Annotations selected on 3 pages' && sel.copyOn, sel);
   await p.evaluate(() => window.__hl.everythingSelectAll.click());
   await p.evaluate(() => window.__hl.everythingList.querySelector('.item .check').click());
   await p.evaluate(() => window.__hl.everythingCopy.click()); await p.waitForTimeout(100);
@@ -76,7 +76,7 @@ async function main(browser) {
   check('copy writes the ticked quote with its page heading', /^## \[other\.test\/blog\/post\-one\]\(https:\/\/other\.test\/blog\/post-one\)\n\n> The quick brown fox jumps \[↗\]/.test(md || ''), md);
   await p.evaluate(() => window.__hl.everythingForget.click()); await p.waitForTimeout(150);
   const left = await state(p);
-  check('forget removes it from storage and the list', left && left.count === '3 annotations on 3 pages' && !left.pages[0].items.some(i => i.text === 'The quick brown fox jumps'), left);
+  check('forget removes it from storage and the list', left && left.count === '3 Annotations on 3 pages' && !left.pages[0].items.some(i => i.text === 'The quick brown fox jumps'), left);
   await p.keyboard.press('Escape');
   // menu
   check('the menu has it', (await L.menu(p)).includes('Search all pages'), await L.menu(p));

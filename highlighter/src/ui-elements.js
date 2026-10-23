@@ -48,8 +48,13 @@
     const toastAction = makeEl('button', { type: 'button', class: 'link', hidden: '' });
     const toastEl = makeEl('div', { class: 'surface toast', role: 'status', hidden: '' }, [toastIcon, toastText, toastAction]);
 
+    // A panel's title: the counts in the quiet colour around the bold word "Annotations".
+    function setPanelTitle(el, lead, tail) {
+        el.replaceChildren(lead + ' ', makeEl('span', { class: 'panel-title', text: lead === '1' ? 'Annotation' : 'Annotations' }), tail);
+    }
+
     // The annotations panel (see openPanel). Its list is built by renderPanel.
-    const panelCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });
+    const panelCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });   // the whole title, see setPanelTitle
     const panelErase = fluentButton({ icon: fluentIcon('eraser_20_regular') });
     panelErase.disabled = true;
     const panelSelectAll = fluentButton({ icon: fluentIcon('select_all_on_20_regular') });
@@ -62,7 +67,7 @@
     const panelList = makeEl('div', { class: 'panel-list' });
     const panelEl = makeEl('div', { class: 'surface panel', role: 'complementary', 'aria-label': 'Annotations', hidden: '' }, [
         makeEl('div', { class: 'panel-header' }, [
-            makeEl('div', { class: 'panel-title', text: 'Annotations' }), panelCount,
+            panelCount,
             makeEl('div', { class: 'panel-actions' }, [panelSelectAll, panelCopy, panelErase, panelClose])
         ]),
         makeEl('div', { class: 'field' }, [searchIcon, panelFilter]),
@@ -76,7 +81,7 @@
     const penEl = makeEl('div', { class: 'surface pen', role: 'status', hidden: '' }, [penIcon, penText, penOff]);
 
     // Everything saved (Alt+Shift+O, see openEverything): a dialog over the dimmed page.
-    const everythingCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });
+    const everythingCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });   // the whole title, see setPanelTitle
     const everythingSelectAll = fluentButton({ icon: fluentIcon('select_all_on_20_regular') });
     const everythingCopy = fluentButton({ icon: fluentIcon('copy_20_regular') });
     everythingCopy.disabled = true;
@@ -90,7 +95,7 @@
     const everythingEl = makeEl('div', { class: 'everything', hidden: '' }, [
         makeEl('div', { class: 'surface everything-box', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'All saved annotations' }, [
             makeEl('div', { class: 'panel-header' }, [
-                makeEl('div', { class: 'panel-title', text: 'All annotations' }), everythingCount,
+                everythingCount,
                 makeEl('div', { class: 'panel-actions' }, [everythingSelectAll, everythingCopy, everythingForget, everythingClose])
             ]),
             makeEl('div', { class: 'field' }, [everythingIcon, everythingFilter]),

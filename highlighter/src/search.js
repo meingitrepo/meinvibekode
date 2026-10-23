@@ -146,7 +146,7 @@
             const head = makeEl('button', { type: 'button', class: 'page-head', 'aria-expanded': String(open), 'data-key': p.key }, [
                 fluentIcon(open ? 'chevron_down_16_regular' : 'chevron_right_16_regular'),
                 makeEl('span', { class: 'page-name' }, [makeEl('span', { class: 'page-host', text: p.host }), makeEl('span', { class: 'page-path', text: p.path })]),
-                makeEl('span', { class: 'page-meta', text: `${items.length}${p.time ? ` · ${formatDate(p.time)}` : ''}` })
+                makeEl('span', { class: 'page-meta', text: `${(() => { const n = items.filter(a => everythingChecked.has(everythingId(p, a))).length; return n ? `${n}/${items.length}` : items.length; })()}${p.time ? ` · ${formatDate(p.time)}` : ''}` })
             ]);
             const section = makeEl('div', { class: 'page', role: 'listitem' }, [head]);
             if (open) {
@@ -168,11 +168,13 @@
         const total = everythingPages.reduce((n, p) => n + p.items.length, 0);
         const ticked = everythingChecked.size;
         syncSelectionButtons(everythingSelectAll, everythingCopy, everythingForget, ticked, shownItems);
-        everythingCount.textContent = ticked
-            ? `${ticked}/${shownItems}${terms.length ? ` of ${total}` : ''}`
-            : terms.length
-                ? `${shownItems} of ${annotationsText(total)}`
-                : `${annotationsText(total)} on ${everythingPages.length} ${everythingPages.length === 1 ? 'page' : 'pages'}`;
+        const pagesText = n => `${n} ${n === 1 ? 'page' : 'pages'}`;
+        if (ticked) {
+            const tickedPages = new Set(everythingShown.filter(s => everythingChecked.has(s.id)).map(s => s.page.key)).size;
+            setPanelTitle(everythingCount, ticked === 1 ? '1' : String(ticked), ` selected on ${pagesText(tickedPages)}`);
+        } else {
+            setPanelTitle(everythingCount, terms.length ? `${shownItems} of ${total}` : String(total), ` on ${pagesText(terms.length ? visible.length : everythingPages.length)}`);
+        }
         if (!rows.length) rows.push(makeEl('div', { class: 'empty', text: total ? 'Nothing matches.' : 'No annotations saved yet.' }));
         everythingList.replaceChildren(...rows);
     }

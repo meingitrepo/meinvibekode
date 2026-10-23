@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.78
+// @version      8.79
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -3814,7 +3814,7 @@
             width: min(340px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
         }
         .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }
-        .panel-title { font-weight: 600; }
+        .panel-title { font-weight: 600; color: var(--colorNeutralForeground1); }
         .panel-count { flex: 1; color: var(--colorNeutralForeground3); }
         .panel-actions { display: flex; align-items: center; gap: 2px; }
         .panel .field { flex: none; margin: 0 12px 8px; padding-bottom: 0; }
@@ -3940,8 +3940,13 @@
     const toastAction = makeEl('button', { type: 'button', class: 'link', hidden: '' });
     const toastEl = makeEl('div', { class: 'surface toast', role: 'status', hidden: '' }, [toastIcon, toastText, toastAction]);
 
+    // A panel's title: the counts in the quiet colour around the bold word "Annotations".
+    function setPanelTitle(el, lead, tail) {
+        el.replaceChildren(lead + ' ', makeEl('span', { class: 'panel-title', text: lead === '1' ? 'Annotation' : 'Annotations' }), tail);
+    }
+
     // The annotations panel (see openPanel). Its list is built by renderPanel.
-    const panelCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });
+    const panelCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });   // the whole title, see setPanelTitle
     const panelErase = fluentButton({ icon: fluentIcon('eraser_20_regular') });
     panelErase.disabled = true;
     const panelSelectAll = fluentButton({ icon: fluentIcon('select_all_on_20_regular') });
@@ -3954,7 +3959,7 @@
     const panelList = makeEl('div', { class: 'panel-list' });
     const panelEl = makeEl('div', { class: 'surface panel', role: 'complementary', 'aria-label': 'Annotations', hidden: '' }, [
         makeEl('div', { class: 'panel-header' }, [
-            makeEl('div', { class: 'panel-title', text: 'Annotations' }), panelCount,
+            panelCount,
             makeEl('div', { class: 'panel-actions' }, [panelSelectAll, panelCopy, panelErase, panelClose])
         ]),
         makeEl('div', { class: 'field' }, [searchIcon, panelFilter]),
@@ -3968,7 +3973,7 @@
     const penEl = makeEl('div', { class: 'surface pen', role: 'status', hidden: '' }, [penIcon, penText, penOff]);
 
     // Everything saved (Alt+Shift+O, see openEverything): a dialog over the dimmed page.
-    const everythingCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });
+    const everythingCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });   // the whole title, see setPanelTitle
     const everythingSelectAll = fluentButton({ icon: fluentIcon('select_all_on_20_regular') });
     const everythingCopy = fluentButton({ icon: fluentIcon('copy_20_regular') });
     everythingCopy.disabled = true;
@@ -3982,7 +3987,7 @@
     const everythingEl = makeEl('div', { class: 'everything', hidden: '' }, [
         makeEl('div', { class: 'surface everything-box', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'All saved annotations' }, [
             makeEl('div', { class: 'panel-header' }, [
-                makeEl('div', { class: 'panel-title', text: 'All annotations' }), everythingCount,
+                everythingCount,
                 makeEl('div', { class: 'panel-actions' }, [everythingSelectAll, everythingCopy, everythingForget, everythingClose])
             ]),
             makeEl('div', { class: 'field' }, [everythingIcon, everythingFilter]),
@@ -5849,8 +5854,8 @@
 
         const ticked = shown.filter(a => panelChecked.has(a.group)).length;
         syncSelectionButtons(panelSelectAll, panelCopy, panelErase, ticked, shown.length);
-        const total = terms.length ? `${shown.length} of ${present.length}` : String(present.length);
-        panelCount.textContent = ticked ? `${ticked}/${shown.length}${terms.length ? ` of ${present.length}` : ''}` : total;
+        if (ticked) setPanelTitle(panelCount, `${ticked}/${shown.length}`, ' selected');
+        else setPanelTitle(panelCount, terms.length ? `${shown.length} of ${present.length}` : String(present.length), '');
         const children = [];
         if (!present.length && !missing.length) {
             children.push(makeEl('div', { class: 'empty', text: 'No annotations on this page yet. Select some text and press Alt+H to highlight it.' }));
@@ -6164,7 +6169,7 @@
             const head = makeEl('button', { type: 'button', class: 'page-head', 'aria-expanded': String(open), 'data-key': p.key }, [
                 fluentIcon(open ? 'chevron_down_16_regular' : 'chevron_right_16_regular'),
                 makeEl('span', { class: 'page-name' }, [makeEl('span', { class: 'page-host', text: p.host }), makeEl('span', { class: 'page-path', text: p.path })]),
-                makeEl('span', { class: 'page-meta', text: `${items.length}${p.time ? ` · ${formatDate(p.time)}` : ''}` })
+                makeEl('span', { class: 'page-meta', text: `${(() => { const n = items.filter(a => everythingChecked.has(everythingId(p, a))).length; return n ? `${n}/${items.length}` : items.length; })()}${p.time ? ` · ${formatDate(p.time)}` : ''}` })
             ]);
             const section = makeEl('div', { class: 'page', role: 'listitem' }, [head]);
             if (open) {
@@ -6186,11 +6191,13 @@
         const total = everythingPages.reduce((n, p) => n + p.items.length, 0);
         const ticked = everythingChecked.size;
         syncSelectionButtons(everythingSelectAll, everythingCopy, everythingForget, ticked, shownItems);
-        everythingCount.textContent = ticked
-            ? `${ticked}/${shownItems}${terms.length ? ` of ${total}` : ''}`
-            : terms.length
-                ? `${shownItems} of ${annotationsText(total)}`
-                : `${annotationsText(total)} on ${everythingPages.length} ${everythingPages.length === 1 ? 'page' : 'pages'}`;
+        const pagesText = n => `${n} ${n === 1 ? 'page' : 'pages'}`;
+        if (ticked) {
+            const tickedPages = new Set(everythingShown.filter(s => everythingChecked.has(s.id)).map(s => s.page.key)).size;
+            setPanelTitle(everythingCount, ticked === 1 ? '1' : String(ticked), ` selected on ${pagesText(tickedPages)}`);
+        } else {
+            setPanelTitle(everythingCount, terms.length ? `${shownItems} of ${total}` : String(total), ` on ${pagesText(terms.length ? visible.length : everythingPages.length)}`);
+        }
         if (!rows.length) rows.push(makeEl('div', { class: 'empty', text: total ? 'Nothing matches.' : 'No annotations saved yet.' }));
         everythingList.replaceChildren(...rows);
     }

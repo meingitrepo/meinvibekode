@@ -189,8 +189,8 @@
 
         const ticked = shown.filter(a => panelChecked.has(a.group)).length;
         syncSelectionButtons(panelSelectAll, panelCopy, panelErase, ticked, shown.length);
-        const total = terms.length ? `${shown.length} of ${present.length}` : String(present.length);
-        panelCount.textContent = ticked ? `${ticked}/${shown.length}${terms.length ? ` of ${present.length}` : ''}` : total;
+        if (ticked) setPanelTitle(panelCount, `${ticked}/${shown.length}`, ' selected');
+        else setPanelTitle(panelCount, terms.length ? `${shown.length} of ${present.length}` : String(present.length), '');
         const children = [];
         if (!present.length && !missing.length) {
             children.push(makeEl('div', { class: 'empty', text: 'No annotations on this page yet. Select some text and press Alt+H to highlight it.' }));

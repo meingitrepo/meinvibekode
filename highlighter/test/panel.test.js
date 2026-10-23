@@ -47,7 +47,7 @@ ${filler(40)}
   L.check('clicked row is selected on the page', await page.evaluate(() => window.__hl.selectedGroups.length === 1), null);
   L.check('missing has date from group id', it.find(i => i.missing).meta.includes('added'), it.find(i => i.missing));
   const count = await page.evaluate(() => window.__hl.panelCount.textContent);
-  L.check('count', count === '5', count);
+  L.check('count', count === '5 Annotations', count);
   const focusOk = await page.evaluate(() => window.__hl.uiRoot.activeElement === window.__hl.panelFilter);
   L.check('filter focused', focusOk);
   await page.keyboard.type('#animals');
@@ -105,7 +105,7 @@ ${filler(40)}
   L.check('undo brings it back to panel', it.some(i => i.text === 'three four'), it.length);
   // the count shows how many are ticked
   const cnt = await page.evaluate(() => { const h = window.__hl; h.panelList.querySelector('.item .check').click(); const n = h.panelList.querySelectorAll('.item:not(.missing)').length; return { n, one: h.panelCount.textContent }; });
-  L.check('count shows ticked/total', cnt.one === `1/${cnt.n}`, cnt);
+  L.check('count shows ticked/total', cnt.one === `1/${cnt.n} Annotations selected`, cnt);
   await page.evaluate(() => window.__hl.panelSelectAll.click());
   await page.evaluate(() => window.__hl.panelSelectAll.click());
   // select all, then erase several in one step

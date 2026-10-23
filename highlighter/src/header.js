@@ -3,7 +3,7 @@
 // @namespace    Violentmonkey Scripts
 // @version      8.86
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
-// @author       -
+// @author       Mhmd & Claude
 // @match        *://*/*
 // @match        file:///*
 // @noframes

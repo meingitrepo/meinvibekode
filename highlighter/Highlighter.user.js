@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.91
+// @version      8.92
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3611,7 +3611,7 @@
         --colorNeutralBackground1: #292929;
         --colorSubtleBackgroundHover: #383838;
         --colorSubtleBackgroundPressed: #2e2e2e;
-        --colorSubtleBackgroundSelected: #383838;
+        --colorSubtleBackgroundSelected: #333333;
         --colorNeutralStroke1: #666666;
         --colorNeutralStroke1Hover: #757575;
         --colorNeutralStrokeAccessible: #adadad;

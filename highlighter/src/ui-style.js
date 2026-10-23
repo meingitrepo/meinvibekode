@@ -137,7 +137,7 @@
         --colorNeutralBackground1: #292929;
         --colorSubtleBackgroundHover: #383838;
         --colorSubtleBackgroundPressed: #2e2e2e;
-        --colorSubtleBackgroundSelected: #383838;
+        --colorSubtleBackgroundSelected: #333333;
         --colorNeutralStroke1: #666666;
         --colorNeutralStroke1Hover: #757575;
         --colorNeutralStrokeAccessible: #adadad;

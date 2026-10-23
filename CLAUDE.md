@@ -8,6 +8,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - After PUSH run ONE Bash call: `highlighter/release.sh "Theme" "What's in it" "Commit message"`. Never bump @version, commit the built file by hand. On conflict: keep BOTH sides, rerun related tests, rerun the script, mention the merged-in change. After pushing just say it's pushed.
 - One task per thread; new thread per follow-up/revert. Open-ended "find problems" asks: one ranking thread that fixes nothing, then one short thread per item Mhmd picks.
 - Economy: batch independent commands in one Bash call, no subagents, at most one review pass, status updates at milestones only.
+- UI/Fluent design: vanilla Fluent 2, no library; references https://github.com/microsoft/fluentui and https://storybooks.fluentui.dev/react/
 
 ## Invariants (violating these is expensive)
 - Edit only `highlighter/src/*.js`, then `node build.js` in `highlighter/`; `node build.js --check` must say "up to date". Never edit the built .user.js.

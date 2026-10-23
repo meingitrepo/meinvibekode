@@ -47,6 +47,11 @@
         select_all_on_20_regular: 'M12.33 6.62c.2.18.22.5.04.7l-3.5 4a.5.5 0 0 1-.73.03l-2-2a.5.5 0 1 1 .7-.7l1.63 1.62 3.15-3.6c.18-.2.5-.23.7-.05M3 6a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3zm3-2a2 2 0 0 0-2 2v6c0 1.1.9 2 2 2h6a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm-.25 12c.55.61 1.35 1 2.24 1h4.5a4.5 4.5 0 0 0 4.5-4.5V8c0-.88-.38-1.68-.99-2.23V11q0 .15-.01.3v1.2a3.5 3.5 0 0 1-3.5 3.5h-1.43l-.06.01z',
         select_all_off_20_regular: 'M6 3a3 3 0 0 0-3 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3zM4 6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm3.99 11c-.89 0-1.69-.39-2.24-1h5.25q.03 0 .05-.01h1.44a3.5 3.5 0 0 0 3.5-3.5v-1.2q.01-.15.01-.3V5.77c.61.55.99 1.35.99 2.23v4.5a4.5 4.5 0 0 1-4.5 4.5z',
         copy_20_regular: 'M7 7H5.5C4.67 7 4 7.67 4 8.5v6c0 .83.67 1.5 1.5 1.5h4c.65 0 1.2-.42 1.41-1h1.04a2.5 2.5 0 0 1-2.45 2h-4A2.5 2.5 0 0 1 3 14.5v-6A2.5 2.5 0 0 1 5.5 6H7zm7.5-4A2.5 2.5 0 0 1 17 5.5v6a2.5 2.5 0 0 1-2.5 2.5h-4A2.5 2.5 0 0 1 8 11.5v-6A2.5 2.5 0 0 1 10.5 3zm-4 1C9.67 4 9 4.67 9 5.5v6c0 .83.67 1.5 1.5 1.5h4c.83 0 1.5-.67 1.5-1.5v-6c0-.83-.67-1.5-1.5-1.5z',
+        edit_20_filled: 'M12.9203 2.87317C14.1027 1.69077 16.0271 1.71505 17.1794 2.92689C18.2913 4.09631 18.2681 5.93899 17.1271 7.08003L16.4581 7.74902L12.2512 3.54217L12.9203 2.87317ZM11.5441 4.24927L3.54545 12.2475C3.21763 12.5754 2.99008 12.9899 2.88953 13.4424L2.01191 17.3923C1.97483 17.5592 2.02559 17.7335 2.14649 17.8544C2.26739 17.9753 2.44166 18.026 2.60855 17.9889L6.53494 17.1157C7.00237 17.0118 7.43048 16.7767 7.76907 16.4381L15.751 8.45613L11.5441 4.24927Z',
+        eraser_20_filled: 'M11.197 2.43934C11.7828 1.85355 12.7326 1.85355 13.3184 2.43934L17.561 6.68198C18.1468 7.26777 18.1468 8.21751 17.561 8.8033L9.36408 17.0002H14.5001C14.7763 17.0002 15.0001 17.2241 15.0001 17.5002C15.0001 17.7764 14.7763 18.0002 14.5001 18.0002H7.81974C7.40996 18.0217 6.99303 17.876 6.68003 17.5629L2.43739 13.3203C1.8516 12.7345 1.8516 11.7848 2.43739 11.199L11.197 2.43934ZM9.7811 15.169L4.83135 10.2192L3.14449 11.9061C2.94923 12.1014 2.94923 12.4179 3.14449 12.6132L7.38713 16.8558C7.5824 17.0511 7.89898 17.0511 8.09424 16.8558L9.7811 15.169Z',
+        copy_20_filled: 'M7 11.5C7 13.433 8.567 15 10.5 15H11.9502C11.7186 16.1411 10.7095 17 9.5 17H5.5C4.11929 17 3 15.8807 3 14.5V8.5C3 7.11929 4.11929 6 5.5 6H7V11.5ZM14.5 3C15.8807 3 17 4.11929 17 5.5V11.5C17 12.8807 15.8807 14 14.5 14H10.5C9.11929 14 8 12.8807 8 11.5V5.5C8 4.11929 9.11929 3 10.5 3H14.5Z',
+        search_20_filled: 'M13.5352 14.5961C12.4267 15.4751 11.0246 16 9.5 16C5.91015 16 3 13.0899 3 9.5C3 5.91015 5.91015 3 9.5 3C13.0899 3 16 5.91015 16 9.5C16 11.0247 15.475 12.4268 14.596 13.5353L18.0302 16.9697C18.3231 17.2626 18.3231 17.7374 18.0302 18.0303C17.764 18.2966 17.3473 18.3208 17.0537 18.1029L16.9696 18.0303L13.5352 14.5961ZM14.5 9.5C14.5 6.73858 12.2614 4.5 9.5 4.5C6.73858 4.5 4.5 6.73858 4.5 9.5C4.5 12.2614 6.73858 14.5 9.5 14.5C12.2614 14.5 14.5 12.2614 14.5 9.5Z',
+        select_all_on_20_filled: 'M6 3C4.34315 3 3 4.34315 3 6V12C3 13.6569 4.34315 15 6 15H12C13.6569 15 15 13.6569 15 12V6C15 4.34315 13.6569 3 12 3H6ZM12.3293 6.62372C12.5371 6.80556 12.5581 7.12144 12.3763 7.32926L8.87629 11.3293C8.78516 11.4334 8.65495 11.4951 8.51664 11.4997C8.37833 11.5043 8.2443 11.4514 8.14645 11.3536L6.14645 9.35356C5.95118 9.1583 5.95118 8.84172 6.14645 8.64645C6.34171 8.45119 6.65829 8.45119 6.85355 8.64645L8.47565 10.2685L11.6237 6.67075C11.8056 6.46294 12.1214 6.44188 12.3293 6.62372ZM5.75391 16.0002C6.30322 16.6137 7.10139 16.9998 7.98973 16.9998H12.4897C14.975 16.9998 16.9897 14.9851 16.9897 12.4998V7.99985C16.9897 7.11558 16.6072 6.32067 15.9985 5.77161V11.0002C15.9985 11.1003 15.9955 11.1998 15.9897 11.2985V12.4998C15.9897 14.4328 14.4227 15.9998 12.4897 15.9998H11.0548C11.0361 16.0001 11.0173 16.0002 10.9985 16.0002H5.75391Z',
         dismiss_20_regular: 'm4.09 4.22.06-.07a.5.5 0 0 1 .63-.06l.07.06L10 9.29l5.15-5.14a.5.5 0 0 1 .63-.06l.07.06c.18.17.2.44.06.63l-.06.07L10.71 10l5.14 5.15c.18.17.2.44.06.63l-.06.07a.5.5 0 0 1-.63.06l-.07-.06L10 10.71l-5.15 5.14a.5.5 0 0 1-.63.06l-.07-.06a.5.5 0 0 1-.06-.63l.06-.07L9.29 10 4.15 4.85a.5.5 0 0 1-.06-.63l.06-.07z',
         chevron_down_16_regular: 'M3.15 5.65c.2-.2.5-.2.7 0L8 9.79l4.15-4.14a.5.5 0 0 1 .7.7l-4.5 4.5a.5.5 0 0 1-.7 0l-4.5-4.5a.5.5 0 0 1 0-.7',
         chevron_right_16_regular: 'M5.65 3.15a.5.5 0 0 0 0 .7L9.79 8l-4.14 4.15a.5.5 0 0 0 .7.7l4.5-4.5a.5.5 0 0 0 0-.7l-4.5-4.5a.5.5 0 0 0-.7 0',
@@ -68,7 +73,10 @@
         const size = /_16_/.test(name) ? 16 : 20;
         const svg = svgEl('svg', { class: `icon icon-${size}`, viewBox: `0 0 ${size} ${size}`, 'aria-hidden': 'true', focusable: 'false' });
         under.forEach(s => svg.appendChild(s));
-        svg.appendChild(svgEl('path', { d: FLUENT_ICONS[name], }));
+        svg.appendChild(svgEl('path', { d: FLUENT_ICONS[name], class: 'ic-r' }));
+        // Fluent's bundleIcon: a subtle button shows the Filled form while hovered or pressed.
+        const filled = FLUENT_ICONS[name.replace('_regular', '_filled')];
+        if (filled) svg.appendChild(svgEl('path', { d: filled, class: 'ic-f' }));
         over.forEach(s => svg.appendChild(s));
         return svg;
     }
@@ -83,6 +91,8 @@
         --colorNeutralForeground2: #424242;
         --colorNeutralForegroundDisabled: #bdbdbd;
         --colorNeutralForeground2Hover: #242424;
+        --colorNeutralForeground2Pressed: #242424;
+        --colorNeutralForeground2Selected: #242424;
         --colorNeutralForeground2BrandHover: #0f6cbd;
         --colorNeutralForeground2BrandPressed: #115ea3;
         --colorNeutralForeground2BrandSelected: #0f6cbd;
@@ -138,6 +148,8 @@
         --colorNeutralForeground2: #d6d6d6;
         --colorNeutralForegroundDisabled: #5c5c5c;
         --colorNeutralForeground2Hover: #ffffff;
+        --colorNeutralForeground2Pressed: #ffffff;
+        --colorNeutralForeground2Selected: #ffffff;
         --colorNeutralForeground2BrandHover: #479ef5;
         --colorNeutralForeground2BrandPressed: #2886de;
         --colorNeutralForeground2BrandSelected: #479ef5;
@@ -213,6 +225,9 @@
         .icon { display: block; flex: none; fill: currentColor; }
         .icon-20 { width: 20px; height: 20px; }
         .icon-16 { width: 16px; height: 16px; }
+        .ic-f { display: none; }
+        .btn-subtle:not(:disabled):hover .ic-f, .btn-subtle:not(:disabled):active:focus-visible .ic-f { display: inline; }
+        .btn-subtle:not(:disabled):hover .ic-r, .btn-subtle:not(:disabled):active:focus-visible .ic-r { display: none; }
 
         /* Button: Fluent's subtle appearance, size medium (32px), the same in the toolbar and the
            panels, so every icon has the same padding (6px), hover square and spacing. */
@@ -226,15 +241,17 @@
                         border-color var(--durationFaster) var(--curveEasyEase),
                         color var(--durationFaster) var(--curveEasyEase);
         }
+        .btn:not(.btn-icon) { font-weight: 600; }
         .btn-icon { min-width: 0; width: 32px; padding: 0; }
         .btn-subtle { background: transparent; color: var(--colorNeutralForeground2); }
         /* A style the selected text already has: Fluent's subtle ToggleButton, checked. */
-        .btn-subtle[aria-pressed="true"] { background: var(--colorSubtleBackgroundSelected); color: var(--colorNeutralForeground2Hover); }
+        .btn-subtle[aria-pressed="true"] { background: var(--colorSubtleBackgroundSelected); color: var(--colorNeutralForeground2Selected); }
         .btn-subtle[aria-pressed="true"] .icon { color: var(--colorNeutralForeground2BrandSelected); }
         .btn-subtle:hover { background: var(--colorSubtleBackgroundHover); color: var(--colorNeutralForeground2Hover); }
-        .btn-subtle:active { background: var(--colorSubtleBackgroundPressed); }
+        /* Fluent's pressed selector: also while a key holds a focused button down. */
+        .btn-subtle:hover:active, .btn-subtle:active:focus-visible { background: var(--colorSubtleBackgroundPressed); color: var(--colorNeutralForeground2Pressed); }
         .btn-subtle:hover .icon { color: var(--colorNeutralForeground2BrandHover); }
-        .btn-subtle:active .icon { color: var(--colorNeutralForeground2BrandPressed); }
+        .btn-subtle:hover:active .icon, .btn-subtle:active:focus-visible .icon { color: var(--colorNeutralForeground2BrandPressed); }
         /* Fluent's createFocusOutlineStyle: focus border plus a 1px inset ring; the transparent outline shows in forced colors. */
         .btn:focus-visible { border-color: var(--colorStrokeFocus2); outline: 2px solid var(--colorTransparentStroke); box-shadow: inset 0 0 0 1px var(--colorStrokeFocus2); z-index: 1; }
         /* Fluent's disabled subtle button: the note editor's Save while there is nothing to save. */

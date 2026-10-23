@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.99
+// @version      8.100
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -4267,7 +4267,7 @@
         button.addEventListener('click', hideLabelTip);
         button.addEventListener('mouseenter', () => showLabelTip(button, preferBelow));
         button.addEventListener('mouseleave', hideLabelTip);
-        button.addEventListener('focus', () => showLabelTip(button, preferBelow));
+        button.addEventListener('focus', () => { if (button.matches(':focus-visible')) showLabelTip(button, preferBelow); });
         button.addEventListener('blur', hideLabelTip);
         return button;
     }

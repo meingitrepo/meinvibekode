@@ -68,7 +68,7 @@
         button.addEventListener('click', hideLabelTip);
         button.addEventListener('mouseenter', () => showLabelTip(button, preferBelow));
         button.addEventListener('mouseleave', hideLabelTip);
-        button.addEventListener('focus', () => showLabelTip(button, preferBelow));
+        button.addEventListener('focus', () => { if (button.matches(':focus-visible')) showLabelTip(button, preferBelow); });
         button.addEventListener('blur', hideLabelTip);
         return button;
     }

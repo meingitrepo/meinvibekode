@@ -4,7 +4,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 
 ## Working rules
 - Plan first. Ask Mhmd for any missing detail in one short batched question. Never assume anything unnecessary. Do only what is asked, nothing extra.
-- Never push, open PRs or make branches on your own. Finish, commit locally, show the result, ask "Reply PUSH to push it to main." Only the word PUSH authorises a push. Never force-push main.
+- Never push, open PRs or make branches on your own. Finish, commit locally, show the result, ask "Reply PUSH to push it to main." Only the word PUSH authorises a push. Never force-push main. Say nothing about commit or push state.
 - After PUSH run ONE Bash call: `highlighter/tools/release.sh "Theme" "What's in it" "Commit message"`. Never bump @version, commit the built file by hand. On conflict: keep BOTH sides, rerun related tests, rerun the script, mention the merged-in change. After pushing just say it's pushed.
 - One task per thread; new thread per follow-up/revert. Open-ended "find problems" asks: one ranking thread that fixes nothing, then one short thread per item Mhmd picks.
 - Economy: batch independent commands in one Bash call, no subagents, at most one review pass, status updates at milestones only.

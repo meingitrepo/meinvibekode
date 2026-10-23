@@ -21,7 +21,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   await watch(); await press('Cyan highlight'); await page.waitForTimeout(500);
   let hid = await stop();
   L.check('button restyle: toolbar never hidden', hid === 0, hid);
-  L.check('button restyle: green pressed', ((await labels()) || []).includes('Erase cyan highlight*'), await labels());
+  L.check('button restyle: cyan pressed, only it', JSON.stringify(((await labels()) || []).filter(x => x.endsWith('*'))) === '["Cyan highlight*"]', await labels());
   await watch(); await page.keyboard.press('KeyU'); await page.waitForTimeout(500);   // underline, no Alt
   hid = await stop();
   let w = await L.wr(page);
@@ -35,8 +35,10 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   await page.keyboard.press('KeyS'); await page.waitForTimeout(500);
   L.check('multi: both still selected', (await page.evaluate(() => window.__hl.selectedGroups.length)) === 2, null);
   L.check('multi: no toolbar', !(await L.toolbar(page)), null);
-  // the style both have removes them
+  // the style both already have changes nothing: only D erases
   await page.keyboard.press('KeyS'); await page.waitForTimeout(400);
+  L.check('same style again: both kept and selected', (await page.evaluate(() => window.__hl.selectedGroups.length)) === 2 && (await L.wr(page)).length > 0, null);
+  await page.keyboard.press('KeyD'); await page.waitForTimeout(400);
   L.check('removing leaves no toolbar', !(await L.toolbar(page)) && (await L.wr(page)).length === 0, null);
   L.check('no page errors', page.__errors.length === 0, page.__errors);
   await b.close();

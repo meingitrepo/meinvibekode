@@ -79,11 +79,14 @@ async function basic(browser) {
   await L.altKey(p, '1');
   s = await state(p);
   st = await L.stored(p);
-  check('its own style removes it (after undo/redo redrew it under a still mouse)', !s.some(w => w.g === 'gA') && !st.some(r => r.group === 'gA'), { s, st });
-  check('removal offers Undo', (await L.toast(p)) === 'Erased 1x annotation · Undo', await L.toast(p));
-  await p.evaluate(() => window.__hl.toastAction.click()); await p.waitForTimeout(150);
+  check('its own style changes nothing (after undo/redo redrew it under a still mouse)', keysOf(s, 'gA').join() === 'h2' && st.some(r => r.group === 'gA'), { s, st });
+  await L.altKey(p, 'd');
+  if ((await state(p)).some(w => w.g === 'gA')) await L.altKey(p, 'd');   // a note goes first
   s = await state(p);
-  check('Undo brings it back with its note', keysOf(s, 'gA').join() === 'h2' && s.find(w => w.g === 'gA').n === 'my note', s);
+  check('Alt+D erases it', !s.some(w => w.g === 'gA'), s);
+  await L.altKey(p, 'z'); await p.waitForTimeout(150);
+  s = await state(p);
+  check('Undo brings it back', keysOf(s, 'gA').join() === 'h2', s);
   check('no page errors', p.__errors.length === 0, p.__errors);
   await ctx.close();
 }
@@ -181,8 +184,8 @@ async function noteCard(browser) {
     const s = await state(p);
     check('mouse on the note card: Alt+1 restyles its annotation', keysOf(s, 'gA').join() === 'h2' && s[0].n === 'my note', s);
     await L.altKey(p, '1');
-    await L.until(p, () => !window.__hl.allWrappers().length && window.__hl.noteCardEl.hidden, null, 2000);
-    check('and its own style removes it, closing the card', (await state(p)).length === 0 && (await p.evaluate(() => window.__hl.noteCardEl.hidden)), { s: await state(p) });
+    await p.waitForTimeout(200);
+    check('and its own style changes nothing', keysOf(await state(p), 'gA').join() === 'h2', { s: await state(p) });
   }
   await ctx.close();
 }
@@ -207,7 +210,7 @@ async function waitingPiece(browser) {
   const st = await L.stored(p);
   check('the waiting piece takes the new style too', st.length === 2 && st.every(r => r.key === 'h2' && r.group === 'gP'), st);
   await L.altKey(p, '1');
-  check('its own style removes the waiting piece as well', (await L.stored(p)).length === 0, await L.stored(p));
+  check('its own style leaves the waiting piece as it is', (await L.stored(p)).length === 2, await L.stored(p));
   await ctx.close();
 }
 

@@ -51,11 +51,10 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   const eg = await page.evaluate(() => { const e = window.__hl.editor; return e && document.querySelector(`[data-highlighter-group="${e.group}"]`).textContent; });
   L.check('N opens the first in reading order', eg === 'bravo', eg);
   await page.keyboard.press('Escape'); await page.waitForTimeout(300);
-  // own style pressed when all same: select bravo+kilo (both yellow), press 3 (yellow) -> removes both
+  // own style pressed when all same: select bravo+kilo (both yellow), press 3 (yellow) -> nothing
   await click('bravo'); await click('kilo', 'Control');
   await page.keyboard.press('Digit3'); await page.waitForTimeout(200);
-  L.check('own style removes both', (await L.wr(page)).length === 3, await L.wr(page));
-  await L.altKey(page, 'KeyZ');
+  L.check('own style changes nothing', (await L.wr(page)).length === 5, await L.wr(page));
   // Esc clears, plain click selects one
   await click('bravo'); await click('kilo', 'Control'); await click('echo');
   L.check('plain click selects just one', JSON.stringify(await sel()) === '["echo"]', await sel());

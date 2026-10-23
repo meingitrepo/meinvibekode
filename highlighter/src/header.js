@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.86
+// @version      8.87
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -25,9 +25,9 @@
  * written for Windows):
  *   1 / 2 / 3 (or H)      highlight in cyan / magenta / yellow
  *   U / S                 underline / strike-through
- *                         (the style the selected text already has removes that annotation, all of it)
+ *                         (the style the selected text already has does nothing; Alt+D erases)
  *                         With nothing selected, these restyle the annotation under the mouse, or
- *                         the one just jumped to, keeping its note; its own style removes it.
+ *                         the one just jumped to, keeping its note; its own style does nothing (Alt+D erases).
  *   N                     add or edit a note: on the selected annotation, on the annotation
  *                         under the mouse, or on new selected text (it gets a highlight)
  *   D / Delete            erase annotations from the selected text (what is left of them stays);

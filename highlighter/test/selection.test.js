@@ -1,4 +1,4 @@
-// 7.29: pressed style, same style again removes the whole annotation, eraser removes exactly the
+// 7.29: pressed style, same style again does nothing, eraser removes exactly the
 // selection, trimmed and word-snapped selections, triple-click on the visual paragraph.
 const L = require('./lib');
 const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title></head><body style="font: 16px/1.5 sans-serif; margin: 40px; max-width: 700px">
@@ -22,28 +22,23 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
   await page.waitForTimeout(400);
   let tb = await L.toolbar(page);
   const yb = tb && tb.buttons.find(b => /yellow/i.test(b.label));
-  L.check('toolbar shows yellow pressed', yb && yb.pressed === 'true' && yb.label === 'Erase yellow highlight' && tb.buttons.filter(b => b.pressed === 'true').length === 1, tb);
+  L.check('toolbar shows yellow pressed', yb && yb.pressed === 'true' && yb.label === 'Yellow highlight' && tb.buttons.filter(b => b.pressed === 'true').length === 1, tb);
   L.check('pressed button has a background', yb && yb.bg !== 'rgba(0, 0, 0, 0)', yb);
   L.check('note button says Add note', tb && tb.buttons.some(b => b.label === 'Add note'), tb && tb.buttons.map(b => b.label));
   await L.altKey(page, 'h');
   let w = await L.wr(page);
-  L.check('Alt+H on a word inside removes the whole highlight', w.length === 0, w);
-  L.check('toast says removed', (await L.toast(page)) === 'Erased 1x annotation · Undo', await L.toast(page));
-  await L.altKey(page, 'z');
-  w = await L.wr(page);
-  L.check('undo brings it back', w.length === 1 && w[0].t === 'quick brown fox jumps', w);
+  L.check('Alt+H on a word inside changes nothing', w.length === 1 && w[0].t === 'quick brown fox jumps', w);
   // --- across a link: pieces of one annotation ---
   await L.selStr(page, '#p2', 'Read', { endStr: 'settings page' }); await L.altKey(page, 'u');
   w = await L.wr(page);
   L.check('annotation split across a link', w.filter(x => x.k === 'u').length === 2 && new Set(w.filter(x => x.k === 'u').map(x => x.g)).size === 1, w);
   await L.selStr(page, '#p2', 'settings'); await L.altKey(page, 'u');
   w = await L.wr(page);
-  L.check('same style on one piece removes every piece', w.every(x => x.k !== 'u'), w);
-  L.check('toast after removing a split one', (await L.toast(page)) === 'Erased 1x annotation · Undo', await L.toast(page));
+  L.check('same style on one piece changes nothing', w.filter(x => x.k === 'u').length === 2, w);
   // a different style inside: goes on top, sharing the text (7.53)
   await L.selStr(page, '#p1', 'brown'); await L.altKey(page, '1');
   w = await L.wr(page);
-  L.check('another style on a word inside goes on top of it', w.map(x => x.k + ':' + x.t).join('|') === 'h:quick brown fox jumps|h2:brown', w);
+  L.check('another style on a word inside goes on top of it', w.filter(x => x.k !== 'u').map(x => x.k + ':' + x.t).join('|') === 'h:quick brown fox jumps|h2:brown', w);
   // --- eraser: exactly the selection, rest keeps its note ---
   await L.selStr(page, '#p3', 'two three four five'); await L.altKey(page, '2');
   await L.selStr(page, '#p3', 'three'); await L.altKey(page, 'n'); await page.keyboard.type('Numbers note'); await page.keyboard.press('Enter'); await page.waitForTimeout(150);
@@ -66,7 +61,7 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
   w = await L.wr(page).then(a => a.filter(x => x.t.includes('beta')));
   L.check('spaces at the edges trimmed', w.length === 1 && w[0].t === 'beta gamma', w);
   await L.selStr(page, '#p6', 'lta epsilon ze'); await L.altKey(page, 'u');
-  w = await L.wr(page).then(a => a.filter(x => x.k === 'u'));
+  w = await L.wr(page).then(a => a.filter(x => x.k === 'u' && x.t.includes('delta')));
   L.check('half words snap to whole words', w.length === 1 && w[0].t === 'delta epsilon zeta', w);
   await L.selStr(page, '#p5', '日は良'); await L.altKey(page, 's');
   w = await L.wr(page).then(a => a.filter(x => x.k === 's'));

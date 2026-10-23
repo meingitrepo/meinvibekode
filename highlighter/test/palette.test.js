@@ -24,8 +24,9 @@ async function light(browser) {
   b = await info(p, 'White words');
   check('hidden annotations give the text its own color back', b && b.color === 'rgb(255, 255, 255)', b);
   await L.altKey(p, 'v');
-  // the banner one as an underline instead (its own style removes the highlight): no ink on a line
+  // the banner one as an underline instead (erased with Alt+D first): no ink on a line
   await L.selStr(p, '#p2', 'White words'); await L.altKey(p, 'h');
+  await L.selStr(p, '#p2', 'White words'); await L.altKey(p, 'd');
   await L.selStr(p, '#p2', 'White words'); await L.altKey(p, 'u'); await p.waitForTimeout(100);
   b = await info(p, 'White words');
   check('an underline never recolors text', b && !b.ink && b.color === 'rgb(255, 255, 255)', b);

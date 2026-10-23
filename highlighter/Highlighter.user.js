@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.86
+// @version      8.87
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
-// @author       -
+// @author       Mhmd & Claude
 // @match        *://*/*
 // @match        file:///*
 // @noframes
@@ -25,9 +25,9 @@
  * written for Windows):
  *   1 / 2 / 3 (or H)      highlight in cyan / magenta / yellow
  *   U / S                 underline / strike-through
- *                         (the style the selected text already has removes that annotation, all of it)
+ *                         (the style the selected text already has does nothing; Alt+D erases)
  *                         With nothing selected, these restyle the annotation under the mouse, or
- *                         the one just jumped to, keeping its note; its own style removes it.
+ *                         the one just jumped to, keeping its note; its own style does nothing (Alt+D erases).
  *   N                     add or edit a note: on the selected annotation, on the annotation
  *                         under the mouse, or on new selected text (it gets a highlight)
  *   D / Delete            erase annotations from the selected text (what is left of them stays);
@@ -3114,26 +3114,19 @@
     }
 
     // Shared by the shortcuts and the selection toolbar. `active` is { sel, range }. A style the
-    // selected text already has (all of it) removes those annotations, whole; any other style
+    // selected text already has (all of it) does nothing (only Alt+D erases); any other style
     // annotates it, on top of the styles it has (see applyAnnotation).
     function annotateSelection(key, { sel, range: selected }) {
         if (!sel.toString().trim()) return;
         const range = cleanRange(selected);
         if (!range) return;
-        let removed = 0;
-        const step = runUndoable(() => {
-            const overlaps = findOverlaps(range);
-            if (selectionStyles(range, overlaps).includes(key)) {
-                const groups = new Set(overlaps.filter(o => o.key === key).map(o => o.group));
-                removeGroups(groups);
-                removed = groups.size;
-            } else {
-                applyAnnotation(range, key, overlaps);
-                lastStyleKey = key;
-            }
+        const overlaps = findOverlaps(range);
+        if (selectionStyles(range, overlaps).includes(key)) return;
+        runUndoable(() => {
+            applyAnnotation(range, key, overlaps);
+            lastStyleKey = key;
         });
         sel.removeAllRanges();
-        if (removed) offerUndo(doneText('Erased', removed), step);
     }
 
     function removeInSelection({ sel, range: selected }) {
@@ -3163,16 +3156,13 @@
 
     // A style chosen with nothing selected, for the annotations pointed at or clicked (see
     // setSelectedGroups), as one step for Undo: all of each takes that style (pieces waiting to
-    // come back too), keeping its note and date; they all go when all have that style already.
+    // come back too), keeping its note and date; nothing happens when all have that style already.
     function restyleGroups(groups, key) {
         if (editor && !groups.includes(editor.group)) cancelEditor();   // one note at a time, as when opening another
         groups = groups.filter(g => groupWrappers(g).length);
         const wrappers = groups.flatMap(groupWrappers);
         if (!wrappers.length) return;
-        if (wrappers.every(w => w.getAttribute(STYLE_ATTR) === key)) {
-            deleteGroups(groups);
-            return;
-        }
+        if (wrappers.every(w => w.getAttribute(STYLE_ATTR) === key)) return;
         lastStyleKey = key;
         runUndoable(() => {
             pendingRecords.forEach(r => {
@@ -4224,7 +4214,7 @@
 
     // Style icons show the colors the annotation will get where the selection is (`dark`).
     // `overlaps` are the annotations the selection touches (findOverlaps). The styles all of the
-    // selected text has (`current`, see selectionStyles) show pressed, and choosing one removes it; the note
+    // selected text has (`current`, see selectionStyles) show pressed, and choosing one does nothing; the note
     // button says whether the note it opens exists; the eraser shows when there is anything to erase.
     // For an annotation selected by clicking it, `act` holds what the buttons do instead (see
     // showGroupToolbar).
@@ -4237,7 +4227,7 @@
             if (lastGroup && group !== lastGroup) items.push(toolbarDivider());
             lastGroup = group;
             const pressed = current.includes(k);
-            const label = pressed ? `Erase ${styleLabel(k).toLowerCase()}` : styleLabel(k);
+            const label = styleLabel(k);
             items.push(toolButton(styleIcon(k, dark), label, shortcutText(k), act ? () => act.style(k) : () => runToolbarAction(active => annotateSelection(k, active)), pressed));
         });
         items.push(toolbarDivider());
@@ -4301,7 +4291,7 @@
     }
 
     // The toolbar for annotations selected by clicking them (see setSelectedGroups), placed by
-    // their dashed boxes (a single one; none for several). The style all of them have shows pressed and removes them, as with a
+    // their dashed boxes (a single one; none for several). The style all of them have shows pressed and keeps them, as with a
     // selection; the others restyle them, and they stay selected with the toolbar over them.
     function showGroupToolbar(groups) {
         if (groups.length > 1) return false;   // several selected: outlines only, no toolbar

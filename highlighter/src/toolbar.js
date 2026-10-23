@@ -98,7 +98,7 @@
 
     // Style icons show the colors the annotation will get where the selection is (`dark`).
     // `overlaps` are the annotations the selection touches (findOverlaps). The styles all of the
-    // selected text has (`current`, see selectionStyles) show pressed, and choosing one removes it; the note
+    // selected text has (`current`, see selectionStyles) show pressed, and choosing one does nothing; the note
     // button says whether the note it opens exists; the eraser shows when there is anything to erase.
     // For an annotation selected by clicking it, `act` holds what the buttons do instead (see
     // showGroupToolbar).
@@ -111,7 +111,7 @@
             if (lastGroup && group !== lastGroup) items.push(toolbarDivider());
             lastGroup = group;
             const pressed = current.includes(k);
-            const label = pressed ? `Erase ${styleLabel(k).toLowerCase()}` : styleLabel(k);
+            const label = styleLabel(k);
             items.push(toolButton(styleIcon(k, dark), label, shortcutText(k), act ? () => act.style(k) : () => runToolbarAction(active => annotateSelection(k, active)), pressed));
         });
         items.push(toolbarDivider());
@@ -175,7 +175,7 @@
     }
 
     // The toolbar for annotations selected by clicking them (see setSelectedGroups), placed by
-    // their dashed boxes (a single one; none for several). The style all of them have shows pressed and removes them, as with a
+    // their dashed boxes (a single one; none for several). The style all of them have shows pressed and keeps them, as with a
     // selection; the others restyle them, and they stay selected with the toolbar over them.
     function showGroupToolbar(groups) {
         if (groups.length > 1) return false;   // several selected: outlines only, no toolbar

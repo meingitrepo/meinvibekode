@@ -32,24 +32,21 @@ const recs = s => s.map(r => `${r.key}:${r.text}`).sort();
     const tb = await L.toolbar(page);
     const pressed = tb ? tb.buttons.filter(x => x.pressed === 'true').map(x => x.label) : null;
     L.check(`${scheme} toolbar shows three pressed`, pressed && pressed.length === 3, pressed);
-    // Yellow again removes only the yellow
+    // Yellow again changes nothing
     await L.altKey(page, 'KeyH');
     w = await L.wr(page);
-    L.check(`${scheme} H removes only yellow`, !w.some(x => x.k === 'h') && w.some(x => x.k === 'h2') && w.some(x => x.k === 'u'), w);
+    L.check(`${scheme} H changes nothing`, w.some(x => x.k === 'h') && w.some(x => x.k === 'h2') && w.some(x => x.k === 'u'), w);
     await page.waitForTimeout(100);
     s = await sw(page);
     const greens = s.filter(x => x.k === 'h2');
-    L.check(`${scheme} green full again`, greens.every(x => Math.abs(x.sw - greens[0].sw) < 0.6) && greens[0].sw > 15, s);
-    await L.altKey(page, 'KeyZ');
     st = await L.stored(page);
-    L.check(`${scheme} undo brings yellow back`, st.some(r => r.key === 'h'), recs(st));
     // reload: same annotations come back, nested
     const before = recs(st);
     const { page: p2 } = await L.open(b, { html, scheme, store: await page.evaluate(() => window.__gm) });
     await p2.waitForTimeout(300);
     const after = recs(await L.stored(p2));
     const s2 = await sw(p2);
-    L.check(`${scheme} reload restores all`, JSON.stringify(before) === JSON.stringify(after) && s2.length === s.length + 1 && p2.__errors.length === 0, { before, after, s2, e: p2.__errors });
+    L.check(`${scheme} reload restores all`, JSON.stringify(before) === JSON.stringify(after) && s2.length === s.length && p2.__errors.length === 0, { before, after, s2, e: p2.__errors });
     L.check(`${scheme} reload keeps the band`, s2.some(x => x.k === 'h2' && x.nested && x.sw < 15), s2);
     // restyle yellow to green by clicking it: the nested green merges in
     const pt = await p2.evaluate(() => { const w = window.__hl.allWrappers().find(w => w.getAttribute('data-style-key') === 'h'); const r = w.getClientRects()[0]; return { x: r.left + 4, y: r.top + r.height / 2 }; });

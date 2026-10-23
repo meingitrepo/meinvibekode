@@ -64,7 +64,7 @@ async function otherToastSurvives(browser) {
   check('a plain hint doesn\'t replace the hidden message', hint === 'Annotations hidden · Show', hint);
   await L.altKey(p, 'v');
   await L.selStr(p, '#p2', 'beta two');
-  await L.altKey(p, 'u');   // its own style: removed, Undo offered (shows them first)
+  await L.altKey(p, 'd');   // erased: Undo offered (shows them first)
   await L.altKey(p, 'v');
   await L.altKey(p, 'v');
   check('showing again leaves a message that isn\'t the hidden one', (await L.toast(p)) === null || !/hidden/.test(await L.toast(p)), await L.toast(p));

@@ -15,26 +15,19 @@
     }
 
     // Shared by the shortcuts and the selection toolbar. `active` is { sel, range }. A style the
-    // selected text already has (all of it) removes those annotations, whole; any other style
+    // selected text already has (all of it) does nothing (only Alt+D erases); any other style
     // annotates it, on top of the styles it has (see applyAnnotation).
     function annotateSelection(key, { sel, range: selected }) {
         if (!sel.toString().trim()) return;
         const range = cleanRange(selected);
         if (!range) return;
-        let removed = 0;
-        const step = runUndoable(() => {
-            const overlaps = findOverlaps(range);
-            if (selectionStyles(range, overlaps).includes(key)) {
-                const groups = new Set(overlaps.filter(o => o.key === key).map(o => o.group));
-                removeGroups(groups);
-                removed = groups.size;
-            } else {
-                applyAnnotation(range, key, overlaps);
-                lastStyleKey = key;
-            }
+        const overlaps = findOverlaps(range);
+        if (selectionStyles(range, overlaps).includes(key)) return;
+        runUndoable(() => {
+            applyAnnotation(range, key, overlaps);
+            lastStyleKey = key;
         });
         sel.removeAllRanges();
-        if (removed) offerUndo(doneText('Erased', removed), step);
     }
 
     function removeInSelection({ sel, range: selected }) {
@@ -64,16 +57,13 @@
 
     // A style chosen with nothing selected, for the annotations pointed at or clicked (see
     // setSelectedGroups), as one step for Undo: all of each takes that style (pieces waiting to
-    // come back too), keeping its note and date; they all go when all have that style already.
+    // come back too), keeping its note and date; nothing happens when all have that style already.
     function restyleGroups(groups, key) {
         if (editor && !groups.includes(editor.group)) cancelEditor();   // one note at a time, as when opening another
         groups = groups.filter(g => groupWrappers(g).length);
         const wrappers = groups.flatMap(groupWrappers);
         if (!wrappers.length) return;
-        if (wrappers.every(w => w.getAttribute(STYLE_ATTR) === key)) {
-            deleteGroups(groups);
-            return;
-        }
+        if (wrappers.every(w => w.getAttribute(STYLE_ATTR) === key)) return;
         lastStyleKey = key;
         runUndoable(() => {
             pendingRecords.forEach(r => {

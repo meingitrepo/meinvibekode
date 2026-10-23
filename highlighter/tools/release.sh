@@ -17,20 +17,9 @@ if [ -n "$(git status --porcelain -- $H)" ]; then
 fi
 
 for attempt in 1 2 3; do
-    git fetch -q origin main
+    tools=$(dirname "$0")
+    $tools/sync.sh || exit 1
     [ -n "$(git log --oneline origin/main..HEAD)" ] || { echo 'nothing to release'; exit 1; }
-    base=$(git merge-base HEAD origin/main)
-    overlap=$(comm -12 <(git diff --name-only "$base" origin/main | sort) \
-                       <(git diff --name-only "$base" HEAD | grep -v -e Highlighter.user.js -e header.js | sort) || true)
-    if ! git rebase -q origin/main; then
-        echo 'REBASE CONFLICT: resolve keeping BOTH changes, git rebase --continue, rerun related tests, then run this again'
-        exit 1
-    fi
-    if [ -n "$overlap" ]; then
-        echo "Main changed files you also changed (merged in, rebased):"; echo "$overlap"
-        echo 'Rerun the related tests, then run this again. Mention the merged-in change in your reply.'
-        exit 1
-    fi
     code=$(git rev-parse HEAD)
     cur=$(git show origin/main:$H/src/header.js | sed -n 's/^\/\/ @version *//p' | head -1)
     ver="${cur%%.*}.$(( ${cur#*.} + 1 ))"

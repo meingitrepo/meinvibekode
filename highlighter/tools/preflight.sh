@@ -3,8 +3,8 @@
 # Usage: highlighter/tools/preflight.sh ["Theme" "What's in it" "Commit message"]
 set -euo pipefail
 cd "$(dirname "$0")/../.."
-highlighter/tools/build.sh
 git fetch -q origin main || true
+highlighter/tools/sync.sh || echo '--- sync needs attention (see above)'
 echo "--- local vs origin/main"; git status -sb | head -1
 echo "--- changes"; git diff HEAD --stat -- . ':!highlighter/Highlighter.user.js'; git log --oneline origin/main..HEAD 2>/dev/null
 if [ $# -eq 3 ]; then

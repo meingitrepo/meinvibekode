@@ -25,7 +25,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 
 ## Automation candidates
 - At the end of every reply, flag any step you repeated in the task or that recurs across tasks and costs tokens (rebases, builds, test runs, screenshots, version bumps, greps for the same thing, etc.) as a candidate for a script like `release.sh`, with a one-line script idea. Don't build it unasked; Mhmd picks.
-- Scripts in `highlighter/tools/`: `build.sh` (build+check), `map-check.sh` (Map vs build.js), `tests-for.sh <keyword>` (find and run suites mentioning it; sets NODE_PATH), `stale-checks.sh <old-term>` (test lines for retired behaviour), `preflight.sh` (build, diffstat, release.sh line), `release.sh` (post-PUSH release), `shot.sh <out.png> [light|dark] [js]` (playground screenshot). Use them instead of redoing these steps by hand.
+- Scripts in `highlighter/tools/`: `build.sh` (build+check), `map-check.sh` (Map vs build.js), `tests-for.sh <keyword>` (find and run suites mentioning it; sets NODE_PATH), `stale-checks.sh <old-term>` (test lines for retired behaviour), `sync.sh` (rebase onto latest origin/main, rebuild, report conflicts/overlap), `preflight.sh` (sync, diffstat, release.sh line), `release.sh` (post-PUSH release), `shot.sh <out.png> [light|dark] [js]` (playground screenshot). Use them instead of redoing these steps by hand.
 
 ## Map (`highlighter/src/`, joined in `build.js` order; one IIFE, so later files see earlier names)
 Core

@@ -70,6 +70,18 @@ async function main(browser) {
   const sel = await p.evaluate(() => ({ n: window.__hl.everythingCount.textContent, copyOn: !window.__hl.everythingCopy.disabled }));
   check('select all ticks everything, count and copy follow', sel.n === '4 Annotations selected on 3 pages' && sel.copyOn, sel);
   await p.evaluate(() => window.__hl.everythingSelectAll.click());
+  // three steps: untick one quote, then select all grows to its page, then all pages, then none
+  const cnt = () => p.evaluate(() => ({ n: window.__hl.everythingCount.textContent, tip: window.__hl.everythingSelectAll.dataset.label }));
+  await p.evaluate(() => { const c = window.__hl.everythingList.querySelectorAll('.item .check'); c.forEach(x => { if (x.checked) x.click(); }); });
+  await p.evaluate(() => window.__hl.everythingList.querySelector('.item .check').click());
+  let st = await cnt();
+  check('one ticked: the button offers the same page first', st.n === '1 Annotation selected on 1 page' && st.tip === 'Select all on these pages', st);
+  await p.evaluate(() => window.__hl.everythingSelectAll.click()); st = await cnt();
+  check('click 1 ticks that page only', st.n === '2 Annotations selected on 1 page' && st.tip === 'Select all', st);
+  await p.evaluate(() => window.__hl.everythingSelectAll.click()); st = await cnt();
+  check('click 2 ticks every page', st.n === '4 Annotations selected on 3 pages' && st.tip === 'Select none', st);
+  await p.evaluate(() => window.__hl.everythingSelectAll.click()); st = await cnt();
+  check('click 3 ticks nothing', st.n === '4 Annotations on 3 pages', st);
   await p.evaluate(() => window.__hl.everythingList.querySelector('.item .check').click());
   await p.evaluate(() => window.__hl.everythingCopy.click()); await p.waitForTimeout(100);
   const md = await p.evaluate(() => window.__clip);

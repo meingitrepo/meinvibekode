@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.84
+// @version      8.85
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -5934,13 +5934,15 @@
 
     // The header's select all/none, copy and erase (or forget) buttons of either panel: copy and
     // erase wait for something ticked, and select all turns into select none once all are.
-    function syncSelectionButtons(selectAll, copy, erase, ticked, total) {
+    // The search can pass the label of a middle step ("Select all on these pages") for select all.
+    function syncSelectionButtons(selectAll, copy, erase, ticked, total, midLabel) {
         selectAll.disabled = !total;
         const allTicked = !!total && ticked === total;
+        const label = allTicked ? 'Select none' : midLabel || 'Select all';
         selectAll.dataset.all = String(allTicked);
         selectAll.replaceChildren(fluentIcon(allTicked ? 'select_all_off_20_regular' : 'select_all_on_20_regular'));
-        selectAll.setAttribute('aria-label', allTicked ? 'Select none' : 'Select all');
-        selectAll.dataset.label = allTicked ? 'Select none' : 'Select all';
+        selectAll.setAttribute('aria-label', label);
+        selectAll.dataset.label = label;
         copy.disabled = !ticked;
         erase.disabled = !ticked;
         hideLabelTip();
@@ -6241,7 +6243,7 @@
         });
         const total = everythingPages.reduce((n, p) => n + p.items.length, 0);
         const ticked = everythingChecked.size;
-        syncSelectionButtons(everythingSelectAll, everythingCopy, everythingForget, ticked, shownItems);
+        syncSelectionButtons(everythingSelectAll, everythingCopy, everythingForget, ticked, shownItems, everythingPagesStep() ? 'Select all on these pages' : '');
         const pagesText = n => `${n} ${n === 1 ? 'page' : 'pages'}`;
         if (ticked) {
             const tickedPages = new Set(everythingShown.filter(s => everythingChecked.has(s.id)).map(s => s.page.key)).size;
@@ -6258,9 +6260,21 @@
     addLabelTip(everythingSelectAll, 'Select all', '', () => true);
     addLabelTip(everythingCopy, 'Copy selected as Markdown', '', () => true);
     addLabelTip(everythingForget, 'Forget selected annotations', '', () => true);
+    // Select all goes in three steps: the pages that already have a tick, then every page shown, then none.
+    function everythingPagesStep() {
+        const ticked = everythingShown.filter(s => everythingChecked.has(s.id));
+        if (!ticked.length || ticked.length === everythingShown.length) return false;
+        const pages = new Set(ticked.map(s => s.page.key));
+        return everythingShown.some(s => pages.has(s.page.key) && !everythingChecked.has(s.id));
+    }
     everythingSelectAll.addEventListener('click', () => {
         const none = everythingSelectAll.dataset.all === 'true';
-        everythingShown.forEach(s => { if (none) everythingChecked.delete(s.id); else everythingChecked.add(s.id); });
+        const pagesOnly = !none && everythingPagesStep();
+        const pages = new Set(everythingShown.filter(s => everythingChecked.has(s.id)).map(s => s.page.key));
+        everythingShown.forEach(s => {
+            if (none) everythingChecked.delete(s.id);
+            else if (!pagesOnly || pages.has(s.page.key)) everythingChecked.add(s.id);
+        });
         renderEverything();
     });
     everythingCopy.addEventListener('click', () => {

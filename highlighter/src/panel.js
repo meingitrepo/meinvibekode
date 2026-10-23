@@ -218,13 +218,15 @@
 
     // The header's select all/none, copy and erase (or forget) buttons of either panel: copy and
     // erase wait for something ticked, and select all turns into select none once all are.
-    function syncSelectionButtons(selectAll, copy, erase, ticked, total) {
+    // The search can pass the label of a middle step ("Select all on these pages") for select all.
+    function syncSelectionButtons(selectAll, copy, erase, ticked, total, midLabel) {
         selectAll.disabled = !total;
         const allTicked = !!total && ticked === total;
+        const label = allTicked ? 'Select none' : midLabel || 'Select all';
         selectAll.dataset.all = String(allTicked);
         selectAll.replaceChildren(fluentIcon(allTicked ? 'select_all_off_20_regular' : 'select_all_on_20_regular'));
-        selectAll.setAttribute('aria-label', allTicked ? 'Select none' : 'Select all');
-        selectAll.dataset.label = allTicked ? 'Select none' : 'Select all';
+        selectAll.setAttribute('aria-label', label);
+        selectAll.dataset.label = label;
         copy.disabled = !ticked;
         erase.disabled = !ticked;
         hideLabelTip();

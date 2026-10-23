@@ -167,7 +167,7 @@
         });
         const total = everythingPages.reduce((n, p) => n + p.items.length, 0);
         const ticked = everythingChecked.size;
-        syncSelectionButtons(everythingSelectAll, everythingCopy, everythingForget, ticked, shownItems);
+        syncSelectionButtons(everythingSelectAll, everythingCopy, everythingForget, ticked, shownItems, everythingPagesStep() ? 'Select all on these pages' : '');
         const pagesText = n => `${n} ${n === 1 ? 'page' : 'pages'}`;
         if (ticked) {
             const tickedPages = new Set(everythingShown.filter(s => everythingChecked.has(s.id)).map(s => s.page.key)).size;
@@ -184,9 +184,21 @@
     addLabelTip(everythingSelectAll, 'Select all', '', () => true);
     addLabelTip(everythingCopy, 'Copy selected as Markdown', '', () => true);
     addLabelTip(everythingForget, 'Forget selected annotations', '', () => true);
+    // Select all goes in three steps: the pages that already have a tick, then every page shown, then none.
+    function everythingPagesStep() {
+        const ticked = everythingShown.filter(s => everythingChecked.has(s.id));
+        if (!ticked.length || ticked.length === everythingShown.length) return false;
+        const pages = new Set(ticked.map(s => s.page.key));
+        return everythingShown.some(s => pages.has(s.page.key) && !everythingChecked.has(s.id));
+    }
     everythingSelectAll.addEventListener('click', () => {
         const none = everythingSelectAll.dataset.all === 'true';
-        everythingShown.forEach(s => { if (none) everythingChecked.delete(s.id); else everythingChecked.add(s.id); });
+        const pagesOnly = !none && everythingPagesStep();
+        const pages = new Set(everythingShown.filter(s => everythingChecked.has(s.id)).map(s => s.page.key));
+        everythingShown.forEach(s => {
+            if (none) everythingChecked.delete(s.id);
+            else if (!pagesOnly || pages.has(s.page.key)) everythingChecked.add(s.id);
+        });
         renderEverything();
     });
     everythingCopy.addEventListener('click', () => {

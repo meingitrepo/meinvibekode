@@ -49,6 +49,11 @@ async function main(browser) {
   await p.evaluate(() => { const f = window.__hl.everythingFilter; f.value = 'zzz'; f.dispatchEvent(new Event('input')); });
   s = await state(p);
   check('nothing matching says so', s.pages.length === 0 && /Nothing matches/.test(await p.evaluate(() => window.__hl.everythingList.textContent)), s);
+  const inside = () => p.evaluate(() => !!window.__hl.uiRoot.activeElement && window.__hl.everythingEl.contains(window.__hl.uiRoot.activeElement));
+  let trapped = true;
+  for (let i = 0; i < 40 && trapped; i++) { await p.keyboard.press('Tab'); trapped = await inside(); }
+  for (let i = 0; i < 40 && trapped; i++) { await p.keyboard.press('Shift+Tab'); trapped = await inside(); }
+  check('Tab and Shift+Tab stay inside it', trapped, null);
   await p.keyboard.press('Escape'); await p.waitForTimeout(100);
   check('Esc closes it', (await state(p)) === null, null);
   // this page's quote scrolls here

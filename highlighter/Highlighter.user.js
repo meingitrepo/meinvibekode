@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.90
+// @version      8.91
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3262,6 +3262,16 @@
         if (e.key === 'Escape' && !everythingEl.hidden) {
             e.preventDefault();
             closeEverything();
+            return;
+        }
+        // Tab stays inside everything saved, like a Fluent Dialog.
+        if (e.key === 'Tab' && !everythingEl.hidden) {
+            const stops = Array.from(everythingEl.querySelectorAll('button, input, [tabindex]')).filter(el => !el.disabled && !el.hidden && el.tabIndex >= 0 && el.getClientRects().length);
+            if (!stops.length) { e.preventDefault(); return; }
+            const at = stops.indexOf(uiRoot.activeElement);
+            const next = e.shiftKey ? (at <= 0 ? stops[stops.length - 1] : stops[at - 1]) : (at < 0 || at === stops.length - 1 ? stops[0] : stops[at + 1]);
+            e.preventDefault();
+            next.focus({ preventScroll: true });
             return;
         }
         // Everything saved covers the page: the page's keys wait until it closes.

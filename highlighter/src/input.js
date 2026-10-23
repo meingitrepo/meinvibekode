@@ -165,6 +165,16 @@
             closeEverything();
             return;
         }
+        // Tab stays inside everything saved, like a Fluent Dialog.
+        if (e.key === 'Tab' && !everythingEl.hidden) {
+            const stops = Array.from(everythingEl.querySelectorAll('button, input, [tabindex]')).filter(el => !el.disabled && !el.hidden && el.tabIndex >= 0 && el.getClientRects().length);
+            if (!stops.length) { e.preventDefault(); return; }
+            const at = stops.indexOf(uiRoot.activeElement);
+            const next = e.shiftKey ? (at <= 0 ? stops[stops.length - 1] : stops[at - 1]) : (at < 0 || at === stops.length - 1 ? stops[0] : stops[at + 1]);
+            e.preventDefault();
+            next.focus({ preventScroll: true });
+            return;
+        }
         // Everything saved covers the page: the page's keys wait until it closes.
         if (!everythingEl.hidden && e.code !== 'KeyO') return;
         // Esc closes a note pinned by clicking its badge.

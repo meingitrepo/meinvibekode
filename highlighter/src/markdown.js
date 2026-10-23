@@ -171,7 +171,7 @@
         syncLocation();
         const list = (items || pageAnnotations()).filter(a => a.wrappers.some(w => w.isConnected));
         if (!list.length) {
-            showToast('There are no annotations on this page to copy.');
+            showToast('Nothing to copy', { body: 'This page has no annotations.' });
             return;
         }
         let markdown;
@@ -179,11 +179,11 @@
             markdown = annotationsMarkdown(list);
         } catch (e) {
             console.warn(`${LOG} could not build Markdown`, e);
-            showToast('Couldn\'t copy the annotations.');
+            showToast('Couldn\'t copy', { intent: 'warning', icon: 'warning_20_regular', body: 'Try again.' });
             return;
         }
         writeClipboard(markdown).then(
-            () => showToast(doneText('Copied', list.length), { icon: 'copy_20_regular' }),
-            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy to the clipboard.'); });
+            () => showToast(doneText('Copied', list.length), { icon: 'checkmark_20_regular', intent: 'success' }),
+            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'warning', icon: 'warning_20_regular', body: 'The browser blocked clipboard access.' }); });
     }
 

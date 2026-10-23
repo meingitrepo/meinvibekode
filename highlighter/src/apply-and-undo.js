@@ -297,7 +297,7 @@
         if (!running) return;
         syncLocation();
         if (!countAnnotations(missingRecords())) {
-            showToast('No annotations are missing on this page.');
+            showToast('No annotations missing', { intent: 'success', icon: 'checkmark_20_regular' });
             return;
         }
         const unsaved = cancelEditor({ offer: false });

@@ -2544,7 +2544,7 @@
         if (document.hidden) { noticeDue = true; return; }
         noticedKeys.add(currentKey);
         if (!toastEl.hidden && toastRun) return;
-        showToast(doneText('Couldn\'t find', missing), { icon: 'search_20_regular', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
+        showToast(doneText('Couldn\'t find', missing), { icon: 'warning_20_regular', intent: 'warning', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
     }
 
     function restoreHighlights() {
@@ -3080,7 +3080,7 @@
         if (!running) return;
         syncLocation();
         if (!countAnnotations(missingRecords())) {
-            showToast('No annotations are missing on this page.');
+            showToast('No annotations missing', { intent: 'success', icon: 'checkmark_20_regular' });
             return;
         }
         const unsaved = cancelEditor({ offer: false });
@@ -3231,8 +3231,10 @@
         const off = !keysSwitchedOff();
         setKeysSwitchedOff(off);
         if (off) releaseAccessKeys();
-        showToast(off ? 'Shortcut keys off: the sites get their Alt keys back. Alt+Shift+K turns them on.'
-            : 'Shortcut keys on: Alt keys are the highlighter\'s, not the sites\'.');
+        showToast(off ? 'Shortcut keys off' : 'Shortcut keys on', {
+            body: off ? 'Sites get their Alt keys back. Press Alt+Shift+K to turn them on.'
+                : 'Alt keys now belong to the highlighter, not the site.'
+        });
         refreshMenu();
     }
 
@@ -3326,7 +3328,7 @@
             const group = selected ? null : pointedGroup();
             if (selected) noteSelection(active);
             else if (group) openNoteEditor(group);
-            else showToast('To add a note, select some text or point at an annotation, then press Alt+N.');
+            else showToast('Nothing to add a note to', { intent: 'warning', icon: 'warning_20_regular', body: 'Select text or point at an annotation, then press Alt+N.' });
             return;
         }
 
@@ -3514,6 +3516,7 @@
         chevron_right_16_regular: 'M5.65 3.15a.5.5 0 0 0 0 .7L9.79 8l-4.14 4.15a.5.5 0 0 0 .7.7l4.5-4.5a.5.5 0 0 0 0-.7l-4.5-4.5a.5.5 0 0 0-.7 0',
         search_20_regular: 'M13.73 14.44a6.5 6.5 0 1 1 .7-.7l3.42 3.4a.5.5 0 0 1-.63.77l-.07-.06zm-.71-.71A5.5 5.5 0 0 0 15 9.5a5.5 5.5 0 1 0-1.98 4.23',
         eye_off_20_regular: 'M2.85 2.15a.5.5 0 1 0-.7.7l3.5 3.5a8 8 0 0 0-3.37 5.05.5.5 0 1 0 .98.2 7 7 0 0 1 3.1-4.53l1.6 1.59a3.5 3.5 0 1 0 4.88 4.89l4.3 4.3a.5.5 0 0 0 .71-.7zm9.27 10.68a2.5 2.5 0 1 1-3.45-3.45zm-2-4.83 3.38 3.38A3.5 3.5 0 0 0 10.12 8M10 6q-.86 0-1.67.21l-.8-.8A8 8 0 0 1 10 5c3.7 0 6.94 2.67 7.72 6.4a.5.5 0 0 1-.98.2A7 7 0 0 0 10 6',
+        warning_20_regular: 'M10 2.5a1.5 1.5 0 0 1 1.32.79l6.5 12A1.5 1.5 0 0 1 16.5 17.5h-13a1.5 1.5 0 0 1-1.32-2.21l6.5-12A1.5 1.5 0 0 1 10 2.5m0 1a.5.5 0 0 0-.44.26l-6.5 12a.5.5 0 0 0 .44.74h13a.5.5 0 0 0 .44-.74l-6.5-12A.5.5 0 0 0 10 3.5M10 7.5c.28 0 .5.22.5.5v4a.5.5 0 0 1-1 0V8c0-.28.22-.5.5-.5m0 7a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5',
         info_20_regular: 'M10.5 8.91a.5.5 0 0 0-1 .09v4.6a.5.5 0 0 0 1-.1V8.91m.3-2.16a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0M18 10a8 8 0 1 0-16 0 8 8 0 0 0 16 0M3 10a7 7 0 1 1 14 0 7 7 0 0 1-14 0'
     };
 
@@ -3561,6 +3564,8 @@
         --colorNeutralForegroundOnBrand: #ffffff;
         --colorBrandForeground1: #0f6cbd;
         --colorPaletteRedForeground1: #b10e1c;
+        --colorPaletteGreenForeground1: #107c10;
+        --colorPaletteDarkOrangeForeground1: #bc4b09;
         --colorBrandForegroundLink: #115ea3;
         --colorBrandForegroundLinkHover: #0f548c;
         --colorBrandForegroundLinkPressed: #0c3b5e;
@@ -3605,6 +3610,8 @@
         --colorNeutralForegroundOnBrand: #ffffff;
         --colorBrandForeground1: #479ef5;
         --colorPaletteRedForeground1: #dc626d;
+        --colorPaletteGreenForeground1: #54b054;
+        --colorPaletteDarkOrangeForeground1: #f4a082;
         --colorBrandForegroundLink: #479ef5;
         --colorBrandForegroundLinkHover: #62abf5;
         --colorBrandForegroundLinkPressed: #2886de;
@@ -3766,7 +3773,13 @@
         /* Toast */
         .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; max-width: min(360px, calc(100vw - 32px)); padding: 12px; }
         .toast .icon { color: var(--colorNeutralForeground3); }
-        .toast-text { flex: 1; min-width: 0; }
+        .toast[data-intent="success"] > .icon { color: var(--colorPaletteGreenForeground1); }
+        .toast[data-intent="warning"] > .icon { color: var(--colorPaletteDarkOrangeForeground1); }
+        .toast-content { flex: 1; min-width: 0; }
+        .toast-text { font-weight: 600; }
+        .toast-body { margin-top: 2px; color: var(--colorNeutralForeground2); }
+        .toast-body[hidden] { display: none; }
+        .toast .btn-icon { margin: -6px -6px -6px 0; }
         /* The toast's action (Undo, Restore): a Fluent Link, as in Fluent's Toast. */
         .link {
             flex: none; margin: 0 0 0 4px; padding: 0; border: 0; border-radius: var(--borderRadiusMedium);
@@ -3928,8 +3941,11 @@
 
     let toastIcon = fluentIcon('info_20_regular');   // replaced per message
     const toastText = makeEl('div', { class: 'toast-text' });
+    const toastBody = makeEl('div', { class: 'toast-body', hidden: '' });
+    const toastContent = makeEl('div', { class: 'toast-content' }, [toastText, toastBody]);
     const toastAction = makeEl('button', { type: 'button', class: 'link', hidden: '' });
-    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', hidden: '' }, [toastIcon, toastText, toastAction]);
+    const toastDismiss = fluentButton({ icon: fluentIcon('dismiss_20_regular'), label: 'Dismiss' });
+    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', hidden: '' }, [toastIcon, toastContent, toastAction, toastDismiss]);
 
     // A panel's title: the counts in the quiet colour around the bold word "Annotations".
     function setPanelTitle(el, lead, tail) {
@@ -4419,8 +4435,7 @@
         setToolbarSwitchedOff(off);
         if (off) hideToolbar();
         else scheduleToolbar();   // for text that is selected now
-        showToast(off ? 'Selection toolbar off.'
-            : 'Selection toolbar on.');
+        showToast(off ? 'Selection toolbar off' : 'Selection toolbar on', { body: off ? 'Press Alt+T to turn it on.' : '' });
         refreshMenu();
     }
 
@@ -4970,6 +4985,7 @@
     function offerDraft({ group, draft, records }, message = 'Note not saved', icon = 'edit_20_regular') {
         showToast(message, {
             icon,
+            body: message === 'Note not saved' ? 'Restore the text you wrote.' : '',
             action: { label: 'Restore', keep: true, run: () => restoreDraft(group, draft, records) }
         });
     }
@@ -5033,9 +5049,11 @@
     let toastKeep = false;        // it survives undo and redo (see resetUi)
     let toastKeepsEditor = false; // its action leaves a note being written open
 
-    // A message in the bottom-right corner. `icon` is a FLUENT_ICONS name; `action` adds a text
-    // button, { label, run, keep, keepEditor }, such as Undo.
-    function showToast(message, { icon = 'info_20_regular', action = null } = {}) {
+    // A message in the bottom-right corner, as Fluent's Toast: an intent icon, a title, an
+    // optional `body` under it, an action and Dismiss. `icon` is a FLUENT_ICONS name; `intent`
+    // is info, success or warning; `action` adds a text button, { label, run, keep, keepEditor },
+    // such as Undo.
+    function showToast(message, { icon = 'info_20_regular', intent = 'info', body = '', action = null } = {}) {
         // A plain message doesn't take the place of one still offering Undo or Restore.
         if (!action && !toastEl.hidden && toastRun) return;
         // The toast has the page's theme, set on it alone: a panel open next to a box of the
@@ -5046,7 +5064,10 @@
         const nextIcon = fluentIcon(icon);
         toastIcon.replaceWith(nextIcon);
         toastIcon = nextIcon;
+        toastEl.setAttribute('data-intent', intent);
         toastText.textContent = message;
+        toastBody.textContent = body;
+        toastBody.hidden = !body;
         toastRun = action ? action.run : null;
         toastKey = currentKey;
         toastKeep = !!(action && action.keep);
@@ -5077,6 +5098,8 @@
     }
 
     let toastReturnFocus = null;  // what had focus before the toast's button took it
+
+    toastDismiss.addEventListener('click', hideToast);
 
     toastAction.addEventListener('click', () => {
         const run = toastRun;
@@ -5723,7 +5746,7 @@
         syncLocation();
         const list = (items || pageAnnotations()).filter(a => a.wrappers.some(w => w.isConnected));
         if (!list.length) {
-            showToast('There are no annotations on this page to copy.');
+            showToast('Nothing to copy', { body: 'This page has no annotations.' });
             return;
         }
         let markdown;
@@ -5731,12 +5754,12 @@
             markdown = annotationsMarkdown(list);
         } catch (e) {
             console.warn(`${LOG} could not build Markdown`, e);
-            showToast('Couldn\'t copy the annotations.');
+            showToast('Couldn\'t copy', { intent: 'warning', icon: 'warning_20_regular', body: 'Try again.' });
             return;
         }
         writeClipboard(markdown).then(
-            () => showToast(doneText('Copied', list.length), { icon: 'copy_20_regular' }),
-            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy to the clipboard.'); });
+            () => showToast(doneText('Copied', list.length), { icon: 'checkmark_20_regular', intent: 'success' }),
+            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'warning', icon: 'warning_20_regular', body: 'The browser blocked clipboard access.' }); });
     }
 
     // --- Changes made from the panel ---
@@ -5777,7 +5800,7 @@
         const selected = toolbarSelection();
         let range = selected && cleanRange(selected);
         if (!range) {
-            showToast('Select the text this annotation belongs to, then choose Attach to selection.');
+            showToast('Select the text first', { body: 'Then choose Attach to selection.' });
             return;
         }
         if (editor) {
@@ -5811,7 +5834,7 @@
         });
         const sel = window.getSelection();
         if (sel) sel.removeAllRanges();
-        if (!created.length) showToast('That text can\'t be annotated. Try selecting it again.');
+        if (!created.length) showToast('Couldn\'t annotate that text', { intent: 'warning', icon: 'warning_20_regular', body: 'Try selecting it again.' });
     }
 
     // --- Annotations panel (Alt+O) ---
@@ -6306,8 +6329,8 @@
         const selected = everythingShown.filter(s => everythingChecked.has(s.id));
         if (!selected.length) return;
         writeClipboard(savedMarkdown(selected)).then(
-            () => showToast(doneText('Copied', selected.length), { icon: 'copy_20_regular' }),
-            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy to the clipboard.'); });
+            () => showToast(doneText('Copied', selected.length), { icon: 'checkmark_20_regular', intent: 'success' }),
+            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'warning', icon: 'warning_20_regular', body: 'The browser blocked clipboard access.' }); });
     });
     everythingForget.addEventListener('click', () => {
         if (!running) return;

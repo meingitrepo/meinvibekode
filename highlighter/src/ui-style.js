@@ -52,6 +52,7 @@
         chevron_right_16_regular: 'M5.65 3.15a.5.5 0 0 0 0 .7L9.79 8l-4.14 4.15a.5.5 0 0 0 .7.7l4.5-4.5a.5.5 0 0 0 0-.7l-4.5-4.5a.5.5 0 0 0-.7 0',
         search_20_regular: 'M13.73 14.44a6.5 6.5 0 1 1 .7-.7l3.42 3.4a.5.5 0 0 1-.63.77l-.07-.06zm-.71-.71A5.5 5.5 0 0 0 15 9.5a5.5 5.5 0 1 0-1.98 4.23',
         eye_off_20_regular: 'M2.85 2.15a.5.5 0 1 0-.7.7l3.5 3.5a8 8 0 0 0-3.37 5.05.5.5 0 1 0 .98.2 7 7 0 0 1 3.1-4.53l1.6 1.59a3.5 3.5 0 1 0 4.88 4.89l4.3 4.3a.5.5 0 0 0 .71-.7zm9.27 10.68a2.5 2.5 0 1 1-3.45-3.45zm-2-4.83 3.38 3.38A3.5 3.5 0 0 0 10.12 8M10 6q-.86 0-1.67.21l-.8-.8A8 8 0 0 1 10 5c3.7 0 6.94 2.67 7.72 6.4a.5.5 0 0 1-.98.2A7 7 0 0 0 10 6',
+        warning_20_regular: 'M10 2.5a1.5 1.5 0 0 1 1.32.79l6.5 12A1.5 1.5 0 0 1 16.5 17.5h-13a1.5 1.5 0 0 1-1.32-2.21l6.5-12A1.5 1.5 0 0 1 10 2.5m0 1a.5.5 0 0 0-.44.26l-6.5 12a.5.5 0 0 0 .44.74h13a.5.5 0 0 0 .44-.74l-6.5-12A.5.5 0 0 0 10 3.5M10 7.5c.28 0 .5.22.5.5v4a.5.5 0 0 1-1 0V8c0-.28.22-.5.5-.5m0 7a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5',
         info_20_regular: 'M10.5 8.91a.5.5 0 0 0-1 .09v4.6a.5.5 0 0 0 1-.1V8.91m.3-2.16a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0M18 10a8 8 0 1 0-16 0 8 8 0 0 0 16 0M3 10a7 7 0 1 1 14 0 7 7 0 0 1-14 0'
     };
 
@@ -99,6 +100,8 @@
         --colorNeutralForegroundOnBrand: #ffffff;
         --colorBrandForeground1: #0f6cbd;
         --colorPaletteRedForeground1: #b10e1c;
+        --colorPaletteGreenForeground1: #107c10;
+        --colorPaletteDarkOrangeForeground1: #bc4b09;
         --colorBrandForegroundLink: #115ea3;
         --colorBrandForegroundLinkHover: #0f548c;
         --colorBrandForegroundLinkPressed: #0c3b5e;
@@ -143,6 +146,8 @@
         --colorNeutralForegroundOnBrand: #ffffff;
         --colorBrandForeground1: #479ef5;
         --colorPaletteRedForeground1: #dc626d;
+        --colorPaletteGreenForeground1: #54b054;
+        --colorPaletteDarkOrangeForeground1: #f4a082;
         --colorBrandForegroundLink: #479ef5;
         --colorBrandForegroundLinkHover: #62abf5;
         --colorBrandForegroundLinkPressed: #2886de;
@@ -304,7 +309,13 @@
         /* Toast */
         .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; max-width: min(360px, calc(100vw - 32px)); padding: 12px; }
         .toast .icon { color: var(--colorNeutralForeground3); }
-        .toast-text { flex: 1; min-width: 0; }
+        .toast[data-intent="success"] > .icon { color: var(--colorPaletteGreenForeground1); }
+        .toast[data-intent="warning"] > .icon { color: var(--colorPaletteDarkOrangeForeground1); }
+        .toast-content { flex: 1; min-width: 0; }
+        .toast-text { font-weight: 600; }
+        .toast-body { margin-top: 2px; color: var(--colorNeutralForeground2); }
+        .toast-body[hidden] { display: none; }
+        .toast .btn-icon { margin: -6px -6px -6px 0; }
         /* The toast's action (Undo, Restore): a Fluent Link, as in Fluent's Toast. */
         .link {
             flex: none; margin: 0 0 0 4px; padding: 0; border: 0; border-radius: var(--borderRadiusMedium);

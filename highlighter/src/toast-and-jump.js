@@ -6,9 +6,11 @@
     let toastKeep = false;        // it survives undo and redo (see resetUi)
     let toastKeepsEditor = false; // its action leaves a note being written open
 
-    // A message in the bottom-right corner. `icon` is a FLUENT_ICONS name; `action` adds a text
-    // button, { label, run, keep, keepEditor }, such as Undo.
-    function showToast(message, { icon = 'info_20_regular', action = null } = {}) {
+    // A message in the bottom-right corner, as Fluent's Toast: an intent icon, a title, an
+    // optional `body` under it, an action and Dismiss. `icon` is a FLUENT_ICONS name; `intent`
+    // is info, success or warning; `action` adds a text button, { label, run, keep, keepEditor },
+    // such as Undo.
+    function showToast(message, { icon = 'info_20_regular', intent = 'info', body = '', action = null } = {}) {
         // A plain message doesn't take the place of one still offering Undo or Restore.
         if (!action && !toastEl.hidden && toastRun) return;
         // The toast has the page's theme, set on it alone: a panel open next to a box of the
@@ -19,7 +21,10 @@
         const nextIcon = fluentIcon(icon);
         toastIcon.replaceWith(nextIcon);
         toastIcon = nextIcon;
+        toastEl.setAttribute('data-intent', intent);
         toastText.textContent = message;
+        toastBody.textContent = body;
+        toastBody.hidden = !body;
         toastRun = action ? action.run : null;
         toastKey = currentKey;
         toastKeep = !!(action && action.keep);
@@ -50,6 +55,8 @@
     }
 
     let toastReturnFocus = null;  // what had focus before the toast's button took it
+
+    toastDismiss.addEventListener('click', hideToast);
 
     toastAction.addEventListener('click', () => {
         const run = toastRun;

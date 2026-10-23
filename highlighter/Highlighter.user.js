@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.100
+// @version      8.101
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3862,6 +3862,7 @@
             cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent;
         }
         .page-head:hover { background: var(--colorSubtleBackgroundHover); }
+        .page-head:hover:active { background: var(--colorSubtleBackgroundPressed); }
         .page-head:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: -2px; }
         .page-name { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
         .page-host { font-weight: 600; }
@@ -3925,7 +3926,9 @@
         @media (hover: none) { .item .check { opacity: 1; } }
         .everything .item .check { margin: 10px 4px 0 8px; }
         .item { display: flex; align-items: flex-start; border-radius: var(--borderRadiusMedium); }
+        .item:has(.check:checked) { background: var(--colorSubtleBackgroundSelected); }
         .item:hover { background: var(--colorSubtleBackgroundHover); }
+        .item:hover:active { background: var(--colorSubtleBackgroundPressed); }
         /* The annotation itself: a button that scrolls to it. The bar at its left is its color. */
         .item-main {
             position: relative; flex: 1; min-width: 0; display: block; margin: 0; padding: 6px 4px 6px 14px;
@@ -3959,6 +3962,18 @@
             .btn[aria-pressed="true"] .icon { color: HighlightText; }
             .field::after { background: Highlight; }
             .link, .link:hover, .link:active { color: LinkText; }
+            .check { border-color: ButtonText; }
+            .check:checked, .check:checked:hover, .check:checked:active { border-color: Highlight; background: Highlight; }
+            .check:checked::after { background: HighlightText; }
+            .check:indeterminate, .check:indeterminate:hover, .check:indeterminate:active { border-color: Highlight; }
+            .check:indeterminate::after, .check:indeterminate:hover::after, .check:indeterminate:active::after { background: Highlight; }
+            .check:disabled, .check:disabled:hover, .check:disabled:active { border-color: GrayText; }
+            .check:disabled::after { background: GrayText; }
+            .item:hover, .item:has(.check:checked), .page-head:hover { background: Highlight; color: HighlightText; }
+            .item:hover *, .item:has(.check:checked) *, .page-head:hover * { color: HighlightText; }
+            .item-main:focus-visible, .page-head:focus-visible, .check:focus-visible { outline-color: CanvasText; }
+            .item-main::before { forced-color-adjust: none; }
+            .select-box path { stroke: Highlight; }
         }
     `;
 

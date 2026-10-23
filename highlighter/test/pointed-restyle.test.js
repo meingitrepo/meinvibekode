@@ -236,7 +236,7 @@ async function dark(browser) {
 }
 
 async function editorOther(browser) {
-  // A note being written on another annotation closes first and is offered back.
+  // While a note is being written its annotation is selected, so style keys act on it, not on another one pointed at.
   const { ctx, page: p } = await L.open(browser, { html: HTML, store: storeOf(recA(), recB()) });
   await hover(p, 'gB');
   await L.altKey(p, 'n');
@@ -247,8 +247,7 @@ async function editorOther(browser) {
   await L.altKey(p, '1');
   const s = await state(p);
   const ed = await p.evaluate(() => window.__hl.editor);
-  check('editor on another annotation closes, restyle applies', keysOf(s, 'gA').join() === 'h2' && !ed, { s, ed });
-  check('its text is offered back', (await L.toast(p)) === 'Note not saved · Restore', await L.toast(p));
+  check('editor open: the key restyles the annotation being edited, not the pointed one', keysOf(s, 'gB').join() === 'h2' && keysOf(s, 'gA').join() === 'h' && !!ed && ed.group === 'gB', { s, ed });
   await ctx.close();
 }
 

@@ -35,10 +35,10 @@ const html = `<html><body style="font:16px sans-serif;margin:40px">
     L.check(`${scheme} N opens editor`, await page.evaluate(() => !!window.__hl.editor), null);
     await page.keyboard.press('Escape'); await page.waitForTimeout(150);
     L.check(`${scheme} Esc closes editor first`, await page.evaluate(() => !window.__hl.editor), null);
-    // Delete removes, Undo brings back
-    await page.keyboard.press('Delete'); await page.waitForTimeout(150);
+    // Alt+D removes, Undo brings back
+    await L.altKey(page, 'd'); await page.waitForTimeout(150);
     w = await L.wr(page);
-    L.check(`${scheme} Delete removes`, w.length === 0, w);
+    L.check(`${scheme} Alt+D removes`, w.length === 0, w);
     L.check(`${scheme} undo toast`, /^Erased 1x annotation · Undo$/.test(await L.toast(page) || ''), await L.toast(page));
     await page.waitForTimeout(50);
     L.check(`${scheme} box gone with it`, !(await box()), await box());

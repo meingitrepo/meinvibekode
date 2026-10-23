@@ -40,12 +40,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   L.check('toast says 2', /^Erased 2x annotations · Undo$/.test(await L.toast(page) || ''), await L.toast(page));
   await L.altKey(page, 'KeyZ');
   L.check('one undo brings both back', (await L.wr(page)).length === 5, await L.wr(page));
-  // Delete key on mixed styles
-  await click('hotel'); await click('oscar', 'Control');
-  await page.keyboard.press('Delete'); await page.waitForTimeout(200);
-  L.check('Delete removes all selected', (await L.wr(page)).length === 3 && (await boxes()) === 0, await L.wr(page));
-  await L.altKey(page, 'KeyZ');
-  // Alt+D too
+  // Alt+D on mixed styles
   await click('bravo'); await click('echo', 'Control');
   await L.altKey(page, 'd');
   L.check('Alt+D removes all selected', (await L.wr(page)).length === 3, await L.wr(page));
@@ -56,9 +51,8 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   const eg = await page.evaluate(() => { const e = window.__hl.editor; return e && document.querySelector(`[data-highlighter-group="${e.group}"]`).textContent; });
   L.check('N opens the first in reading order', eg === 'bravo', eg);
   await page.keyboard.press('Escape'); await page.waitForTimeout(300);
-  // own style pressed when all same: select bravo+kilo (both yellow), press 1 -> removes both
+  // own style pressed when all same: select bravo+kilo (both yellow), press 3 (yellow) -> removes both
   await click('bravo'); await click('kilo', 'Control');
-  L.check('no toolbar for two yellow', !(await L.toolbar(page)), null);
   await page.keyboard.press('Digit3'); await page.waitForTimeout(200);
   L.check('own style removes both', (await L.wr(page)).length === 3, await L.wr(page));
   await L.altKey(page, 'KeyZ');

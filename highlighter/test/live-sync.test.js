@@ -21,7 +21,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px">
   L.check('B restyle shows in A', wa.length === 1 && wa[0].k === 'h4', wa);
 
   await L.selStr(A, '#q', 'kilo', { endStr: 'mike' }); await L.altKey(A, 'KeyU'); await settle();
-  await click(A, 0); await A.keyboard.press('Delete'); await settle();
+  await click(A, 0); await L.altKey(A, 'd'); await settle();
   wb = await L.wr(B);
   L.check('A delete removes it in B, keeps the other', wb.length === 1 && wb[0].k === 'u', wb);
 

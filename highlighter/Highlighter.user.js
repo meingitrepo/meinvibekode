@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.85
+// @version      8.86
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       -
 // @match        *://*/*
@@ -5435,8 +5435,13 @@
 
     // The part of a dashed box that lies under the page's header or the like is cut away, as the
     // text is not seen there.
+    // Worked out again only when the box moves on the screen (the page's header changes with scrolling), so a box that sits still costs no hit tests.
+    const clipKeys = new WeakMap();
     function clipOutCovers(el) {
         const r = el.getBoundingClientRect();
+        const key = `${r.left},${r.top},${r.width},${r.height},${innerWidth},${innerHeight}`;
+        if (clipKeys.get(el) === key) return;
+        clipKeys.set(el, key);
         const hit = pageCovers().filter(c => c.left < r.right && c.right > r.left && c.top < r.bottom && c.bottom > r.top);
         const clip = hit.length ? `path(evenodd, 'M-10 -10H${r.width + 10}V${r.height + 10}H-10Z${hit.map(c =>
             `M${c.left - r.left} ${c.top - r.top}h${c.width}v${c.height}h${-c.width}Z`).join('')}')` : '';

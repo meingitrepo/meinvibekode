@@ -345,7 +345,7 @@
         .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
         /* Toast */
         .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; max-width: min(360px, calc(100vw - 32px)); padding: 12px; }
-        .toast .icon { color: var(--colorNeutralForeground3); }
+        .toast .icon { color: var(--colorNeutralForeground2); }
         .toast[data-intent="success"] > .icon { color: var(--colorPaletteGreenForeground1); }
         .toast[data-intent="warning"] > .icon { color: var(--colorPaletteDarkOrangeForeground1); }
         .toast[data-intent="error"] > .icon { color: var(--colorPaletteRedForeground1); }
@@ -361,12 +361,13 @@
         /* The toast's action (Undo, Restore): a Fluent Link, as in Fluent's Toast. */
         .link {
             flex: none; margin: 0 0 0 4px; padding: 0; border: 0; border-radius: var(--borderRadiusMedium);
-            background: none; font: inherit; color: var(--colorBrandForeground1);
+            background: none; font: inherit; color: var(--colorBrandForegroundLink);
             cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent;
         }
         .link:hover { color: var(--colorBrandForegroundLinkHover); text-decoration: underline; }
         .link:active { color: var(--colorBrandForegroundLinkPressed); text-decoration: underline; }
-        .link:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 1px; }
+        .link:focus-visible { text-decoration: underline double; }
+        .toast:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
         /* The pen's bar, centred at the top of the view. */
         .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: 2px; padding: 4px; }
         .pen-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

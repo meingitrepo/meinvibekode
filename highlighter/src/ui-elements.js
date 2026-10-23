@@ -49,7 +49,7 @@
     const toastContent = makeEl('div', { class: 'toast-content' }, [toastText, toastBody]);
     const toastAction = makeEl('button', { type: 'button', class: 'link', hidden: '' });   // a text link, or an icon button (see showToast)
     const toastDismiss = fluentButton({ icon: fluentIcon('dismiss_20_regular'), label: 'Dismiss' });
-    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', hidden: '' }, [toastIcon, toastContent, toastAction, toastDismiss]);
+    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastDismiss]);
 
     // A panel's title: the counts in the quiet colour around the bold word "Annotations".
     function setPanelTitle(el, lead, tail) {

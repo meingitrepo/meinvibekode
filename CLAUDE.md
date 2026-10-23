@@ -24,7 +24,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - CI runs only a quick gate on every push (`node build.js --check` + `node --check` on the built file, seconds). The full Playwright suite is local-only (CI run was ~2 min per push).
 
 ## Automation candidates
-- At the end of every reply, flag any step you repeated in the task or that recurs across tasks and costs tokens (rebases, builds, test runs, screenshots, version bumps, greps for the same thing, etc.) as a candidate for a script like `release.sh`, with a one-line script idea. Don't build it unasked; Mhmd picks.
+- Only when a repeated step would cut significant manual work or tokens across threads, end the reply with one terse line suggesting a script like `release.sh` (with the idea). Skip one-liners and trivial wrappers unless the saving is significant. If nothing qualifies, say nothing, not even "none". Don't build it unasked; Mhmd picks.
 - Scripts in `highlighter/tools/`: `build.sh` (build+check), `map-check.sh` (Map vs build.js), `tests-for.sh <keyword>` (find and run suites mentioning it; sets NODE_PATH), `stale-checks.sh <old-term>` (test lines for retired behaviour), `sync.sh` (rebase onto latest origin/main, rebuild, report conflicts/overlap), `preflight.sh` (sync, diffstat, release.sh line), `release.sh` (post-PUSH release), `shot.sh <out.png> [light|dark] [js]` (playground screenshot). Use them instead of redoing these steps by hand.
 
 ## Map (`highlighter/src/`, joined in `build.js` order; one IIFE, so later files see earlier names)

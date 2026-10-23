@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.87
+// @version      8.88
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -4460,15 +4460,21 @@
         ensureUi(panelOpen() && uiDark !== null ? uiDark : dark);
         penEl.setAttribute('data-theme', dark ? 'dark' : 'light');
         // One button per style: the pen's own shows pressed; clicking another changes the pen.
-        const tools = Object.keys(STYLES).filter(k => !STYLES[k].retired).map(k => {
+        const tools = [];
+        let lastGroup = null;
+        Object.keys(STYLES).forEach(k => {
+            if (STYLES[k].retired) return;
+            const group = STYLES[k].type === 'highlight' ? 'highlight' : 'line';
+            if (lastGroup && group !== lastGroup) tools.push(toolbarDivider());
+            lastGroup = group;
             const b = toolButton(styleIcon(k, dark), styleLabel(k), shortcutText(k), () => setPen(k), k === penKey);
             b.tabIndex = k === penKey ? 0 : -1;
-            return b;
+            tools.push(b);
         });
         const eraser = toolButton(fluentIcon('eraser_20_regular'), 'Eraser', '', () => setPen(PEN_ERASER), penKey === PEN_ERASER);
         eraser.tabIndex = penKey === PEN_ERASER ? 0 : -1;
         tools.push(toolbarDivider(), eraser);
-        if (penKey !== PEN_ERASER && !tools.some(b => b.tabIndex === 0)) tools[0].tabIndex = 0;
+        if (penKey !== PEN_ERASER && !tools.some(b => b.tabIndex === 0)) tools.find(b => b.tagName === 'BUTTON').tabIndex = 0;
         penEl.replaceChildren(...tools, toolbarDivider(), penText, penOff);
         penText.textContent = `Pen: ${penKey === PEN_ERASER ? 'eraser' : styleLabel(penKey).toLowerCase()}`;
         penEl.hidden = false;

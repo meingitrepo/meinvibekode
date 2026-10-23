@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.93
+// @version      8.94
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3594,8 +3594,8 @@
         --durationNormal: 200ms;
         --durationSlow: 300ms;
         --curveEasyEase: cubic-bezier(0.33, 0, 0.67, 1);
-        --curveDecelerateMid: cubic-bezier(0.1, 0.9, 0.2, 1);
-        --curveAccelerateMid: cubic-bezier(0.9, 0.1, 1, 0.2);
+        --curveDecelerateMax: cubic-bezier(0.1, 0.9, 0.2, 1);
+        --curveAccelerateMax: cubic-bezier(0.9, 0.1, 1, 0.2);
         --colorScheme: light;
     `;
     const DARK_TOKENS = `
@@ -3642,10 +3642,10 @@
         [hidden]:not(.surface):not(.everything), .tip[hidden] { display: none !important; }
         /* Surfaces fade out rather than vanish: display flips last (allow-discrete), so the hidden attribute
            still takes effect at once for scripts. */
-        .surface:not(.tip) { transition: opacity var(--durationNormal) var(--curveAccelerateMid), transform var(--durationNormal) var(--curveAccelerateMid), display var(--durationNormal) allow-discrete; }
-        .everything { transition: opacity var(--durationNormal) var(--curveAccelerateMid), display var(--durationNormal) allow-discrete; }
+        .surface:not(.tip) { transition: opacity var(--durationNormal) var(--curveAccelerateMax), transform var(--durationNormal) var(--curveAccelerateMax), display var(--durationNormal) allow-discrete; }
+        .everything { transition: opacity var(--durationNormal) var(--curveAccelerateMax), display var(--durationNormal) allow-discrete; }
         .everything[hidden] { display: none; opacity: 0; pointer-events: none; }
-        .everything:not([hidden]) { animation: highlighter-fade var(--durationNormal) var(--curveDecelerateMid); }
+        .everything:not([hidden]) { animation: highlighter-fade var(--durationNormal) var(--curveDecelerateMax); }
         @keyframes highlighter-fade { from { opacity: 0; } }
         .surface:not(.tip)[hidden] { display: none; opacity: 0; transform: translateY(4px); pointer-events: none; }
         /* Scrollbars (note box, card text, lists) follow our theme, not the page's. Set here, not on
@@ -3661,7 +3661,7 @@
             color: var(--colorNeutralForeground1); background: var(--colorNeutralBackground1);
             border: 1px solid var(--colorTransparentStroke); border-radius: var(--borderRadiusXLarge);
             box-shadow: var(--shadow8);
-            animation: highlighter-enter var(--durationNormal) var(--curveDecelerateMid);
+            animation: highlighter-enter var(--durationNormal) var(--curveDecelerateMax);
         }
         /* In the page, not the window: they scroll with their text (see uiHost). */
         .surface.toolbar, .surface.tip, .surface.card, .surface.editor { position: absolute; }
@@ -3770,7 +3770,7 @@
             height: 2px; background: var(--colorCompoundBrandStroke);
             transform: scaleX(0); transition: transform 50ms var(--curveEasyEase);
         }
-        .field:focus-within::after { transform: scaleX(1); transition: transform var(--durationNormal) var(--curveDecelerateMid); }
+        .field:focus-within::after { transform: scaleX(1); transition: transform var(--durationNormal) var(--curveDecelerateMax); }
         textarea {
             /* Height is set by sizeNoteInput(): NOTE_MIN_LINES to NOTE_MAX_LINES, then it scrolls.
                The corner handle resizes it (and the panel) for the current edit only. */

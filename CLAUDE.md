@@ -27,5 +27,38 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - At the end of every reply, flag any step you repeated in the task or that recurs across tasks and costs tokens (rebases, builds, test runs, screenshots, version bumps, greps for the same thing, etc.) as a candidate for a script like `release.sh`, with a one-line script idea. Don't build it unasked; Mhmd picks.
 - Scripts in `highlighter/tools/`: `build.sh` (build+check), `tests-for.sh <keyword>` (find and run suites mentioning it; sets NODE_PATH), `stale-checks.sh <old-term>` (test lines for retired behaviour), `preflight.sh` (build, diffstat, release.sh line), `shot.sh <out.png> [light|dark] [js]` (playground screenshot). Use them instead of redoing these steps by hand.
 
-## Map (`highlighter/src/`, concatenated in `build.js` order; all one IIFE, so later files see earlier names)
-header (metadata) → config (IIFE open, limits, colors) → page-css-and-state (page CSS, shared state) → theme (dark-page detection) → strokes (line/strike drawing) → text-anchoring (blocks, XPath, offsets, loose matching) → wrappers (wrap/unwrap) → storage (page identity, records, `rnh:settings`) → restore (restore, late content) → navigation-and-selection (SPA nav, selections) → apply-and-undo (apply/remove, undo/redo) → input (shortcuts) → notes (group ids, times) → ui-style (makeEl, icons, tokens, CSS) → ui-elements (shadow root, panel placement) → toolbar (selection toolbar) → pen (Alt+P) → note-card-and-editor (hover card, editor) → toast-and-jump (toast, Alt+J/K) → annotation-select (click-select) → markdown (Copy as Markdown) → panel (Alt+O) → search (all pages, Alt+Shift+O) → live-sync (other tabs) → start-and-boot (page events, start/stop, menu, boot).
+## Map (`highlighter/src/`, joined in `build.js` order; one IIFE, so later files see earlier names)
+Core
+- `header` metadata block, user notes
+- `config` opens the IIFE; attrs, colors, timings, limits
+- `page-css-and-state` page CSS, shared state, `listen`
+- `theme` dark-page detection, annotation colors
+- `strokes` line/strike drawing and metrics
+
+Anchoring and storage
+- `text-anchoring` blocks, XPath, text offsets, loose matching
+- `wrappers` wrap/unwrap, wrapper bookkeeping, text selection marks
+- `storage` page identity, records, `rnh:settings`, per-site switch
+- `restore` restore, late content, missing annotations
+
+Behaviour
+- `navigation-and-selection` SPA navigation, word-snapped selections
+- `apply-and-undo` apply/remove annotations, undo/redo
+- `input` keyboard shortcuts
+- `notes` group ids, times, note text
+
+UI
+- `ui-style` `makeEl`, Fluent icons, tokens, `UI_CSS`
+- `ui-elements` shadow root, buttons, panel placement
+- `toolbar` selection toolbar and tooltips
+- `pen` Alt+P
+- `note-card-and-editor` hover card, note editor
+- `toast-and-jump` toast, Alt+J/K
+- `annotation-select` click-select (dashed box)
+- `markdown` Copy as Markdown
+- `panel` Alt+O
+- `search` all pages, Alt+Shift+O
+
+Runtime
+- `live-sync` changes from other tabs
+- `start-and-boot` page events, start/stop, menu, boot

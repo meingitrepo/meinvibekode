@@ -33,9 +33,35 @@ async function states(browser) {
   await ctx.close();
 }
 
+// Hovered or pressed, every toolbar icon keeps a visible outline (Regular, or Filled where one exists) that contrasts with the hover background.
+async function hoverVisible(browser) {
+  for (const scheme of ['light', 'dark']) {
+    const html = HTML.replace('<body style="', `<body style="${scheme === 'dark' ? 'background:#121212;color:#e8e8e8;' : ''}`);
+    const { ctx, page: p } = await L.open(browser, { html, scheme });
+    await L.selStr(p, '#p1', 'plain words'); await p.waitForTimeout(400);
+    const n = await p.evaluate(() => window.__hl.toolbarEl.querySelectorAll('button').length);
+    for (let i = 0; i < n; i++) {
+      for (const press of [false, true]) {
+        const box = await p.evaluate(i => { const r = [...window.__hl.toolbarEl.querySelectorAll('button')][i].getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }, i);
+        await p.mouse.move(box.x, box.y); if (press) await p.mouse.down(); await p.waitForTimeout(250);
+        const r = await p.evaluate(i => {
+          const b = [...window.__hl.toolbarEl.querySelectorAll('button')][i];
+          const shown = [...b.querySelectorAll('.ic-r, .ic-f')].filter(x => getComputedStyle(x).display !== 'none');
+          const lum = c => { const v = c.match(/[\d.]+/g).slice(0, 3).map(x => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+          const a = lum(getComputedStyle(b.querySelector('.icon')).color), g = lum(getComputedStyle(b).backgroundColor);
+          return { label: b.dataset.label, shown: shown.length, contrast: (Math.max(a, g) + 0.05) / (Math.min(a, g) + 0.05) };
+        }, i);
+        if (press) { await p.mouse.move(5, 5); await p.mouse.up(); }
+        check(`${scheme} ${r.label} ${press ? 'pressed' : 'hovered'}: outline shows and contrasts`, r.shown > 0 && r.contrast >= 3, r);
+      }
+    }
+    await ctx.close();
+  }
+}
+
 (async () => {
   const browser = await L.launch();
-  await Promise.all([states].map(f => f(browser).catch(e => check(`${f.name} threw`, false, String(e)))));
+  await Promise.all([states, hoverVisible].map(f => f(browser).catch(e => check(`${f.name} threw`, false, String(e)))));
   await browser.close();
   let fails = 0;
   results.forEach(([name, ok, info]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' :: ' + JSON.stringify(info)}`); if (!ok) fails++; });

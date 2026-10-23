@@ -76,7 +76,7 @@
         svg.appendChild(svgEl('path', { d: FLUENT_ICONS[name], class: 'ic-r' }));
         // Fluent's bundleIcon: a subtle button shows the Filled form while hovered or pressed.
         const filled = FLUENT_ICONS[name.replace('_regular', '_filled')];
-        if (filled) svg.appendChild(svgEl('path', { d: filled, class: 'ic-f' }));
+        if (filled) { svg.classList.add('has-f'); svg.appendChild(svgEl('path', { d: filled, class: 'ic-f' })); }
         over.forEach(s => svg.appendChild(s));
         return svg;
     }
@@ -229,7 +229,7 @@
         .icon-16 { width: 16px; height: 16px; }
         .ic-f { display: none; }
         .btn-subtle:not(:disabled):hover .ic-f, .btn-subtle:not(:disabled):active:focus-visible .ic-f { display: inline; }
-        .btn-subtle:not(:disabled):hover .ic-r, .btn-subtle:not(:disabled):active:focus-visible .ic-r { display: none; }
+        .btn-subtle:not(:disabled):hover .has-f .ic-r, .btn-subtle:not(:disabled):active:focus-visible .has-f .ic-r { display: none; }
 
         /* Button: Fluent's subtle appearance, size medium (32px), the same in the toolbar and the
            panels, so every icon has the same padding (6px), hover square and spacing. */

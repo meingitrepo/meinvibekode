@@ -218,7 +218,8 @@
         .btn-subtle:active { background: var(--colorSubtleBackgroundPressed); }
         .btn-subtle:hover .icon { color: var(--colorNeutralForeground2BrandHover); }
         .btn-subtle:active .icon { color: var(--colorNeutralForeground2BrandPressed); }
-        .btn:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 0; box-shadow: inset 0 0 0 1px var(--colorStrokeFocus1); }
+        /* Fluent's createFocusOutlineStyle: focus border plus a 1px inset ring; the transparent outline shows in forced colors. */
+        .btn:focus-visible { border-color: var(--colorStrokeFocus2); outline: 2px solid var(--colorTransparentStroke); box-shadow: inset 0 0 0 1px var(--colorStrokeFocus2); z-index: 1; }
         /* Fluent's disabled subtle button: the note editor's Save while there is nothing to save. */
         .btn-subtle:disabled, .btn-subtle:disabled:hover, .btn-subtle:disabled:active { background: transparent; color: var(--colorNeutralForegroundDisabled); cursor: not-allowed; }
         .btn-subtle:disabled .icon, .btn-subtle:disabled:hover .icon, .btn-subtle:disabled:active .icon { color: var(--colorNeutralForegroundDisabled); }

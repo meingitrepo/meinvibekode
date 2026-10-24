@@ -22,7 +22,8 @@
         const { type, color } = resolveStyle(key, dark);
         switch (type) {
             case 'highlight':
-                return fluentIcon('highlight_20_regular');
+                // The highlighter's cap and tip (its accent layer) in the highlight color.
+                return fluentIcon('highlight_20_regular', { under: [svgEl('path', { d: FLUENT_ICONS.highlight_accent_20_filled, fill: color })] });
             case 'underline':
                 // The icon's own underline bar (x 5-15, y 16-17), repainted in the style's color.
                 return fluentIcon('text_underline_20_regular', { over: [svgEl('rect', { x: 5, y: 15.75, width: 10, height: 1.5, rx: 0.75, fill: color })] });
@@ -30,7 +31,8 @@
                 // The icon's own strike bar (x 3-17, y 10-11), repainted in the style's color.
                 return fluentIcon('text_strikethrough_20_regular', { over: [svgEl('rect', { x: 3, y: 9.75, width: 14, height: 1.5, rx: 0.75, fill: color })] });
             default:
-                return fluentIcon('highlight_20_regular');
+                // The highlighter's cap and tip (its accent layer) in the highlight color.
+                return fluentIcon('highlight_20_regular', { under: [svgEl('path', { d: FLUENT_ICONS.highlight_accent_20_filled, fill: color })] });
         }
     }
 

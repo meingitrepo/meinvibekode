@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.118
+// @version      8.119
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3513,6 +3513,7 @@
     // Fluent UI System Icons (@fluentui/svg-icons 1.1.343), path data as published.
     // Copyright (c) Microsoft Corporation. MIT License: https://github.com/microsoft/fluentui-system-icons
     const FLUENT_ICONS = {
+        highlight_accent_20_filled: 'M16.5 3v4a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5V3zm-10 7.5v7l6.45-3.1a1 1 0 0 0 .55-.9v-3z',
         highlight_20_regular: 'M3.5 2c.28 0 .5.22.5.5v4c0 .28.22.5.5.5h11a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 1 0v4c0 .65-.42 1.2-1 1.41V9a2 2 0 0 1-2 2v2.07a2 2 0 0 1-1.1 1.8l-6.18 3.08A.5.5 0 0 1 6 17.5V11a2 2 0 0 1-2-2V7.91c-.58-.2-1-.76-1-1.41v-4c0-.28.22-.5.5-.5M5 8v1a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8zm2 3v5.7l5.45-2.73a1 1 0 0 0 .55-.9V11z',
         text_underline_20_regular: 'M6 3.5a.5.5 0 0 0-1 0v6.45A5 5 0 0 0 10 15c2.77 0 5-2.26 5-5.05V3.5a.5.5 0 0 0-1 0v6.45C14 12.2 12.2 14 10 14s-4-1.8-4-4.05zm-1 13c0-.28.22-.5.5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5',
         text_strikethrough_20_regular: 'M6.53 4.03A6 6 0 0 1 10 3a6.2 6.2 0 0 1 4.9 2.2.5.5 0 0 1-.8.6A5.2 5.2 0 0 0 10 4c-1.15 0-2.18.35-2.9.85C6.36 5.35 6 5.98 6 6.5c0 .9.43 1.48 1.17 1.93q.54.32 1.25.57H6.23A3 3 0 0 1 5 6.5c0-.98.64-1.86 1.53-2.47M16.5 10a.5.5 0 0 1 0 1h-2.73A3 3 0 0 1 15 13.5c0 1.23-.72 2.12-1.68 2.68-.94.56-2.16.82-3.32.82a7 7 0 0 1-2.9-.48 4.6 4.6 0 0 1-2.02-1.74.5.5 0 0 1 .84-.56c.45.68.96 1.11 1.58 1.38.64.28 1.44.4 2.5.4 1.03 0 2.06-.24 2.82-.68.74-.44 1.18-1.05 1.18-1.82 0-.9-.43-1.48-1.17-1.93q-.54-.32-1.25-.57H3.5a.5.5 0 0 1 0-1z',
@@ -4231,7 +4232,8 @@
         const { type, color } = resolveStyle(key, dark);
         switch (type) {
             case 'highlight':
-                return fluentIcon('highlight_20_regular');
+                // The highlighter's cap and tip (its accent layer) in the highlight color.
+                return fluentIcon('highlight_20_regular', { under: [svgEl('path', { d: FLUENT_ICONS.highlight_accent_20_filled, fill: color })] });
             case 'underline':
                 // The icon's own underline bar (x 5-15, y 16-17), repainted in the style's color.
                 return fluentIcon('text_underline_20_regular', { over: [svgEl('rect', { x: 5, y: 15.75, width: 10, height: 1.5, rx: 0.75, fill: color })] });
@@ -4239,7 +4241,8 @@
                 // The icon's own strike bar (x 3-17, y 10-11), repainted in the style's color.
                 return fluentIcon('text_strikethrough_20_regular', { over: [svgEl('rect', { x: 3, y: 9.75, width: 14, height: 1.5, rx: 0.75, fill: color })] });
             default:
-                return fluentIcon('highlight_20_regular');
+                // The highlighter's cap and tip (its accent layer) in the highlight color.
+                return fluentIcon('highlight_20_regular', { under: [svgEl('path', { d: FLUENT_ICONS.highlight_accent_20_filled, fill: color })] });
         }
     }
 

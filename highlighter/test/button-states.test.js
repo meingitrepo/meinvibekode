@@ -59,9 +59,26 @@ async function hoverVisible(browser) {
   }
 }
 
+// Each highlighter button carries its own colour, at rest and when selected (toolbar and pen bar).
+async function swatches(browser) {
+  const { ctx, page: p } = await L.open(browser, { html: HTML });
+  const fills = (bar) => p.evaluate(bar => [...window.__hl[bar].querySelectorAll('button')].map(b => [...b.querySelectorAll('svg > path[fill]')].map(x => x.getAttribute('fill'))[0]).filter(Boolean), bar);
+  await L.selStr(p, '#p1', 'plain words'); await p.waitForTimeout(400);
+  const tb = await fills('toolbarEl');
+  check('toolbar: every highlighter button shows its own distinct colour', tb.length >= 3 && new Set(tb).size === tb.length, tb);
+  await p.mouse.click(5, 5);
+  await L.altKey(p, 'p'); await p.waitForTimeout(300);
+  const pen = await fills('penEl');
+  check('pen bar: every highlighter button shows its own distinct colour', pen.length >= 3 && new Set(pen).size === pen.length, pen);
+  await p.evaluate(() => [...window.__hl.penEl.querySelectorAll('button')].find(b => b.querySelector('svg > path[fill]')).click()); await p.waitForTimeout(300);
+  const sel = await fills('penEl');
+  check('pen bar: colours stay when a highlighter is selected', sel.length === pen.length && sel.every((c, i) => c === pen[i]), { pen, sel });
+  await ctx.close();
+}
+
 (async () => {
   const browser = await L.launch();
-  await Promise.all([states, hoverVisible].map(f => f(browser).catch(e => check(`${f.name} threw`, false, String(e)))));
+  await Promise.all([states, hoverVisible, swatches].map(f => f(browser).catch(e => check(`${f.name} threw`, false, String(e)))));
   await browser.close();
   let fails = 0;
   results.forEach(([name, ok, info]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' :: ' + JSON.stringify(info)}`); if (!ok) fails++; });

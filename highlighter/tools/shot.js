@@ -20,9 +20,20 @@ const PRESETS = {
   const store = {};
   if (process.env.SHOT_FIXTURE) for (const [k, v] of Object.entries(JSON.parse(fs.readFileSync(process.env.SHOT_FIXTURE, 'utf8')))) store[k] = JSON.stringify(v);
   const browser = await chromium.launch();
-  const { page } = await lib.open(browser, { html, scheme, store });
-  if (js) { await page.evaluate(js); await page.waitForTimeout(400); }
-  await page.screenshot({ path: out });
+  // scheme "both": light and dark in one image, light on the left.
+  const shots = [];
+  for (const sc of scheme === 'both' ? ['light', 'dark'] : [scheme]) {
+    const { page } = await lib.open(browser, { html, scheme: sc, store });
+    if (js) { await page.evaluate(js); await page.waitForTimeout(400); }
+    shots.push(await page.screenshot());
+  }
+  if (shots.length === 1) fs.writeFileSync(out, shots[0]);
+  else {
+    const side = await browser.newPage();
+    await side.setContent(`<body style="margin:0;display:flex">${shots.map(b => `<img src="data:image/png;base64,${b.toString('base64')}">`).join('')}</body>`);
+    await side.waitForFunction(() => [...document.images].every(i => i.complete));
+    await side.screenshot({ path: out, fullPage: true });
+  }
   console.log('saved', out);
   await browser.close();
 })();

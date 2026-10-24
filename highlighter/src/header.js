@@ -83,8 +83,8 @@
  * saving can be brought back from the message that appears.
  *
  * The script is off on every site until switched on: a sticky menu (top left, draggable; Alt+Shift+M
- * hides or shows it) holds the site's switch and, once it is on, a switch for each tool (selection
- * toolbar, shortcuts, pen, panels, undo and redo) and a button that hides the annotations.
+ * hides or shows it) holds the site's switch and, once it is on, a column of buttons: undo, redo, the two panels,
+ * hide annotations, pen, selection toolbar and shortcuts.
  *
  * The userscript manager's menu can also open the panel, copy as Markdown, clear this page,
  * forget annotations whose text is gone (when there are some), turn the script off for the

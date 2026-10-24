@@ -89,7 +89,7 @@
     }
 
     function openPanel({ focus = true } = {}) {
-        if (!running || !toolOn('panels')) return;
+        if (!running) return;
         syncLocation();
         const dark = computeDarkMode();
         ensureUi(panelOpen() && uiDark !== null ? uiDark : dark);
@@ -193,7 +193,7 @@
         syncSelectionButtons(panelSelectAll, panelCopy, panelErase, ticked, shown.length);
         const word = present.length === 1 ? 'annotation' : 'annotations';
         if (ticked) setPanelTitle(panelCount, `${ticked} of ${shown.length}`, ' selected', word);
-        else if (terms.length) setPanelTitle(panelCount, `${shown.length} of ${present.length}`, ` contain "${panelFilter.value.trim().replace(/\s+/g, ' ')}"`, word);
+        else if (terms.length) setPanelTitle(panelCount, `${shown.length} of ${present.length}`, ` contain`, word);
         else setPanelTitle(panelCount, String(present.length), ' found', word);
         const children = [];
         if (!present.length && !missing.length) {

@@ -154,7 +154,7 @@
     function updateToolbar() {
         toolbarTimer = null;
         if (!running || editor) return;
-        if (toolbarSwitchedOff() || !toolOn('toolbar')) { hideToolbar(); return; }
+        if (toolbarSwitchedOff()) { hideToolbar(); return; }
         const selected = toolbarSelection();
         const range = selected && cleanRange(selected);   // what an action would annotate
         const rect = range && range.getBoundingClientRect();
@@ -219,7 +219,7 @@
     // they do (the style all of them had removes them).
     function refreshGroupToolbar() {
         if (!toolbarGroups) return;   // not shown for them (text selected, faded, switched off)
-        if (!running || editor || toolbarSwitchedOff() || !toolOn('toolbar') || !selectedGroups.length || !showGroupToolbar(selectedInOrder())) hideToolbar();
+        if (!running || editor || toolbarSwitchedOff() || !selectedGroups.length || !showGroupToolbar(selectedInOrder())) hideToolbar();
     }
 
     // The toolbar goes centered over the selection, above its first line (below its last on a

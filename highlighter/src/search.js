@@ -44,7 +44,7 @@
     }
 
     function openEverything() {
-        if (!running || !toolOn('panels')) return;
+        if (!running) return;
         const dark = computeDarkMode();
         ensureUi(dark);
         everythingEl.setAttribute('data-theme', dark ? 'dark' : 'light');
@@ -187,7 +187,8 @@
             const tickedPages = new Set(everythingShown.filter(s => everythingChecked.has(s.id)).map(s => s.page.key)).size;
             setPanelTitle(everythingCount, ticked === 1 ? '1' : String(ticked), ` selected on ${pagesText(tickedPages)}`);
         } else {
-            setPanelTitle(everythingCount, terms.length ? `${shownItems} of ${total}` : String(total), ` on ${pagesText(terms.length ? visible.length : everythingPages.length)}`);
+            if (terms.length) setPanelTitle(everythingCount, `${shownItems} of ${total}`, ' contain', 'annotations');
+            else setPanelTitle(everythingCount, String(total), ` on ${pagesText(everythingPages.length)}`);
         }
         if (!rows.length) rows.push(makeEl('div', { class: 'empty', text: total ? 'Nothing matches.' : 'No annotations saved yet.' }));
         everythingList.replaceChildren(...rows);

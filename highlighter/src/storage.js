@@ -360,7 +360,7 @@
 
     // Read afresh each time, so a switch made in another tab counts here too.
     function keysSwitchedOff() {
-        return readSettings().keysOff === true || !toolOn('keys');
+        return readSettings().keysOff === true;
     }
 
     function setKeysSwitchedOff(off) {

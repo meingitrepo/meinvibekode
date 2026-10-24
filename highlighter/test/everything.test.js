@@ -44,7 +44,7 @@ async function main(browser) {
   await p.evaluate(() => window.__hl.everythingFilter.focus());
   await p.keyboard.type('#foxes'); await p.waitForTimeout(100);
   s = await state(p);
-  check('searching finds notes on any page, opened', s.pages.length === 1 && s.pages[0].open === 'true' && s.pages[0].items.length === 1 && s.count === '1 of 4 Annotations on 1 page', s);
+  check('searching finds notes on any page, opened', s.pages.length === 1 && s.pages[0].open === 'true' && s.pages[0].items.length === 1 && s.count === '1 of 4 annotations contain', s);
   await p.evaluate(() => { const f = window.__hl.everythingFilter; f.value = 'third'; f.dispatchEvent(new Event('input')); });
   s = await state(p);
   check('searching a site name shows its page', s.pages.length === 1 && s.pages[0].items[0].text === 'ancient words', s);

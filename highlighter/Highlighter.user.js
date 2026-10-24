@@ -83,8 +83,8 @@
  * saving can be brought back from the message that appears.
  *
  * The script is off on every site until switched on: a sticky menu (top left, draggable; Alt+Shift+M
- * hides or shows it) holds the site's switch and, once it is on, a switch for each tool (selection
- * toolbar, shortcuts, pen, panels, undo and redo) and a button that hides the annotations.
+ * hides or shows it) holds the site's switch and, once it is on, a column of buttons: undo, redo, the two panels,
+ * hide annotations, pen, selection toolbar and shortcuts.
  *
  * The userscript manager's menu can also open the panel, copy as Markdown, clear this page,
  * forget annotations whose text is gone (when there are some), turn the script off for the
@@ -2252,7 +2252,7 @@
 
     // Read afresh each time, so a switch made in another tab counts here too.
     function keysSwitchedOff() {
-        return readSettings().keysOff === true || !toolOn('keys');
+        return readSettings().keysOff === true;
     }
 
     function setKeysSwitchedOff(off) {
@@ -3076,12 +3076,10 @@
     }
 
     function undoLastAction() {
-        if (!toolOn('undo')) return;
         stepHistory(undoStack, redoStack);
     }
 
     function redoLastAction() {
-        if (!toolOn('undo')) return;
         stepHistory(redoStack, undoStack);
     }
 
@@ -3322,7 +3320,6 @@
         if (!COMMAND_CODES.has(code) && (e.shiftKey || !CODE_TO_STYLE.has(code))) return;
         syncLocation();
 
-        if ((code === 'KeyZ' || code === 'KeyY') && !toolOn('undo')) return;
         if (code === 'KeyZ' || code === 'KeyY') {
             const redo = code === 'KeyY' || e.shiftKey;
             if (!(redo ? redoStack : undoStack).length) return;
@@ -3567,6 +3564,10 @@
         warning_20_regular: 'M7.37013 3.55566C8.50949 1.48158 11.4895 1.48168 12.629 3.55566L18.1251 13.5605C19.2227 15.5597 17.7759 18.0046 15.4952 18.0049H4.5039C2.22288 18.0048 0.776902 15.5598 1.87498 13.5605L7.37013 3.55566ZM11.753 4.03711C10.9934 2.65441 9.00677 2.65456 8.24709 4.03711L2.75096 14.042C2.01908 15.3748 2.98329 17.0048 4.5039 17.0049H15.4952C17.0156 17.0046 17.9798 15.3747 17.2481 14.042L11.753 4.03711ZM10 12.75C10.4142 12.7501 10.75 13.0858 10.75 13.5C10.75 13.9141 10.4141 14.2499 10 14.25C9.58587 14.25 9.2501 13.9141 9.25003 13.5C9.25003 13.0858 9.58582 12.75 10 12.75ZM10 6.5C10.2761 6.50007 10.5 6.7239 10.5 7V11C10.5 11.276 10.2761 11.4999 10 11.5C9.72394 11.5 9.50011 11.2761 9.50003 11V7C9.50003 6.72386 9.72389 6.5 10 6.5Z',
         arrow_undo_20_regular: 'M5 2.5C5 2.22386 4.77614 2 4.5 2C4.22386 2 4 2.22386 4 2.5V7.4C4 7.73137 4.26863 8 4.6 8H9.5C9.77614 8 10 7.77614 10 7.5C10 7.22386 9.77614 7 9.5 7H5.90603L9.37872 3.98124C11.046 2.53191 13.5725 2.70858 15.0218 4.37584C16.4711 6.0431 16.2945 8.56959 14.6272 10.0189L6.45529 17.1226C6.24688 17.3038 6.2248 17.6196 6.40596 17.828C6.58713 18.0364 6.90294 18.0585 7.11135 17.8774L15.2833 10.7736C17.3673 8.96197 17.5882 5.80385 15.7765 3.71978C13.9648 1.63571 10.8067 1.41487 8.72266 3.22653L5 6.46259V2.5Z',
         error_circle_20_regular: 'M10 2C14.4183 2 18 5.58172 18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2ZM10 3C6.13401 3 3 6.13401 3 10C3 13.866 6.13401 17 10 17C13.866 17 17 13.866 17 10C17 6.13401 13.866 3 10 3ZM10 12.5C10.4142 12.5 10.75 12.8358 10.75 13.25C10.75 13.6642 10.4142 14 10 14C9.58579 14 9.25 13.6642 9.25 13.25C9.25 12.8358 9.58579 12.5 10 12.5ZM10 6C10.2455 6 10.4496 6.17688 10.4919 6.41012L10.5 6.5V11C10.5 11.2761 10.2761 11.5 10 11.5C9.75454 11.5 9.55039 11.3231 9.50806 11.0899L9.5 11V6.5C9.5 6.22386 9.72386 6 10 6Z',
+        arrow_redo_20_regular: 'M15.003 2.5C15.003 2.22386 15.2269 2 15.503 2C15.7792 2 16.003 2.22386 16.003 2.5V7.4C16.003 7.73137 15.7344 8 15.403 8H10.503C10.2269 8 10.003 7.77614 10.003 7.5C10.003 7.22386 10.2269 7 10.503 7H14.097L10.6243 3.98124C8.95706 2.53191 6.43056 2.70858 4.98124 4.37584C3.53191 6.0431 3.70858 8.56959 5.37584 10.0189L13.5477 17.1226C13.7562 17.3038 13.7782 17.6196 13.5971 17.828C13.4159 18.0364 13.1001 18.0585 12.8917 17.8774L4.71978 10.7736C2.63571 8.96197 2.41487 5.80385 4.22653 3.71978C6.03818 1.63571 9.1963 1.41487 11.2804 3.22653L15.003 6.46259V2.5Z',
+        text_bullet_list_20_regular: 'M3 5.5C3.55228 5.5 4 5.05228 4 4.5C4 3.94772 3.55228 3.5 3 3.5C2.44772 3.5 2 3.94772 2 4.5C2 5.05228 2.44772 5.5 3 5.5ZM6 4.5C6 4.22386 6.22386 4 6.5 4H17.5C17.7761 4 18 4.22386 18 4.5C18 4.77614 17.7761 5 17.5 5H6.5C6.22386 5 6 4.77614 6 4.5ZM6 9.5C6 9.22386 6.22386 9 6.5 9H17.5C17.7761 9 18 9.22386 18 9.5C18 9.77614 17.7761 10 17.5 10H6.5C6.22386 10 6 9.77614 6 9.5ZM6.5 14C6.22386 14 6 14.2239 6 14.5C6 14.7761 6.22386 15 6.5 15H17.5C17.7761 15 18 14.7761 18 14.5C18 14.2239 17.7761 14 17.5 14H6.5ZM4 14.5C4 15.0523 3.55228 15.5 3 15.5C2.44772 15.5 2 15.0523 2 14.5C2 13.9477 2.44772 13.5 3 13.5C3.55228 13.5 4 13.9477 4 14.5ZM3 10.5C3.55228 10.5 4 10.0523 4 9.5C4 8.94772 3.55228 8.5 3 8.5C2.44772 8.5 2 8.94772 2 9.5C2 10.0523 2.44772 10.5 3 10.5Z',
+        keyboard_20_regular: 'M5 12.5C5 12.2239 5.22386 12 5.5 12H14.5C14.7761 12 15 12.2239 15 12.5C15 12.7761 14.7761 13 14.5 13H5.5C5.22386 13 5 12.7761 5 12.5ZM11.5024 8.00468C11.9179 8.00468 12.2547 7.66783 12.2547 7.25231C12.2547 6.83679 11.9179 6.49994 11.5024 6.49994C11.0868 6.49994 10.75 6.83679 10.75 7.25231C10.75 7.66783 11.0868 8.00468 11.5024 8.00468ZM15.2547 7.25231C15.2547 7.66783 14.9179 8.00468 14.5024 8.00468C14.0868 8.00468 13.75 7.66783 13.75 7.25231C13.75 6.83679 14.0868 6.49994 14.5024 6.49994C14.9179 6.49994 15.2547 6.83679 15.2547 7.25231ZM5.50237 8.00468C5.91789 8.00468 6.25474 7.66783 6.25474 7.25231C6.25474 6.83679 5.91789 6.49994 5.50237 6.49994C5.08685 6.49994 4.75 6.83679 4.75 7.25231C4.75 7.66783 5.08685 8.00468 5.50237 8.00468ZM7.74998 9.75231C7.74998 10.1678 7.41313 10.5047 6.99761 10.5047C6.58209 10.5047 6.24524 10.1678 6.24524 9.75231C6.24524 9.33679 6.58209 8.99994 6.99761 8.99994C7.41313 8.99994 7.74998 9.33679 7.74998 9.75231ZM10.0024 10.5047C10.4179 10.5047 10.7547 10.1678 10.7547 9.75231C10.7547 9.33679 10.4179 8.99994 10.0024 8.99994C9.58685 8.99994 9.25 9.33679 9.25 9.75231C9.25 10.1678 9.58685 10.5047 10.0024 10.5047ZM13.7595 9.75231C13.7595 10.1678 13.4227 10.5047 13.0071 10.5047C12.5916 10.5047 12.2548 10.1678 12.2548 9.75231C12.2548 9.33679 12.5916 8.99994 13.0071 8.99994C13.4227 8.99994 13.7595 9.33679 13.7595 9.75231ZM8.50237 8.00468C8.91789 8.00468 9.25474 7.66783 9.25474 7.25231C9.25474 6.83679 8.91789 6.49994 8.50237 6.49994C8.08685 6.49994 7.75 6.83679 7.75 7.25231C7.75 7.66783 8.08685 8.00468 8.50237 8.00468ZM2 5.5C2 4.67157 2.67157 4 3.5 4H16.5C17.3284 4 18 4.67157 18 5.5V13.5C18 14.3284 17.3284 15 16.5 15H3.5C2.67157 15 2 14.3284 2 13.5V5.5ZM3.5 5C3.22386 5 3 5.22386 3 5.5V13.5C3 13.7761 3.22386 14 3.5 14H16.5C16.7761 14 17 13.7761 17 13.5V5.5C17 5.22386 16.7761 5 16.5 5H3.5Z',
+        eye_20_regular: 'M3.25909 11.6021C3.94254 8.32689 6.79437 6 10 6C13.2057 6 16.0574 8.32688 16.7409 11.6021C16.7974 11.8725 17.0622 12.0459 17.3325 11.9895C17.6029 11.933 17.7763 11.6682 17.7199 11.3979C16.9425 7.67312 13.6934 5 10 5C6.3066 5 3.05742 7.67311 2.28017 11.3979C2.22377 11.6682 2.39718 11.933 2.6675 11.9895C2.93782 12.0459 3.20268 11.8725 3.25909 11.6021ZM10 8C8.067 8 6.5 9.567 6.5 11.5C6.5 13.433 8.067 15 10 15C11.933 15 13.5 13.433 13.5 11.5C13.5 9.567 11.933 8 10 8ZM7.5 11.5C7.5 10.1193 8.61929 9 10 9C11.3807 9 12.5 10.1193 12.5 11.5C12.5 12.8807 11.3807 14 10 14C8.61929 14 7.5 12.8807 7.5 11.5Z',
         info_20_regular: 'M10.5 8.91a.5.5 0 0 0-1 .09v4.6a.5.5 0 0 0 1-.1V8.91m.3-2.16a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0M18 10a8 8 0 1 0-16 0 8 8 0 0 0 16 0M3 10a7 7 0 1 1 14 0 7 7 0 0 1-14 0'
     };
 
@@ -3877,15 +3878,13 @@
         .toast:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
         /* The pen's bar, centred at the top of the view. */
         .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
-        /* The sticky menu: a pill with the site switch, tools expanding below it. */
-        .sitemenu { padding: 4px 8px; width: max-content; max-width: calc(100vw - 24px); }
-        .sitemenu-head { display: flex; align-items: center; gap: 8px; min-height: 32px; cursor: grab; }
-        .sitemenu-title { flex: 1 1 auto; font-weight: 600; user-select: none; }
+        /* The sticky menu: the site switch, with a column of icon buttons expanding below it. */
+        .sitemenu { padding: 8px; width: max-content; cursor: grab; }
+        .sitemenu .btn { cursor: pointer; }
         .sitemenu-tools { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--durationNormal) var(--curveDecelerateMid), opacity var(--durationNormal) var(--curveDecelerateMid); }
         .sitemenu[data-open] .sitemenu-tools { grid-template-rows: 1fr; opacity: 1; }
-        .sitemenu-inner { overflow: hidden; min-height: 0; }
-        .sitemenu-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 32px; }
-        .switch { flex: none; position: relative; width: 40px; height: 20px; padding: 0; box-sizing: border-box; border: 1px solid var(--colorNeutralStrokeAccessible); border-radius: 10px; background: none; cursor: pointer; transition: background var(--durationNormal) var(--curveEasyEase), border-color var(--durationNormal) var(--curveEasyEase); }
+        .sitemenu-inner { overflow: hidden; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 4px; }
+        .switch { display: block; flex: none; position: relative; width: 40px; height: 20px; margin: 6px 0; padding: 0; box-sizing: border-box; border: 1px solid var(--colorNeutralStrokeAccessible); border-radius: 10px; background: none; cursor: pointer; transition: background var(--durationNormal) var(--curveEasyEase), border-color var(--durationNormal) var(--curveEasyEase); }
         .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--colorNeutralStrokeAccessible); transition: transform var(--durationNormal) var(--curveEasyEase), background var(--durationNormal) var(--curveEasyEase); }
         .switch[aria-checked="true"] { background: var(--colorCompoundBrandBackground); border-color: var(--colorCompoundBrandBackground); }
         .switch[aria-checked="true"]::after { transform: translateX(20px); background: var(--colorNeutralForegroundOnBrand, #fff); }
@@ -4412,7 +4411,7 @@
     function updateToolbar() {
         toolbarTimer = null;
         if (!running || editor) return;
-        if (toolbarSwitchedOff() || !toolOn('toolbar')) { hideToolbar(); return; }
+        if (toolbarSwitchedOff()) { hideToolbar(); return; }
         const selected = toolbarSelection();
         const range = selected && cleanRange(selected);   // what an action would annotate
         const rect = range && range.getBoundingClientRect();
@@ -4477,7 +4476,7 @@
     // they do (the style all of them had removes them).
     function refreshGroupToolbar() {
         if (!toolbarGroups) return;   // not shown for them (text selected, faded, switched off)
-        if (!running || editor || toolbarSwitchedOff() || !toolOn('toolbar') || !selectedGroups.length || !showGroupToolbar(selectedInOrder())) hideToolbar();
+        if (!running || editor || toolbarSwitchedOff() || !selectedGroups.length || !showGroupToolbar(selectedInOrder())) hideToolbar();
     }
 
     // The toolbar goes centered over the selection, above its first line (below its last on a
@@ -4628,7 +4627,6 @@
     }
 
     function togglePen() {
-        if (!toolOn('pen')) return;
         if (penKey) { setPen(null); showToast('Pen off'); return; }
         hideToolbar();
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
@@ -6045,7 +6043,7 @@
     }
 
     function openPanel({ focus = true } = {}) {
-        if (!running || !toolOn('panels')) return;
+        if (!running) return;
         syncLocation();
         const dark = computeDarkMode();
         ensureUi(panelOpen() && uiDark !== null ? uiDark : dark);
@@ -6149,7 +6147,7 @@
         syncSelectionButtons(panelSelectAll, panelCopy, panelErase, ticked, shown.length);
         const word = present.length === 1 ? 'annotation' : 'annotations';
         if (ticked) setPanelTitle(panelCount, `${ticked} of ${shown.length}`, ' selected', word);
-        else if (terms.length) setPanelTitle(panelCount, `${shown.length} of ${present.length}`, ` contain "${panelFilter.value.trim().replace(/\s+/g, ' ')}"`, word);
+        else if (terms.length) setPanelTitle(panelCount, `${shown.length} of ${present.length}`, ` contain`, word);
         else setPanelTitle(panelCount, String(present.length), ' found', word);
         const children = [];
         if (!present.length && !missing.length) {
@@ -6403,7 +6401,7 @@
     }
 
     function openEverything() {
-        if (!running || !toolOn('panels')) return;
+        if (!running) return;
         const dark = computeDarkMode();
         ensureUi(dark);
         everythingEl.setAttribute('data-theme', dark ? 'dark' : 'light');
@@ -6546,7 +6544,8 @@
             const tickedPages = new Set(everythingShown.filter(s => everythingChecked.has(s.id)).map(s => s.page.key)).size;
             setPanelTitle(everythingCount, ticked === 1 ? '1' : String(ticked), ` selected on ${pagesText(tickedPages)}`);
         } else {
-            setPanelTitle(everythingCount, terms.length ? `${shownItems} of ${total}` : String(total), ` on ${pagesText(terms.length ? visible.length : everythingPages.length)}`);
+            if (terms.length) setPanelTitle(everythingCount, `${shownItems} of ${total}`, ' contain', 'annotations');
+            else setPanelTitle(everythingCount, String(total), ` on ${pagesText(everythingPages.length)}`);
         }
         if (!rows.length) rows.push(makeEl('div', { class: 'empty', text: total ? 'Nothing matches.' : 'No annotations saved yet.' }));
         everythingList.replaceChildren(...rows);
@@ -6661,40 +6660,8 @@
         }
     });
     // =====================================================================
-    // The sticky menu: this site's switch, and the tools that expand from it
+    // The sticky menu: this site's switch on top, a column of tool buttons below it
     // =====================================================================
-
-    // The tools, each switched on or off for this site. On by default once the site is on.
-    const SITE_TOOLS = [
-        ['toolbar', 'Selection toolbar'],
-        ['keys', 'Shortcuts'],
-        ['pen', 'Pen mode'],
-        ['panels', 'Annotation panels'],
-        ['undo', 'Undo and redo']
-    ];
-
-    function toolsOff() {
-        const all = readSettings().toolsOff;
-        const list = all && typeof all === 'object' ? all[siteId()] : null;
-        return Array.isArray(list) ? list : [];
-    }
-
-    // Read afresh each time, so a switch made in another tab counts here too.
-    function toolOn(id) {
-        return !toolsOff().includes(id);
-    }
-
-    function setToolOn(id, on) {
-        const settings = readSettings();
-        const all = settings.toolsOff && typeof settings.toolsOff === 'object' ? settings.toolsOff : {};
-        const list = new Set(toolsOff());
-        if (on) list.delete(id);
-        else list.add(id);
-        if (list.size) all[siteId()] = Array.from(list);
-        else delete all[siteId()];
-        settings.toolsOff = all;
-        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
-    }
 
     function menuHiddenHere() {
         const list = readSettings().menuHiddenSites;
@@ -6715,46 +6682,91 @@
     menuHost.style.cssText = 'all: initial !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 0 !important; z-index: 2147483647 !important;';
     const menuRoot = menuHost.attachShadow({ mode: 'closed' });
     const menuMaster = makeEl('button', { type: 'button', class: 'switch', role: 'switch', 'aria-label': 'Highlighter on this site' });
-    const menuTitle = makeEl('span', { class: 'sitemenu-title', text: 'Highlighter' });
-    const menuClose = fluentButton({ icon: fluentIcon('dismiss_20_regular'), label: 'Hide the menu on this site' });
-    const menuHide = fluentButton({ icon: fluentIcon('eye_off_20_regular'), text: 'Hide annotations' });
-    const menuTools = makeEl('div', { class: 'sitemenu-tools' });
-    const menuRows = new Map(SITE_TOOLS.map(([id, label]) => {
-        const sw = makeEl('button', { type: 'button', class: 'switch', role: 'switch', 'aria-label': label });
-        sw.addEventListener('click', () => { setToolOn(id, !toolOn(id)); applyToolChange(id); renderSiteMenu(); });
-        return [id, sw];
-    }));
-    menuTools.append(makeEl('div', { class: 'sitemenu-inner' }, [
-        ...SITE_TOOLS.map(([id, label]) => makeEl('div', { class: 'sitemenu-row' }, [makeEl('span', { text: label }), menuRows.get(id)])),
-        makeEl('div', { class: 'sitemenu-row' }, [menuHide])
-    ]));
-    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'group', 'aria-label': 'Highlighter', hidden: '' }, [
-        makeEl('div', { class: 'sitemenu-head' }, [menuMaster, menuTitle, menuClose]),
-        menuTools
-    ]);
-    menuRoot.append(makeEl('style', { text: UI_CSS }), menuEl);
-    menuHost.addEventListener('keydown', e => e.stopPropagation());
-    menuHost.addEventListener('keyup', e => e.stopPropagation());
-    menuHost.addEventListener('keypress', e => e.stopPropagation());
-    menuEl.addEventListener('mousedown', e => e.preventDefault());
+    const menuClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
+    const menuTip = makeEl('div', { class: 'surface tip', role: 'tooltip', hidden: '' });
+    let menuTipTimer = null;
 
-    // A tool just switched off stops at once.
-    function applyToolChange(id) {
-        if (id === 'toolbar' && running) { hideToolbar(); updateToolbar(); }
-        if (id === 'pen' && !toolOn('pen') && penKey) setPen(null);
-        if (id === 'panels' && !toolOn('panels') && running) { closePanel(); closeEverything(); }
-        if (id === 'keys' && !toolOn('keys')) releaseAccessKeys();
-        refreshMenu();
+    function showMenuTip(button) {
+        clearTimeout(menuTipTimer);
+        menuTipTimer = setTimeout(() => {
+            if (!button.isConnected || menuEl.hidden) return;
+            menuTip.replaceChildren(document.createTextNode(button.dataset.label));
+            if (button.dataset.shortcut) menuTip.appendChild(makeEl('span', { class: 'kbd', text: button.dataset.shortcut }));
+            menuTip.hidden = false;
+            const r = button.getBoundingClientRect(), t = menuTip.getBoundingClientRect();
+            const right = r.right + 8 + t.width <= window.innerWidth;
+            menuTip.style.position = 'fixed';
+            menuTip.style.left = `${Math.round(right ? r.right + 8 : Math.max(4, r.left - 8 - t.width))}px`;
+            menuTip.style.top = `${Math.round(r.top + (r.height - t.height) / 2)}px`;
+        }, 250);
     }
+
+    function hideMenuTip() {
+        clearTimeout(menuTipTimer);
+        menuTip.hidden = true;
+    }
+
+    function menuButton(label, shortcut, icon, onClick) {
+        const b = fluentButton({ icon });
+        b.setAttribute('aria-label', shortcut ? `${label} (${shortcut})` : label);
+        b.dataset.label = label;
+        if (shortcut) { b.dataset.shortcut = shortcut; b.setAttribute('aria-keyshortcuts', shortcut); }
+        b.addEventListener('click', () => { hideMenuTip(); onClick(); renderSiteMenu(); });
+        b.addEventListener('mouseenter', () => showMenuTip(b));
+        b.addEventListener('mouseleave', hideMenuTip);
+        b.addEventListener('focus', () => { if (b.matches(':focus-visible')) showMenuTip(b); });
+        b.addEventListener('blur', hideMenuTip);
+        return b;
+    }
+
+    // id, label, shortcut, icon, click. Undo, redo and the two panels are actions; the pen, the
+    // selection toolbar and the shortcuts are modes, shown pressed while on.
+    const menuButtons = new Map([
+        ['undo', menuButton('Undo', 'Alt+Z', fluentIcon('arrow_undo_20_regular'), () => undoLastAction())],
+        ['redo', menuButton('Redo', 'Alt+Y', fluentIcon('arrow_redo_20_regular'), () => redoLastAction())],
+        ['panel', menuButton('Annotations', 'Alt+O', fluentIcon('text_bullet_list_20_regular'), () => togglePanel())],
+        ['search', menuButton('Search all pages', 'Alt+Shift+O', fluentIcon('search_20_regular'), () => toggleEverything())],
+        ['hide', menuButton('Hide annotations', 'Alt+V', fluentIcon('eye_off_20_regular'), () => toggleAnnotationsHidden())],
+        ['pen', menuButton('Pen', 'Alt+P', fluentIcon('edit_20_regular'), () => togglePen())],
+        ['toolbar', menuButton('Selection toolbar', 'Alt+T', fluentIcon('highlight_20_regular'), () => toggleToolbarSwitch())],
+        ['keys', menuButton('Shortcuts', 'Alt+Shift+K', fluentIcon('keyboard_20_regular'), () => toggleKeysSwitch())]
+    ]);
+    addMenuTip(menuMaster, 'Highlighter on this site');
+    addMenuTip(menuClose, 'Hide the menu', 'Alt+Shift+M');
+
+    function addMenuTip(b, label, shortcut) {
+        b.setAttribute('aria-label', shortcut ? `${label} (${shortcut})` : label);
+        b.dataset.label = label;
+        if (shortcut) b.dataset.shortcut = shortcut;
+        b.addEventListener('mouseenter', () => showMenuTip(b));
+        b.addEventListener('mouseleave', hideMenuTip);
+        b.addEventListener('click', hideMenuTip);
+    }
+
+    const menuTools = makeEl('div', { class: 'sitemenu-tools' }, [
+        makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons.values(), menuClose])
+    ]);
+    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'vertical', 'aria-label': 'Highlighter', hidden: '' }, [menuMaster, menuTools]);
+    menuRoot.append(makeEl('style', { text: UI_CSS }), menuEl, menuTip);
+    ['keydown', 'keyup', 'keypress'].forEach(type => menuHost.addEventListener(type, e => e.stopPropagation()));
+    menuEl.addEventListener('mousedown', e => e.preventDefault());
+    menuEl.addEventListener('pointerenter', () => renderSiteMenu());
 
     function renderSiteMenu() {
         const on = siteEnabled();
         menuMaster.setAttribute('aria-checked', String(on));
         menuEl.toggleAttribute('data-open', on);
-        menuTools.setAttribute('aria-hidden', String(!on));
         menuTools.toggleAttribute('inert', !on);
-        SITE_TOOLS.forEach(([id]) => menuRows.get(id).setAttribute('aria-checked', String(toolOn(id))));
-        menuHide.firstChild.nextSibling.textContent = annotationsHidden ? 'Show annotations' : 'Hide annotations';
+        const pressed = { pen: !!penKey, toolbar: !toolbarSwitchedOff(), keys: !keysSwitchedOff() };
+        menuButtons.forEach((b, id) => {
+            if (id in pressed) b.setAttribute('aria-pressed', String(pressed[id]));
+        });
+        menuButtons.get('undo').disabled = !undoStack.length;
+        menuButtons.get('redo').disabled = !redoStack.length;
+        const hideBtn = menuButtons.get('hide');
+        hideBtn.dataset.label = annotationsHidden ? 'Show annotations' : 'Hide annotations';
+        hideBtn.setAttribute('aria-label', `${hideBtn.dataset.label} (Alt+V)`);
+        hideBtn.setAttribute('aria-pressed', String(!!annotationsHidden));
         const dark = computeDarkMode();
         menuHost.setAttribute('data-theme', dark ? 'dark' : 'light');
         const hidden = menuHiddenHere();
@@ -6762,33 +6774,29 @@
         if (hidden) { if (menuHost.isConnected) menuHost.remove(); return; }
         if (!menuHost.isConnected) document.documentElement.appendChild(menuHost);
         menuHost.style.setProperty('--dpr', String(window.devicePixelRatio || 1));
-        const pos = readSettings().menuPos;
-        menuEl.style.left = pos && Number.isFinite(pos.left) ? `${Math.max(0, pos.left)}px` : '12px';
-        menuEl.style.top = pos && Number.isFinite(pos.top) ? `${Math.max(0, pos.top)}px` : '12px';
+        if (!menuEl.style.left) {
+            const pos = readSettings().menuPos;
+            menuEl.style.left = pos && Number.isFinite(pos.left) ? `${Math.max(0, pos.left)}px` : '12px';
+            menuEl.style.top = pos && Number.isFinite(pos.top) ? `${Math.max(0, pos.top)}px` : '12px';
+        }
     }
 
     menuMaster.addEventListener('click', () => toggleSite());
-    menuClose.addEventListener('click', () => { setMenuHidden(true); renderSiteMenu(); showSiteMenuToast(); });
-    menuHide.addEventListener('click', () => { if (running) { toggleAnnotationsHidden(); renderSiteMenu(); } });
+    menuClose.addEventListener('click', () => { setMenuHidden(true); renderSiteMenu(); refreshMenu(); if (running) showToast('Menu hidden. Alt+Shift+M brings it back'); });
 
-    function showSiteMenuToast() {
-        if (running) showToast('Menu hidden. Alt+Shift+M brings it back');
-    }
-
-    // Dragging the header moves it; the place is kept for every site.
-    menuEl.firstChild.addEventListener('pointerdown', e => {
+    // Dragging the menu by its edge moves it; the place is kept for every site.
+    menuEl.addEventListener('pointerdown', e => {
         if (e.button || e.target.closest('button')) return;
         e.preventDefault();
-        const head = menuEl.firstChild;
         const dx = parseFloat(menuEl.style.left) - e.clientX, dy = parseFloat(menuEl.style.top) - e.clientY;
         const move = m => {
             menuEl.style.left = `${Math.max(0, Math.min(window.innerWidth - 40, m.clientX + dx))}px`;
             menuEl.style.top = `${Math.max(0, Math.min(window.innerHeight - 40, m.clientY + dy))}px`;
         };
-        head.setPointerCapture(e.pointerId);
-        head.addEventListener('pointermove', move);
-        head.addEventListener('lostpointercapture', () => {
-            head.removeEventListener('pointermove', move);
+        menuEl.setPointerCapture(e.pointerId);
+        menuEl.addEventListener('pointermove', move);
+        menuEl.addEventListener('lostpointercapture', () => {
+            menuEl.removeEventListener('pointermove', move);
             const settings = readSettings();
             settings.menuPos = { left: parseFloat(menuEl.style.left), top: parseFloat(menuEl.style.top) };
             GM_setValue(SETTINGS_KEY, JSON.stringify(settings));

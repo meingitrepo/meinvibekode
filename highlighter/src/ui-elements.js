@@ -57,7 +57,7 @@
 
     // A panel's title: the counts in the quiet colour around the bold word "Annotations".
     function setPanelTitle(el, lead, tail) {
-        el.replaceChildren(lead + ' ', makeEl('span', { class: 'panel-title', text: lead === '1' ? 'Annotation' : 'Annotations' }), tail);
+        el.replaceChildren(lead + ' ', makeEl('span', { class: 'panel-title', text: lead === '1' ? 'Annotation' : 'Annotations' }), makeEl('span', { class: 'panel-tail', text: tail }));
     }
 
     // The annotations panel (see openPanel). Its list is built by renderPanel.

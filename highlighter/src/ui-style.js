@@ -123,6 +123,7 @@
         --colorBackgroundOverlay: rgba(0, 0, 0, 0.4);
         --shadow8: 0 0 2px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.14);
         --shadow16: 0 0 2px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.14);
+        --shadow64: 0 0 8px rgba(0, 0, 0, 0.12), 0 32px 64px rgba(0, 0, 0, 0.14);
         --borderRadiusSmall: 2px;
         --borderRadiusMedium: 4px;
         --borderRadiusXLarge: 8px;
@@ -181,6 +182,7 @@
         --colorBackgroundOverlay: rgba(0, 0, 0, 0.5);
         --shadow8: 0 0 2px rgba(0, 0, 0, 0.24), 0 4px 8px rgba(0, 0, 0, 0.28);
         --shadow16: 0 0 2px rgba(0, 0, 0, 0.24), 0 8px 16px rgba(0, 0, 0, 0.28);
+        --shadow64: 0 0 8px rgba(0, 0, 0, 0.2), 0 32px 64px rgba(0, 0, 0, 0.24);
         --toolbarDivider: #666666;
         --colorScheme: dark;
     `;
@@ -203,8 +205,8 @@
         .surface, .everything { color-scheme: var(--colorScheme); }
 
         /* Every floating panel (toolbar, note preview, note editor, toast, tooltip) shares this
-           surface: 8px corners and shadow8, matched to Edge's PDF selection toolbar. The toast and
-           tooltip use Fluent's 4px corners; the note preview, note editor and panels, a Fluent
+           surface: 8px corners and shadow8, matched to Edge's PDF selection toolbar. Tooltips use
+           Fluent's 4px corners; the note preview, note editor and panels, a Fluent
            Popover's 4px corners and shadow16. */
         .surface {
             position: fixed; top: 0; left: 0; box-sizing: border-box;
@@ -217,6 +219,7 @@
         /* In the page, not the window: they scroll with their text (see uiHost). */
         .surface.toolbar, .surface.tip, .surface.card, .surface.editor { position: absolute; }
         .surface.card, .surface.editor, .surface.panel { border-radius: var(--borderRadiusMedium); box-shadow: var(--shadow16); }
+        .surface.panel, .surface.everything-box { box-shadow: var(--shadow64); }
         @keyframes highlighter-enter { from { opacity: 0; transform: translateY(4px); } }
 
         .icon { display: block; flex: none; fill: currentColor; }
@@ -341,7 +344,7 @@
            panel, which would leave the box's border wider than the textarea and its scrollbar. */
         .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
         /* Toast */
-        .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; width: min(292px, calc(100vw - 32px)); padding: 12px; border-radius: var(--borderRadiusMedium); }
+        .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; min-width: min(292px, calc(100vw - 32px)); max-width: min(360px, calc(100vw - 32px)); padding: 12px; }
         .toast .icon { color: var(--colorNeutralForeground2); }
         .toast[data-intent="success"] > .icon { color: var(--colorPaletteGreenForeground1); }
         .toast[data-intent="warning"] > .icon { color: var(--colorPaletteDarkOrangeForeground1); }
@@ -368,10 +371,10 @@
         .pen-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
         .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
-        .everything-box { position: relative; display: flex; flex-direction: column; width: min(720px, 100%); max-height: 100%; padding: 16px 0 0; }
-        .everything-box .panel-header { margin: -8px 8px 8px 16px; }
-        .everything-box .field { flex: none; margin: 0 16px 8px; }
-        .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 12px 12px; overscroll-behavior: contain; }
+        .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 24px 0 0; }
+        .everything-box .panel-header { margin: -4px 18px 12px 24px; }
+        .everything-box .field { flex: none; margin: 0 24px 8px; }
+        .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 20px 24px; overscroll-behavior: contain; }
         .page-head {
             display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 6px 4px; border: 0;
             border-radius: var(--borderRadiusMedium); background: none; font: inherit; color: inherit; text-align: left;
@@ -390,11 +393,13 @@
         /* Annotations panel: a Fluent Drawer-like panel along the right edge, above the page. */
         .panel {
             top: 8px; left: auto; right: 8px; display: flex; flex-direction: column;
-            width: min(340px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
+            width: min(320px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
         }
         .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }
         .panel-title { font-weight: 600; color: var(--colorNeutralForeground1); }
-        .panel-count { flex: 1; color: var(--colorNeutralForeground3); }
+        /* Fluent's dialog and drawer title: 20/28; the tail ("selected on 3 pages") stays 14/20. */
+        .panel-count { flex: 1; font-size: 20px; line-height: 28px; color: var(--colorNeutralForeground3); }
+        .panel-tail { font-size: 14px; line-height: 20px; }
         .panel-actions { display: flex; align-items: center; gap: 2px; }
         .panel .field { flex: none; margin: 0 12px 8px; padding-bottom: 0; }
         .search-icon { position: absolute; left: 9px; top: 6px; color: var(--colorNeutralForeground3); pointer-events: none; }

@@ -3844,10 +3844,10 @@
         .pen-text { box-sizing: border-box; padding: 0 4px; white-space: nowrap; color: var(--colorNeutralForeground1); }
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
         .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
-        .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 24px 0 0; }
-        .everything-box .panel-header { margin: -4px 18px 12px 24px; }
-        .everything-box .field { flex: none; margin: 0 24px 8px; }
-        .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 20px 24px; overscroll-behavior: contain; }
+        .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 16px 0 0; }
+        .everything-box .panel-header { margin: 0 12px 8px 16px; }
+        .everything-box .field { flex: none; margin: 0 16px 8px; }
+        .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 12px 12px; overscroll-behavior: contain; }
         .page-head {
             display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 6px 4px; border: 0;
             border-radius: var(--borderRadiusMedium); background: none; font: inherit; color: inherit; text-align: left;
@@ -3866,11 +3866,11 @@
         /* Annotations panel: a Fluent Drawer-like panel along the right edge, above the page. */
         .panel {
             top: 8px; left: auto; right: 8px; display: flex; flex-direction: column;
-            width: min(320px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
+            width: min(360px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
         }
         .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }
         .panel-title { font-weight: 600; color: var(--colorNeutralForeground1); }
-        .panel-count { flex: 1; color: var(--colorNeutralForeground3); }
+        .panel-count { flex: 1; min-width: 0; white-space: nowrap; color: var(--colorNeutralForeground3); }
         .panel-actions { display: flex; align-items: center; gap: 2px; }
         .panel .field { flex: none; margin: 0 12px 8px; padding-bottom: 0; }
         .search-icon { position: absolute; left: 9px; top: 6px; color: var(--colorNeutralForeground3); pointer-events: none; }

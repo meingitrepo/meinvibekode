@@ -27,7 +27,9 @@ const SHADOW8 = /0px 4px 8px/, SHADOW16 = /0px 8px 16px/, SHADOW64 = /0px 32px 6
   await page.evaluate(() => window.__hl.openPanel()); await page.waitForTimeout(300);
   const panel = await css('window.__hl.panelEl', ['boxShadow']);
   const ptitle = await css('window.__hl.panelCount', ['fontSize', 'lineHeight']);
-  L.check('22: panel is 320px wide with a shadow64', panel.w === 320 && SHADOW64.test(panel.boxShadow), panel);
+  L.check('22: panel is 360px wide (widened so the selected count fits one line) with a shadow64', panel.w === 360 && SHADOW64.test(panel.boxShadow), panel);
+  const one = await page.evaluate(() => { const c = window.__hl.panelCount; c.replaceChildren('10/10 ', Object.assign(document.createElement('span'), { className: 'panel-title', textContent: 'Annotations' }), ' selected'); return c.getBoundingClientRect().height; });
+  L.check('2: "N/N Annotations selected" stays on one line', one === 20, one);
   L.check('22: panel title stays 14/20', ptitle.fontSize === '14px' && ptitle.lineHeight === '20px', ptitle);
   await page.evaluate(() => window.__hl.closePanel());
   await page.keyboard.press('Alt+Shift+O'); await page.waitForTimeout(400);
@@ -35,7 +37,7 @@ const SHADOW8 = /0px 4px 8px/, SHADOW16 = /0px 8px 16px/, SHADOW64 = /0px 32px 6
   const etitle = await css('window.__hl.everythingCount', ['fontSize', 'lineHeight']);
   const left = await page.evaluate(() => { const r = window.__hl; const b = r.everythingEl.firstElementChild.getBoundingClientRect(); return { count: r.everythingCount.getBoundingClientRect().left - b.left, field: r.everythingFilter.parentElement.getBoundingClientRect().left - b.left }; });
   L.check('22: dialog is 600px wide with a shadow64 and 8px corners', box.w === 600 && SHADOW64.test(box.boxShadow) && box.borderTopLeftRadius === '8px', box);
-  L.check('22: dialog content sits 16px in from the edge (tightened)', left.count === 16 && left.field === 16 && box.paddingTop === '16px', { box, left });
+  L.check('22: dialog content sits 16px (plus the 1px border) in from the edge (tightened)', left.count === 17 && left.field === 17 && box.paddingTop === '16px', { box, left });
   L.check('22: dialog title stays 14/20', etitle.fontSize === '14px' && etitle.lineHeight === '20px', etitle);
   // Shadow tokens equal Fluent tokens (createShadowTokens: ambient/key .12/.14 light, .24/.28 dark)
   const built = require('fs').readFileSync(require('path').join(__dirname, '..', 'Highlighter.user.js'), 'utf8');

@@ -391,11 +391,11 @@
         /* Annotations panel: a Fluent Drawer-like panel along the right edge, above the page. */
         .panel {
             top: 8px; left: auto; right: 8px; display: flex; flex-direction: column;
-            width: min(320px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
+            width: min(360px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
         }
         .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }
         .panel-title { font-weight: 600; color: var(--colorNeutralForeground1); }
-        .panel-count { flex: 1; color: var(--colorNeutralForeground3); }
+        .panel-count { flex: 1; min-width: 0; white-space: nowrap; color: var(--colorNeutralForeground3); }
         .panel-actions { display: flex; align-items: center; gap: 2px; }
         .panel .field { flex: none; margin: 0 12px 8px; padding-bottom: 0; }
         .search-icon { position: absolute; left: 9px; top: 6px; color: var(--colorNeutralForeground3); pointer-events: none; }

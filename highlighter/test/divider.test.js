@@ -26,7 +26,7 @@ const spaces = (p, bar) => p.evaluate(b => {
   await L.altKey(p, 'p');
   await p.waitForTimeout(100);
   const gaps = await p.evaluate(() => { const b = [...window.__hl.penEl.querySelectorAll('button')]; return b.slice(1).map((x, i) => Math.round(x.getBoundingClientRect().left - b[i].getBoundingClientRect().right)); });
-  check('buttons in a group touch, as in Fluent (only dividers separate)', gaps.filter(g => g !== 24 && g < 20).every(g => g === 0), gaps);
+  check('buttons in a group are 2px apart (spacingHorizontalXXS)', gaps.filter(g => g !== 24 && g < 20).every(g => g === 2), gaps);
   await browser.close();
   let fails = 0;
   results.forEach(([n, ok, i]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${n}${ok ? '' : ' :: ' + JSON.stringify(i)}`); if (!ok) fails++; });

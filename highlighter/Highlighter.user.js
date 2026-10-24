@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.131
+// @version      8.132
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3569,6 +3569,7 @@
         keyboard_20_regular: 'M5 12.5C5 12.2239 5.22386 12 5.5 12H14.5C14.7761 12 15 12.2239 15 12.5C15 12.7761 14.7761 13 14.5 13H5.5C5.22386 13 5 12.7761 5 12.5ZM11.5024 8.00468C11.9179 8.00468 12.2547 7.66783 12.2547 7.25231C12.2547 6.83679 11.9179 6.49994 11.5024 6.49994C11.0868 6.49994 10.75 6.83679 10.75 7.25231C10.75 7.66783 11.0868 8.00468 11.5024 8.00468ZM15.2547 7.25231C15.2547 7.66783 14.9179 8.00468 14.5024 8.00468C14.0868 8.00468 13.75 7.66783 13.75 7.25231C13.75 6.83679 14.0868 6.49994 14.5024 6.49994C14.9179 6.49994 15.2547 6.83679 15.2547 7.25231ZM5.50237 8.00468C5.91789 8.00468 6.25474 7.66783 6.25474 7.25231C6.25474 6.83679 5.91789 6.49994 5.50237 6.49994C5.08685 6.49994 4.75 6.83679 4.75 7.25231C4.75 7.66783 5.08685 8.00468 5.50237 8.00468ZM7.74998 9.75231C7.74998 10.1678 7.41313 10.5047 6.99761 10.5047C6.58209 10.5047 6.24524 10.1678 6.24524 9.75231C6.24524 9.33679 6.58209 8.99994 6.99761 8.99994C7.41313 8.99994 7.74998 9.33679 7.74998 9.75231ZM10.0024 10.5047C10.4179 10.5047 10.7547 10.1678 10.7547 9.75231C10.7547 9.33679 10.4179 8.99994 10.0024 8.99994C9.58685 8.99994 9.25 9.33679 9.25 9.75231C9.25 10.1678 9.58685 10.5047 10.0024 10.5047ZM13.7595 9.75231C13.7595 10.1678 13.4227 10.5047 13.0071 10.5047C12.5916 10.5047 12.2548 10.1678 12.2548 9.75231C12.2548 9.33679 12.5916 8.99994 13.0071 8.99994C13.4227 8.99994 13.7595 9.33679 13.7595 9.75231ZM8.50237 8.00468C8.91789 8.00468 9.25474 7.66783 9.25474 7.25231C9.25474 6.83679 8.91789 6.49994 8.50237 6.49994C8.08685 6.49994 7.75 6.83679 7.75 7.25231C7.75 7.66783 8.08685 8.00468 8.50237 8.00468ZM2 5.5C2 4.67157 2.67157 4 3.5 4H16.5C17.3284 4 18 4.67157 18 5.5V13.5C18 14.3284 17.3284 15 16.5 15H3.5C2.67157 15 2 14.3284 2 13.5V5.5ZM3.5 5C3.22386 5 3 5.22386 3 5.5V13.5C3 13.7761 3.22386 14 3.5 14H16.5C16.7761 14 17 13.7761 17 13.5V5.5C17 5.22386 16.7761 5 16.5 5H3.5Z',
         eye_20_regular: 'M3.25909 11.6021C3.94254 8.32689 6.79437 6 10 6C13.2057 6 16.0574 8.32688 16.7409 11.6021C16.7974 11.8725 17.0622 12.0459 17.3325 11.9895C17.6029 11.933 17.7763 11.6682 17.7199 11.3979C16.9425 7.67312 13.6934 5 10 5C6.3066 5 3.05742 7.67311 2.28017 11.3979C2.22377 11.6682 2.39718 11.933 2.6675 11.9895C2.93782 12.0459 3.20268 11.8725 3.25909 11.6021ZM10 8C8.067 8 6.5 9.567 6.5 11.5C6.5 13.433 8.067 15 10 15C11.933 15 13.5 13.433 13.5 11.5C13.5 9.567 11.933 8 10 8ZM7.5 11.5C7.5 10.1193 8.61929 9 10 9C11.3807 9 12.5 10.1193 12.5 11.5C12.5 12.8807 11.3807 14 10 14C8.61929 14 7.5 12.8807 7.5 11.5Z',
         arrow_reset_20_regular: 'M5.85355 2.64645C6.04882 2.84171 6.04882 3.15829 5.85355 3.35355L4.20711 5H11C14.3137 5 17 7.68629 17 11C17 14.3137 14.3137 17 11 17C7.68629 17 5 14.3137 5 11C5 10.7239 5.22386 10.5 5.5 10.5C5.77614 10.5 6 10.7239 6 11C6 13.7614 8.23858 16 11 16C13.7614 16 16 13.7614 16 11C16 8.23858 13.7614 6 11 6H4.20711L5.85355 7.64645C6.04882 7.84171 6.04882 8.15829 5.85355 8.35355C5.65829 8.54882 5.34171 8.54882 5.14645 8.35355L2.64645 5.85355C2.45118 5.65829 2.45118 5.34171 2.64645 5.14645L5.14645 2.64645C5.34171 2.45118 5.65829 2.45118 5.85355 2.64645Z',
+        power_20_regular: 'M10.5 2.5C10.5 2.22386 10.2761 2 10 2C9.72386 2 9.5 2.22386 9.5 2.5V8.5C9.5 8.77614 9.72386 9 10 9C10.2761 9 10.5 8.77614 10.5 8.5V2.5ZM13.7432 4.00089C13.5039 3.86307 13.1982 3.94533 13.0604 4.18462C12.9226 4.42391 13.0048 4.72962 13.2441 4.86744C14.4843 5.58172 15.454 6.68534 16.0029 8.00706C16.5518 9.32878 16.6492 10.7947 16.2798 12.1774C15.9105 13.5601 15.0952 14.7822 13.9603 15.6542C12.8255 16.5262 11.4346 16.9993 10.0034 17C8.57224 17.0008 7.18084 16.5291 6.04508 15.6584C4.90932 14.7876 4.0927 13.5663 3.72193 12.184C3.35115 10.8017 3.44695 9.33564 3.99446 8.01335C4.54197 6.69105 5.51058 5.58642 6.75 4.87084C6.98915 4.73277 7.07109 4.42697 6.93302 4.18783C6.79495 3.94868 6.48915 3.86674 6.25 4.00481C4.8199 4.83048 3.70227 6.10506 3.07053 7.63078C2.43879 9.15651 2.32825 10.8481 2.75607 12.443C3.18388 14.038 4.12613 15.4472 5.43663 16.4519C6.74712 17.4567 8.35259 18.0009 10.0039 18C11.6553 17.9991 13.2602 17.4533 14.5696 16.4472C15.879 15.441 16.8198 14.0309 17.246 12.4355C17.6721 10.84 17.5598 9.1486 16.9265 7.62353C16.2931 6.09847 15.1742 4.82507 13.7432 4.00089Z',
         info_20_regular: 'M10.5 8.91a.5.5 0 0 0-1 .09v4.6a.5.5 0 0 0 1-.1V8.91m.3-2.16a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0M18 10a8 8 0 1 0-16 0 8 8 0 0 0 16 0M3 10a7 7 0 1 1 14 0 7 7 0 0 1-14 0'
     };
 
@@ -3882,16 +3883,11 @@
         /* The sticky menu: the site switch, with a column of icon buttons expanding below it. */
         .sitemenu { padding: 8px; width: max-content; cursor: grab; }
         .sitemenu .btn { cursor: pointer; }
+        .sitemenu-master { display: flex; justify-content: center; }
         .sitemenu-tools { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--durationNormal) var(--curveDecelerateMid), opacity var(--durationNormal) var(--curveDecelerateMid); }
         .sitemenu[data-open] .sitemenu-tools { grid-template-rows: 1fr; opacity: 1; }
-        .sitemenu-inner { overflow: hidden; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 4px; }
-        .switch { display: block; flex: none; position: relative; width: 40px; height: 20px; margin: 6px 0; padding: 0; box-sizing: border-box; border: 1px solid var(--colorNeutralStrokeAccessible); border-radius: 10px; background: none; cursor: pointer; transition: background var(--durationNormal) var(--curveEasyEase), border-color var(--durationNormal) var(--curveEasyEase); }
-        .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--colorNeutralStrokeAccessible); transition: transform var(--durationNormal) var(--curveEasyEase), background var(--durationNormal) var(--curveEasyEase); }
-        .switch[aria-checked="true"] { background: var(--colorCompoundBrandBackground); border-color: var(--colorCompoundBrandBackground); }
-        .switch[aria-checked="true"]::after { transform: translateX(20px); background: var(--colorNeutralForegroundOnBrand, #fff); }
-        .switch:hover[aria-checked="true"] { background: var(--colorCompoundBrandBackgroundHover); }
-        .switch:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 1px; }
-        @media (prefers-reduced-motion: reduce) { .sitemenu-tools, .switch, .switch::after { transition: none; } }
+        .sitemenu-inner { overflow: hidden; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 2px; }
+        @media (prefers-reduced-motion: reduce) { .sitemenu-tools { transition: none; } }
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
         .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
         .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 12px 0 0; }
@@ -6742,7 +6738,7 @@
     const menuHost = makeEl('div', { [UI_ATTR]: '' });
     menuHost.style.cssText = 'all: initial !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 0 !important; z-index: 2147483647 !important;';
     const menuRoot = menuHost.attachShadow({ mode: 'closed' });
-    const menuMaster = makeEl('button', { type: 'button', class: 'switch', role: 'switch', 'aria-label': 'Highlighter on this site' });
+    const menuMaster = fluentButton({ icon: fluentIcon('power_20_regular') });   // pressed while the site is on
     const menuClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const menuTip = makeEl('div', { class: 'surface tip', role: 'tooltip', hidden: '' });
     let menuTipTimer = null;
@@ -6792,7 +6788,7 @@
         ['toolbar', menuButton('Selection toolbar', 'Alt+T', fluentIcon('highlight_20_regular'), () => toggleToolbarSwitch())],
         ['keys', menuButton('Shortcuts', 'Alt+Shift+K', fluentIcon('keyboard_20_regular'), () => toggleKeysSwitch())]
     ]);
-    addMenuTip(menuMaster, 'Highlighter on this site');
+    addMenuTip(menuMaster, 'Turn highlighter on for this site');
     addMenuTip(menuClose, 'Hide the menu', 'Alt+Shift+M');
 
     function addMenuTip(b, label, shortcut) {
@@ -6807,7 +6803,7 @@
     const menuTools = makeEl('div', { class: 'sitemenu-tools' }, [
         makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons.values(), menuClose])
     ]);
-    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'vertical', 'aria-label': 'Highlighter', hidden: '' }, [menuMaster, menuTools]);
+    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'vertical', 'aria-label': 'Highlighter', hidden: '' }, [makeEl('div', { class: 'sitemenu-master' }, [menuMaster]), menuTools]);
     menuRoot.append(makeEl('style', { text: UI_CSS }), menuEl, menuTip);
     ['keydown', 'keyup', 'keypress'].forEach(type => menuHost.addEventListener(type, e => e.stopPropagation()));
     menuEl.addEventListener('mousedown', e => e.preventDefault());
@@ -6815,7 +6811,9 @@
 
     function renderSiteMenu() {
         const on = siteEnabled();
-        menuMaster.setAttribute('aria-checked', String(on));
+        menuMaster.setAttribute('aria-pressed', String(on));
+        menuMaster.dataset.label = on ? 'Turn highlighter off for this site' : 'Turn highlighter on for this site';
+        menuMaster.setAttribute('aria-label', menuMaster.dataset.label);
         menuEl.toggleAttribute('data-open', on);
         menuTools.toggleAttribute('inert', !on);
         const pressed = { pen: !!penKey, toolbar: !toolbarSwitchedOff(), keys: !keysSwitchedOff() };

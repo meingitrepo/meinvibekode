@@ -5,7 +5,9 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"></head><body styl
 const btn = (page, id) => page.evaluate(i => window.__hl.menuButtons.get(i).click(), id);
 const state = page => page.evaluate(() => ({
   shown: !window.__hl.menuEl.hidden && getComputedStyle(window.__hl.menuEl).display !== 'none',
-  master: window.__hl.menuMaster.getAttribute('aria-checked'),
+  master: window.__hl.menuMaster.getAttribute('aria-pressed'),
+  masterIsIconButton: window.__hl.menuMaster.tagName === 'BUTTON' && /btn-icon/.test(window.__hl.menuMaster.className) && !!window.__hl.menuMaster.querySelector('svg') && !window.__hl.menuMaster.hasAttribute('role'),
+  masterLeft: Math.round(window.__hl.menuMaster.getBoundingClientRect().left), masterTop: Math.round(window.__hl.menuMaster.getBoundingClientRect().top),
   open: window.__hl.menuEl.hasAttribute('data-open'),
   ids: [...window.__hl.menuButtons.keys()].join(),
   pressed: Object.fromEntries([...window.__hl.menuButtons].map(([k, v]) => [k, v.getAttribute('aria-pressed')])),
@@ -23,6 +25,7 @@ const state = page => page.evaluate(() => ({
   L.check('default corner is top left', s.rect.left < 20 && s.rect.top < 20, s.rect);
   L.check('buttons are undo, redo, panel, search, hide, pen, toolbar, keys', s.ids === 'undo,redo,panel,search,hide,pen,toolbar,keys', s.ids);
   L.check('one column: same left, increasing tops', new Set(s.lefts).size === 1 && s.tops.every((t, i) => !i || t > s.tops[i - 1]), s);
+  L.check('the site switch is an icon button in the same column, above the rest', s.masterIsIconButton && s.masterLeft === s.lefts[0] && s.masterTop < s.tops[0], s);
   L.check('every button has a name with its shortcut', s.labels.every(l => /\(Alt\+/.test(l)), s.labels);
   await page.evaluate(() => window.__hl.menuMaster.click()); await page.waitForTimeout(400);
   s = await state(page);

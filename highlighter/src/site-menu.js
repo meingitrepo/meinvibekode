@@ -20,7 +20,7 @@
     const menuHost = makeEl('div', { [UI_ATTR]: '' });
     menuHost.style.cssText = 'all: initial !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 0 !important; z-index: 2147483647 !important;';
     const menuRoot = menuHost.attachShadow({ mode: 'closed' });
-    const menuMaster = makeEl('button', { type: 'button', class: 'switch', role: 'switch', 'aria-label': 'Highlighter on this site' });
+    const menuMaster = fluentButton({ icon: fluentIcon('power_20_regular') });   // pressed while the site is on
     const menuClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const menuTip = makeEl('div', { class: 'surface tip', role: 'tooltip', hidden: '' });
     let menuTipTimer = null;
@@ -70,7 +70,7 @@
         ['toolbar', menuButton('Selection toolbar', 'Alt+T', fluentIcon('highlight_20_regular'), () => toggleToolbarSwitch())],
         ['keys', menuButton('Shortcuts', 'Alt+Shift+K', fluentIcon('keyboard_20_regular'), () => toggleKeysSwitch())]
     ]);
-    addMenuTip(menuMaster, 'Highlighter on this site');
+    addMenuTip(menuMaster, 'Turn highlighter on for this site');
     addMenuTip(menuClose, 'Hide the menu', 'Alt+Shift+M');
 
     function addMenuTip(b, label, shortcut) {
@@ -85,7 +85,7 @@
     const menuTools = makeEl('div', { class: 'sitemenu-tools' }, [
         makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons.values(), menuClose])
     ]);
-    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'vertical', 'aria-label': 'Highlighter', hidden: '' }, [menuMaster, menuTools]);
+    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'vertical', 'aria-label': 'Highlighter', hidden: '' }, [makeEl('div', { class: 'sitemenu-master' }, [menuMaster]), menuTools]);
     menuRoot.append(makeEl('style', { text: UI_CSS }), menuEl, menuTip);
     ['keydown', 'keyup', 'keypress'].forEach(type => menuHost.addEventListener(type, e => e.stopPropagation()));
     menuEl.addEventListener('mousedown', e => e.preventDefault());
@@ -93,7 +93,9 @@
 
     function renderSiteMenu() {
         const on = siteEnabled();
-        menuMaster.setAttribute('aria-checked', String(on));
+        menuMaster.setAttribute('aria-pressed', String(on));
+        menuMaster.dataset.label = on ? 'Turn highlighter off for this site' : 'Turn highlighter on for this site';
+        menuMaster.setAttribute('aria-label', menuMaster.dataset.label);
         menuEl.toggleAttribute('data-open', on);
         menuTools.toggleAttribute('inert', !on);
         const pressed = { pen: !!penKey, toolbar: !toolbarSwitchedOff(), keys: !keysSwitchedOff() };

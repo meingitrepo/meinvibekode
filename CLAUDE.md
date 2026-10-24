@@ -14,7 +14,6 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - After PUSH run ONE Bash call: `highlighter/tools/release.sh "Theme" "What's in it" "Commit message"`. Never bump @version or commit the built file by hand. On conflict: keep BOTH sides, rerun related tests, rerun the script, mention the merged-in change. After pushing just say it's pushed.
 - One task per thread; new thread per follow-up/revert. Open-ended "find problems" asks: one ranking thread that fixes nothing, then one short thread per item Mhmd picks.
 - Economy: fewer turns is the main saving. Chain build, test and diffstat in one Bash call (`tools/verify.sh <keyword>`), batch independent commands, no subagents, at most one review pass, status updates at milestones only.
-- /agent-skills: only when the task is large or risky enough that the quality gain clearly outweighs the token cost (e.g. code-review before a big feature, doubt-driven-development before anything hard to undo); never on small tasks.
 
 ## Tests
 - `node highlighter/test/run.js <word>` (Playwright 1.56.1 + Chromium, `NODE_PATH=/opt/node22/lib/node_modules`).

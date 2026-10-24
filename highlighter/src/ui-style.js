@@ -452,6 +452,7 @@
         @media (hover: none) { .item .check { opacity: 1; } }
         .everything .item .check { margin: 10px 4px 0 8px; }
         .item { display: flex; align-items: flex-start; border-radius: var(--borderRadiusMedium); }
+        .item + .item { margin-top: 2px; }
         .item:has(.check:checked) { background: var(--colorSubtleBackgroundSelected); }
         .item:hover { background: var(--colorSubtleBackgroundHover); }
         .item:hover:active { background: var(--colorSubtleBackgroundPressed); }

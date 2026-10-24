@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.102
+// @version      8.103
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3926,6 +3926,7 @@
         @media (hover: none) { .item .check { opacity: 1; } }
         .everything .item .check { margin: 10px 4px 0 8px; }
         .item { display: flex; align-items: flex-start; border-radius: var(--borderRadiusMedium); }
+        .item + .item { margin-top: 2px; }
         .item:has(.check:checked) { background: var(--colorSubtleBackgroundSelected); }
         .item:hover { background: var(--colorSubtleBackgroundHover); }
         .item:hover:active { background: var(--colorSubtleBackgroundPressed); }

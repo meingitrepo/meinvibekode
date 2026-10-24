@@ -36,7 +36,7 @@ const SRC = GM + instrument(fs.readFileSync(SCRIPT, 'utf8'));
 // headers: response headers for the page (see fixes-8.0.test.js).
 async function open(browser, opts) {
   const { html, store = {}, scheme = 'light', url = 'https://example.test/a', viewport = { width: 1100, height: 700 }, wait = 800, routes = null, hidden = null } = opts;
-  const ctx = await browser.newContext({ colorScheme: scheme, viewport, deviceScaleFactor: +(process.env.DSF || 1) });
+  const ctx = await browser.newContext({ colorScheme: scheme, viewport: realDsf ? null : viewport, deviceScaleFactor: realDsf ? undefined : +(process.env.DSF || 1) });
   const page = await ctx.newPage();
   // HL_CPU=6 runs the page's CPU 6x slower, to find checks that only pass on a fast machine.
   if (+process.env.HL_CPU > 1) await (await ctx.newCDPSession(page)).send('Emulation.setCPUThrottlingRate', { rate: +process.env.HL_CPU });
@@ -91,7 +91,10 @@ const toolbar = page => page.evaluate(() => { const t = window.__hl.toolbarEl; i
     buttons: Array.from(t.querySelectorAll('button')).map(b => ({ label: b.dataset.label, pressed: b.getAttribute('aria-pressed'), bg: getComputedStyle(b).backgroundColor })) }; });
 let fails = 0;
 function check(name, ok, info) { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' :: ' + JSON.stringify(info)}`); if (!ok) fails++; }
-const launch = () => chromium.launch();
+// launch(dsf) starts the browser itself at that device scale factor, so layout and painting snap to real device
+// pixels; a context's deviceScaleFactor is only emulated and snaps to CSS pixels (dividers then paint 2 or 3 columns by phase).
+let realDsf = 0;
+const launch = (dsf = 0) => { realDsf = dsf; return chromium.launch(dsf ? { args: ['--force-device-scale-factor=' + dsf] } : {}); };
 const setHidden = (page, h) => page.evaluate(h => { window.__hidden = h; document.dispatchEvent(new Event('visibilitychange')); }, h);
 const menu = page => page.evaluate(() => Object.keys(window.__menu || {}));
 // The panel's rows: annotations ({ g, missing, text, note, meta }) and section titles ({ label }).

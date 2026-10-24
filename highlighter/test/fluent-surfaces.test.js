@@ -37,6 +37,10 @@ const SHADOW8 = /0px 4px 8px/, SHADOW16 = /0px 8px 16px/, SHADOW64 = /0px 32px 6
   L.check('22: dialog is 600px wide with a shadow64 and 8px corners', box.w === 600 && SHADOW64.test(box.boxShadow) && box.borderTopLeftRadius === '8px', box);
   L.check('22: dialog padding is 24px', box.paddingTop === '24px' || left.count === 24 && left.field === 24, { box, left });
   L.check('22: dialog title stays 14/20', etitle.fontSize === '14px' && etitle.lineHeight === '20px', etitle);
+  // Shadow tokens equal Fluent tokens (createShadowTokens: ambient/key .12/.14 light, .24/.28 dark)
+  const built = require('fs').readFileSync(require('path').join(__dirname, '..', 'Highlighter.user.js'), 'utf8');
+  L.check('shadow64 light is 0 0 8px .12, 0 32px 64px .14', built.includes('--shadow64: 0 0 8px rgba(0, 0, 0, 0.12), 0 32px 64px rgba(0, 0, 0, 0.14)'));
+  L.check('shadow64 dark is 0 0 8px .24, 0 32px 64px .28', built.includes('--shadow64: 0 0 8px rgba(0, 0, 0, 0.24), 0 32px 64px rgba(0, 0, 0, 0.28)'));
   // 25: pages are tree items, annotations their children
   const tree = await page.evaluate(() => { const r = window.__hl; let head = r.everythingList.querySelector('.page-head'); head.click(); head = r.everythingList.querySelector('.page-head'); const page = head.closest('.page');
     const item = r.everythingList.querySelector('.item');

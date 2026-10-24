@@ -182,7 +182,7 @@
         --colorBackgroundOverlay: rgba(0, 0, 0, 0.5);
         --shadow8: 0 0 2px rgba(0, 0, 0, 0.24), 0 4px 8px rgba(0, 0, 0, 0.28);
         --shadow16: 0 0 2px rgba(0, 0, 0, 0.24), 0 8px 16px rgba(0, 0, 0, 0.28);
-        --shadow64: 0 0 8px rgba(0, 0, 0, 0.2), 0 32px 64px rgba(0, 0, 0, 0.24);
+        --shadow64: 0 0 8px rgba(0, 0, 0, 0.24), 0 32px 64px rgba(0, 0, 0, 0.28);
         --toolbarDivider: #666666;
         --colorScheme: dark;
     `;

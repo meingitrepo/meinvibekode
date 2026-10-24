@@ -5,7 +5,6 @@ const results = [];
 const check = (name, ok, info) => results.push([name, ok, info]);
 // Device-pixel columns that are painted (not the surface colour) across each divider, read back from a screenshot.
 async function widths(browser, dsf, bar) {
-  process.env.DSF = dsf;
   const { ctx, page: p } = await L.open(browser, { html: HTML });
   if (bar === 'penEl') await L.altKey(p, 'p'); else await L.drag(p, '#p1', 'plain words');
   await p.waitForTimeout(700);
@@ -27,12 +26,12 @@ async function widths(browser, dsf, bar) {
   return out;
 }
 (async () => {
-  const browser = await L.launch();
   for (const bar of ['penEl', 'toolbarEl']) for (const dsf of [1, 1.25, 1.5, 1.75]) {
+    const browser = await L.launch(dsf);   // a real device scale factor, not an emulated one
     const w = await widths(browser, dsf, bar);
+    await browser.close();
     check(`${bar} dividers paint one width at DPR ${dsf}`, w.length >= 1 && new Set(w.map(s => String(s).split(':')[0])).size === 1, w);
   }
-  await browser.close();
   let fails = 0;
   results.forEach(([n, ok, i]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${n}${ok ? '' : ' :: ' + JSON.stringify(i)}`); if (!ok) fails++; });
   console.log(`FAILS ${fails}`);

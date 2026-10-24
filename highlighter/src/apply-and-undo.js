@@ -225,7 +225,7 @@
         if (!step) return;
         showToast(message, {
             icon,
-            action: { label: 'Undo', run: () => { if (undoStack[undoStack.length - 1] === step) undoLastAction(); } }
+            action: { label: 'Undo', shortcut: 'Alt+Z', run: () => { if (undoStack[undoStack.length - 1] === step) undoLastAction(); } }
         });
     }
 

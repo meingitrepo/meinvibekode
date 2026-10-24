@@ -80,6 +80,7 @@
     let panelItems = [];          // the annotations on the page the list shows, for Copy
     let panelCounts = '';         // see notePanelChanges
     let panelReturnFocus = null;
+    let panelAnchor = null;           // the row ticked last: Shift+click ticks the rows from it
     const panelChecked = new Set();   // the groups ticked in the list; the eraser in the header erases them
 
     function setPanelTheme(dark) {
@@ -176,6 +177,7 @@
         // Only what the list shows can stay ticked, so the eraser never takes what is out of sight.
         const shownGroups = new Set(shown.map(a => a.group));
         panelChecked.forEach(g => { if (!shownGroups.has(g)) panelChecked.delete(g); });
+        if (!panelChecked.size) panelAnchor = null;
         const signature = JSON.stringify([dark, terms, Array.from(panelChecked), present.length, missing.length, elsewhere.length,
             shown.map(describe), shownMissing.map(describe), shownElsewhere.map(describe)]);
         panelItems = shown;
@@ -189,8 +191,10 @@
 
         const ticked = shown.filter(a => panelChecked.has(a.group)).length;
         syncSelectionButtons(panelSelectAll, panelCopy, panelErase, ticked, shown.length);
-        if (ticked) setPanelTitle(panelCount, `${ticked}/${shown.length}`, ' selected');
-        else setPanelTitle(panelCount, terms.length ? `${shown.length} of ${present.length}` : String(present.length), '');
+        const word = present.length === 1 ? 'annotation' : 'annotations';
+        if (ticked) setPanelTitle(panelCount, `${ticked} of ${shown.length}`, ' selected', word);
+        else if (terms.length) setPanelTitle(panelCount, `${shown.length} of ${present.length}`, ` contain "${panelFilter.value.trim().replace(/\s+/g, ' ')}"`, word);
+        else setPanelTitle(panelCount, String(present.length), ' found', word);
         const children = [];
         if (!present.length && !missing.length) {
             children.push(makeEl('div', { class: 'empty', text: 'No annotations on this page yet. Select some text and press Alt+H to highlight it.' }));
@@ -309,6 +313,26 @@
         setSelectedGroups(panelItems.map(a => a.group).filter(g => panelChecked.has(g) && groupWrappers(g).length));
     }
 
+    // Windows-style selection in a list of rows (here and in the search): Ctrl+click toggles a row,
+    // Shift+click ticks every row between the one ticked last (the anchor) and this one. Returns the
+    // anchor to keep. `ids` are the rows in list order.
+    function tickRows(checked, ids, anchor, id, shift) {
+        if (shift && ids.includes(anchor) && ids.includes(id)) {
+            const a = ids.indexOf(anchor), b = ids.indexOf(id);
+            ids.slice(Math.min(a, b), Math.max(a, b) + 1).forEach(x => checked.add(x));
+            return anchor;
+        }
+        if (checked.has(id)) checked.delete(id); else checked.add(id);
+        return id;
+    }
+
+    function tickPanelRows(group, shift) {
+        const ids = Array.from(panelList.querySelectorAll('.item:not(.missing)')).map(el => el.dataset.group);
+        panelAnchor = tickRows(panelChecked, ids, panelAnchor, group, shift);
+        selectPanelTicked();
+        renderPanel();
+    }
+
     panelList.addEventListener('click', e => {
         const button = e.target.closest('[data-act]');
         const item = button && button.closest('[data-group]');
@@ -316,12 +340,16 @@
         const group = item.dataset.group;
         switch (button.dataset.act) {
             case 'jump':
+                // Once something is ticked, Ctrl or Shift on a row selects instead of jumping.
+                if (panelChecked.size && (e.shiftKey || e.ctrlKey || e.metaKey)) { tickPanelRows(group, e.shiftKey); break; }
                 syncLocation();
                 jumpToGroup(group);
                 setSelectedGroups([group]);
                 break;
             case 'check':
+                if (e.shiftKey && panelAnchor) { tickPanelRows(group, true); break; }
                 if (button.checked) panelChecked.add(group); else panelChecked.delete(group);
+                panelAnchor = group;
                 selectPanelTicked();
                 renderPanel();
                 break;
@@ -338,6 +366,13 @@
             return;
         }
         const focused = uiRoot.activeElement;
+        // Shift+Space ticks the rows from the last ticked one to the focused row.
+        const focusedRow = focused && focused !== panelFilter && focused.closest ? focused.closest('.item:not(.missing)') : null;
+        if (e.key === ' ' && e.shiftKey && focusedRow) {
+            e.preventDefault();
+            tickPanelRows(focusedRow.dataset.group, !!panelAnchor);
+            return;
+        }
         if (e.key === 'Enter' && focused === panelFilter) {
             e.preventDefault();
             const first = panelList.querySelector('button.item-main');
@@ -354,7 +389,14 @@
         const down = e.key === 'ArrowDown';
         if (i < 0) { (down ? rows[0] : rows[rows.length - 1]).focus(); return; }
         if (!down && i === 0) { panelFilter.focus(); return; }
-        const next = rows[Math.min(rows.length - 1, i + (down ? 1 : -1))];
+        let next = rows[Math.min(rows.length - 1, i + (down ? 1 : -1))];
+        // Shift+arrow ticks the row it moves to, with the ones between (the list is rebuilt, so the row is found again).
+        if (e.shiftKey && next !== rows[i]) {
+            const group = next.closest('.item').dataset.group;
+            if (!panelAnchor) tickPanelRows(rows[i].closest('.item').dataset.group, false);
+            tickPanelRows(group, true);
+            next = panelList.querySelector(`[data-group="${group}"] button.item-main`) || next;
+        }
         next.focus();
         next.scrollIntoView({ block: 'nearest' });
     });

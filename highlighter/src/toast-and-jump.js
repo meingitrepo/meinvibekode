@@ -8,8 +8,8 @@
 
     // A message in the bottom-right corner, as Fluent's Toast: an intent icon, a title, an
     // action and Dismiss. `icon` is a FLUENT_ICONS name; `intent`
-    // is info, success or warning; `action` adds a text button, { label, run, keep, keepEditor },
-    // such as Undo.
+    // is info, success or warning; `action` adds a button, { label, run, keep, keepEditor, tip, shortcut },
+    // such as Undo; `tip` and `shortcut` are for its tooltip.
     function showToast(message, { icon = 'info_20_regular', intent = 'info', action = null } = {}) {
         // A plain message doesn't take the place of one still offering Undo or Restore.
         if (!action && !toastEl.hidden && toastRun) return;
@@ -27,9 +27,16 @@
         toastKey = currentKey;
         toastKeep = !!(action && action.keep);
         toastKeepsEditor = !!(action && action.keepEditor);
-        // An action with an icon (Undo) is an icon button beside Dismiss; its label stays for screen readers.
         toastAction.textContent = action ? action.label : '';
         toastAction.hidden = !action;
+        if (action) {
+            // The tooltip: what it does, and its shortcut where it has one.
+            const tip = action.tip || action.label;
+            toastAction.dataset.label = tip;
+            toastAction.setAttribute('aria-label', action.shortcut ? `${tip} (${action.shortcut})` : tip);
+            if (action.shortcut) { toastAction.dataset.shortcut = action.shortcut; toastAction.setAttribute('aria-keyshortcuts', action.shortcut); }
+            else { delete toastAction.dataset.shortcut; toastAction.removeAttribute('aria-keyshortcuts'); }
+        }
         toastEl.hidden = true;
         void toastEl.offsetWidth;   // restart the entrance animation
         toastEl.hidden = false;
@@ -56,6 +63,8 @@
     let toastReturnFocus = null;  // what had focus before the toast's button took it
 
     toastDismiss.addEventListener('click', hideToast);
+    addLabelTip(toastDismiss, 'Dismiss', '', () => false);
+    addLabelTip(toastAction, 'Undo', '', () => false);   // its label and shortcut are set per toast, see showToast
 
     toastAction.addEventListener('click', () => {
         const run = toastRun;

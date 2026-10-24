@@ -323,6 +323,6 @@
     function toggleAnnotationsHidden() {
         const hide = !annotationsHidden;
         setAnnotationsHidden(hide);
-        if (hide) showToast('Annotations hidden', { icon: 'eye_off_20_regular', action: { label: 'Show', run: showAnnotations, keepEditor: true } });
+        if (hide) showToast('Annotations hidden', { icon: 'eye_off_20_regular', action: { label: 'Show', tip: 'Show annotations', shortcut: 'Alt+V', run: showAnnotations, keepEditor: true } });
     }
 

@@ -6,6 +6,7 @@
     let everythingPages = [];
     let everythingToggled = new Set();   // pages opened by a click (closed by one, while searching)
     let everythingReturnFocus = null;
+    let everythingAnchor = null;         // the row ticked last, for Shift+click
     let everythingChecked = new Set();   // ticked annotations, as `${page key}\n${group}`
     let everythingShown = [];            // [{ id, page, item }]: what the search shows, in every page, open or not
 
@@ -152,6 +153,7 @@
         everythingShown = visible.flatMap(v => v.items.map(a => ({ id: everythingId(v.p, a), page: v.p, item: a })));
         const shownIds = new Set(everythingShown.map(s => s.id));
         everythingChecked.forEach(id => { if (!shownIds.has(id)) everythingChecked.delete(id); });
+        if (!everythingChecked.size) everythingAnchor = null;
         visible.forEach(({ p, items }) => {
             // Pages start closed, and opened while searching; a click turns that round.
             const open = everythingToggled.has(p.key) !== terms.length > 0;
@@ -234,12 +236,38 @@
     addLabelTip(everythingClose, 'Close', 'Esc', () => true);
     // Clicking the dimmed page around it closes it.
     everythingEl.addEventListener('mousedown', e => { if (e.target === everythingEl) closeEverything(); });
+    // Ticks by the rows on screen, in list order (the rows of a closed page are not on screen).
+    function tickEverythingRows(id, shift) {
+        const ids = Array.from(everythingList.querySelectorAll('a.item-main')).map(a => `${a.dataset.key}\n${a.dataset.group}`);
+        everythingAnchor = tickRows(everythingChecked, ids, everythingAnchor, id, shift);
+    }
+
+    // Shift+Space ticks the rows from the last ticked one to the focused quote.
+    everythingList.addEventListener('keydown', e => {
+        const row = e.key === ' ' && e.shiftKey ? e.target.closest('a.item-main') : null;
+        if (!row) return;
+        e.preventDefault();
+        tickEverythingRows(`${row.dataset.key}\n${row.dataset.group}`, !!everythingAnchor);
+        renderEverything();
+    });
     everythingList.addEventListener('click', e => {
         const box = e.target.closest('input.check');
         if (box) {
             const link = box.closest('.item').querySelector('a.item-main');
             const id = `${link.dataset.key}\n${link.dataset.group}`;
-            if (box.checked) everythingChecked.add(id); else everythingChecked.delete(id);
+            if (e.shiftKey && everythingAnchor) tickEverythingRows(id, true);
+            else {
+                if (box.checked) everythingChecked.add(id); else everythingChecked.delete(id);
+                everythingAnchor = id;
+            }
+            renderEverything();
+            return;
+        }
+        // Once something is ticked, Ctrl or Shift on a quote selects instead of opening it.
+        const row = e.target.closest('a.item-main');
+        if (row && everythingChecked.size && (e.shiftKey || e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            tickEverythingRows(`${row.dataset.key}\n${row.dataset.group}`, e.shiftKey);
             renderEverything();
             return;
         }

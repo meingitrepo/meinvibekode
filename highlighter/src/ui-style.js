@@ -357,15 +357,10 @@
         .toast-text { font-weight: 600; }
         .toast .btn-icon { margin: -6px 0; }
         .toast .btn-icon:last-child { margin-right: -6px; }
-        /* The toast's action (Undo, Restore): a Fluent Link, as in Fluent's Toast. */
-        .link {
-            flex: none; margin: 0 0 0 4px; padding: 0; border: 0; border-radius: var(--borderRadiusMedium);
-            background: none; font: inherit; color: var(--colorBrandForegroundLink);
-            cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent;
-        }
-        .link:hover { color: var(--colorBrandForegroundLinkHover); text-decoration: underline; }
-        .link:active { color: var(--colorBrandForegroundLinkPressed); text-decoration: underline; }
-        .link:focus-visible { text-decoration: underline double; }
+        /* The toast's action (Undo, Restore, Show): Fluent's small subtle button. */
+        .btn-small { min-width: 0; height: 24px; padding: 0 8px; font-size: 12px; line-height: 16px; border-radius: var(--borderRadiusMedium); }
+        .toast .btn-small { flex: none; margin: -2px 0; }
+        .toast .btn-small[hidden] { display: none; }
         .toast:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
         /* The pen's bar, centred at the top of the view. */
         .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
@@ -412,7 +407,7 @@
         }
         .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }
         .panel-title { font-weight: 600; color: var(--colorNeutralForeground1); }
-        .panel-count { flex: 1; min-width: 0; white-space: nowrap; color: var(--colorNeutralForeground3); }
+        .panel-count { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--colorNeutralForeground3); }
         .panel-actions { display: flex; align-items: center; gap: 2px; }
         .panel .field { flex: none; margin: 0 12px 8px; padding-bottom: 0; }
         .search-icon { position: absolute; left: 9px; top: 6px; color: var(--colorNeutralForeground3); pointer-events: none; }
@@ -495,7 +490,6 @@
             .btn[aria-pressed="true"] { background: Highlight; }
             .btn[aria-pressed="true"] .icon { color: HighlightText; }
             .field::after { background: Highlight; }
-            .link, .link:hover, .link:active { color: LinkText; }
             .check { border-color: ButtonText; }
             .check:checked, .check:checked:hover, .check:checked:active { border-color: Highlight; background: Highlight; }
             .check:checked::after { background: HighlightText; }

@@ -50,13 +50,14 @@
     let toastIcon = fluentIcon('info_20_regular');   // replaced per message
     const toastText = makeEl('div', { class: 'toast-text' });
     const toastContent = makeEl('div', { class: 'toast-content' }, [toastText]);
-    const toastAction = makeEl('button', { type: 'button', class: 'link', hidden: '' });   // a text link
+    const toastAction = fluentButton({ text: 'Undo', size: 'small' });   // a small subtle button (Undo, Restore, Show); label and tooltip set per toast
+    toastAction.hidden = true;
     const toastDismiss = fluentButton({ icon: fluentIcon('dismiss_20_regular'), label: 'Dismiss' });
     const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastDismiss]);
 
     // A panel's title: the counts in the quiet colour around the bold word "Annotations".
-    function setPanelTitle(el, lead, tail) {
-        el.replaceChildren(lead + ' ', makeEl('span', { class: 'panel-title', text: lead === '1' ? 'Annotation' : 'Annotations' }), tail);
+    function setPanelTitle(el, lead, tail, word = lead === '1' ? 'Annotation' : 'Annotations') {
+        el.replaceChildren(lead + ' ', makeEl('span', { class: 'panel-title', text: word }), tail);
     }
 
     // The annotations panel (see openPanel). Its list is built by renderPanel.

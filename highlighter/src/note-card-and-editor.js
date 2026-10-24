@@ -494,7 +494,7 @@
     function offerDraft({ group, draft, records }, message = 'Note not saved', icon = 'edit_20_regular') {
         showToast(message, {
             icon,
-            action: { label: 'Restore', keep: true, run: () => restoreDraft(group, draft, records) }
+            action: { label: 'Restore', tip: 'Restore the note', keep: true, run: () => restoreDraft(group, draft, records) }
         });
     }
 

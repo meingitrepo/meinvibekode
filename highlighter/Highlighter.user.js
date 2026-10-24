@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.129
+// @version      8.130
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -683,7 +683,7 @@
     function toggleAnnotationsHidden() {
         const hide = !annotationsHidden;
         setAnnotationsHidden(hide);
-        if (hide) showToast('Annotations hidden', { icon: 'eye_off_20_regular', action: { label: 'Show', run: showAnnotations, keepEditor: true } });
+        if (hide) showToast('Annotations hidden', { icon: 'eye_off_20_regular', action: { label: 'Show', tip: 'Show annotations', shortcut: 'Alt+V', run: showAnnotations, keepEditor: true } });
     }
 
     // =====================================================================
@@ -2572,7 +2572,7 @@
         if (document.hidden) { noticeDue = true; return; }
         noticedKeys.add(currentKey);
         if (!toastEl.hidden && toastRun) return;
-        showToast(doneText('not found', missing), { icon: 'warning_20_regular', intent: 'warning', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
+        showToast(doneText('not found', missing), { icon: 'warning_20_regular', intent: 'warning', action: { label: 'Show', tip: 'Show what was not found', run: showMissingInPanel, keepEditor: true } });
     }
 
     function restoreHighlights() {
@@ -3036,7 +3036,7 @@
         if (!step) return;
         showToast(message, {
             icon,
-            action: { label: 'Undo', run: () => { if (undoStack[undoStack.length - 1] === step) undoLastAction(); } }
+            action: { label: 'Undo', shortcut: 'Alt+Z', run: () => { if (undoStack[undoStack.length - 1] === step) undoLastAction(); } }
         });
     }
 
@@ -3870,15 +3870,10 @@
         .toast-text { font-weight: 600; }
         .toast .btn-icon { margin: -6px 0; }
         .toast .btn-icon:last-child { margin-right: -6px; }
-        /* The toast's action (Undo, Restore): a Fluent Link, as in Fluent's Toast. */
-        .link {
-            flex: none; margin: 0 0 0 4px; padding: 0; border: 0; border-radius: var(--borderRadiusMedium);
-            background: none; font: inherit; color: var(--colorBrandForegroundLink);
-            cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent;
-        }
-        .link:hover { color: var(--colorBrandForegroundLinkHover); text-decoration: underline; }
-        .link:active { color: var(--colorBrandForegroundLinkPressed); text-decoration: underline; }
-        .link:focus-visible { text-decoration: underline double; }
+        /* The toast's action (Undo, Restore, Show): Fluent's small subtle button. */
+        .btn-small { min-width: 0; height: 24px; padding: 0 8px; font-size: 12px; line-height: 16px; border-radius: var(--borderRadiusMedium); }
+        .toast .btn-small { flex: none; margin: -2px 0; }
+        .toast .btn-small[hidden] { display: none; }
         .toast:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
         /* The pen's bar, centred at the top of the view. */
         .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
@@ -3925,7 +3920,7 @@
         }
         .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }
         .panel-title { font-weight: 600; color: var(--colorNeutralForeground1); }
-        .panel-count { flex: 1; min-width: 0; white-space: nowrap; color: var(--colorNeutralForeground3); }
+        .panel-count { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--colorNeutralForeground3); }
         .panel-actions { display: flex; align-items: center; gap: 2px; }
         .panel .field { flex: none; margin: 0 12px 8px; padding-bottom: 0; }
         .search-icon { position: absolute; left: 9px; top: 6px; color: var(--colorNeutralForeground3); pointer-events: none; }
@@ -4008,7 +4003,6 @@
             .btn[aria-pressed="true"] { background: Highlight; }
             .btn[aria-pressed="true"] .icon { color: HighlightText; }
             .field::after { background: Highlight; }
-            .link, .link:hover, .link:active { color: LinkText; }
             .check { border-color: ButtonText; }
             .check:checked, .check:checked:hover, .check:checked:active { border-color: Highlight; background: Highlight; }
             .check:checked::after { background: HighlightText; }
@@ -4076,13 +4070,14 @@
     let toastIcon = fluentIcon('info_20_regular');   // replaced per message
     const toastText = makeEl('div', { class: 'toast-text' });
     const toastContent = makeEl('div', { class: 'toast-content' }, [toastText]);
-    const toastAction = makeEl('button', { type: 'button', class: 'link', hidden: '' });   // a text link
+    const toastAction = fluentButton({ text: 'Undo', size: 'small' });   // a small subtle button (Undo, Restore, Show); label and tooltip set per toast
+    toastAction.hidden = true;
     const toastDismiss = fluentButton({ icon: fluentIcon('dismiss_20_regular'), label: 'Dismiss' });
     const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastDismiss]);
 
     // A panel's title: the counts in the quiet colour around the bold word "Annotations".
-    function setPanelTitle(el, lead, tail) {
-        el.replaceChildren(lead + ' ', makeEl('span', { class: 'panel-title', text: lead === '1' ? 'Annotation' : 'Annotations' }), tail);
+    function setPanelTitle(el, lead, tail, word = lead === '1' ? 'Annotation' : 'Annotations') {
+        el.replaceChildren(lead + ' ', makeEl('span', { class: 'panel-title', text: word }), tail);
     }
 
     // The annotations panel (see openPanel). Its list is built by renderPanel.
@@ -5164,7 +5159,7 @@
     function offerDraft({ group, draft, records }, message = 'Note not saved', icon = 'edit_20_regular') {
         showToast(message, {
             icon,
-            action: { label: 'Restore', keep: true, run: () => restoreDraft(group, draft, records) }
+            action: { label: 'Restore', tip: 'Restore the note', keep: true, run: () => restoreDraft(group, draft, records) }
         });
     }
 
@@ -5229,8 +5224,8 @@
 
     // A message in the bottom-right corner, as Fluent's Toast: an intent icon, a title, an
     // action and Dismiss. `icon` is a FLUENT_ICONS name; `intent`
-    // is info, success or warning; `action` adds a text button, { label, run, keep, keepEditor },
-    // such as Undo.
+    // is info, success or warning; `action` adds a button, { label, run, keep, keepEditor, tip, shortcut },
+    // such as Undo; `tip` and `shortcut` are for its tooltip.
     function showToast(message, { icon = 'info_20_regular', intent = 'info', action = null } = {}) {
         // A plain message doesn't take the place of one still offering Undo or Restore.
         if (!action && !toastEl.hidden && toastRun) return;
@@ -5248,9 +5243,16 @@
         toastKey = currentKey;
         toastKeep = !!(action && action.keep);
         toastKeepsEditor = !!(action && action.keepEditor);
-        // An action with an icon (Undo) is an icon button beside Dismiss; its label stays for screen readers.
         toastAction.textContent = action ? action.label : '';
         toastAction.hidden = !action;
+        if (action) {
+            // The tooltip: what it does, and its shortcut where it has one.
+            const tip = action.tip || action.label;
+            toastAction.dataset.label = tip;
+            toastAction.setAttribute('aria-label', action.shortcut ? `${tip} (${action.shortcut})` : tip);
+            if (action.shortcut) { toastAction.dataset.shortcut = action.shortcut; toastAction.setAttribute('aria-keyshortcuts', action.shortcut); }
+            else { delete toastAction.dataset.shortcut; toastAction.removeAttribute('aria-keyshortcuts'); }
+        }
         toastEl.hidden = true;
         void toastEl.offsetWidth;   // restart the entrance animation
         toastEl.hidden = false;
@@ -5277,6 +5279,8 @@
     let toastReturnFocus = null;  // what had focus before the toast's button took it
 
     toastDismiss.addEventListener('click', hideToast);
+    addLabelTip(toastDismiss, 'Dismiss', '', () => false);
+    addLabelTip(toastAction, 'Undo', '', () => false);   // its label and shortcut are set per toast, see showToast
 
     toastAction.addEventListener('click', () => {
         const run = toastRun;
@@ -6032,6 +6036,7 @@
     let panelItems = [];          // the annotations on the page the list shows, for Copy
     let panelCounts = '';         // see notePanelChanges
     let panelReturnFocus = null;
+    let panelAnchor = null;           // the row ticked last: Shift+click ticks the rows from it
     const panelChecked = new Set();   // the groups ticked in the list; the eraser in the header erases them
 
     function setPanelTheme(dark) {
@@ -6128,6 +6133,7 @@
         // Only what the list shows can stay ticked, so the eraser never takes what is out of sight.
         const shownGroups = new Set(shown.map(a => a.group));
         panelChecked.forEach(g => { if (!shownGroups.has(g)) panelChecked.delete(g); });
+        if (!panelChecked.size) panelAnchor = null;
         const signature = JSON.stringify([dark, terms, Array.from(panelChecked), present.length, missing.length, elsewhere.length,
             shown.map(describe), shownMissing.map(describe), shownElsewhere.map(describe)]);
         panelItems = shown;
@@ -6141,8 +6147,10 @@
 
         const ticked = shown.filter(a => panelChecked.has(a.group)).length;
         syncSelectionButtons(panelSelectAll, panelCopy, panelErase, ticked, shown.length);
-        if (ticked) setPanelTitle(panelCount, `${ticked}/${shown.length}`, ' selected');
-        else setPanelTitle(panelCount, terms.length ? `${shown.length} of ${present.length}` : String(present.length), '');
+        const word = present.length === 1 ? 'annotation' : 'annotations';
+        if (ticked) setPanelTitle(panelCount, `${ticked} of ${shown.length}`, ' selected', word);
+        else if (terms.length) setPanelTitle(panelCount, `${shown.length} of ${present.length}`, ` contain "${panelFilter.value.trim().replace(/\s+/g, ' ')}"`, word);
+        else setPanelTitle(panelCount, String(present.length), ' found', word);
         const children = [];
         if (!present.length && !missing.length) {
             children.push(makeEl('div', { class: 'empty', text: 'No annotations on this page yet. Select some text and press Alt+H to highlight it.' }));
@@ -6261,6 +6269,26 @@
         setSelectedGroups(panelItems.map(a => a.group).filter(g => panelChecked.has(g) && groupWrappers(g).length));
     }
 
+    // Windows-style selection in a list of rows (here and in the search): Ctrl+click toggles a row,
+    // Shift+click ticks every row between the one ticked last (the anchor) and this one. Returns the
+    // anchor to keep. `ids` are the rows in list order.
+    function tickRows(checked, ids, anchor, id, shift) {
+        if (shift && ids.includes(anchor) && ids.includes(id)) {
+            const a = ids.indexOf(anchor), b = ids.indexOf(id);
+            ids.slice(Math.min(a, b), Math.max(a, b) + 1).forEach(x => checked.add(x));
+            return anchor;
+        }
+        if (checked.has(id)) checked.delete(id); else checked.add(id);
+        return id;
+    }
+
+    function tickPanelRows(group, shift) {
+        const ids = Array.from(panelList.querySelectorAll('.item:not(.missing)')).map(el => el.dataset.group);
+        panelAnchor = tickRows(panelChecked, ids, panelAnchor, group, shift);
+        selectPanelTicked();
+        renderPanel();
+    }
+
     panelList.addEventListener('click', e => {
         const button = e.target.closest('[data-act]');
         const item = button && button.closest('[data-group]');
@@ -6268,12 +6296,16 @@
         const group = item.dataset.group;
         switch (button.dataset.act) {
             case 'jump':
+                // Once something is ticked, Ctrl or Shift on a row selects instead of jumping.
+                if (panelChecked.size && (e.shiftKey || e.ctrlKey || e.metaKey)) { tickPanelRows(group, e.shiftKey); break; }
                 syncLocation();
                 jumpToGroup(group);
                 setSelectedGroups([group]);
                 break;
             case 'check':
+                if (e.shiftKey && panelAnchor) { tickPanelRows(group, true); break; }
                 if (button.checked) panelChecked.add(group); else panelChecked.delete(group);
+                panelAnchor = group;
                 selectPanelTicked();
                 renderPanel();
                 break;
@@ -6290,6 +6322,13 @@
             return;
         }
         const focused = uiRoot.activeElement;
+        // Shift+Space ticks the rows from the last ticked one to the focused row.
+        const focusedRow = focused && focused !== panelFilter && focused.closest ? focused.closest('.item:not(.missing)') : null;
+        if (e.key === ' ' && e.shiftKey && focusedRow) {
+            e.preventDefault();
+            tickPanelRows(focusedRow.dataset.group, !!panelAnchor);
+            return;
+        }
         if (e.key === 'Enter' && focused === panelFilter) {
             e.preventDefault();
             const first = panelList.querySelector('button.item-main');
@@ -6306,7 +6345,14 @@
         const down = e.key === 'ArrowDown';
         if (i < 0) { (down ? rows[0] : rows[rows.length - 1]).focus(); return; }
         if (!down && i === 0) { panelFilter.focus(); return; }
-        const next = rows[Math.min(rows.length - 1, i + (down ? 1 : -1))];
+        let next = rows[Math.min(rows.length - 1, i + (down ? 1 : -1))];
+        // Shift+arrow ticks the row it moves to, with the ones between (the list is rebuilt, so the row is found again).
+        if (e.shiftKey && next !== rows[i]) {
+            const group = next.closest('.item').dataset.group;
+            if (!panelAnchor) tickPanelRows(rows[i].closest('.item').dataset.group, false);
+            tickPanelRows(group, true);
+            next = panelList.querySelector(`[data-group="${group}"] button.item-main`) || next;
+        }
         next.focus();
         next.scrollIntoView({ block: 'nearest' });
     });
@@ -6319,6 +6365,7 @@
     let everythingPages = [];
     let everythingToggled = new Set();   // pages opened by a click (closed by one, while searching)
     let everythingReturnFocus = null;
+    let everythingAnchor = null;         // the row ticked last, for Shift+click
     let everythingChecked = new Set();   // ticked annotations, as `${page key}\n${group}`
     let everythingShown = [];            // [{ id, page, item }]: what the search shows, in every page, open or not
 
@@ -6465,6 +6512,7 @@
         everythingShown = visible.flatMap(v => v.items.map(a => ({ id: everythingId(v.p, a), page: v.p, item: a })));
         const shownIds = new Set(everythingShown.map(s => s.id));
         everythingChecked.forEach(id => { if (!shownIds.has(id)) everythingChecked.delete(id); });
+        if (!everythingChecked.size) everythingAnchor = null;
         visible.forEach(({ p, items }) => {
             // Pages start closed, and opened while searching; a click turns that round.
             const open = everythingToggled.has(p.key) !== terms.length > 0;
@@ -6547,12 +6595,38 @@
     addLabelTip(everythingClose, 'Close', 'Esc', () => true);
     // Clicking the dimmed page around it closes it.
     everythingEl.addEventListener('mousedown', e => { if (e.target === everythingEl) closeEverything(); });
+    // Ticks by the rows on screen, in list order (the rows of a closed page are not on screen).
+    function tickEverythingRows(id, shift) {
+        const ids = Array.from(everythingList.querySelectorAll('a.item-main')).map(a => `${a.dataset.key}\n${a.dataset.group}`);
+        everythingAnchor = tickRows(everythingChecked, ids, everythingAnchor, id, shift);
+    }
+
+    // Shift+Space ticks the rows from the last ticked one to the focused quote.
+    everythingList.addEventListener('keydown', e => {
+        const row = e.key === ' ' && e.shiftKey ? e.target.closest('a.item-main') : null;
+        if (!row) return;
+        e.preventDefault();
+        tickEverythingRows(`${row.dataset.key}\n${row.dataset.group}`, !!everythingAnchor);
+        renderEverything();
+    });
     everythingList.addEventListener('click', e => {
         const box = e.target.closest('input.check');
         if (box) {
             const link = box.closest('.item').querySelector('a.item-main');
             const id = `${link.dataset.key}\n${link.dataset.group}`;
-            if (box.checked) everythingChecked.add(id); else everythingChecked.delete(id);
+            if (e.shiftKey && everythingAnchor) tickEverythingRows(id, true);
+            else {
+                if (box.checked) everythingChecked.add(id); else everythingChecked.delete(id);
+                everythingAnchor = id;
+            }
+            renderEverything();
+            return;
+        }
+        // Once something is ticked, Ctrl or Shift on a quote selects instead of opening it.
+        const row = e.target.closest('a.item-main');
+        if (row && everythingChecked.size && (e.shiftKey || e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            tickEverythingRows(`${row.dataset.key}\n${row.dataset.group}`, e.shiftKey);
             renderEverything();
             return;
         }

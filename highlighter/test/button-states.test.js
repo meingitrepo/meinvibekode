@@ -1,4 +1,4 @@
-// Fluent v9 button states: pressed (hover or key-held), Regular to Filled icon swap, selected, disabled.
+// Fluent v9 button states: pressed (hover or key-held), Regular icon kept on hover, selected, disabled.
 const L = require('./lib');
 const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title></head><body style="font:18px/1.6 serif;margin:40px"><p id="p1">Some plain words to mark.</p></body></html>`;
 const results = [];
@@ -10,14 +10,14 @@ async function states(browser) {
   const info = () => p.evaluate(() => {
     const b = [...window.__hl.penEl.querySelectorAll('button')].find(x => x.dataset.label === 'Eraser');
     const cs = getComputedStyle(b);
-    return { bg: cs.backgroundColor, fg: cs.color, f: getComputedStyle(b.querySelector('.ic-f')).display, r: getComputedStyle(b.querySelector('.ic-r')).display };
+    return { bg: cs.backgroundColor, fg: cs.color, f: b.querySelectorAll('.ic-f').length, r: getComputedStyle(b.querySelector('.ic-r')).display };
   });
   const rest = await info();
-  check('at rest the Regular icon shows, not the Filled one', rest.r !== 'none' && rest.f === 'none', rest);
+  check('at rest the Regular icon shows and no Filled path exists', rest.r !== 'none' && rest.f === 0, rest);
   const box = await p.evaluate(() => { const r = [...window.__hl.penEl.querySelectorAll('button')].find(x => x.dataset.label === 'Eraser').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
   await p.mouse.move(box.x, box.y); await p.waitForTimeout(250);
   const hov = await info();
-  check('hover swaps to the Filled icon', hov.f !== 'none' && hov.r === 'none', hov);
+  check('hover keeps the Regular icon (no Filled swap)', hov.f === 0 && hov.r !== 'none', hov);
   await p.mouse.down(); await p.waitForTimeout(250);
   const prs = await info();
   check('pressed changes the background from hover', prs.bg !== hov.bg, { hov, prs });
@@ -33,7 +33,7 @@ async function states(browser) {
   await ctx.close();
 }
 
-// Hovered or pressed, every toolbar icon keeps a visible outline (Regular, or Filled where one exists) that contrasts with the hover background.
+// Hovered or pressed, every toolbar icon keeps a visible outline (Regular) that contrasts with the hover background.
 async function hoverVisible(browser) {
   for (const scheme of ['light', 'dark']) {
     const html = HTML.replace('<body style="', `<body style="${scheme === 'dark' ? 'background:#121212;color:#e8e8e8;' : ''}`);

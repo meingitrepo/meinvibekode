@@ -24,6 +24,10 @@ const PRESETS = {
   const shots = [];
   for (const sc of scheme === 'both' ? ['light', 'dark'] : [scheme]) {
     const { page } = await lib.open(browser, { html, scheme: sc, store });
+    // The playground themes itself with html.dark, not prefers-color-scheme, so a dark shot must set the class too.
+    if (sc === 'dark') { await page.evaluate(() => document.documentElement.classList.add('dark')); await page.waitForTimeout(300); }
+    const luma = await page.evaluate(() => { const m = getComputedStyle(document.documentElement).backgroundColor.match(/\d+/g).map(Number); return (m[0] + m[1] + m[2]) / 3; });
+    if ((sc === 'dark') !== (luma < 128)) { console.error(`shot is not ${sc}: page background luma ${luma}`); process.exit(1); }
     if (js) { await page.evaluate(js); await page.waitForTimeout(400); }
     shots.push(await page.screenshot());
   }

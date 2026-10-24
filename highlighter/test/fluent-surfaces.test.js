@@ -28,7 +28,7 @@ const SHADOW8 = /0px 4px 8px/, SHADOW16 = /0px 8px 16px/, SHADOW64 = /0px 32px 6
   const panel = await css('window.__hl.panelEl', ['boxShadow']);
   const ptitle = await css('window.__hl.panelCount', ['fontSize', 'lineHeight']);
   L.check('22: panel is 320px wide with a shadow64', panel.w === 320 && SHADOW64.test(panel.boxShadow), panel);
-  L.check('22: panel title is 20/28', ptitle.fontSize === '20px' && ptitle.lineHeight === '28px', ptitle);
+  L.check('22: panel title stays 14/20', ptitle.fontSize === '14px' && ptitle.lineHeight === '20px', ptitle);
   await page.evaluate(() => window.__hl.closePanel());
   await page.keyboard.press('Alt+Shift+O'); await page.waitForTimeout(400);
   const box = await css('window.__hl.everythingEl.firstElementChild', ['boxShadow', 'paddingTop', 'borderTopLeftRadius']);
@@ -36,7 +36,7 @@ const SHADOW8 = /0px 4px 8px/, SHADOW16 = /0px 8px 16px/, SHADOW64 = /0px 32px 6
   const left = await page.evaluate(() => { const r = window.__hl; const b = r.everythingEl.firstElementChild.getBoundingClientRect(); return { count: r.everythingCount.getBoundingClientRect().left - b.left, field: r.everythingFilter.parentElement.getBoundingClientRect().left - b.left }; });
   L.check('22: dialog is 600px wide with a shadow64 and 8px corners', box.w === 600 && SHADOW64.test(box.boxShadow) && box.borderTopLeftRadius === '8px', box);
   L.check('22: dialog padding is 24px', box.paddingTop === '24px' || left.count === 24 && left.field === 24, { box, left });
-  L.check('22: dialog title is 20/28', etitle.fontSize === '20px' && etitle.lineHeight === '28px', etitle);
+  L.check('22: dialog title stays 14/20', etitle.fontSize === '14px' && etitle.lineHeight === '20px', etitle);
   // 25: pages are tree items, annotations their children
   const tree = await page.evaluate(() => { const r = window.__hl; let head = r.everythingList.querySelector('.page-head'); head.click(); head = r.everythingList.querySelector('.page-head'); const page = head.closest('.page');
     const item = r.everythingList.querySelector('.item');

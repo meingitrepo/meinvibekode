@@ -395,9 +395,7 @@
         }
         .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }
         .panel-title { font-weight: 600; color: var(--colorNeutralForeground1); }
-        /* Fluent's dialog and drawer title: 20/28; the tail ("selected on 3 pages") stays 14/20. */
-        .panel-count { flex: 1; font-size: 20px; line-height: 28px; color: var(--colorNeutralForeground3); }
-        .panel-tail { font-size: 14px; line-height: 20px; }
+        .panel-count { flex: 1; color: var(--colorNeutralForeground3); }
         .panel-actions { display: flex; align-items: center; gap: 2px; }
         .panel .field { flex: none; margin: 0 12px 8px; padding-bottom: 0; }
         .search-icon { position: absolute; left: 9px; top: 6px; color: var(--colorNeutralForeground3); pointer-events: none; }

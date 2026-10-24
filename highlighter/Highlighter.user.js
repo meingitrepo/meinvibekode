@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.121
+// @version      8.122
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -679,7 +679,7 @@
     function toggleAnnotationsHidden() {
         const hide = !annotationsHidden;
         setAnnotationsHidden(hide);
-        if (hide) showToast('Annotations hidden', { icon: 'eye_off_20_regular', body: 'Press Alt+V to show them again.', action: { label: 'Show', run: showAnnotations, keepEditor: true } });
+        if (hide) showToast('Annotations hidden', { icon: 'eye_off_20_regular', action: { label: 'Show', run: showAnnotations, keepEditor: true } });
     }
 
     // =====================================================================
@@ -2544,7 +2544,7 @@
         if (document.hidden) { noticeDue = true; return; }
         noticedKeys.add(currentKey);
         if (!toastEl.hidden && toastRun) return;
-        showToast(doneText('not found', missing), { icon: 'warning_20_regular', intent: 'warning', body: 'Their text has changed or is gone from this page.', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
+        showToast(doneText('not found', missing), { icon: 'warning_20_regular', intent: 'warning', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
     }
 
     function restoreHighlights() {
@@ -3008,7 +3008,6 @@
         if (!step) return;
         showToast(message, {
             icon,
-            body: 'Undo brings it back, as does Ctrl+Z.',
             action: { label: 'Undo', run: () => { if (undoStack[undoStack.length - 1] === step) undoLastAction(); } }
         });
     }
@@ -3081,7 +3080,7 @@
         if (!running) return;
         syncLocation();
         if (!countAnnotations(missingRecords())) {
-            showToast('No annotations missing', { intent: 'success', icon: 'checkmark_20_regular', body: 'Every annotation was found on this page.' });
+            showToast('No annotations missing', { intent: 'success', icon: 'checkmark_20_regular' });
             return;
         }
         const unsaved = cancelEditor({ offer: false });
@@ -3232,10 +3231,7 @@
         const off = !keysSwitchedOff();
         setKeysSwitchedOff(off);
         if (off) releaseAccessKeys();
-        showToast(off ? 'Shortcut keys off' : 'Shortcut keys on', {
-            body: off ? 'Sites get their Alt keys back. Press Alt+Shift+K to turn them on.'
-                : 'Alt keys now belong to the highlighter, not the site.'
-        });
+        showToast(off ? 'Shortcut keys off' : 'Shortcut keys on');
         refreshMenu();
     }
 
@@ -3339,7 +3335,7 @@
             const group = selected ? null : pointedGroup();
             if (selected) noteSelection(active);
             else if (group) openNoteEditor(group);
-            else showToast('Nothing to add a note to', { intent: 'warning', icon: 'warning_20_regular', body: 'Select text or point at an annotation, then press Alt+N.' });
+            else showToast('Nothing to add a note to', { intent: 'warning', icon: 'warning_20_regular' });
             return;
         }
 
@@ -3601,6 +3597,8 @@
         --colorTransparentStroke: transparent;
         --colorBackgroundOverlay: rgba(0, 0, 0, 0.4);
         --shadow8: 0 0 2px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.14);
+        --shadow16: 0 0 2px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.14);
+        --shadow64: 0 0 8px rgba(0, 0, 0, 0.12), 0 32px 64px rgba(0, 0, 0, 0.14);
         --borderRadiusSmall: 2px;
         --borderRadiusMedium: 4px;
         --borderRadiusXLarge: 8px;
@@ -3658,6 +3656,8 @@
         --colorStrokeFocus2: #ffffff;
         --colorBackgroundOverlay: rgba(0, 0, 0, 0.5);
         --shadow8: 0 0 2px rgba(0, 0, 0, 0.24), 0 4px 8px rgba(0, 0, 0, 0.28);
+        --shadow16: 0 0 2px rgba(0, 0, 0, 0.24), 0 8px 16px rgba(0, 0, 0, 0.28);
+        --shadow64: 0 0 8px rgba(0, 0, 0, 0.2), 0 32px 64px rgba(0, 0, 0, 0.24);
         --toolbarDivider: #666666;
         --colorScheme: dark;
     `;
@@ -3680,8 +3680,9 @@
         .surface, .everything { color-scheme: var(--colorScheme); }
 
         /* Every floating panel (toolbar, note preview, note editor, toast, tooltip) shares this
-           surface: 8px corners and shadow8, matched to Edge's PDF selection toolbar. Tooltips
-           alone keep Fluent's 4px corners. */
+           surface: 8px corners and shadow8, matched to Edge's PDF selection toolbar. The toast and
+           tooltip use Fluent's 4px corners; the note preview, note editor and panels, a Fluent
+           Popover's 4px corners and shadow16. */
         .surface {
             position: fixed; top: 0; left: 0; box-sizing: border-box;
             font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; font-weight: 400;
@@ -3692,6 +3693,8 @@
         }
         /* In the page, not the window: they scroll with their text (see uiHost). */
         .surface.toolbar, .surface.tip, .surface.card, .surface.editor { position: absolute; }
+        .surface.card, .surface.editor, .surface.panel { border-radius: var(--borderRadiusMedium); box-shadow: var(--shadow16); }
+        .surface.panel, .surface.everything-box { box-shadow: var(--shadow64); }
         @keyframes highlighter-enter { from { opacity: 0; transform: translateY(4px); } }
 
         .icon { display: block; flex: none; fill: currentColor; }
@@ -3738,7 +3741,7 @@
         /* Matched to Edge's PDF selection toolbar: 8px corners, a lighter shadow, and longer,
            darker separators. */
         /* 4px padding: with 32px buttons the toolbar is 40px high, close to Edge's (about 42px). */
-        .toolbar { display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px; }
+        .toolbar { display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
         /* Idle fade-out (see TOOLBAR_IDLE_MS). Pointing at the toolbar brings it back at once. */
         .toolbar.fading { opacity: 0; transition: opacity var(--durationSlow) var(--curveEasyEase); }
         .divider { flex: none; width: calc(1px / var(--dpr, 1)); height: 24px; margin: 0 round(10px, calc(1px / var(--dpr, 1))); background: var(--toolbarDivider); }
@@ -3816,7 +3819,7 @@
            panel, which would leave the box's border wider than the textarea and its scrollbar. */
         .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
         /* Toast */
-        .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; min-width: min(292px, calc(100vw - 32px)); max-width: min(360px, calc(100vw - 32px)); padding: 12px; }
+        .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; width: min(292px, calc(100vw - 32px)); padding: 12px; border-radius: var(--borderRadiusMedium); }
         .toast .icon { color: var(--colorNeutralForeground2); }
         .toast[data-intent="success"] > .icon { color: var(--colorPaletteGreenForeground1); }
         .toast[data-intent="warning"] > .icon { color: var(--colorPaletteDarkOrangeForeground1); }
@@ -3824,8 +3827,6 @@
         .toast > .icon { width: 16px; height: 16px; margin-top: 2px; }
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 600; }
-        .toast-body { padding-top: 6px; color: var(--colorNeutralForeground1); }
-        .toast-body[hidden] { display: none; }
         .toast .btn-icon { margin: -6px 0; }
         .toast .btn-icon:last-child { margin-right: -6px; }
         /* The toast's action (Undo, Restore): a Fluent Link, as in Fluent's Toast. */
@@ -3839,14 +3840,14 @@
         .link:focus-visible { text-decoration: underline double; }
         .toast:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
         /* The pen's bar, centred at the top of the view. */
-        .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px; }
-        .pen-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+        .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
+        .pen-text { box-sizing: border-box; padding: 0 4px; white-space: nowrap; color: var(--colorNeutralForeground1); }
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
         .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
-        .everything-box { position: relative; display: flex; flex-direction: column; width: min(720px, 100%); max-height: 100%; padding: 16px 0 0; }
-        .everything-box .panel-header { margin: -8px 8px 8px 16px; }
-        .everything-box .field { flex: none; margin: 0 16px 8px; }
-        .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 12px 12px; overscroll-behavior: contain; }
+        .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 24px 0 0; }
+        .everything-box .panel-header { margin: -4px 18px 12px 24px; }
+        .everything-box .field { flex: none; margin: 0 24px 8px; }
+        .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 20px 24px; overscroll-behavior: contain; }
         .page-head {
             display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 6px 4px; border: 0;
             border-radius: var(--borderRadiusMedium); background: none; font: inherit; color: inherit; text-align: left;
@@ -3865,7 +3866,7 @@
         /* Annotations panel: a Fluent Drawer-like panel along the right edge, above the page. */
         .panel {
             top: 8px; left: auto; right: 8px; display: flex; flex-direction: column;
-            width: min(340px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
+            width: min(320px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
         }
         .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }
         .panel-title { font-weight: 600; color: var(--colorNeutralForeground1); }
@@ -4020,8 +4021,7 @@
 
     let toastIcon = fluentIcon('info_20_regular');   // replaced per message
     const toastText = makeEl('div', { class: 'toast-text' });
-    const toastBody = makeEl('div', { class: 'toast-body', hidden: '' });
-    const toastContent = makeEl('div', { class: 'toast-content' }, [toastText, toastBody]);
+    const toastContent = makeEl('div', { class: 'toast-content' }, [toastText]);
     const toastAction = makeEl('button', { type: 'button', class: 'link', hidden: '' });   // a text link
     const toastDismiss = fluentButton({ icon: fluentIcon('dismiss_20_regular'), label: 'Dismiss' });
     const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastDismiss]);
@@ -4053,7 +4053,7 @@
     ]);
 
     // The pen (Alt+P, see setPen): a pill at the top of the view while it is on.
-    const penText = makeEl('span', { class: 'pen-text' });   // the pen's state in words, for screen readers
+    const penText = makeEl('span', { class: 'pen-text' });   // the pen's state in words
     const penOff = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const penEl = makeEl('div', { class: 'surface pen', role: 'toolbar', 'aria-label': 'Pen', hidden: '' }, [penText, penOff]);
 
@@ -4068,7 +4068,7 @@
     const everythingFilter = makeEl('input', { type: 'search', placeholder: 'Search every page\'s annotations and notes', 'aria-label': 'Search saved annotations', spellcheck: 'false', autocomplete: 'off' });
     const everythingIcon = fluentIcon('search_20_regular');
     everythingIcon.classList.add('search-icon');
-    const everythingList = makeEl('div', { class: 'everything-list', role: 'list' });
+    const everythingList = makeEl('div', { class: 'everything-list', role: 'tree', 'aria-label': 'Saved annotations' });
     const everythingEl = makeEl('div', { class: 'everything', hidden: '' }, [
         makeEl('div', { class: 'surface everything-box', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'All saved annotations' }, [
             makeEl('div', { class: 'panel-header' }, [
@@ -4515,7 +4515,7 @@
         setToolbarSwitchedOff(off);
         if (off) hideToolbar();
         else scheduleToolbar();   // for text that is selected now
-        showToast(off ? 'Selection toolbar off' : 'Selection toolbar on', { body: off ? 'Press Alt+T to turn it on.' : 'Press Alt+T to turn it off.' });
+        showToast(off ? 'Selection toolbar off' : 'Selection toolbar on');
         refreshMenu();
     }
 
@@ -4576,7 +4576,7 @@
     }
 
     function togglePen() {
-        if (penKey) { setPen(null); showToast('Pen off', { body: 'Press Alt+P to turn it on.' }); return; }
+        if (penKey) { setPen(null); showToast('Pen off'); return; }
         hideToolbar();
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
     }
@@ -5065,7 +5065,6 @@
     function offerDraft({ group, draft, records }, message = 'Note not saved', icon = 'edit_20_regular') {
         showToast(message, {
             icon,
-            body: message === 'Note not saved' ? 'Restore the text you wrote.' : '',
             action: { label: 'Restore', keep: true, run: () => restoreDraft(group, draft, records) }
         });
     }
@@ -5130,10 +5129,10 @@
     let toastKeepsEditor = false; // its action leaves a note being written open
 
     // A message in the bottom-right corner, as Fluent's Toast: an intent icon, a title, an
-    // optional `body` under it, an action and Dismiss. `icon` is a FLUENT_ICONS name; `intent`
+    // action and Dismiss. `icon` is a FLUENT_ICONS name; `intent`
     // is info, success or warning; `action` adds a text button, { label, run, keep, keepEditor },
     // such as Undo.
-    function showToast(message, { icon = 'info_20_regular', intent = 'info', body = '', action = null } = {}) {
+    function showToast(message, { icon = 'info_20_regular', intent = 'info', action = null } = {}) {
         // A plain message doesn't take the place of one still offering Undo or Restore.
         if (!action && !toastEl.hidden && toastRun) return;
         // The toast has the page's theme, set on it alone: a panel open next to a box of the
@@ -5146,8 +5145,6 @@
         toastIcon = nextIcon;
         toastEl.setAttribute('data-intent', intent);
         toastText.textContent = message;
-        toastBody.textContent = body;
-        toastBody.hidden = !body;
         toastRun = action ? action.run : null;
         toastKey = currentKey;
         toastKeep = !!(action && action.keep);
@@ -5303,7 +5300,7 @@
         if (wrapped) target = dir > 0 ? 0 : groups.length - 1;
         jumpToGroup(groups[target], { showNote: true });
         // After the jump, which takes down an "Annotations hidden" message that would hold this one back.
-        if (wrapped && groups.length > 1) showToast(dir > 0 ? 'Back to the first annotation' : 'Back to the last annotation', { body: 'That was the end of this page.' });
+        if (wrapped && groups.length > 1) showToast(dir > 0 ? 'Back to the first annotation' : 'Back to the last annotation');
         return true;
     }
 
@@ -5827,7 +5824,7 @@
         syncLocation();
         const list = (items || pageAnnotations()).filter(a => a.wrappers.some(w => w.isConnected));
         if (!list.length) {
-            showToast('Nothing to copy', { body: 'This page has no annotations.' });
+            showToast('Nothing to copy');
             return;
         }
         let markdown;
@@ -5835,12 +5832,12 @@
             markdown = annotationsMarkdown(list);
         } catch (e) {
             console.warn(`${LOG} could not build Markdown`, e);
-            showToast('Couldn\'t copy', { intent: 'error', icon: 'error_circle_20_regular', body: 'Try again.' });
+            showToast('Couldn\'t copy', { intent: 'error', icon: 'error_circle_20_regular' });
             return;
         }
         writeClipboard(markdown).then(
-            () => showToast(doneText('copied', list.length), { icon: 'checkmark_20_regular', intent: 'success', body: 'Pasted as Markdown, with its notes.' }),
-            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'error_circle_20_regular', body: 'The browser blocked clipboard access.' }); });
+            () => showToast(doneText('copied', list.length), { icon: 'checkmark_20_regular', intent: 'success' }),
+            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'error_circle_20_regular' }); });
     }
 
     // --- Changes made from the panel ---
@@ -5881,7 +5878,7 @@
         const selected = toolbarSelection();
         let range = selected && cleanRange(selected);
         if (!range) {
-            showToast('Select the text first', { body: 'Then choose Attach to selection.' });
+            showToast('Select the text first');
             return;
         }
         if (editor) {
@@ -5915,7 +5912,7 @@
         });
         const sel = window.getSelection();
         if (sel) sel.removeAllRanges();
-        if (!created.length) showToast('Couldn\'t annotate that text', { intent: 'error', icon: 'error_circle_20_regular', body: 'Try selecting it again.' });
+        if (!created.length) showToast('Couldn\'t annotate that text', { intent: 'error', icon: 'error_circle_20_regular' });
     }
 
     // --- Annotations panel (Alt+O) ---
@@ -6329,7 +6326,7 @@
             // Undo covers only this page, so it is offered only when nothing else was forgotten.
             if (!elsewhere.size) { offerUndo(doneText('forgotten', selected.length), step, 'eraser_20_regular'); return; }
         }
-        showToast(doneText('forgotten', selected.length), { icon: 'eraser_20_regular', body: 'Removed from every page they were on.' });
+        showToast(doneText('forgotten', selected.length), { icon: 'eraser_20_regular' });
     }
 
     let everythingItemSeq = 0;
@@ -6350,14 +6347,14 @@
         visible.forEach(({ p, items }) => {
             // Pages start closed, and opened while searching; a click turns that round.
             const open = everythingToggled.has(p.key) !== terms.length > 0;
-            const head = makeEl('button', { type: 'button', class: 'page-head', 'aria-expanded': String(open), 'data-key': p.key }, [
+            const head = makeEl('button', { type: 'button', class: 'page-head', role: 'treeitem', 'aria-level': '1', 'aria-expanded': String(open), 'data-key': p.key }, [
                 fluentIcon(open ? 'chevron_down_16_regular' : 'chevron_right_16_regular'),
                 makeEl('span', { class: 'page-name' }, [makeEl('span', { class: 'page-host', text: p.host }), makeEl('span', { class: 'page-path', text: p.path })]),
                 makeEl('span', { class: 'page-meta', text: `${(() => { const n = items.filter(a => everythingChecked.has(everythingId(p, a))).length; return n ? `${n}/${items.length}` : items.length; })()}${p.time ? ` · ${formatDate(p.time)}` : ''}` })
             ]);
-            const section = makeEl('div', { class: 'page', role: 'listitem' }, [head]);
+            const section = makeEl('div', { class: 'page', role: 'none' }, [head]);
             if (open) {
-                const list = makeEl('div', { class: 'page-items' });
+                const list = makeEl('div', { class: 'page-items', role: 'group' });
                 items.forEach(a => {
                     const link = makeEl('a', { class: 'item-main', href: a.url, target: '_blank', rel: 'noopener', 'data-key': p.key, 'data-group': a.group },
                         [makeEl('div', { class: 'item-text', id: `rnh-ei-${++everythingItemSeq}`, text: a.text })]);
@@ -6366,7 +6363,7 @@
                     link.style.setProperty('--swatch', resolveStyle(a.key, dark).color);
                     const check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-labelledby': link.firstChild.id });
                     check.checked = everythingChecked.has(everythingId(p, a));
-                    list.appendChild(makeEl('div', { class: 'item' }, [check, link]));
+                    list.appendChild(makeEl('div', { class: 'item', role: 'treeitem', 'aria-level': '2' }, [check, link]));
                 });
                 section.appendChild(list);
             }
@@ -6412,8 +6409,8 @@
         const selected = everythingShown.filter(s => everythingChecked.has(s.id));
         if (!selected.length) return;
         writeClipboard(savedMarkdown(selected)).then(
-            () => showToast(doneText('copied', selected.length), { icon: 'checkmark_20_regular', intent: 'success', body: 'Pasted as Markdown, with its notes.' }),
-            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'error_circle_20_regular', body: 'The browser blocked clipboard access.' }); });
+            () => showToast(doneText('copied', selected.length), { icon: 'checkmark_20_regular', intent: 'success' }),
+            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'error_circle_20_regular' }); });
     });
     everythingForget.addEventListener('click', () => {
         if (!running) return;

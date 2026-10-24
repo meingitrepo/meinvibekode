@@ -22,8 +22,7 @@
         const { type, color } = resolveStyle(key, dark);
         switch (type) {
             case 'highlight':
-                // The highlighter's cap and tip (its accent layer) in the highlight color.
-                return fluentIcon('highlight_20_regular', { under: [svgEl('path', { d: FLUENT_ICONS.highlight_accent_20_filled, fill: color })] });
+                return fluentIcon('highlight_20_regular');
             case 'underline':
                 // The icon's own underline bar (x 5-15, y 16-17), repainted in the style's color.
                 return fluentIcon('text_underline_20_regular', { over: [svgEl('rect', { x: 5, y: 15.75, width: 10, height: 1.5, rx: 0.75, fill: color })] });

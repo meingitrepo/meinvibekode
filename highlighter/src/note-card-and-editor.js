@@ -121,7 +121,7 @@
         pinnedCards.set(mark, card);
         mark.setAttribute(NOTE_PIN_ATTR, '');
         const pin = card.querySelector('.card-actions button');
-        pin.replaceChildren(fluentIcon('pin_20_filled'));
+        pin.replaceChildren(fluentIcon('pin_20_regular'));
         pin.dataset.label = 'Unpin note';
         pin.setAttribute('aria-label', 'Unpin note');
         pin.setAttribute('aria-pressed', 'true');

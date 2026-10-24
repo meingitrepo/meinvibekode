@@ -25,6 +25,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - CI runs only a quick gate per push (`node build.js --check` + `node --check` on the built file). The full Playwright suite is local-only.
 
 ## UI / Fluent
+- Showcase shots must be cropped to the changed component (`SHOT_CLIP`), never a whole-window shot; the same crop for before/after and light/dark.
 - Vanilla Fluent 2, no library. References: https://github.com/microsoft/fluentui and https://storybooks.fluentui.dev/react/. Before building or changing UI, look up the real Fluent v9 component, don't guess.
 - Lookup order: saved notes in `/mnt/project-files/fluent/` first; then source in microsoft/fluentui `packages/react-components/react-<name>` (raw.githubusercontent.com or sparse clone); then the Storybook rendered with Playwright (plain fetch gets no content; check it's reachable, the network may block it). Save new findings to `/mnt/project-files/fluent/`.
 - Visual bug (spacing, widths, colors): reproduce it first with `shot.sh` or a test, at the trigger named in the brief (device pixel ratio, zoom, dark mode, high contrast). If the first attempt does not reproduce it, stop and ask in one short question; don't loop.
@@ -32,7 +33,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 ## Scripts (`highlighter/tools/`; use them instead of redoing these steps by hand)
 - `build.sh` build+check; `map-check.sh` Map vs build.js; `tests-for.sh <keyword>` find and run suites mentioning it; `stale-checks.sh <old-term>` test lines for retired behaviour
 - `sync.sh` rebase onto latest origin/main, rebuild, report conflicts/overlap; `preflight.sh` sync, diffstat, release.sh line; `release.sh` post-PUSH release
-- `verify.sh <keyword...>` build, matching suites, diffstat in one call; `shot.sh <out.png> [light|dark] [js]` playground screenshot
+- `verify.sh <keyword...>` build, matching suites, diffstat in one call; `shot.sh <out.png> [light|dark|both] [js]` playground screenshot; component presets (panel, all) crop to the element at 2x, other shots: `SHOT_CLIP=<selector|__hl.name>` (+`SHOT_PAD`)
 
 ## Map (`highlighter/src/`, joined in `build.js` order; one IIFE, so later files see earlier names)
 Core

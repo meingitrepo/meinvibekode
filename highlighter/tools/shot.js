@@ -11,10 +11,17 @@ const PRESETS = {
   all: ALL,
   'all-ticked': `${ALL} const hs=()=>__hl.everythingList.querySelectorAll('.page-head'); hs()[0].click(); setTimeout(()=>{${TICK} hs()[1].click(); setTimeout(()=>{${TICK}},100)},100)`
 };
+// Component presets crop to their element by default; SHOT_CLIP=<css selector | __hl.name> overrides, SHOT_CLIP=none takes the whole window.
+const CLIPS = { panel: '__hl.panelEl', 'panel-ticked': '__hl.panelEl', all: '__hl.everythingEl', 'all-ticked': '__hl.everythingEl' };
 (async () => {
   const [out, scheme = 'light', arg] = process.argv.slice(2);
   const js = PRESETS[arg] || arg;
   if (PRESETS[arg] && !process.env.SHOT_FIXTURE) process.env.SHOT_FIXTURE = path.resolve(__dirname, 'shot-fixture.json');
+  const clipSel = process.env.SHOT_CLIP || CLIPS[arg];
+  const clipOn = clipSel && clipSel !== 'none';
+  if (clipOn && !process.env.DSF) process.env.DSF = '2';   // cropped shots are viewed small, so render at 2x
+  const pad = +(process.env.SHOT_PAD || 16);
+  let clip = null;   // measured once (light) and reused so every panel of a both shot has the same crop
   const html = fs.readFileSync(path.resolve(__dirname, '../test/playground.html'), 'utf8');
   // SHOT_FIXTURE=<json>: saved annotations ({ pageUrl: [records] }) to start with, as GM storage values.
   const store = {};
@@ -29,7 +36,18 @@ const PRESETS = {
     const luma = await page.evaluate(() => { const m = getComputedStyle(document.documentElement).backgroundColor.match(/\d+/g).map(Number); return (m[0] + m[1] + m[2]) / 3; });
     if ((sc === 'dark') !== (luma < 128)) { console.error(`shot is not ${sc}: page background luma ${luma}`); process.exit(1); }
     if (js) { await page.evaluate(js); await page.waitForTimeout(400); }
-    shots.push(await page.screenshot());
+    if (clipOn && !clip) {
+      const r = await page.evaluate(sel => {
+        const el = sel.startsWith('__hl.') ? window.__hl[sel.slice(5)] : document.querySelector(sel);
+        if (!el) return null;
+        const b = el.getBoundingClientRect();
+        return { x: b.x, y: b.y, width: b.width, height: b.height };
+      }, clipSel);
+      if (!r || !r.width || !r.height) { console.error(`SHOT_CLIP target not found or empty: ${clipSel}`); process.exit(1); }
+      const x = Math.max(0, r.x - pad), y = Math.max(0, r.y - pad), vp = page.viewportSize();
+      clip = { x, y, width: Math.min(vp.width - x, r.width + 2 * pad), height: Math.min(vp.height - y, r.height + 2 * pad) };
+    }
+    shots.push(await page.screenshot(clip ? { clip } : {}));
   }
   if (shots.length === 1) fs.writeFileSync(out, shots[0]);
   else {

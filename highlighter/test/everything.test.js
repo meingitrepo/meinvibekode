@@ -74,6 +74,7 @@ async function main(browser) {
       copyOff: r.everythingCopy.disabled, forgetOff: r.everythingForget.disabled, checkLast: item.lastElementChild.classList.contains('check'),
       pad: [r.everythingList, r.everythingList.previousElementSibling].map(e => getComputedStyle(e).paddingLeft + '/' + getComputedStyle(e).marginLeft).join(' '), boxPad: getComputedStyle(r.everythingList.parentElement).paddingTop, listPad: getComputedStyle(r.everythingList).padding }; });
   check('header order select/copy/forget/close, copy grayed, tick on the right', hdr.order === '0123' && hdr.copyOff && hdr.forgetOff && hdr.checkLast, hdr);
+  check('header block matches Alt+O: title 5px, search 41px below the top', await p.evaluate(() => { const r = window.__hl, B = r.everythingEl.firstElementChild.getBoundingClientRect(); return Math.round(r.everythingEl.querySelector('.panel-header').getBoundingClientRect().top - B.top) === 5 && Math.round(r.everythingFilter.parentElement.getBoundingClientRect().top - B.top) === 41; }), null);
   check('paddings match Alt+O: box 12px, list 0 8px 8px', hdr.boxPad === '12px' && hdr.listPad === '0px 8px 8px', hdr);
   await p.evaluate(() => window.__hl.everythingSelectAll.click());
   const sel = await p.evaluate(() => ({ n: window.__hl.everythingCount.textContent, copyOn: !window.__hl.everythingCopy.disabled }));

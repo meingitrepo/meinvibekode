@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.130
+// @version      8.131
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -6157,7 +6157,7 @@
         syncSelectionButtons(panelSelectAll, panelCopy, panelErase, ticked, shown.length);
         const word = present.length === 1 ? 'annotation' : 'annotations';
         if (ticked) setPanelTitle(panelCount, `${ticked} of ${shown.length}`, ' selected', word);
-        else if (terms.length) setPanelTitle(panelCount, `${shown.length} of ${present.length}`, ` contain`, word);
+        else if (terms.length) setPanelTitle(panelCount, `${shown.length} of ${present.length}`, ` matched`, word);
         else setPanelTitle(panelCount, String(present.length), ' found', word);
         const children = [];
         if (!present.length && !missing.length) {
@@ -6550,12 +6550,14 @@
         const ticked = everythingChecked.size;
         syncSelectionButtons(everythingSelectAll, everythingCopy, everythingForget, ticked, shownItems, everythingPagesStep() ? 'Select all on these pages' : '');
         const pagesText = n => `${n} ${n === 1 ? 'page' : 'pages'}`;
+        const noun = n => (n === 1 ? 'annotation' : 'annotations');
         if (ticked) {
             const tickedPages = new Set(everythingShown.filter(s => everythingChecked.has(s.id)).map(s => s.page.key)).size;
-            setPanelTitle(everythingCount, ticked === 1 ? '1' : String(ticked), ` selected on ${pagesText(tickedPages)}`);
+            setPanelTitle(everythingCount, `${ticked} of ${shownItems}`, ` selected on ${pagesText(tickedPages)}`, noun(shownItems));
+        } else if (terms.length) {
+            setPanelTitle(everythingCount, `${shownItems} of ${total}`, ` matched on ${pagesText(visible.length)}`, noun(total));
         } else {
-            if (terms.length) setPanelTitle(everythingCount, `${shownItems} of ${total}`, ' contain', 'annotations');
-            else setPanelTitle(everythingCount, String(total), ` on ${pagesText(everythingPages.length)}`);
+            setPanelTitle(everythingCount, String(total), ` found on ${pagesText(everythingPages.length)}`, noun(total));
         }
         if (!rows.length) rows.push(makeEl('div', { class: 'empty', text: total ? 'Nothing matches.' : 'No annotations saved yet.' }));
         everythingList.replaceChildren(...rows);

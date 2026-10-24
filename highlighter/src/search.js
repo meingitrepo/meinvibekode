@@ -183,12 +183,14 @@
         const ticked = everythingChecked.size;
         syncSelectionButtons(everythingSelectAll, everythingCopy, everythingForget, ticked, shownItems, everythingPagesStep() ? 'Select all on these pages' : '');
         const pagesText = n => `${n} ${n === 1 ? 'page' : 'pages'}`;
+        const noun = n => (n === 1 ? 'annotation' : 'annotations');
         if (ticked) {
             const tickedPages = new Set(everythingShown.filter(s => everythingChecked.has(s.id)).map(s => s.page.key)).size;
-            setPanelTitle(everythingCount, ticked === 1 ? '1' : String(ticked), ` selected on ${pagesText(tickedPages)}`);
+            setPanelTitle(everythingCount, `${ticked} of ${shownItems}`, ` selected on ${pagesText(tickedPages)}`, noun(shownItems));
+        } else if (terms.length) {
+            setPanelTitle(everythingCount, `${shownItems} of ${total}`, ` matched on ${pagesText(visible.length)}`, noun(total));
         } else {
-            if (terms.length) setPanelTitle(everythingCount, `${shownItems} of ${total}`, ' contain', 'annotations');
-            else setPanelTitle(everythingCount, String(total), ` on ${pagesText(everythingPages.length)}`);
+            setPanelTitle(everythingCount, String(total), ` found on ${pagesText(everythingPages.length)}`, noun(total));
         }
         if (!rows.length) rows.push(makeEl('div', { class: 'empty', text: total ? 'Nothing matches.' : 'No annotations saved yet.' }));
         everythingList.replaceChildren(...rows);

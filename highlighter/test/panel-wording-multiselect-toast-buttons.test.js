@@ -1,4 +1,4 @@
-// Alt+O title wording (found / contain / "2 of 5 ... selected"), Windows-style Ctrl/Shift selection in the
+// Alt+O title wording (found / matched / "2 of 5 ... selected"), Windows-style Ctrl/Shift selection in the
 // Alt+O and Alt+Shift+O lists, and toast actions as small subtle buttons with tooltips.
 const L = require('./lib');
 const WORDS = ['alpha', 'bravo', 'charlie', 'delta', 'echo'];
@@ -22,7 +22,7 @@ const eTicks = page => page.evaluate(() => Array.from(window.__hl.everythingList
   L.check('idle title says found', (await title()) === '5 annotations found', await title());
   await page.keyboard.type('a'); await page.waitForTimeout(150);
   const n = await page.evaluate(() => window.__hl.panelList.querySelectorAll('.item').length);
-  L.check("searching title says contain, without the term", (await title()) === `${n} of 5 annotations contain`, await title());
+  L.check("searching title says matched, without the term", (await title()) === `${n} of 5 annotations matched`, await title());
   await page.evaluate(() => { const f = window.__hl.panelFilter; f.value = ''; f.dispatchEvent(new Event('input')); });
   await page.waitForTimeout(100);
   await click(page, 'P[data-act="check"]', 1); await click(page, 'P[data-act="check"]', 3);

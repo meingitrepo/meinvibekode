@@ -3841,7 +3841,6 @@
         .toast:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
         /* The pen's bar, centred at the top of the view. */
         .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
-        .pen-text { box-sizing: border-box; padding: 0 4px; white-space: nowrap; color: var(--colorNeutralForeground1); }
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
         .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
         .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 16px 0 0; }
@@ -4053,9 +4052,8 @@
     ]);
 
     // The pen (Alt+P, see setPen): a pill at the top of the view while it is on.
-    const penText = makeEl('span', { class: 'pen-text' });   // the pen's state in words
     const penOff = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
-    const penEl = makeEl('div', { class: 'surface pen', role: 'toolbar', 'aria-label': 'Pen', hidden: '' }, [penText, penOff]);
+    const penEl = makeEl('div', { class: 'surface pen', role: 'toolbar', 'aria-label': 'Pen', hidden: '' }, [penOff]);
 
     // Everything saved (Alt+Shift+O, see openEverything): a dialog over the dimmed page.
     const everythingCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });   // the whole title, see setPanelTitle
@@ -4570,8 +4568,7 @@
         eraser.tabIndex = penKey === PEN_ERASER ? 0 : -1;
         tools.push(toolbarDivider(), eraser);
         if (penKey !== PEN_ERASER && !tools.some(b => b.tabIndex === 0)) tools.find(b => b.tagName === 'BUTTON').tabIndex = 0;
-        penEl.replaceChildren(...tools, toolbarDivider(), penText, penOff);
-        penText.textContent = `Pen: ${penKey === PEN_ERASER ? 'eraser' : styleLabel(penKey).toLowerCase()}`;
+        penEl.replaceChildren(...tools, toolbarDivider(), penOff);
         penEl.hidden = false;
     }
 

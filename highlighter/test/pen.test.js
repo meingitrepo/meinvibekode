@@ -6,7 +6,8 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
 <input id="f" value="a field with words"></body></html>`;
 const results = [];
 const check = (name, ok, info) => results.push([name, ok, info]);
-const pill = p => p.evaluate(() => (window.__hl.penEl.hidden ? null : window.__hl.penText.textContent));
+// The pen's state is its blue (pressed) tool button; the pen bar has no label.
+const pill = p => p.evaluate(() => { const e = window.__hl.penEl; if (e.hidden) return null; const b = e.querySelector('button[aria-pressed="true"]'); return b ? 'Pen: ' + b.dataset.label.toLowerCase() : ''; });
 const selText = p => p.evaluate(() => getSelection().toString());
 
 async function basics(browser) {

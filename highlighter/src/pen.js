@@ -33,8 +33,7 @@
         eraser.tabIndex = penKey === PEN_ERASER ? 0 : -1;
         tools.push(toolbarDivider(), eraser);
         if (penKey !== PEN_ERASER && !tools.some(b => b.tabIndex === 0)) tools.find(b => b.tagName === 'BUTTON').tabIndex = 0;
-        penEl.replaceChildren(...tools, toolbarDivider(), penText, penOff);
-        penText.textContent = `Pen: ${penKey === PEN_ERASER ? 'eraser' : styleLabel(penKey).toLowerCase()}`;
+        penEl.replaceChildren(...tools, toolbarDivider(), penOff);
         penEl.hidden = false;
     }
 

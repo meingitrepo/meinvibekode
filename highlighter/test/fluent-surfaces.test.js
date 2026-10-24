@@ -51,12 +51,12 @@ const SHADOW8 = /0px 4px 8px/, SHADOW16 = /0px 8px 16px/, SHADOW64 = /0px 32px 6
   L.check('25: page head is a level-1 treeitem with aria-expanded', tree.page === 'none' && tree.head[0] === 'treeitem' && tree.head[1] === '1' && tree.head[2] === 'true', tree);
   L.check('25: annotations are level-2 treeitems in a group', tree.group === 'group' && tree.item[0] === 'treeitem' && tree.item[1] === '2', tree);
   await page.keyboard.press('Escape');
-  // 9, 10: toolbar padding, pen label
+  // 9: toolbar padding; 10 reversed: no pen label
   const tb = await page.evaluate(() => { const r = window.__hl; const c = e => getComputedStyle(e); return { toolbar: c(r.toolbarEl).padding, pen: c(r.penEl).padding }; });
   L.check('9: toolbar and pen bar padding 4px 8px (Fluent medium)', tb.toolbar === '4px 8px' && tb.pen === '4px 8px', tb);
   await page.evaluate(() => { window.__hl.everythingClose.click(); });
   await L.altKey(page, 'p'); await page.waitForTimeout(300);
-  const pen = await page.evaluate(() => { const t = window.__hl.penText; const r = t.getBoundingClientRect(); const c = getComputedStyle(t); return { text: t.textContent, w: Math.round(r.width), h: Math.round(r.height), visible: c.clipPath === 'none' && c.position !== 'absolute', fs: c.fontSize }; });
-  L.check('10: the pen bar shows its label', /^Pen: /.test(pen.text) && pen.visible && pen.w > 40 && pen.h >= 16, pen);
+  const pen = await page.evaluate(() => ({ label: !!window.__hl.penEl.querySelector('.pen-text'), pressed: window.__hl.penEl.querySelectorAll('button[aria-pressed="true"]').length }));
+  L.check('10 (reversed): the pen bar has no text label, one tool shows pressed', !pen.label && pen.pressed === 1, pen);
   await ctx.close(); await L.done(browser);
 })();

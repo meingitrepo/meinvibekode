@@ -1,9 +1,4 @@
 {
-  "enabledPlugins": {
-    "superpowers@anthropic-plugin-directory": true,
-    "frontend-design@anthropic-plugin-directory": true,
-    "playwright@anthropic-plugin-directory": true
-  },
   "permissions": {
     "deny": [
       "Read(./.env)",
@@ -37,5 +32,10 @@
       "Read(./**/*.mp4)",
       "Read(./**/*.pdf)"
     ]
+  },
+  "enabledPlugins": {
+    "frontend-design@anthropic-plugin-directory": true,
+    "superpowers@anthropic-plugin-directory": true,
+    "playwright@anthropic-plugin-directory": true
   }
 }

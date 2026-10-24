@@ -24,7 +24,7 @@ const info = page => page.evaluate(() => { const r = window.__hl; const t = r.to
   await L.selStr(page, '#p1', 'words to select'); await page.waitForTimeout(300);
   await L.altKey(page, 'd'); await page.waitForTimeout(300);
   const u = await info(page);
-  L.check('Undo is a button, no icon', (await L.toast(page)) === '1 annotation erased · Undo' && /btn-subtle/.test(u.link) && !u.icon, u);
+  L.check('Undo is an icon-only button', (await L.toast(page)) === '1 annotation erased · Undo' && /btn-subtle/.test(u.link) && /btn-icon/.test(u.link) && u.icon, u);
   // No toast has a body line.
   const body = async name => { const i = await info(page); L.check(`${name} has no body`, i.body.length === 0, i); };
   await body('Undo');

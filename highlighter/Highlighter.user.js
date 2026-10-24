@@ -3568,6 +3568,7 @@
         text_bullet_list_20_regular: 'M3 5.5C3.55228 5.5 4 5.05228 4 4.5C4 3.94772 3.55228 3.5 3 3.5C2.44772 3.5 2 3.94772 2 4.5C2 5.05228 2.44772 5.5 3 5.5ZM6 4.5C6 4.22386 6.22386 4 6.5 4H17.5C17.7761 4 18 4.22386 18 4.5C18 4.77614 17.7761 5 17.5 5H6.5C6.22386 5 6 4.77614 6 4.5ZM6 9.5C6 9.22386 6.22386 9 6.5 9H17.5C17.7761 9 18 9.22386 18 9.5C18 9.77614 17.7761 10 17.5 10H6.5C6.22386 10 6 9.77614 6 9.5ZM6.5 14C6.22386 14 6 14.2239 6 14.5C6 14.7761 6.22386 15 6.5 15H17.5C17.7761 15 18 14.7761 18 14.5C18 14.2239 17.7761 14 17.5 14H6.5ZM4 14.5C4 15.0523 3.55228 15.5 3 15.5C2.44772 15.5 2 15.0523 2 14.5C2 13.9477 2.44772 13.5 3 13.5C3.55228 13.5 4 13.9477 4 14.5ZM3 10.5C3.55228 10.5 4 10.0523 4 9.5C4 8.94772 3.55228 8.5 3 8.5C2.44772 8.5 2 8.94772 2 9.5C2 10.0523 2.44772 10.5 3 10.5Z',
         keyboard_20_regular: 'M5 12.5C5 12.2239 5.22386 12 5.5 12H14.5C14.7761 12 15 12.2239 15 12.5C15 12.7761 14.7761 13 14.5 13H5.5C5.22386 13 5 12.7761 5 12.5ZM11.5024 8.00468C11.9179 8.00468 12.2547 7.66783 12.2547 7.25231C12.2547 6.83679 11.9179 6.49994 11.5024 6.49994C11.0868 6.49994 10.75 6.83679 10.75 7.25231C10.75 7.66783 11.0868 8.00468 11.5024 8.00468ZM15.2547 7.25231C15.2547 7.66783 14.9179 8.00468 14.5024 8.00468C14.0868 8.00468 13.75 7.66783 13.75 7.25231C13.75 6.83679 14.0868 6.49994 14.5024 6.49994C14.9179 6.49994 15.2547 6.83679 15.2547 7.25231ZM5.50237 8.00468C5.91789 8.00468 6.25474 7.66783 6.25474 7.25231C6.25474 6.83679 5.91789 6.49994 5.50237 6.49994C5.08685 6.49994 4.75 6.83679 4.75 7.25231C4.75 7.66783 5.08685 8.00468 5.50237 8.00468ZM7.74998 9.75231C7.74998 10.1678 7.41313 10.5047 6.99761 10.5047C6.58209 10.5047 6.24524 10.1678 6.24524 9.75231C6.24524 9.33679 6.58209 8.99994 6.99761 8.99994C7.41313 8.99994 7.74998 9.33679 7.74998 9.75231ZM10.0024 10.5047C10.4179 10.5047 10.7547 10.1678 10.7547 9.75231C10.7547 9.33679 10.4179 8.99994 10.0024 8.99994C9.58685 8.99994 9.25 9.33679 9.25 9.75231C9.25 10.1678 9.58685 10.5047 10.0024 10.5047ZM13.7595 9.75231C13.7595 10.1678 13.4227 10.5047 13.0071 10.5047C12.5916 10.5047 12.2548 10.1678 12.2548 9.75231C12.2548 9.33679 12.5916 8.99994 13.0071 8.99994C13.4227 8.99994 13.7595 9.33679 13.7595 9.75231ZM8.50237 8.00468C8.91789 8.00468 9.25474 7.66783 9.25474 7.25231C9.25474 6.83679 8.91789 6.49994 8.50237 6.49994C8.08685 6.49994 7.75 6.83679 7.75 7.25231C7.75 7.66783 8.08685 8.00468 8.50237 8.00468ZM2 5.5C2 4.67157 2.67157 4 3.5 4H16.5C17.3284 4 18 4.67157 18 5.5V13.5C18 14.3284 17.3284 15 16.5 15H3.5C2.67157 15 2 14.3284 2 13.5V5.5ZM3.5 5C3.22386 5 3 5.22386 3 5.5V13.5C3 13.7761 3.22386 14 3.5 14H16.5C16.7761 14 17 13.7761 17 13.5V5.5C17 5.22386 16.7761 5 16.5 5H3.5Z',
         eye_20_regular: 'M3.25909 11.6021C3.94254 8.32689 6.79437 6 10 6C13.2057 6 16.0574 8.32688 16.7409 11.6021C16.7974 11.8725 17.0622 12.0459 17.3325 11.9895C17.6029 11.933 17.7763 11.6682 17.7199 11.3979C16.9425 7.67312 13.6934 5 10 5C6.3066 5 3.05742 7.67311 2.28017 11.3979C2.22377 11.6682 2.39718 11.933 2.6675 11.9895C2.93782 12.0459 3.20268 11.8725 3.25909 11.6021ZM10 8C8.067 8 6.5 9.567 6.5 11.5C6.5 13.433 8.067 15 10 15C11.933 15 13.5 13.433 13.5 11.5C13.5 9.567 11.933 8 10 8ZM7.5 11.5C7.5 10.1193 8.61929 9 10 9C11.3807 9 12.5 10.1193 12.5 11.5C12.5 12.8807 11.3807 14 10 14C8.61929 14 7.5 12.8807 7.5 11.5Z',
+        arrow_reset_20_regular: 'M5.85355 2.64645C6.04882 2.84171 6.04882 3.15829 5.85355 3.35355L4.20711 5H11C14.3137 5 17 7.68629 17 11C17 14.3137 14.3137 17 11 17C7.68629 17 5 14.3137 5 11C5 10.7239 5.22386 10.5 5.5 10.5C5.77614 10.5 6 10.7239 6 11C6 13.7614 8.23858 16 11 16C13.7614 16 16 13.7614 16 11C16 8.23858 13.7614 6 11 6H4.20711L5.85355 7.64645C6.04882 7.84171 6.04882 8.15829 5.85355 8.35355C5.65829 8.54882 5.34171 8.54882 5.14645 8.35355L2.64645 5.85355C2.45118 5.65829 2.45118 5.34171 2.64645 5.14645L5.14645 2.64645C5.34171 2.45118 5.65829 2.45118 5.85355 2.64645Z',
         info_20_regular: 'M10.5 8.91a.5.5 0 0 0-1 .09v4.6a.5.5 0 0 0 1-.1V8.91m.3-2.16a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0M18 10a8 8 0 1 0-16 0 8 8 0 0 0 16 0M3 10a7 7 0 1 1 14 0 7 7 0 0 1-14 0'
     };
 
@@ -4069,7 +4070,7 @@
     let toastIcon = fluentIcon('info_20_regular');   // replaced per message
     const toastText = makeEl('div', { class: 'toast-text' });
     const toastContent = makeEl('div', { class: 'toast-content' }, [toastText]);
-    const toastAction = fluentButton({ text: 'Undo', size: 'small' });   // a small subtle button (Undo, Restore, Show); label and tooltip set per toast
+    const toastAction = fluentButton({ icon: fluentIcon('arrow_undo_20_regular') });   // an icon button (Undo, Restore, Show); icon, label and tooltip set per toast
     toastAction.hidden = true;
     const toastDismiss = fluentButton({ icon: fluentIcon('dismiss_20_regular'), label: 'Dismiss' });
     const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastDismiss]);
@@ -4762,13 +4763,17 @@
     // selection, or selecting something else, closes it.
     let selectPreview = false;
     let selectPreviewTimer = null;
+    let selectShowTimer = null;
+    const SELECT_PREVIEW_DELAY_MS = 150;   // the note follows the selection toolbar a little later
     function previewSelectedNote(groups) {
         if (selectPreview) hideNoteCard();
         const note = groups.length === 1 && !editor && !annotationsHidden &&
             groupWrappers(groups[0]).filter(w => w.hasAttribute(NOTE_ATTR) && w.getClientRects().length).pop();
         if (!note || !note.getAttribute(NOTE_ATTR)) return;
-        showNoteCard(note);
         selectPreview = true;
+        selectShowTimer = setTimeout(() => {
+            if (selectPreview && note.isConnected && !editor && !annotationsHidden) showNoteCard(note);
+        }, SELECT_PREVIEW_DELAY_MS);
         if (!TOOLBAR_IDLE_MS) return;
         selectPreviewTimer = setTimeout(function idle() {
             if (noteCardEl.matches(':hover')) { selectPreviewTimer = setTimeout(idle, 500); return; }
@@ -4780,6 +4785,7 @@
         clearTimeout(cardHideTimer);
         clearTimeout(cardShowTimer);
         clearTimeout(selectPreviewTimer);
+        clearTimeout(selectShowTimer);
         selectPreview = false;
         if (!noteCardEl.hidden) hideLabelTip();   // its Pin button's tip goes with it
         releaseFocus(noteCardEl);
@@ -5241,7 +5247,10 @@
         toastKey = currentKey;
         toastKeep = !!(action && action.keep);
         toastKeepsEditor = !!(action && action.keepEditor);
-        toastAction.textContent = action ? action.label : '';
+        if (action) {
+            toastAction.dataset.action = action.label;
+            toastAction.replaceChildren(fluentIcon(TOAST_ACTION_ICONS[action.label] || 'arrow_undo_20_regular'));
+        }
         toastAction.hidden = !action;
         if (action) {
             // The tooltip: what it does, and its shortcut where it has one.
@@ -5278,6 +5287,7 @@
 
     toastDismiss.addEventListener('click', hideToast);
     addLabelTip(toastDismiss, 'Dismiss', '', () => false);
+    const TOAST_ACTION_ICONS = { Undo: 'arrow_undo_20_regular', Restore: 'arrow_reset_20_regular', Show: 'eye_20_regular' };
     addLabelTip(toastAction, 'Undo', '', () => false);   // its label and shortcut are set per toast, see showToast
 
     toastAction.addEventListener('click', () => {

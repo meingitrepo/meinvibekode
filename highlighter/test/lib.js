@@ -87,7 +87,7 @@ async function altKey(page, key, shift) {
   if (shift) await page.keyboard.up('Shift'); await page.keyboard.up('Alt');
   await page.waitForTimeout(150);
 }
-const toast = page => page.evaluate(() => { const r = window.__hl; return r.toastEl.hidden ? null : r.toastText.textContent + (r.toastAction.hidden ? '' : ' · ' + r.toastAction.textContent); });
+const toast = page => page.evaluate(() => { const r = window.__hl; return r.toastEl.hidden ? null : r.toastText.textContent + (r.toastAction.hidden ? '' : ' · ' + r.toastAction.dataset.action); });
 const wr = page => page.evaluate(() => window.__hl.allWrappers().map(w => {
   const o = { k: w.getAttribute('data-style-key'), t: w.textContent, g: w.getAttribute('data-highlighter-group') };
   const n = w.getAttribute('data-highlighter-note'); if (n) o.n = n; return o; }));

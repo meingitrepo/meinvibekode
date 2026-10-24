@@ -50,7 +50,7 @@
     let toastIcon = fluentIcon('info_20_regular');   // replaced per message
     const toastText = makeEl('div', { class: 'toast-text' });
     const toastContent = makeEl('div', { class: 'toast-content' }, [toastText]);
-    const toastAction = fluentButton({ text: 'Undo', size: 'small' });   // a small subtle button (Undo, Restore, Show); label and tooltip set per toast
+    const toastAction = fluentButton({ icon: fluentIcon('arrow_undo_20_regular') });   // an icon button (Undo, Restore, Show); icon, label and tooltip set per toast
     toastAction.hidden = true;
     const toastDismiss = fluentButton({ icon: fluentIcon('dismiss_20_regular'), label: 'Dismiss' });
     const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastDismiss]);

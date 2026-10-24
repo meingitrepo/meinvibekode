@@ -99,13 +99,17 @@
     // selection, or selecting something else, closes it.
     let selectPreview = false;
     let selectPreviewTimer = null;
+    let selectShowTimer = null;
+    const SELECT_PREVIEW_DELAY_MS = 150;   // the note follows the selection toolbar a little later
     function previewSelectedNote(groups) {
         if (selectPreview) hideNoteCard();
         const note = groups.length === 1 && !editor && !annotationsHidden &&
             groupWrappers(groups[0]).filter(w => w.hasAttribute(NOTE_ATTR) && w.getClientRects().length).pop();
         if (!note || !note.getAttribute(NOTE_ATTR)) return;
-        showNoteCard(note);
         selectPreview = true;
+        selectShowTimer = setTimeout(() => {
+            if (selectPreview && note.isConnected && !editor && !annotationsHidden) showNoteCard(note);
+        }, SELECT_PREVIEW_DELAY_MS);
         if (!TOOLBAR_IDLE_MS) return;
         selectPreviewTimer = setTimeout(function idle() {
             if (noteCardEl.matches(':hover')) { selectPreviewTimer = setTimeout(idle, 500); return; }
@@ -117,6 +121,7 @@
         clearTimeout(cardHideTimer);
         clearTimeout(cardShowTimer);
         clearTimeout(selectPreviewTimer);
+        clearTimeout(selectShowTimer);
         selectPreview = false;
         if (!noteCardEl.hidden) hideLabelTip();   // its Pin button's tip goes with it
         releaseFocus(noteCardEl);

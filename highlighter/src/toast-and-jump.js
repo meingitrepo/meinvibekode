@@ -27,7 +27,10 @@
         toastKey = currentKey;
         toastKeep = !!(action && action.keep);
         toastKeepsEditor = !!(action && action.keepEditor);
-        toastAction.textContent = action ? action.label : '';
+        if (action) {
+            toastAction.dataset.action = action.label;
+            toastAction.replaceChildren(fluentIcon(TOAST_ACTION_ICONS[action.label] || 'arrow_undo_20_regular'));
+        }
         toastAction.hidden = !action;
         if (action) {
             // The tooltip: what it does, and its shortcut where it has one.
@@ -64,6 +67,7 @@
 
     toastDismiss.addEventListener('click', hideToast);
     addLabelTip(toastDismiss, 'Dismiss', '', () => false);
+    const TOAST_ACTION_ICONS = { Undo: 'arrow_undo_20_regular', Restore: 'arrow_reset_20_regular', Show: 'eye_20_regular' };
     addLabelTip(toastAction, 'Undo', '', () => false);   // its label and shortcut are set per toast, see showToast
 
     toastAction.addEventListener('click', () => {

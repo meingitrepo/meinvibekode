@@ -7,7 +7,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Never push, open PRs or make branches on your own. Finish, commit locally, show the result, ask "Reply PUSH to push it to main." Only the word PUSH authorises a push. Never force-push main. Say nothing about commit or push state.
 - After PUSH run ONE Bash call: `highlighter/tools/release.sh "Theme" "What's in it" "Commit message"`. Never bump @version, commit the built file by hand. On conflict: keep BOTH sides, rerun related tests, rerun the script, mention the merged-in change. After pushing just say it's pushed.
 - One task per thread; new thread per follow-up/revert. Open-ended "find problems" asks: one ranking thread that fixes nothing, then one short thread per item Mhmd picks.
-- Economy: batch independent commands in one Bash call, no subagents, at most one review pass, status updates at milestones only.
+- Economy: every turn re-reads ~90k tokens of fixed context, so fewer turns is the main saving: chain build, test, screenshot and diffstat in one Bash call (`tools/verify.sh <keyword>`), batch independent commands, no subagents, at most one review pass, status updates at milestones only.
 - /agent-skills: use a skill only when the task is large or risky enough that the quality gain clearly outweighs the token cost (e.g. code-review before a big feature lands, doubt-driven-development before anything hard to undo); never on small straightforward tasks. Not mandatory.
 - UI/Fluent design: vanilla Fluent 2, no library; references https://github.com/microsoft/fluentui and https://storybooks.fluentui.dev/react/. Before building or changing UI, look up the real Fluent v9 component, don't guess. First: source in microsoft/fluentui `packages/react-components/react-<name>` (raw.githubusercontent.com or sparse clone). Second: the Storybook rendered with Playwright (plain fetch gets no content); check it's reachable first, the network may block it
 
@@ -21,13 +21,16 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 ## Tests
 - `node highlighter/test/run.js <word>` (Playwright 1.56.1 + Chromium, `NODE_PATH=/opt/node22/lib/node_modules`).
 - Tests first: for any behaviour change, write or update the test from the requested behaviour and see it fail, then change the code until it passes. Never edit a test afterwards just to match what the code does. Report pre-existing failures; never silently rewrite them.
-- Run only suites related to the change; no full run before PUSH.
+- Run only suites related to the change; no full run before PUSH (exception: a task about the tests themselves, e.g. stale-test cleanup).
+- Visual bug (spacing, widths, colors): reproduce it first with `shot.sh` or a test, at the trigger named in the brief (device pixel ratio, zoom, dark mode, high contrast). If the first attempt does not reproduce it, stop and ask in one short question; don't loop.
+- A suite that reports 0 checks crashed. Report it even if untouched; don't ignore it.
+- Fluent reference lookups: check `/mnt/project-files/fluent/` for saved notes first; save new findings there so later threads don't refetch.
 - Before asking PUSH on a behaviour change, grep `highlighter/test` for the changed feature/keys/colors; update tests expecting old behaviour; remove checks for retired behaviour rather than skipping.
 - CI runs only a quick gate on every push (`node build.js --check` + `node --check` on the built file, seconds). The full Playwright suite is local-only (CI run was ~2 min per push).
 
 ## Automation candidates
 - Only when a repeated step would cut significant manual work or tokens across threads, end the reply with one terse line suggesting a script like `release.sh` (with the idea). Skip one-liners and trivial wrappers unless the saving is significant. If nothing qualifies, say nothing, not even "none". Don't build it unasked; Mhmd picks.
-- Scripts in `highlighter/tools/`: `build.sh` (build+check), `map-check.sh` (Map vs build.js), `tests-for.sh <keyword>` (find and run suites mentioning it; sets NODE_PATH), `stale-checks.sh <old-term>` (test lines for retired behaviour), `sync.sh` (rebase onto latest origin/main, rebuild, report conflicts/overlap), `preflight.sh` (sync, diffstat, release.sh line), `release.sh` (post-PUSH release), `shot.sh <out.png> [light|dark] [js]` (playground screenshot). Use them instead of redoing these steps by hand.
+- Scripts in `highlighter/tools/`: `build.sh` (build+check), `map-check.sh` (Map vs build.js), `tests-for.sh <keyword>` (find and run suites mentioning it; sets NODE_PATH), `stale-checks.sh <old-term>` (test lines for retired behaviour), `sync.sh` (rebase onto latest origin/main, rebuild, report conflicts/overlap), `verify.sh <keyword...>` (build, matching suites, diffstat in one call), `preflight.sh` (sync, diffstat, release.sh line), `release.sh` (post-PUSH release), `shot.sh <out.png> [light|dark] [js]` (playground screenshot). Use them instead of redoing these steps by hand.
 
 ## Map (`highlighter/src/`, joined in `build.js` order; one IIFE, so later files see earlier names)
 Core

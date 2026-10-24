@@ -18,7 +18,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 
 ## Tests
 - `node highlighter/test/run.js <word>` (Playwright 1.56.1 + Chromium, `NODE_PATH=/opt/node22/lib/node_modules`).
-- Tests first: for any behaviour change, write or update the test from the requested behaviour and see it fail, then change the code until it passes. Never edit a test afterwards just to match the code. Report pre-existing failures; never silently rewrite them.
+- Tests first: for any behaviour change, write or update the test from the requested behaviour first, but don't run it to watch it fail. Do the planned work, then run the tests once at the end. Never edit a test afterwards just to match the code. Report pre-existing failures; never silently rewrite them.
 - Run only suites related to the change; no full run before PUSH (exception: tasks about the tests themselves).
 - A suite that reports 0 checks crashed. Report it even if untouched.
 - Before asking PUSH on a behaviour change, grep `highlighter/test` for the changed feature/keys/colors; update tests expecting old behaviour; remove checks for retired behaviour rather than skipping.

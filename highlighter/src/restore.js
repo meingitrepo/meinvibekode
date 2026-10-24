@@ -294,7 +294,7 @@
         if (document.hidden) { noticeDue = true; return; }
         noticedKeys.add(currentKey);
         if (!toastEl.hidden && toastRun) return;
-        showToast(doneText('not found', missing), { icon: 'warning_20_regular', intent: 'warning', body: 'Their text has changed or is gone from this page.', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
+        showToast(doneText('not found', missing), { icon: 'warning_20_regular', intent: 'warning', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
     }
 
     function restoreHighlights() {

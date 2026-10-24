@@ -39,7 +39,7 @@
     }
 
     function togglePen() {
-        if (penKey) { setPen(null); showToast('Pen off', { body: 'Press Alt+P to turn it on.' }); return; }
+        if (penKey) { setPen(null); showToast('Pen off'); return; }
         hideToolbar();
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
     }

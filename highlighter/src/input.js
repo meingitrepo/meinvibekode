@@ -132,10 +132,7 @@
         const off = !keysSwitchedOff();
         setKeysSwitchedOff(off);
         if (off) releaseAccessKeys();
-        showToast(off ? 'Shortcut keys off' : 'Shortcut keys on', {
-            body: off ? 'Sites get their Alt keys back. Press Alt+Shift+K to turn them on.'
-                : 'Alt keys now belong to the highlighter, not the site.'
-        });
+        showToast(off ? 'Shortcut keys off' : 'Shortcut keys on');
         refreshMenu();
     }
 
@@ -239,7 +236,7 @@
             const group = selected ? null : pointedGroup();
             if (selected) noteSelection(active);
             else if (group) openNoteEditor(group);
-            else showToast('Nothing to add a note to', { intent: 'warning', icon: 'warning_20_regular', body: 'Select text or point at an annotation, then press Alt+N.' });
+            else showToast('Nothing to add a note to', { intent: 'warning', icon: 'warning_20_regular' });
             return;
         }
 

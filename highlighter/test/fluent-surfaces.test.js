@@ -11,7 +11,7 @@ const SHADOW8 = /0px 4px 8px/, SHADOW16 = /0px 8px 16px/, SHADOW64 = /0px 32px 6
   const { ctx, page } = await L.open(browser, { html: HTML, store });
   const css = (get, props) => page.evaluate(([get, props]) => { const el = eval(get); const s = getComputedStyle(el); const r = el.getBoundingClientRect(); return Object.assign({ w: Math.round(r.width) }, ...props.map(p => ({ [p]: s[p] }))); }, [get, props]);
 
-  await page.evaluate(() => window.__hl.showToast('Hello', { body: 'A body line that is long enough to wrap onto a second line when the toast is narrow, to test the width.' })); await page.waitForTimeout(300);
+  await page.evaluate(() => window.__hl.showToast('A toast title that is long enough to wrap onto a second line when the toast is narrow, to test the width')); await page.waitForTimeout(300);
   // 13: toast
   const toast = await css('window.__hl.toastEl', ['borderTopLeftRadius', 'right', 'bottom']);
   L.check('13: toast radius 4px (Fluent Toast)', toast.borderTopLeftRadius === '4px', toast);

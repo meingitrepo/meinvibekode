@@ -453,7 +453,6 @@
     function offerDraft({ group, draft, records }, message = 'Note not saved', icon = 'edit_20_regular') {
         showToast(message, {
             icon,
-            body: message === 'Note not saved' ? 'Restore the text you wrote.' : '',
             action: { label: 'Restore', keep: true, run: () => restoreDraft(group, draft, records) }
         });
     }

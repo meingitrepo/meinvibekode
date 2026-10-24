@@ -305,7 +305,7 @@
         setToolbarSwitchedOff(off);
         if (off) hideToolbar();
         else scheduleToolbar();   // for text that is selected now
-        showToast(off ? 'Selection toolbar off' : 'Selection toolbar on', { body: off ? 'Press Alt+T to turn it on.' : 'Press Alt+T to turn it off.' });
+        showToast(off ? 'Selection toolbar off' : 'Selection toolbar on');
         refreshMenu();
     }
 

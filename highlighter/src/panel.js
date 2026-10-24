@@ -36,7 +36,7 @@
         const selected = toolbarSelection();
         let range = selected && cleanRange(selected);
         if (!range) {
-            showToast('Select the text first', { body: 'Then choose Attach to selection.' });
+            showToast('Select the text first');
             return;
         }
         if (editor) {
@@ -70,7 +70,7 @@
         });
         const sel = window.getSelection();
         if (sel) sel.removeAllRanges();
-        if (!created.length) showToast('Couldn\'t annotate that text', { intent: 'error', icon: 'error_circle_20_regular', body: 'Try selecting it again.' });
+        if (!created.length) showToast('Couldn\'t annotate that text', { intent: 'error', icon: 'error_circle_20_regular' });
     }
 
     // --- Annotations panel (Alt+O) ---

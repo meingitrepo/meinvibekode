@@ -7,10 +7,10 @@
     let toastKeepsEditor = false; // its action leaves a note being written open
 
     // A message in the bottom-right corner, as Fluent's Toast: an intent icon, a title, an
-    // optional `body` under it, an action and Dismiss. `icon` is a FLUENT_ICONS name; `intent`
+    // action and Dismiss. `icon` is a FLUENT_ICONS name; `intent`
     // is info, success or warning; `action` adds a text button, { label, run, keep, keepEditor },
     // such as Undo.
-    function showToast(message, { icon = 'info_20_regular', intent = 'info', body = '', action = null } = {}) {
+    function showToast(message, { icon = 'info_20_regular', intent = 'info', action = null } = {}) {
         // A plain message doesn't take the place of one still offering Undo or Restore.
         if (!action && !toastEl.hidden && toastRun) return;
         // The toast has the page's theme, set on it alone: a panel open next to a box of the
@@ -23,8 +23,6 @@
         toastIcon = nextIcon;
         toastEl.setAttribute('data-intent', intent);
         toastText.textContent = message;
-        toastBody.textContent = body;
-        toastBody.hidden = !body;
         toastRun = action ? action.run : null;
         toastKey = currentKey;
         toastKeep = !!(action && action.keep);
@@ -180,7 +178,7 @@
         if (wrapped) target = dir > 0 ? 0 : groups.length - 1;
         jumpToGroup(groups[target], { showNote: true });
         // After the jump, which takes down an "Annotations hidden" message that would hold this one back.
-        if (wrapped && groups.length > 1) showToast(dir > 0 ? 'Back to the first annotation' : 'Back to the last annotation', { body: 'That was the end of this page.' });
+        if (wrapped && groups.length > 1) showToast(dir > 0 ? 'Back to the first annotation' : 'Back to the last annotation');
         return true;
     }
 

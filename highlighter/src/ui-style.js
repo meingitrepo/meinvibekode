@@ -352,8 +352,6 @@
         .toast > .icon { width: 16px; height: 16px; margin-top: 2px; }
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 600; }
-        .toast-body { padding-top: 6px; color: var(--colorNeutralForeground1); }
-        .toast-body[hidden] { display: none; }
         .toast .btn-icon { margin: -6px 0; }
         .toast .btn-icon:last-child { margin-right: -6px; }
         /* The toast's action (Undo, Restore): a Fluent Link, as in Fluent's Toast. */

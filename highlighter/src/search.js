@@ -123,7 +123,7 @@
             // Undo covers only this page, so it is offered only when nothing else was forgotten.
             if (!elsewhere.size) { offerUndo(doneText('forgotten', selected.length), step, 'eraser_20_regular'); return; }
         }
-        showToast(doneText('forgotten', selected.length), { icon: 'eraser_20_regular', body: 'Removed from every page they were on.' });
+        showToast(doneText('forgotten', selected.length), { icon: 'eraser_20_regular' });
     }
 
     let everythingItemSeq = 0;
@@ -206,8 +206,8 @@
         const selected = everythingShown.filter(s => everythingChecked.has(s.id));
         if (!selected.length) return;
         writeClipboard(savedMarkdown(selected)).then(
-            () => showToast(doneText('copied', selected.length), { icon: 'checkmark_20_regular', intent: 'success', body: 'Pasted as Markdown, with its notes.' }),
-            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'error_circle_20_regular', body: 'The browser blocked clipboard access.' }); });
+            () => showToast(doneText('copied', selected.length), { icon: 'checkmark_20_regular', intent: 'success' }),
+            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'error_circle_20_regular' }); });
     });
     everythingForget.addEventListener('click', () => {
         if (!running) return;

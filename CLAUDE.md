@@ -8,16 +8,16 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Reading: grep src/ first, read only the line ranges needed. Never read the built .user.js or all of src.
 
 ## Workflow
-- Plan first, inside the same turn as the first work (no separate planning turn, no plan file). Small fix = 2-4 lines (cause or goal, files/functions, the proving test, risk). Larger work = numbered tasks in dependency order, each with an acceptance check and a "tests first" step, built in thin slices (one `verify.sh` per slice).
+- Follow the Superpowers workflow for planning: brainstorm, then a written plan (its plan file is fine), then execute. Small fixes may skip straight to a 2-4 line plan (cause or goal, files/functions, the proving test, risk). Build in thin slices (one `verify.sh` per slice).
 - Ask Mhmd for any missing detail in one short batched question. Never assume anything unnecessary. Do only what is asked, nothing extra.
 - Never push, open PRs or make branches on your own. Finish, commit locally, show the result, ask "Reply PUSH to push it to main." Only the word PUSH authorises a push. Never force-push main. Say nothing about commit or push state.
 - After PUSH run ONE Bash call: `highlighter/tools/release.sh "Theme" "What's in it" "Commit message"`. Never bump @version or commit the built file by hand. On conflict: keep BOTH sides, rerun related tests, rerun the script, mention the merged-in change. After pushing just say it's pushed.
 - One task per thread; new thread per follow-up/revert. Open-ended "find problems" asks: one ranking thread that fixes nothing, then one short thread per item Mhmd picks.
-- Economy: fewer turns is the main saving. Chain build, test and diffstat in one Bash call (`tools/verify.sh <keyword>`), batch independent commands, no subagents, at most one review pass, status updates at milestones only.
+- Economy: fewer turns is the main saving. Chain build, test and diffstat in one Bash call (`tools/verify.sh <keyword>`), batch independent commands, subagents allowed when Superpowers calls for them, at most one review pass, status updates at milestones only.
 
 ## Tests
 - `node highlighter/test/run.js <word>` (Playwright 1.56.1 + Chromium, `NODE_PATH=/opt/node22/lib/node_modules`).
-- Tests first: for any behaviour change, write or update the test from the requested behaviour first, but don't run it to watch it fail. Do the planned work, then run the tests once at the end. Never edit a test afterwards just to match the code. Report pre-existing failures; never silently rewrite them.
+- Tests first (Superpowers TDD): for any behaviour change, write the test first and run it to see it fail, then implement, then run it to see it pass. Never edit a test afterwards just to match the code. Report pre-existing failures; never silently rewrite them.
 - Run only suites related to the change; no full run before PUSH (exception: tasks about the tests themselves).
 - A suite that reports 0 checks crashed. Report it even if untouched.
 - Before asking PUSH on a behaviour change, grep `highlighter/test` for the changed feature/keys/colors; update tests expecting old behaviour; remove checks for retired behaviour rather than skipping.

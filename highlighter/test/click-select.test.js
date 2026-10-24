@@ -19,7 +19,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px">
     await page.mouse.click(pt.x, pt.y); await page.waitForTimeout(100);
     let bx = await box();
     const wrect = await page.evaluate(() => { const rs = window.__hl.allWrappers().flatMap(w => Array.from(w.getClientRects())); return [Math.min(...rs.map(r => r.left)), Math.min(...rs.map(r => r.top)), Math.max(...rs.map(r => r.right)), Math.max(...rs.map(r => r.bottom))]; });
-    L.check(`${scheme} box drawn solid 2px around it`, bx && bx.style === 'solid' && bx.width === '2px' && bx.b[0] < wrect[0] && bx.b[1] < wrect[1] && bx.b[2] > wrect[2] && bx.b[3] > wrect[3], { bx, wrect });
+    L.check(`${scheme} box drawn solid 1px around it`, bx && bx.style === 'solid' && bx.width === '1px' && bx.b[0] < wrect[0] && bx.b[1] < wrect[1] && bx.b[2] > wrect[2] && bx.b[3] > wrect[3], { bx, wrect });
     console.log('  box color', bx && bx.color);
     // plain digit restyles, mouse away
     await page.mouse.move(800, 600);

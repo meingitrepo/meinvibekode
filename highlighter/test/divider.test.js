@@ -6,7 +6,7 @@ const check = (name, ok, info) => results.push([name, ok, info]);
 const spaces = (p, bar) => p.evaluate(b => {
   const el = window.__hl[b];
   return [...el.querySelectorAll('.divider')].map(d => {
-    const r = d.getBoundingClientRect(), prev = d.previousElementSibling.getBoundingClientRect(), next = (d.nextElementSibling.classList.contains('pen-text') ? d.nextElementSibling.nextElementSibling : d.nextElementSibling).getBoundingClientRect();
+    const r = d.getBoundingClientRect(), prev = d.previousElementSibling.getBoundingClientRect(), next = d.nextElementSibling.getBoundingClientRect();
     return [r.width, Math.round(r.height), Math.round(r.left - prev.right), Math.round(next.left - r.right), getComputedStyle(d).backgroundColor].join(',');
   });
 }, bar);

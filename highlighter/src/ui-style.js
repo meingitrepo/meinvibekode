@@ -205,8 +205,8 @@
         .surface, .everything { color-scheme: var(--colorScheme); }
 
         /* Every floating panel (toolbar, note preview, note editor, toast, tooltip) shares this
-           surface: 8px corners and shadow8, matched to Edge's PDF selection toolbar. Tooltips use
-           Fluent's 4px corners; the note preview, note editor and panels, a Fluent
+           surface: 8px corners and shadow8, matched to Edge's PDF selection toolbar. The toast and
+           tooltip use Fluent's 4px corners; the note preview, note editor and panels, a Fluent
            Popover's 4px corners and shadow16. */
         .surface {
             position: fixed; top: 0; left: 0; box-sizing: border-box;
@@ -344,7 +344,7 @@
            panel, which would leave the box's border wider than the textarea and its scrollbar. */
         .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
         /* Toast */
-        .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; min-width: min(292px, calc(100vw - 32px)); max-width: min(360px, calc(100vw - 32px)); padding: 12px; }
+        .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; width: min(292px, calc(100vw - 32px)); padding: 12px; border-radius: var(--borderRadiusMedium); }
         .toast .icon { color: var(--colorNeutralForeground2); }
         .toast[data-intent="success"] > .icon { color: var(--colorPaletteGreenForeground1); }
         .toast[data-intent="warning"] > .icon { color: var(--colorPaletteDarkOrangeForeground1); }

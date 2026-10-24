@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.125
+// @version      8.126
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -4705,9 +4705,30 @@
         placePanel(noteCardEl, noteCardAnchor(wrapper), true);
     }
 
+    // Selecting one annotation that has a note shows its note, read-only, for as long as the
+    // selection toolbar stays (TOOLBAR_IDLE_MS; pointing at the card keeps it). Clearing the
+    // selection, or selecting something else, closes it.
+    let selectPreview = false;
+    let selectPreviewTimer = null;
+    function previewSelectedNote(groups) {
+        if (selectPreview) hideNoteCard();
+        const note = groups.length === 1 && !editor && !annotationsHidden &&
+            groupWrappers(groups[0]).filter(w => w.hasAttribute(NOTE_ATTR) && w.getClientRects().length).pop();
+        if (!note || !note.getAttribute(NOTE_ATTR)) return;
+        showNoteCard(note);
+        selectPreview = true;
+        if (!TOOLBAR_IDLE_MS) return;
+        selectPreviewTimer = setTimeout(function idle() {
+            if (noteCardEl.matches(':hover')) { selectPreviewTimer = setTimeout(idle, 500); return; }
+            if (selectPreview) hideNoteCard();
+        }, TOOLBAR_IDLE_MS);
+    }
+
     function hideNoteCard() {
         clearTimeout(cardHideTimer);
         clearTimeout(cardShowTimer);
+        clearTimeout(selectPreviewTimer);
+        selectPreview = false;
         if (!noteCardEl.hidden) hideLabelTip();   // its Pin button's tip goes with it
         releaseFocus(noteCardEl);
         noteCardEl.hidden = true;
@@ -4770,6 +4791,7 @@
     function onMouseMove(e) {
         if (isUiEvent(e)) return;
         pointer = { x: e.clientX, y: e.clientY };
+        if (selectPreview && markNear(e.clientX, e.clientY)) selectPreview = false;   // the pointer takes over
         let mark = annotationsHidden || editor ? null : markNear(e.clientX, e.clientY);
         if (pinnedCards.has(mark)) mark = null;   // its note is open already
         if (mark === nearMark) return;
@@ -4778,7 +4800,7 @@
             scheduleNoteCard(mark);
         } else {
             clearTimeout(cardShowTimer);
-            if (cardWrapper) {
+            if (cardWrapper && !selectPreview) {
                 clearTimeout(cardHideTimer);
                 cardHideTimer = setTimeout(hideNoteCard, 250);
             }
@@ -5362,11 +5384,16 @@
         ensureUi();
         if (!selectFrame) followSelectBoxes();
         scheduleToolbar();   // the selection toolbar, for these annotations (see showGroupToolbar)
+        if (selectedGroups.join() !== previewedGroups) previewSelectedNote(selectedGroups);
+        previewedGroups = selectedGroups.join();
     }
+    let previewedGroups = '';
 
     function clearSelectedGroups() {
         if (editor) { if (selectedGroups.join() !== editor.group) setSelectedGroups([]); return; }   // all but the editor's (see setSelectedGroups)
         selectedGroups = [];
+        previewedGroups = '';
+        if (selectPreview) hideNoteCard();
         cancelAnimationFrame(selectFrame);
         selectFrame = 0;
         selectBoxes.forEach(({ el }, g) => { el.remove(); unmarkNoteSelect(g); });

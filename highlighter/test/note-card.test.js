@@ -79,7 +79,7 @@ async function pin(browser) {
   await p.mouse.click(5, 300); await p.waitForTimeout(50);
   check('moving away and clicking elsewhere keep it', (await pins()).length === 1 && (await fill('gA')) === DARKER, await pins());
   await hoverPin('gB');
-  check('pinning a note already shown on hover does not fade it in again', await p.evaluate(() => Array.from(window.__hl.uiRoot.querySelectorAll('.card[data-pinned]')).map(c => getComputedStyle(c).animationName).join() === 'none,none'), await p.evaluate(() => Array.from(window.__hl.uiRoot.querySelectorAll('.card[data-pinned]')).map(c => getComputedStyle(c).animationName).join()));
+  check('pinning a note does not fade it in again; the copy only lifts its shadow (no stacked dark flash)', await p.evaluate(() => Array.from(window.__hl.uiRoot.querySelectorAll('.card[data-pinned]')).map(c => getComputedStyle(c).animationName).join() === 'highlighter-pin,highlighter-pin'), await p.evaluate(() => Array.from(window.__hl.uiRoot.querySelectorAll('.card[data-pinned]')).map(c => getComputedStyle(c).animationName).join()));
   ps = await pins();
   check('another note pins a second one', ps.length === 2 && ps.map(c => c.text).sort().join() === 'Note A,Note B' && (await fill('gB')) === DARKER, ps);
   await p.mouse.move(5, 300); await p.mouse.wheel(0, 500); await p.waitForTimeout(200);

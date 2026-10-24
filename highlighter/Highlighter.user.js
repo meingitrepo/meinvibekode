@@ -3697,6 +3697,7 @@
         .surface.toolbar, .surface.tip, .surface.card, .surface.editor { position: absolute; }
         .surface.card, .surface.editor, .surface.panel { box-shadow: var(--shadow16); }
         .surface.panel, .surface.everything-box { box-shadow: var(--shadow64); }
+        @keyframes highlighter-pin { from { box-shadow: var(--shadow8); } }
         @keyframes highlighter-enter { from { opacity: 0; transform: translateY(4px); } }
 
         .icon { display: block; flex: none; fill: currentColor; }
@@ -3945,7 +3946,7 @@
         .missing .item-actions { opacity: 1; padding: 0 4px 6px 6px; }
 
         @media (prefers-reduced-motion: reduce) {
-            .surface, .everything { animation: none; transition: none; }
+            .surface, .everything { animation: none !important; transition: none; }
             .btn, .field::after, .toolbar.fading { transition: none; }
         }
         @media (forced-colors: active) {
@@ -4746,8 +4747,13 @@
         if (!mark || pinnedCards.has(mark)) return;
         const card = noteCardEl.cloneNode(true);
         card.setAttribute('data-pinned', '');
-        card.style.animation = 'none';   // the hover card already on screen just stays; no second fade-in
+        card.style.animation = 'highlighter-pin var(--durationNormal) var(--curveDecelerateMax)';
+        // The hover card is replaced on the spot: fading out under the copy doubled their shadows
+        // into a dark flash. The copy only lifts its shadow (see highlighter-pin).
+        noteCardEl.style.transition = 'none';
         hideNoteCard();
+        noteCardEl.offsetWidth;
+        noteCardEl.style.transition = '';
         noteCardEl.after(card);
         pinnedCards.set(mark, card);
         mark.setAttribute(NOTE_PIN_ATTR, '');

@@ -136,8 +136,13 @@
         if (!mark || pinnedCards.has(mark)) return;
         const card = noteCardEl.cloneNode(true);
         card.setAttribute('data-pinned', '');
-        card.style.animation = 'none';   // the hover card already on screen just stays; no second fade-in
+        card.style.animation = 'highlighter-pin var(--durationNormal) var(--curveDecelerateMax)';
+        // The hover card is replaced on the spot: fading out under the copy doubled their shadows
+        // into a dark flash. The copy only lifts its shadow (see highlighter-pin).
+        noteCardEl.style.transition = 'none';
         hideNoteCard();
+        noteCardEl.offsetWidth;
+        noteCardEl.style.transition = '';
         noteCardEl.after(card);
         pinnedCards.set(mark, card);
         mark.setAttribute(NOTE_PIN_ATTR, '');

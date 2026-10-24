@@ -88,7 +88,7 @@
     }
 
     function openPanel({ focus = true } = {}) {
-        if (!running) return;
+        if (!running || !toolOn('panels')) return;
         syncLocation();
         const dark = computeDarkMode();
         ensureUi(panelOpen() && uiDark !== null ? uiDark : dark);

@@ -193,6 +193,7 @@
         if (!COMMAND_CODES.has(code) && (e.shiftKey || !CODE_TO_STYLE.has(code))) return;
         syncLocation();
 
+        if ((code === 'KeyZ' || code === 'KeyY') && !toolOn('undo')) return;
         if (code === 'KeyZ' || code === 'KeyY') {
             const redo = code === 'KeyY' || e.shiftKey;
             if (!(redo ? redoStack : undoStack).length) return;

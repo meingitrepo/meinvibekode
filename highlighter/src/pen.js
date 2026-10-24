@@ -38,6 +38,7 @@
     }
 
     function togglePen() {
+        if (!toolOn('pen')) return;
         if (penKey) { setPen(null); showToast('Pen off'); return; }
         hideToolbar();
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);

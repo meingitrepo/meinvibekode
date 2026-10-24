@@ -144,9 +144,10 @@
 
     function toggleSite() {
         const disable = running;
-        setSiteDisabled(disable);
+        setSiteEnabled(!disable);
         if (disable) stop();
         else start();
+        renderSiteMenu();
         refreshMenu();
     }
 
@@ -226,6 +227,7 @@
                 if (total) items.push([`Clear ${annotationsText(total)} on this page`, clearPageAnnotations]);
             }
         }
+        items.push([menuHiddenHere() ? 'Show the menu' : 'Hide the menu', toggleSiteMenu]);
         items.push(['Delete all saved annotations…', clearAllSaved]);
 
         const labels = items.map(([label]) => label).join('\n');
@@ -240,6 +242,8 @@
     // =====================================================================
 
     if (typeof GM_addValueChangeListener === 'function') GM_addValueChangeListener(SETTINGS_KEY, onSettingsChanged);
-    if (!disabledSites().includes(siteId())) start();
+    migrateEnabledSites();
+    if (siteEnabled()) start();
+    renderSiteMenu();
     refreshMenu();
 })();

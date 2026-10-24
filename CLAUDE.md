@@ -66,6 +66,7 @@ UI
 - `markdown` Copy as Markdown
 - `panel` Alt+O
 - `search` all pages, Alt+Shift+O
+- `site-menu` sticky menu: site switch, tools, Alt+Shift+M
 
 Runtime
 - `live-sync` changes from other tabs

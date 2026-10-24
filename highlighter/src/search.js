@@ -43,7 +43,7 @@
     }
 
     function openEverything() {
-        if (!running) return;
+        if (!running || !toolOn('panels')) return;
         const dark = computeDarkMode();
         ensureUi(dark);
         everythingEl.setAttribute('data-theme', dark ? 'dark' : 'light');

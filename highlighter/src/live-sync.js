@@ -89,10 +89,11 @@
         let sites = [];
         try {
             const s = JSON.parse(newRaw || '{}');
-            if (s && Array.isArray(s.disabledSites)) sites = s.disabledSites;
+            if (s && Array.isArray(s.enabledSites)) sites = s.enabledSites;
         } catch (e) { return; }
-        const off = sites.includes(siteId());
+        const off = !sites.includes(siteId());
         if (off && running) stop();
         else if (!off && !running) start();
+        renderSiteMenu();
         refreshMenu();
     }

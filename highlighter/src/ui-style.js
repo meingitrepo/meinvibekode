@@ -191,8 +191,8 @@
     const UI_CSS = `
         :host { all: initial; ${LIGHT_TOKENS} }
         :host([data-theme="dark"]) { ${DARK_TOKENS} }
-        .panel[data-theme="light"], .toast[data-theme="light"], .pen[data-theme="light"], .everything[data-theme="light"] { ${LIGHT_TOKENS} }
-        .panel[data-theme="dark"], .toast[data-theme="dark"], .pen[data-theme="dark"], .everything[data-theme="dark"] { ${DARK_TOKENS} }
+        .panel[data-theme="light"], .toast[data-theme="light"], .pen[data-theme="light"], .everything[data-theme="light"], .sitemenu[data-theme="light"] { ${LIGHT_TOKENS} }
+        .panel[data-theme="dark"], .toast[data-theme="dark"], .pen[data-theme="dark"], .everything[data-theme="dark"], .sitemenu[data-theme="dark"] { ${DARK_TOKENS} }
         [hidden]:not(.surface):not(.everything), .tip[hidden] { display: none !important; }
         /* Surfaces fade out rather than vanish: display flips last (allow-discrete), so the hidden attribute
            still takes effect at once for scripts. */
@@ -369,6 +369,21 @@
         .toast:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
         /* The pen's bar, centred at the top of the view. */
         .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
+        /* The sticky menu: a pill with the site switch, tools expanding below it. */
+        .sitemenu { padding: 4px 8px; width: max-content; max-width: calc(100vw - 24px); }
+        .sitemenu-head { display: flex; align-items: center; gap: 8px; min-height: 32px; cursor: grab; }
+        .sitemenu-title { flex: 1 1 auto; font-weight: 600; user-select: none; }
+        .sitemenu-tools { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--durationNormal) var(--curveDecelerateMid), opacity var(--durationNormal) var(--curveDecelerateMid); }
+        .sitemenu[data-open] .sitemenu-tools { grid-template-rows: 1fr; opacity: 1; }
+        .sitemenu-inner { overflow: hidden; min-height: 0; }
+        .sitemenu-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 32px; }
+        .switch { flex: none; position: relative; width: 40px; height: 20px; padding: 0; box-sizing: border-box; border: 1px solid var(--colorNeutralStrokeAccessible); border-radius: 10px; background: none; cursor: pointer; transition: background var(--durationNormal) var(--curveEasyEase), border-color var(--durationNormal) var(--curveEasyEase); }
+        .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--colorNeutralStrokeAccessible); transition: transform var(--durationNormal) var(--curveEasyEase), background var(--durationNormal) var(--curveEasyEase); }
+        .switch[aria-checked="true"] { background: var(--colorCompoundBrandBackground); border-color: var(--colorCompoundBrandBackground); }
+        .switch[aria-checked="true"]::after { transform: translateX(20px); background: var(--colorNeutralForegroundOnBrand, #fff); }
+        .switch:hover[aria-checked="true"] { background: var(--colorCompoundBrandBackgroundHover); }
+        .switch:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 1px; }
+        @media (prefers-reduced-motion: reduce) { .sitemenu-tools, .switch, .switch::after { transition: none; } }
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
         .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
         .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 12px 0 0; }

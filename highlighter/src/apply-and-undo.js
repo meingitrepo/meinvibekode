@@ -265,10 +265,12 @@
     }
 
     function undoLastAction() {
+        if (!toolOn('undo')) return;
         stepHistory(undoStack, redoStack);
     }
 
     function redoLastAction() {
+        if (!toolOn('undo')) return;
         stepHistory(redoStack, undoStack);
     }
 

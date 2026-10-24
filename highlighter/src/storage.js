@@ -318,17 +318,41 @@
         }
     }
 
-    function disabledSites() {
-        const list = readSettings().disabledSites;
+    function enabledSites() {
+        const list = readSettings().enabledSites;
         return Array.isArray(list) ? list : [];
     }
 
-    function setSiteDisabled(disabled) {
+    function siteEnabled() {
+        return enabledSites().includes(siteId());
+    }
+
+    function setSiteEnabled(on) {
         const settings = readSettings();
-        const sites = new Set(disabledSites());
-        if (disabled) sites.add(siteId());
+        const sites = new Set(enabledSites());
+        if (on) sites.add(siteId());
         else sites.delete(siteId());
-        settings.disabledSites = Array.from(sites);
+        settings.enabledSites = Array.from(sites);
+        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+    }
+
+    // Sites are off until switched on. Once, when this version first runs, every site that already
+    // has saved annotations is switched on, so nobody loses sight of their notes.
+    function migrateEnabledSites() {
+        const settings = readSettings();
+        if (settings.sitesMigrated) return;
+        const sites = new Set(enabledSites());
+        const old = Array.isArray(settings.disabledSites) ? settings.disabledSites : [];
+        if (typeof GM_listValues === 'function') {
+            GM_listValues().forEach(k => {
+                if (k === SETTINGS_KEY) return;
+                let host;
+                try { const u = new URL(k); host = u.hostname || u.protocol; } catch (e) { return; }
+                if (!old.includes(host) && readRecords(k)) sites.add(host);
+            });
+        }
+        settings.enabledSites = Array.from(sites);
+        settings.sitesMigrated = true;
         GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
     }
 
@@ -336,7 +360,7 @@
 
     // Read afresh each time, so a switch made in another tab counts here too.
     function keysSwitchedOff() {
-        return readSettings().keysOff === true;
+        return readSettings().keysOff === true || !toolOn('keys');
     }
 
     function setKeysSwitchedOff(off) {

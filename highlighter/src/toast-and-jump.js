@@ -40,7 +40,7 @@
     function startToastTimer(ms) {
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => {
-            if (toastEl.matches(':hover') || toastEl.contains(uiRoot.activeElement) || !document.hasFocus()) startToastTimer(2000);   // paused while the window is blurred
+            if (toastEl.matches(':hover') || toastEl.contains(uiRoot.activeElement)) startToastTimer(2000);
             else hideToast();
         }, ms);
     }

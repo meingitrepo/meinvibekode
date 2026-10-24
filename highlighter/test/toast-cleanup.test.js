@@ -37,6 +37,10 @@ const info = page => page.evaluate(() => { const r = window.__hl; const t = r.to
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
   for (let i = 0; i < 3; i++) { await L.altKey(page, 'j'); await page.waitForTimeout(400); }
   L.check('wrap toast', /^Back to the first/.test(await L.toast(page) || ''), await L.toast(page)); await body('Back to the first');
+  // 5: a blurred window does not hold the toast up
+  await page.evaluate(() => { document.hasFocus = () => false; window.__hl.showToast('Blurred'); });
+  await page.waitForTimeout(4800);
+  L.check('toast closes on time while the window is blurred', await page.evaluate(() => window.__hl.toastEl.hidden), await L.toast(page));
   await browser.close();
   console.log('FAILS', L.fails);
 })().catch(e => { console.error(e); process.exit(1); });

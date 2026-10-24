@@ -13,7 +13,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Never push, open PRs or make branches on your own. Finish, commit locally, show the result, ask "Reply PUSH to push it to main." Only the word PUSH authorises a push. Never force-push main. Say nothing about commit or push state.
 - After PUSH run ONE Bash call: `highlighter/tools/release.sh "Theme" "What's in it" "Commit message"`. Never bump @version or commit the built file by hand. On conflict: keep BOTH sides, rerun related tests, rerun the script, mention the merged-in change. After pushing just say it's pushed.
 - One task per thread; new thread per follow-up/revert. Open-ended "find problems" asks: one ranking thread that fixes nothing, then one short thread per item Mhmd picks.
-- Economy: fewer turns is the main saving. Chain build, test, screenshot and diffstat in one Bash call (`tools/verify.sh <keyword>`), batch independent commands, no subagents, at most one review pass, status updates at milestones only.
+- Economy: fewer turns is the main saving. Chain build, test and diffstat in one Bash call (`tools/verify.sh <keyword>`), batch independent commands, no subagents, at most one review pass, status updates at milestones only.
 - /agent-skills: only when the task is large or risky enough that the quality gain clearly outweighs the token cost (e.g. code-review before a big feature, doubt-driven-development before anything hard to undo); never on small tasks.
 
 ## Tests
@@ -25,10 +25,10 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - CI runs only a quick gate per push (`node build.js --check` + `node --check` on the built file). The full Playwright suite is local-only.
 
 ## UI / Fluent
-- Showcase shots must be cropped to the changed component (`SHOT_CLIP`), never a whole-window shot; the same crop for before/after and light/dark.
+- Screenshots: take or send them only when Mhmd asks. Never add before/after or showcase shots by default. When asked, crop to the changed component (`SHOT_CLIP`), never a whole-window shot; the same crop for before/after and light/dark.
 - Vanilla Fluent 2, no library. References: https://github.com/microsoft/fluentui and https://storybooks.fluentui.dev/react/. Before building or changing UI, look up the real Fluent v9 component, don't guess.
 - Lookup order: saved notes in `/mnt/project-files/fluent/` first; then source in microsoft/fluentui `packages/react-components/react-<name>` (raw.githubusercontent.com or sparse clone); then the Storybook rendered with Playwright (plain fetch gets no content; check it's reachable, the network may block it). Save new findings to `/mnt/project-files/fluent/`.
-- Visual bug (spacing, widths, colors): reproduce it first with `shot.sh` or a test, at the trigger named in the brief (device pixel ratio, zoom, dark mode, high contrast). If the first attempt does not reproduce it, stop and ask in one short question; don't loop.
+- Visual bug (spacing, widths, colors): reproduce it first with a test (or `shot.sh` for your own check; don't send the shot unless asked), at the trigger named in the brief (device pixel ratio, zoom, dark mode, high contrast). If the first attempt does not reproduce it, stop and ask in one short question; don't loop.
 
 ## Scripts (`highlighter/tools/`; use them instead of redoing these steps by hand)
 - `build.sh` build+check; `map-check.sh` Map vs build.js; `tests-for.sh <keyword>` find and run suites mentioning it; `stale-checks.sh <old-term>` test lines for retired behaviour

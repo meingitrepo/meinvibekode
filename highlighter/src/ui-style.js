@@ -369,10 +369,10 @@
         .pen-text { box-sizing: border-box; padding: 0 4px; white-space: nowrap; color: var(--colorNeutralForeground1); }
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
         .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
-        .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 24px 0 0; }
-        .everything-box .panel-header { margin: -4px 18px 12px 24px; }
-        .everything-box .field { flex: none; margin: 0 24px 8px; }
-        .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 20px 24px; overscroll-behavior: contain; }
+        .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 16px 0 0; }
+        .everything-box .panel-header { margin: 0 12px 8px 16px; }
+        .everything-box .field { flex: none; margin: 0 16px 8px; }
+        .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 12px 12px; overscroll-behavior: contain; }
         .page-head {
             display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 6px 4px; border: 0;
             border-radius: var(--borderRadiusMedium); background: none; font: inherit; color: inherit; text-align: left;

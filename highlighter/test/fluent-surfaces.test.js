@@ -35,7 +35,7 @@ const SHADOW8 = /0px 4px 8px/, SHADOW16 = /0px 8px 16px/, SHADOW64 = /0px 32px 6
   const etitle = await css('window.__hl.everythingCount', ['fontSize', 'lineHeight']);
   const left = await page.evaluate(() => { const r = window.__hl; const b = r.everythingEl.firstElementChild.getBoundingClientRect(); return { count: r.everythingCount.getBoundingClientRect().left - b.left, field: r.everythingFilter.parentElement.getBoundingClientRect().left - b.left }; });
   L.check('22: dialog is 600px wide with a shadow64 and 8px corners', box.w === 600 && SHADOW64.test(box.boxShadow) && box.borderTopLeftRadius === '8px', box);
-  L.check('22: dialog padding is 24px', box.paddingTop === '24px' || left.count === 24 && left.field === 24, { box, left });
+  L.check('22: dialog content sits 16px in from the edge (tightened)', left.count === 16 && left.field === 16 && box.paddingTop === '16px', { box, left });
   L.check('22: dialog title stays 14/20', etitle.fontSize === '14px' && etitle.lineHeight === '20px', etitle);
   // Shadow tokens equal Fluent tokens (createShadowTokens: ambient/key .12/.14 light, .24/.28 dark)
   const built = require('fs').readFileSync(require('path').join(__dirname, '..', 'Highlighter.user.js'), 'utf8');

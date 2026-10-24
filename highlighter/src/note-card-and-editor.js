@@ -342,7 +342,7 @@
         if (!returnFocus) returnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
         editor = { group, original, step, returnFocus, wasSelected: selectedGroups.includes(group) };
         wrappers.forEach(w => w.setAttribute(NOTE_EDIT_ATTR, ''));
-        setSelectedGroups(selectedGroups.concat(group));   // its dashed outline; no toolbar while the editor is open
+        setSelectedGroups(selectedGroups.concat(group));   // its outline; no toolbar while the editor is open
         editorTitle.textContent = original ? 'Edit note' : 'Add note';
         noteInput.value = draft === null ? original : draft;
         updateSaveState();

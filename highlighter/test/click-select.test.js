@@ -1,4 +1,4 @@
-// 7.39: clicking an annotation selects it (dashed box); keys act on it.
+// 7.39: clicking an annotation selects it (solid focus-stroke box); keys act on it.
 const L = require('./lib');
 const html = `<html><body style="font:16px sans-serif;margin:40px">
 <p id="p">Alpha bravo charlie <a id="lnk" href="#jumped">delta link</a> echo foxtrot golf hotel india juliet.</p>
@@ -13,13 +13,13 @@ const html = `<html><body style="font:16px sans-serif;margin:40px">
     let w = await L.wr(page);
     L.check(`${scheme} annotated`, w.length >= 1 && w[0].k === 'h', w);
     const box = () => page.evaluate(() => { const r = window.__hl; const e = r.selectBoxesEl.querySelector('.select-box'); if (!e || e.hidden) return null; const b = e.getBoundingClientRect();
-      return { g: r.selectedGroups[0], b: [b.left, b.top, b.right, b.bottom], color: getComputedStyle(e).color, style: getComputedStyle(e.querySelector('path')).strokeDasharray !== 'none' ? 'dashed' : 'solid' }; });
+      return { g: r.selectedGroups[0], b: [b.left, b.top, b.right, b.bottom], color: getComputedStyle(e).color, width: getComputedStyle(e.querySelector('path')).strokeWidth, style: getComputedStyle(e.querySelector('path')).strokeDasharray !== 'none' ? 'dashed' : 'solid' }; });
     // click on "bravo" text (not the link)
     const pt = await page.evaluate(() => { const w = window.__hl.allWrappers()[0]; const r = w.getClientRects()[0]; return { x: r.left + 5, y: r.top + r.height / 2 }; });
     await page.mouse.click(pt.x, pt.y); await page.waitForTimeout(100);
     let bx = await box();
     const wrect = await page.evaluate(() => { const rs = window.__hl.allWrappers().flatMap(w => Array.from(w.getClientRects())); return [Math.min(...rs.map(r => r.left)), Math.min(...rs.map(r => r.top)), Math.max(...rs.map(r => r.right)), Math.max(...rs.map(r => r.bottom))]; });
-    L.check(`${scheme} box drawn dashed around it`, bx && bx.style === 'dashed' && bx.b[0] < wrect[0] && bx.b[1] < wrect[1] && bx.b[2] > wrect[2] && bx.b[3] > wrect[3], { bx, wrect });
+    L.check(`${scheme} box drawn solid 2px around it`, bx && bx.style === 'solid' && bx.width === '2px' && bx.b[0] < wrect[0] && bx.b[1] < wrect[1] && bx.b[2] > wrect[2] && bx.b[3] > wrect[3], { bx, wrect });
     console.log('  box color', bx && bx.color);
     // plain digit restyles, mouse away
     await page.mouse.move(800, 600);

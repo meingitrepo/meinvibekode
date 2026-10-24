@@ -175,7 +175,7 @@
     }
 
     // The toolbar for annotations selected by clicking them (see setSelectedGroups), placed by
-    // their dashed boxes (a single one; none for several). The style all of them have shows pressed and keeps them, as with a
+    // their boxes (a single one; none for several). The style all of them have shows pressed and keeps them, as with a
     // selection; the others restyle them, and they stay selected with the toolbar over them.
     function showGroupToolbar(groups) {
         if (groups.length > 1) return false;   // several selected: outlines only, no toolbar

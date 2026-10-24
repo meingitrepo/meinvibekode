@@ -117,7 +117,7 @@
         return { top, left, bottom, right, width: right - left, height: bottom - top };
     }
 
-    // The dashed outline around an annotation's lines, following the text's shape: one row per
+    // The outline around an annotation's lines, following the text's shape: one row per
     // line, from where the text starts on the first line to where it ends on the last, the rows
     // joined halfway between lines into one outline with rounded corners. Rows that don't touch
     // (a line ending left of where the line above it starts) get outlines of their own. Returns
@@ -248,7 +248,7 @@
         selectFrame = requestAnimationFrame(followSelectBoxes);
     }
 
-    // The part of a dashed box that lies under the page's header or the like is cut away, as the
+    // The part of a box that lies under the page's header or the like is cut away, as the
     // text is not seen there.
     // Worked out again only when the box moves on the screen (the page's header changes with scrolling), so a box that sits still costs no hit tests.
     const clipKeys = new WeakMap();

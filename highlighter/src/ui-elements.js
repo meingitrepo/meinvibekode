@@ -109,7 +109,7 @@
         ])
     ]);
 
-    // The dashed boxes around the annotations selected by clicking them (see setSelectedGroups).
+    // The boxes around the annotations selected by clicking them (see setSelectedGroups).
     // They sit in a layer of their own, placed in the page rather than the window, so they scroll
     // with the page in the same frame as the text instead of following it a frame late. It stays
     // under the other panels.

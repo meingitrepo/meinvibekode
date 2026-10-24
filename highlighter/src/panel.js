@@ -304,7 +304,7 @@
     // Pressing a button keeps the page's text selection (for Attach to selection).
     panelEl.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
 
-    // The ticked annotations get the same dashed outline on the page as clicking them does.
+    // The ticked annotations get the same outline on the page as clicking them does.
     function selectPanelTicked() {
         setSelectedGroups(panelItems.map(a => a.group).filter(g => panelChecked.has(g) && groupWrappers(g).length));
     }

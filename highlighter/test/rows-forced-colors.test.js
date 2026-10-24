@@ -59,13 +59,13 @@ const HTML = `<!doctype html><html><body style="font: 16px/1.5 sans-serif; margi
   await page.waitForTimeout(150);
   const fh = await page.evaluate(() => { const r = window.__hl.panelList.querySelector('.item'); const s = getComputedStyle(r); return { bg: s.backgroundColor, color: getComputedStyle(r.querySelector('.item-text')).color }; });
   L.check('forced: hovered row is Highlight/HighlightText', fh.bg === fc.highlight && fh.color === fc.highlightText, fh);
-  // Select box dashed outline.
+  // Select box outline.
   const sb = await page.evaluate(() => {
     const host = window.__hl.panelList, b = document.createElement('div'); b.className = 'select-box';
     b.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0h10"/></svg>'; host.appendChild(b);
     const e = document.createElement('i'); e.style.color = 'Highlight'; document.body.appendChild(e);
     const r = { stroke: getComputedStyle(b.querySelector('path')).stroke, want: getComputedStyle(e).color }; b.remove(); e.remove(); return r;
   });
-  L.check('forced: select box dashed outline is Highlight', sb.stroke === sb.want, sb);
+  L.check('forced: select box outline is Highlight', sb.stroke === sb.want, sb);
   await ctx.close(); await L.done(browser);
 })();

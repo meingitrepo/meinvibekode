@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.115
+// @version      8.116
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -48,7 +48,7 @@
  *                         field is the highlighter's alone: the site's own Alt shortcuts (such as
  *                         Wikipedia's) don't run. Off, the site gets them back and ours do nothing.
  *
- * Clicking an annotation selects it: a dashed box goes around all of it. Ctrl+click
+ * Clicking an annotation selects it: a solid box goes around all of it. Ctrl+click
  * adds one or takes it out again; Shift+click selects all of them from the last one selected to
  * the one clicked. While annotations are selected, the style keys, N (the first one's note) and
  * D / Delete act on all of them (D on a single one with a note deletes the note first), with or without Alt; Esc, clicking elsewhere
@@ -3739,12 +3739,12 @@
         .btn-subtle:disabled, .btn-subtle:disabled:hover, .btn-subtle:disabled:active { background: transparent; color: var(--colorNeutralForegroundDisabled); cursor: not-allowed; }
         .btn-subtle:disabled .icon, .btn-subtle:disabled:hover .icon, .btn-subtle:disabled:active .icon { color: var(--colorNeutralForegroundDisabled); }
 
-        /* Annotations selected by clicking them: a dashed outline around their lines' shape,
+        /* Annotations selected by clicking them: a solid 2px outline (Fluent's focus stroke) around their lines' shape,
            black, or white on a dark page. */
         .select-box { position: absolute; top: 0; left: 0; pointer-events: none; color: #000000; }
         .select-box[data-theme="dark"] { color: #ffffff; }
         .select-box svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-        .select-box path { fill: none; stroke: currentColor; stroke-width: 2; stroke-dasharray: 6 4; }
+        .select-box path { fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
 
         /* Toolbar */
         /* Matched to Edge's PDF selection toolbar: 8px corners, a lighter shadow, and longer,
@@ -4092,7 +4092,7 @@
         ])
     ]);
 
-    // The dashed boxes around the annotations selected by clicking them (see setSelectedGroups).
+    // The boxes around the annotations selected by clicking them (see setSelectedGroups).
     // They sit in a layer of their own, placed in the page rather than the window, so they scroll
     // with the page in the same frame as the text instead of following it a frame late. It stays
     // under the other panels.
@@ -4397,7 +4397,7 @@
     }
 
     // The toolbar for annotations selected by clicking them (see setSelectedGroups), placed by
-    // their dashed boxes (a single one; none for several). The style all of them have shows pressed and keeps them, as with a
+    // their boxes (a single one; none for several). The style all of them have shows pressed and keeps them, as with a
     // selection; the others restyle them, and they stay selected with the toolbar over them.
     function showGroupToolbar(groups) {
         if (groups.length > 1) return false;   // several selected: outlines only, no toolbar
@@ -4965,7 +4965,7 @@
         if (!returnFocus) returnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
         editor = { group, original, step, returnFocus, wasSelected: selectedGroups.includes(group) };
         wrappers.forEach(w => w.setAttribute(NOTE_EDIT_ATTR, ''));
-        setSelectedGroups(selectedGroups.concat(group));   // its dashed outline; no toolbar while the editor is open
+        setSelectedGroups(selectedGroups.concat(group));   // its outline; no toolbar while the editor is open
         editorTitle.textContent = original ? 'Edit note' : 'Add note';
         noteInput.value = draft === null ? original : draft;
         updateSaveState();
@@ -5437,7 +5437,7 @@
         return { top, left, bottom, right, width: right - left, height: bottom - top };
     }
 
-    // The dashed outline around an annotation's lines, following the text's shape: one row per
+    // The outline around an annotation's lines, following the text's shape: one row per
     // line, from where the text starts on the first line to where it ends on the last, the rows
     // joined halfway between lines into one outline with rounded corners. Rows that don't touch
     // (a line ending left of where the line above it starts) get outlines of their own. Returns
@@ -5568,7 +5568,7 @@
         selectFrame = requestAnimationFrame(followSelectBoxes);
     }
 
-    // The part of a dashed box that lies under the page's header or the like is cut away, as the
+    // The part of a box that lies under the page's header or the like is cut away, as the
     // text is not seen there.
     // Worked out again only when the box moves on the screen (the page's header changes with scrolling), so a box that sits still costs no hit tests.
     const clipKeys = new WeakMap();
@@ -6160,7 +6160,7 @@
     // Pressing a button keeps the page's text selection (for Attach to selection).
     panelEl.addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
 
-    // The ticked annotations get the same dashed outline on the page as clicking them does.
+    // The ticked annotations get the same outline on the page as clicking them does.
     function selectPanelTicked() {
         setSelectedGroups(panelItems.map(a => a.group).filter(g => panelChecked.has(g) && groupWrappers(g).length));
     }

@@ -265,7 +265,11 @@
                 return;
             }
             const group = selected ? null : pointed();
-            if (!selected && !group) return;
+            if (!selected && !group) {
+                // With the pen on, nothing to act on makes the eraser the pen's tool.
+                if (penKey) { e.preventDefault(); setPen(PEN_ERASER); }
+                return;
+            }
             e.preventDefault();
             if (selected) removeInSelection(active);
             else if (groupHasNote(group)) deleteGroupNote(group);

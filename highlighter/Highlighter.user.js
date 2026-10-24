@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.110
+// @version      8.111
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3365,7 +3365,11 @@
                 return;
             }
             const group = selected ? null : pointed();
-            if (!selected && !group) return;
+            if (!selected && !group) {
+                // With the pen on, nothing to act on makes the eraser the pen's tool.
+                if (penKey) { e.preventDefault(); setPen(PEN_ERASER); }
+                return;
+            }
             e.preventDefault();
             if (selected) removeInSelection(active);
             else if (groupHasNote(group)) deleteGroupNote(group);
@@ -4573,7 +4577,7 @@
             b.tabIndex = k === penKey ? 0 : -1;
             tools.push(b);
         });
-        const eraser = toolButton(fluentIcon('eraser_20_regular'), 'Eraser', '', () => setPen(PEN_ERASER), penKey === PEN_ERASER);
+        const eraser = toolButton(fluentIcon('eraser_20_regular'), 'Eraser', 'Alt+D', () => setPen(PEN_ERASER), penKey === PEN_ERASER);
         eraser.tabIndex = penKey === PEN_ERASER ? 0 : -1;
         tools.push(toolbarDivider(), eraser);
         if (penKey !== PEN_ERASER && !tools.some(b => b.tabIndex === 0)) tools.find(b => b.tagName === 'BUTTON').tabIndex = 0;

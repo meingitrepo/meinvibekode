@@ -29,7 +29,7 @@
             b.tabIndex = k === penKey ? 0 : -1;
             tools.push(b);
         });
-        const eraser = toolButton(fluentIcon('eraser_20_regular'), 'Eraser', '', () => setPen(PEN_ERASER), penKey === PEN_ERASER);
+        const eraser = toolButton(fluentIcon('eraser_20_regular'), 'Eraser', 'Alt+D', () => setPen(PEN_ERASER), penKey === PEN_ERASER);
         eraser.tabIndex = penKey === PEN_ERASER ? 0 : -1;
         tools.push(toolbarDivider(), eraser);
         if (penKey !== PEN_ERASER && !tools.some(b => b.tabIndex === 0)) tools.find(b => b.tagName === 'BUTTON').tabIndex = 0;

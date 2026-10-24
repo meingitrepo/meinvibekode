@@ -35,6 +35,10 @@ async function basics(browser) {
   await p.mouse.move(5, 5);
   await L.altKey(p, 'u');
   check('a style key with nothing selected or pointed at changes the pen', (await pill(p)) === 'Pen: underline', await pill(p));
+  await L.altKey(p, 'd');
+  check('Alt+D with nothing selected or pointed at makes the pen erase', (await pill(p)) === 'Pen: eraser', await pill(p));
+  check('the eraser button shows Alt+D', await p.evaluate(() => [...window.__hl.penEl.querySelectorAll('button')].find(b => b.dataset.label === 'Eraser').dataset.shortcut) === 'Alt+D', null);
+  await L.altKey(p, 'u');
   await L.drag(p, '#p3', 'plain words');
   w = await L.wr(p);
   check('the next selection gets that style', w.some(x => x.t === 'plain words' && x.k === 'u'), w);

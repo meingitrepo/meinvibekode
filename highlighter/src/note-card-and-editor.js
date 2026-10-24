@@ -250,7 +250,7 @@
         syncLocation();
         if (editor) cancelEditor();
         const changed = runUndoable(() => setGroupNote(group, ''));
-        offerUndo('Note deleted', changed, 'delete_20_regular');
+        offerUndo('Note erased', changed);
     }
 
     // --- Note editor ---
@@ -428,7 +428,7 @@
         }
         if (text !== original) {
             const changed = runUndoable(() => setGroupNote(group, text));
-            if (!text) offerUndo('Note deleted', changed, 'delete_20_regular');
+            if (!text) offerUndo('Note erased', changed);
         }
     }
 
@@ -443,7 +443,7 @@
             return;
         }
         const changed = runUndoable(() => waiting.forEach(r => { r.note = text || undefined; }));
-        if (!text) offerUndo('Note deleted', changed, 'delete_20_regular');
+        if (!text) offerUndo('Note erased', changed);
     }
 
     // Returns the unsaved text, if any, as { group, draft, records } (see offerDraft), which
@@ -507,7 +507,7 @@
     // with the highlight that was made for it, and what was typed in it can be restored, both.
     noteDelete.addEventListener('click', () => {
         const unsaved = editor && editor.step && noteDraft() ? cancelEditor({ offer: false }) : null;
-        if (unsaved) { offerDraft(unsaved, 'Note deleted', 'delete_20_regular'); return; }
+        if (unsaved) { offerDraft(unsaved, 'Note erased', 'eraser_20_regular'); return; }
         noteInput.value = '';
         saveEditor();
     });

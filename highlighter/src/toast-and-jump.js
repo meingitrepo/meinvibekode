@@ -30,10 +30,7 @@
         toastKeep = !!(action && action.keep);
         toastKeepsEditor = !!(action && action.keepEditor);
         // An action with an icon (Undo) is an icon button beside Dismiss; its label stays for screen readers.
-        toastAction.className = action && action.icon ? 'btn btn-subtle btn-medium btn-icon toast-action-icon' : 'link';
-        toastAction.replaceChildren(...(action && action.icon ? [fluentIcon(action.icon), makeEl('span', { text: action.label })] : action ? [action.label] : []));
-        if (action && action.icon) { toastAction.title = action.label; toastAction.setAttribute('aria-label', action.label); }
-        else { toastAction.removeAttribute('title'); toastAction.removeAttribute('aria-label'); }
+        toastAction.textContent = action ? action.label : '';
         toastAction.hidden = !action;
         toastEl.hidden = true;
         void toastEl.offsetWidth;   // restart the entrance animation

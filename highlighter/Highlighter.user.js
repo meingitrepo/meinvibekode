@@ -3008,7 +3008,7 @@
         if (!step) return;
         showToast(message, {
             icon,
-            action: { icon: 'arrow_undo_20_regular', label: 'Undo', run: () => { if (undoStack[undoStack.length - 1] === step) undoLastAction(); } }
+            action: { label: 'Undo', run: () => { if (undoStack[undoStack.length - 1] === step) undoLastAction(); } }
         });
     }
 
@@ -3823,14 +3823,12 @@
            panel, which would leave the box's border wider than the textarea and its scrollbar. */
         .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
         /* Toast */
-        .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; max-width: min(360px, calc(100vw - 32px)); padding: 12px; }
+        .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; min-width: min(292px, calc(100vw - 32px)); max-width: min(360px, calc(100vw - 32px)); padding: 12px; }
         .toast .icon { color: var(--colorNeutralForeground2); }
         .toast[data-intent="success"] > .icon { color: var(--colorPaletteGreenForeground1); }
         .toast[data-intent="warning"] > .icon { color: var(--colorPaletteDarkOrangeForeground1); }
         .toast[data-intent="error"] > .icon { color: var(--colorPaletteRedForeground1); }
         .toast > .icon { width: 16px; height: 16px; margin-top: 2px; }
-        .toast-action-icon { position: relative; }
-        .toast-action-icon > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 600; }
         .toast-body { padding-top: 6px; color: var(--colorNeutralForeground1); }
@@ -4027,7 +4025,7 @@
     const toastText = makeEl('div', { class: 'toast-text' });
     const toastBody = makeEl('div', { class: 'toast-body', hidden: '' });
     const toastContent = makeEl('div', { class: 'toast-content' }, [toastText, toastBody]);
-    const toastAction = makeEl('button', { type: 'button', class: 'link', hidden: '' });   // a text link, or an icon button (see showToast)
+    const toastAction = makeEl('button', { type: 'button', class: 'link', hidden: '' });   // a text link
     const toastDismiss = fluentButton({ icon: fluentIcon('dismiss_20_regular'), label: 'Dismiss' });
     const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastDismiss]);
 
@@ -4519,7 +4517,7 @@
         setToolbarSwitchedOff(off);
         if (off) hideToolbar();
         else scheduleToolbar();   // for text that is selected now
-        showToast(off ? 'Selection toolbar off' : 'Selection toolbar on', { body: off ? 'Press Alt+T to turn it on.' : '' });
+        showToast(off ? 'Selection toolbar off' : 'Selection toolbar on', { body: off ? 'Press Alt+T to turn it on.' : 'Press Alt+T to turn it off.' });
         refreshMenu();
     }
 
@@ -4580,9 +4578,10 @@
     }
 
     function togglePen() {
-        if (penKey) { setPen(null); return; }
+        if (penKey) { setPen(null); showToast('Pen off', { body: 'Press Alt+P to turn it on.' }); return; }
         hideToolbar();
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
+        showToast('Pen on', { body: 'Press Alt+P to turn it off.' });
     }
 
     // After a mouse selection with the pen on: the selected text gets the pen's style (or, with the
@@ -4598,7 +4597,7 @@
         annotateSelection(penKey, { sel, range: selected });
     }
 
-    penOff.addEventListener('click', () => setPen(null));
+    penOff.addEventListener('click', () => togglePen());
 
     // Arrow keys, Home and End move between the pen toolbar's buttons, as in the selection toolbar.
     penEl.addEventListener('keydown', e => {
@@ -5157,10 +5156,7 @@
         toastKeep = !!(action && action.keep);
         toastKeepsEditor = !!(action && action.keepEditor);
         // An action with an icon (Undo) is an icon button beside Dismiss; its label stays for screen readers.
-        toastAction.className = action && action.icon ? 'btn btn-subtle btn-medium btn-icon toast-action-icon' : 'link';
-        toastAction.replaceChildren(...(action && action.icon ? [fluentIcon(action.icon), makeEl('span', { text: action.label })] : action ? [action.label] : []));
-        if (action && action.icon) { toastAction.title = action.label; toastAction.setAttribute('aria-label', action.label); }
-        else { toastAction.removeAttribute('title'); toastAction.removeAttribute('aria-label'); }
+        toastAction.textContent = action ? action.label : '';
         toastAction.hidden = !action;
         toastEl.hidden = true;
         void toastEl.offsetWidth;   // restart the entrance animation

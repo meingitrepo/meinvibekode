@@ -349,14 +349,12 @@
            panel, which would leave the box's border wider than the textarea and its scrollbar. */
         .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
         /* Toast */
-        .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; max-width: min(360px, calc(100vw - 32px)); padding: 12px; }
+        .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; min-width: min(292px, calc(100vw - 32px)); max-width: min(360px, calc(100vw - 32px)); padding: 12px; }
         .toast .icon { color: var(--colorNeutralForeground2); }
         .toast[data-intent="success"] > .icon { color: var(--colorPaletteGreenForeground1); }
         .toast[data-intent="warning"] > .icon { color: var(--colorPaletteDarkOrangeForeground1); }
         .toast[data-intent="error"] > .icon { color: var(--colorPaletteRedForeground1); }
         .toast > .icon { width: 16px; height: 16px; margin-top: 2px; }
-        .toast-action-icon { position: relative; }
-        .toast-action-icon > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 600; }
         .toast-body { padding-top: 6px; color: var(--colorNeutralForeground1); }

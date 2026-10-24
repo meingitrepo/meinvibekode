@@ -8,8 +8,7 @@ const info = page => page.evaluate(() => { const r = window.__hl; const t = r.to
   const browser = await L.launch();
   const { page } = await L.open(browser, { html: HTML });
   await L.altKey(page, 'p'); await page.waitForTimeout(300);
-  L.check('pen on toast', (await L.toast(page)) === 'Pen on', await L.toast(page));
-  L.check('pen on says how to turn off', /Alt\+P/.test((await info(page)).body), await info(page));
+  L.check('pen on: no toast, the bar says it', (await L.toast(page)) === null && await page.evaluate(() => !window.__hl.penEl.hidden), await L.toast(page));
   await L.altKey(page, 'p'); await page.waitForTimeout(300);
   L.check('pen off toast', (await L.toast(page)) === 'Pen off' && /Alt\+P/.test((await info(page)).body), await info(page));
   await L.altKey(page, 't'); await page.waitForTimeout(200);
@@ -26,6 +25,18 @@ const info = page => page.evaluate(() => { const r = window.__hl; const t = r.to
   await L.altKey(page, 'd'); await page.waitForTimeout(300);
   const u = await info(page);
   L.check('Undo is a text link, no icon', (await L.toast(page)) === '1 annotation erased · Undo' && u.link === 'link' && !u.icon, u);
+  // Every toast has a body line.
+  const body = async name => { const i = await info(page); L.check(`${name} has a body`, i.body.length > 0, i); };
+  await body('Undo');
+  await L.selStr(page, '#p1', 'Light paragraph'); await page.waitForTimeout(300);
+  await L.altKey(page, 'h'); await page.waitForTimeout(300);
+  await L.selStr(page, '#p1', 'more words'); await page.waitForTimeout(300);
+  await L.altKey(page, 'h'); await page.waitForTimeout(300);
+  await L.altKey(page, 'v'); await page.waitForTimeout(300);
+  L.check('hidden toast', /^Annotations hidden/.test(await L.toast(page) || ''), await L.toast(page)); await body('Annotations hidden');
+  await L.altKey(page, 'v'); await page.waitForTimeout(300);
+  for (let i = 0; i < 3; i++) { await L.altKey(page, 'j'); await page.waitForTimeout(400); }
+  L.check('wrap toast', /^Back to the first/.test(await L.toast(page) || ''), await L.toast(page)); await body('Back to the first');
   await browser.close();
   console.log('FAILS', L.fails);
 })().catch(e => { console.error(e); process.exit(1); });

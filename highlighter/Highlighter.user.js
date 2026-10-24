@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.104
+// @version      8.105
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -679,7 +679,7 @@
     function toggleAnnotationsHidden() {
         const hide = !annotationsHidden;
         setAnnotationsHidden(hide);
-        if (hide) showToast('Annotations hidden', { icon: 'eye_off_20_regular', action: { label: 'Show', run: showAnnotations, keepEditor: true } });
+        if (hide) showToast('Annotations hidden', { icon: 'eye_off_20_regular', body: 'Press Alt+V to show them again.', action: { label: 'Show', run: showAnnotations, keepEditor: true } });
     }
 
     // =====================================================================
@@ -2544,7 +2544,7 @@
         if (document.hidden) { noticeDue = true; return; }
         noticedKeys.add(currentKey);
         if (!toastEl.hidden && toastRun) return;
-        showToast(doneText('not found', missing), { icon: 'warning_20_regular', intent: 'warning', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
+        showToast(doneText('not found', missing), { icon: 'warning_20_regular', intent: 'warning', body: 'Their text has changed or is gone from this page.', action: { label: 'Show', run: showMissingInPanel, keepEditor: true } });
     }
 
     function restoreHighlights() {
@@ -3008,6 +3008,7 @@
         if (!step) return;
         showToast(message, {
             icon,
+            body: 'Undo brings it back, as does Ctrl+Z.',
             action: { label: 'Undo', run: () => { if (undoStack[undoStack.length - 1] === step) undoLastAction(); } }
         });
     }
@@ -3080,7 +3081,7 @@
         if (!running) return;
         syncLocation();
         if (!countAnnotations(missingRecords())) {
-            showToast('No annotations missing', { intent: 'success', icon: 'checkmark_20_regular' });
+            showToast('No annotations missing', { intent: 'success', icon: 'checkmark_20_regular', body: 'Every annotation was found on this page.' });
             return;
         }
         const unsaved = cancelEditor({ offer: false });
@@ -4581,7 +4582,6 @@
         if (penKey) { setPen(null); showToast('Pen off', { body: 'Press Alt+P to turn it on.' }); return; }
         hideToolbar();
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
-        showToast('Pen on', { body: 'Press Alt+P to turn it off.' });
     }
 
     // After a mouse selection with the pen on: the selected text gets the pen's style (or, with the
@@ -5306,7 +5306,7 @@
         if (wrapped) target = dir > 0 ? 0 : groups.length - 1;
         jumpToGroup(groups[target], { showNote: true });
         // After the jump, which takes down an "Annotations hidden" message that would hold this one back.
-        if (wrapped && groups.length > 1) showToast(dir > 0 ? 'Back to the first annotation' : 'Back to the last annotation');
+        if (wrapped && groups.length > 1) showToast(dir > 0 ? 'Back to the first annotation' : 'Back to the last annotation', { body: 'That was the end of this page.' });
         return true;
     }
 
@@ -5842,7 +5842,7 @@
             return;
         }
         writeClipboard(markdown).then(
-            () => showToast(doneText('copied', list.length), { icon: 'checkmark_20_regular', intent: 'success' }),
+            () => showToast(doneText('copied', list.length), { icon: 'checkmark_20_regular', intent: 'success', body: 'Pasted as Markdown, with its notes.' }),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'error_circle_20_regular', body: 'The browser blocked clipboard access.' }); });
     }
 
@@ -6332,7 +6332,7 @@
             // Undo covers only this page, so it is offered only when nothing else was forgotten.
             if (!elsewhere.size) { offerUndo(doneText('forgotten', selected.length), step, 'eraser_20_regular'); return; }
         }
-        showToast(doneText('forgotten', selected.length), { icon: 'eraser_20_regular' });
+        showToast(doneText('forgotten', selected.length), { icon: 'eraser_20_regular', body: 'Removed from every page they were on.' });
     }
 
     let everythingItemSeq = 0;
@@ -6415,7 +6415,7 @@
         const selected = everythingShown.filter(s => everythingChecked.has(s.id));
         if (!selected.length) return;
         writeClipboard(savedMarkdown(selected)).then(
-            () => showToast(doneText('copied', selected.length), { icon: 'checkmark_20_regular', intent: 'success' }),
+            () => showToast(doneText('copied', selected.length), { icon: 'checkmark_20_regular', intent: 'success', body: 'Pasted as Markdown, with its notes.' }),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'error_circle_20_regular', body: 'The browser blocked clipboard access.' }); });
     });
     everythingForget.addEventListener('click', () => {

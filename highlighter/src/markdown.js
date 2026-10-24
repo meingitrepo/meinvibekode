@@ -183,7 +183,7 @@
             return;
         }
         writeClipboard(markdown).then(
-            () => showToast(doneText('copied', list.length), { icon: 'checkmark_20_regular', intent: 'success' }),
+            () => showToast(doneText('copied', list.length), { icon: 'checkmark_20_regular', intent: 'success', body: 'Pasted as Markdown, with its notes.' }),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'error_circle_20_regular', body: 'The browser blocked clipboard access.' }); });
     }
 

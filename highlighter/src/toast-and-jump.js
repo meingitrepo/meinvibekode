@@ -180,7 +180,7 @@
         if (wrapped) target = dir > 0 ? 0 : groups.length - 1;
         jumpToGroup(groups[target], { showNote: true });
         // After the jump, which takes down an "Annotations hidden" message that would hold this one back.
-        if (wrapped && groups.length > 1) showToast(dir > 0 ? 'Back to the first annotation' : 'Back to the last annotation');
+        if (wrapped && groups.length > 1) showToast(dir > 0 ? 'Back to the first annotation' : 'Back to the last annotation', { body: 'That was the end of this page.' });
         return true;
     }
 

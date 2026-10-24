@@ -225,6 +225,7 @@
         if (!step) return;
         showToast(message, {
             icon,
+            body: 'Undo brings it back, as does Ctrl+Z.',
             action: { label: 'Undo', run: () => { if (undoStack[undoStack.length - 1] === step) undoLastAction(); } }
         });
     }
@@ -297,7 +298,7 @@
         if (!running) return;
         syncLocation();
         if (!countAnnotations(missingRecords())) {
-            showToast('No annotations missing', { intent: 'success', icon: 'checkmark_20_regular' });
+            showToast('No annotations missing', { intent: 'success', icon: 'checkmark_20_regular', body: 'Every annotation was found on this page.' });
             return;
         }
         const unsaved = cancelEditor({ offer: false });

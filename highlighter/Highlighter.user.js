@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.127
+// @version      8.128
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3200,7 +3200,7 @@
         openNoteEditor(created[0].getAttribute(GROUP_ATTR), { step: undoStack[undoStack.length - 1] });
     }
 
-    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD']);
+    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD', 'KeyL']);
 
     // While our keys are on (Alt+Shift+K switches them), every Alt key outside a field is ours
     // alone: the site's own Alt shortcuts never run, whether we use the key or not. Its access
@@ -3336,6 +3336,13 @@
             if (selected) noteSelection(active);
             else if (group) openNoteEditor(group);
             else showToast('Nothing to add a note to', { intent: 'warning', icon: 'warning_20_regular' });
+            return;
+        }
+
+        if (code === 'KeyL') {
+            if (e.shiftKey) return;
+            e.preventDefault();
+            togglePinKey(selected ? null : pointedGroup());
             return;
         }
 
@@ -4300,7 +4307,7 @@
     addLabelTip(noteDiscard, 'Discard changes', 'Esc', () => false);
     addLabelTip(noteDelete, 'Delete note', 'Delete', () => false);
     // The note preview sits below its text, so its tip goes below too, off the text.
-    addLabelTip(cardPin, 'Pin note', '', () => true);
+    addLabelTip(cardPin, 'Pin note', 'Alt+L', () => true);
     addLabelTip(penOff, 'Turn off the pen', 'Esc', () => true);
 
     function toolbarDivider() {
@@ -4461,10 +4468,15 @@
     }
 
     function scheduleToolbar() {
-        if (!ENABLE_SELECTION_TOOLBAR) return;
         clearTimeout(toolbarTimer);
         // Wait for the selection to settle; while a pointer is down the user is still selecting.
-        toolbarTimer = setTimeout(() => { if (!pointerIsDown) updateToolbar(); }, 200);
+        // The note preview of a just-selected annotation (previewDue) opens in the same moment.
+        toolbarTimer = setTimeout(() => {
+            if (pointerIsDown) return;
+            if (ENABLE_SELECTION_TOOLBAR) updateToolbar();
+            else toolbarTimer = null;
+            showDuePreview();
+        }, 200);
     }
 
     // --- Idle fade-out: the toolbar fades away after TOOLBAR_IDLE_MS with no pointer or keyboard
@@ -4768,6 +4780,20 @@
         dragByHandle(card, card.querySelector('.card-footer'), () => true);
     }
 
+    // Alt+L: pins the note card on show, or unpins the note of `group` (the annotation pointed at,
+    // else the one selected) when it is pinned already.
+    function togglePinKey(group) {
+        if (!noteCardEl.hidden) { pinNoteCard(); return; }
+        group = group || (selectedGroups.length === 1 ? selectedGroups[0] : null);
+        const wrappers = group ? groupWrappers(group) : [];
+        const mark = wrappers.find(w => w.hasAttribute(NOTE_MARK_ATTR));
+        if (mark && pinnedCards.has(mark)) { unpinNoteCard(mark); return; }
+        const note = !editor && !annotationsHidden && wrappers.filter(w => w.hasAttribute(NOTE_ATTR) && w.getClientRects().length).pop();
+        if (!note || !note.getAttribute(NOTE_ATTR)) { showToast('No note to pin', { intent: 'warning', icon: 'warning_20_regular' }); return; }
+        showNoteCard(note);
+        pinNoteCard();
+    }
+
     // `mark` omitted: every pinned note.
     function unpinNoteCard(mark) {
         (mark ? [mark] : Array.from(pinnedCards.keys())).forEach(m => {
@@ -4861,7 +4887,7 @@
         syncLocation();
         if (editor) cancelEditor();
         const changed = runUndoable(() => setGroupNote(group, ''));
-        offerUndo('Note deleted', changed, 'delete_20_regular');
+        offerUndo('Note erased', changed);
     }
 
     // --- Note editor ---
@@ -5039,7 +5065,7 @@
         }
         if (text !== original) {
             const changed = runUndoable(() => setGroupNote(group, text));
-            if (!text) offerUndo('Note deleted', changed, 'delete_20_regular');
+            if (!text) offerUndo('Note erased', changed);
         }
     }
 
@@ -5054,7 +5080,7 @@
             return;
         }
         const changed = runUndoable(() => waiting.forEach(r => { r.note = text || undefined; }));
-        if (!text) offerUndo('Note deleted', changed, 'delete_20_regular');
+        if (!text) offerUndo('Note erased', changed);
     }
 
     // Returns the unsaved text, if any, as { group, draft, records } (see offerDraft), which
@@ -5118,7 +5144,7 @@
     // with the highlight that was made for it, and what was typed in it can be restored, both.
     noteDelete.addEventListener('click', () => {
         const unsaved = editor && editor.step && noteDraft() ? cancelEditor({ offer: false }) : null;
-        if (unsaved) { offerDraft(unsaved, 'Note deleted', 'delete_20_regular'); return; }
+        if (unsaved) { offerDraft(unsaved, 'Note erased', 'eraser_20_regular'); return; }
         noteInput.value = '';
         saveEditor();
     });
@@ -5389,15 +5415,21 @@
         ensureUi();
         if (!selectFrame) followSelectBoxes();
         scheduleToolbar();   // the selection toolbar, for these annotations (see showGroupToolbar)
-        if (selectedGroups.join() !== previewedGroups) previewSelectedNote(selectedGroups);
+        if (selectedGroups.join() !== previewedGroups) previewDue = selectedGroups.join();   // shown with the toolbar (see scheduleToolbar)
         previewedGroups = selectedGroups.join();
     }
     let previewedGroups = '';
+    let previewDue = '';
+
+    function showDuePreview() {
+        if (previewDue && previewDue === selectedGroups.join()) previewSelectedNote(selectedGroups);
+        previewDue = '';
+    }
 
     function clearSelectedGroups() {
         if (editor) { if (selectedGroups.join() !== editor.group) setSelectedGroups([]); return; }   // all but the editor's (see setSelectedGroups)
         selectedGroups = [];
-        previewedGroups = '';
+        previewedGroups = previewDue = '';
         if (selectPreview) hideNoteCard();
         cancelAnimationFrame(selectFrame);
         selectFrame = 0;

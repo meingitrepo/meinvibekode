@@ -157,6 +157,20 @@
         dragByHandle(card, card.querySelector('.card-footer'), () => true);
     }
 
+    // Alt+L: pins the note card on show, or unpins the note of `group` (the annotation pointed at,
+    // else the one selected) when it is pinned already.
+    function togglePinKey(group) {
+        if (!noteCardEl.hidden) { pinNoteCard(); return; }
+        group = group || (selectedGroups.length === 1 ? selectedGroups[0] : null);
+        const wrappers = group ? groupWrappers(group) : [];
+        const mark = wrappers.find(w => w.hasAttribute(NOTE_MARK_ATTR));
+        if (mark && pinnedCards.has(mark)) { unpinNoteCard(mark); return; }
+        const note = !editor && !annotationsHidden && wrappers.filter(w => w.hasAttribute(NOTE_ATTR) && w.getClientRects().length).pop();
+        if (!note || !note.getAttribute(NOTE_ATTR)) { showToast('No note to pin', { intent: 'warning', icon: 'warning_20_regular' }); return; }
+        showNoteCard(note);
+        pinNoteCard();
+    }
+
     // `mark` omitted: every pinned note.
     function unpinNoteCard(mark) {
         (mark ? [mark] : Array.from(pinnedCards.keys())).forEach(m => {

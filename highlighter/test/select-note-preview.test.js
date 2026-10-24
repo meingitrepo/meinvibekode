@@ -38,6 +38,14 @@ const store = { [KEY]: JSON.stringify([rec('//*[@id="p1"]', P1, 'alpha note', 'g
   await click(['#p1', 'alpha note']); await page.waitForTimeout(450);
   await page.keyboard.press('Escape'); await page.waitForTimeout(300);
   L.check('Esc closes it', (await shown()) === false, await shown());
+  // Alt+L pins the preview of the selected annotation; its tip names the key.
+  await click(['#p1', 'alpha note']); await page.waitForTimeout(450);
+  L.check('the Pin button names Alt+L', (await page.evaluate(() => window.__hl.cardPin.getAttribute('aria-label'))) === 'Pin note (Alt+L)', null);
+  await L.altKey(page, 'l'); await page.waitForTimeout(300);
+  const pinned = () => page.evaluate(() => document.querySelectorAll('[data-highlighter-note-pin]').length);
+  L.check('Alt+L pins the shown note', (await pinned()) === 1, await pinned());
+  await L.altKey(page, 'l'); await page.waitForTimeout(300);
+  L.check('Alt+L again unpins it', (await pinned()) === 0, await pinned());
   L.check('no page errors', page.__errors.length === 0, page.__errors);
   await b.close();
   console.log(L.fails ? `${L.fails} FAILED` : 'ALL PASS'); process.exit(L.fails ? 1 : 0);

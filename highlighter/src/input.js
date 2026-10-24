@@ -101,7 +101,7 @@
         openNoteEditor(created[0].getAttribute(GROUP_ATTR), { step: undoStack[undoStack.length - 1] });
     }
 
-    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD']);
+    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD', 'KeyL']);
 
     // While our keys are on (Alt+Shift+K switches them), every Alt key outside a field is ours
     // alone: the site's own Alt shortcuts never run, whether we use the key or not. Its access
@@ -237,6 +237,13 @@
             if (selected) noteSelection(active);
             else if (group) openNoteEditor(group);
             else showToast('Nothing to add a note to', { intent: 'warning', icon: 'warning_20_regular' });
+            return;
+        }
+
+        if (code === 'KeyL') {
+            if (e.shiftKey) return;
+            e.preventDefault();
+            togglePinKey(selected ? null : pointedGroup());
             return;
         }
 

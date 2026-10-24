@@ -274,7 +274,7 @@
         .toolbar { display: flex; align-items: center; gap: 2px; padding: 4px; }
         /* Idle fade-out (see TOOLBAR_IDLE_MS). Pointing at the toolbar brings it back at once. */
         .toolbar.fading { opacity: 0; transition: opacity var(--durationSlow) var(--curveEasyEase); }
-        .divider { flex: none; width: 1px; height: 24px; margin: 0 4px; background: var(--toolbarDivider); }
+        .divider { flex: none; width: 1px; height: 24px; margin: 0 10px; background: var(--toolbarDivider); }
         @media (pointer: coarse) { .toolbar .btn-icon { width: 40px; height: 40px; } }
 
         /* Tooltip */

@@ -271,10 +271,10 @@
         /* Matched to Edge's PDF selection toolbar: 8px corners, a lighter shadow, and longer,
            darker separators. */
         /* 4px padding: with 32px buttons the toolbar is 40px high, close to Edge's (about 42px). */
-        .toolbar { display: flex; align-items: center; gap: 2px; padding: 4px; }
+        .toolbar { display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px; }
         /* Idle fade-out (see TOOLBAR_IDLE_MS). Pointing at the toolbar brings it back at once. */
         .toolbar.fading { opacity: 0; transition: opacity var(--durationSlow) var(--curveEasyEase); }
-        .divider { flex: none; width: 1px; height: 24px; margin: 0 10px; background: var(--toolbarDivider); }
+        .divider { flex: none; width: calc(1px / var(--dpr, 1)); height: 24px; margin: 0 round(10px, calc(1px / var(--dpr, 1))); background: var(--toolbarDivider); }
         @media (pointer: coarse) { .toolbar .btn-icon { width: 40px; height: 40px; } }
 
         /* Tooltip */
@@ -372,7 +372,7 @@
         .link:focus-visible { text-decoration: underline double; }
         .toast:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
         /* The pen's bar, centred at the top of the view. */
-        .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: 2px; padding: 4px; }
+        .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px; }
         .pen-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
         .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }

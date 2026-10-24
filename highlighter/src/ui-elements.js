@@ -14,6 +14,10 @@
     const uiHost = makeEl('div', { [UI_ATTR]: '' });
     uiHost.style.cssText = 'all: initial !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 0 !important; z-index: 2147483647 !important;';
     const uiRoot = uiHost.attachShadow({ mode: 'closed' });
+    // The device pixel ratio for the CSS (see .toolbar): spacing is rounded to whole device pixels.
+    const setDpr = () => uiHost.style.setProperty('--dpr', String(window.devicePixelRatio || 1));
+    setDpr();
+    window.addEventListener('resize', setDpr);
 
     const toolbarEl = makeEl('div', { class: 'surface toolbar', role: 'toolbar', 'aria-label': 'Annotate selection', hidden: '' });
     const labelTipEl = makeEl('div', { class: 'surface tip', role: 'tooltip', hidden: '' });

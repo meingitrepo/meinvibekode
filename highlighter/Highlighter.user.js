@@ -6600,8 +6600,57 @@
         everythingAnchor = tickRows(everythingChecked, ids, everythingAnchor, id, shift);
     }
 
+    // Up and down move between the page rows and the quotes of the open pages; right opens a page and
+    // left closes it (or goes from a quote to its page). Shift+arrow ticks the quote it moves to, with the ones between.
+    function everythingStops() {
+        return Array.from(everythingList.querySelectorAll('button.page-head, a.item-main'));
+    }
+    function focusEverythingStop(el) {
+        el.focus({ preventScroll: true });
+        el.scrollIntoView({ block: 'nearest' });
+    }
+    const stopId = el => `${el.dataset.key}\n${el.dataset.group}`;
+    function everythingArrow(e) {
+        const stops = everythingStops();
+        const at = stops.indexOf(e.target.closest('button.page-head, a.item-main'));
+        if (at < 0) return false;
+        const el = stops[at], isHead = el.classList.contains('page-head');
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            const next = stops[at + (e.key === 'ArrowDown' ? 1 : -1)];
+            if (!next) { if (e.key === 'ArrowUp') everythingFilter.focus(); return true; }
+            if (e.shiftKey && !isHead && !next.classList.contains('page-head')) {
+                if (!everythingAnchor) tickEverythingRows(stopId(el), false);
+                tickEverythingRows(stopId(next), true);
+                renderEverything();
+                const again = everythingStops().find(s => !s.classList.contains('page-head') && stopId(s) === stopId(next));
+                if (again) focusEverythingStop(again);
+                return true;
+            }
+            focusEverythingStop(next);
+            return true;
+        }
+        const open = isHead && el.getAttribute('aria-expanded') === 'true';
+        if (e.key === 'ArrowRight' && isHead && !open) { el.click(); return true; }
+        if (e.key === 'ArrowRight' && open) { const first = stops[at + 1]; if (first && !first.classList.contains('page-head')) focusEverythingStop(first); return true; }
+        if (e.key === 'ArrowLeft' && isHead && open) { el.click(); return true; }
+        if (e.key === 'ArrowLeft' && !isHead) {
+            const head = stops.slice(0, at).reverse().find(s => s.classList.contains('page-head'));
+            if (head) focusEverythingStop(head);
+            return true;
+        }
+        return false;
+    }
+    everythingFilter.addEventListener('keydown', e => {
+        if (e.key !== 'ArrowDown') return;
+        const first = everythingStops()[0];
+        if (!first) return;
+        e.preventDefault();
+        focusEverythingStop(first);
+    });
+
     // Shift+Space ticks the rows from the last ticked one to the focused quote.
     everythingList.addEventListener('keydown', e => {
+        if (/^Arrow(Up|Down|Left|Right)$/.test(e.key) && !e.altKey && !e.ctrlKey && !e.metaKey && everythingArrow(e)) { e.preventDefault(); return; }
         const row = e.key === ' ' && e.shiftKey ? e.target.closest('a.item-main') : null;
         if (!row) return;
         e.preventDefault();

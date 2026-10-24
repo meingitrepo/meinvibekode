@@ -133,6 +133,8 @@
         --durationNormal: 200ms;
         --durationSlow: 300ms;
         --curveEasyEase: cubic-bezier(0.33, 0, 0.67, 1);
+        --curveDecelerateMid: cubic-bezier(0, 0, 0, 1);
+        --curveAccelerateMid: cubic-bezier(1, 0, 1, 1);
         --curveDecelerateMax: cubic-bezier(0.1, 0.9, 0.2, 1);
         --curveAccelerateMax: cubic-bezier(0.9, 0.1, 1, 0.2);
         --colorScheme: light;

@@ -58,5 +58,20 @@ const SHADOW8 = /0px 4px 8px/, SHADOW16 = /0px 8px 16px/, SHADOW64 = /0px 32px 6
   await L.altKey(page, 'p'); await page.waitForTimeout(300);
   const pen = await page.evaluate(() => ({ label: !!window.__hl.penEl.querySelector('.pen-text'), pressed: window.__hl.penEl.querySelectorAll('button[aria-pressed="true"]').length }));
   L.check('10 (reversed): the pen bar has no text label, one tool shows pressed', !pen.label && pen.pressed === 1, pen);
+  // 6: expand/collapse motion (Fluent durationNormal + curveDecelerateMid in, curveAccelerateMid out)
+  await page.evaluate(() => { window.__anim = []; const o = Element.prototype.animate; Element.prototype.animate = function (k, opt) { window.__anim.push({ cls: this.className, opt }); return o.call(this, k, opt); }; });
+  await page.keyboard.press('Alt+Shift+O'); await page.waitForTimeout(400);
+  const toggle = async () => { await page.evaluate(() => window.__hl.everythingList.querySelector('.page-head').click()); await page.waitForTimeout(500); };
+  const state = () => page.evaluate(() => ({ open: window.__hl.everythingList.querySelector('.page-head').getAttribute('aria-expanded'), list: !!window.__hl.everythingList.querySelector('.page-items'), anim: window.__anim.splice(0) }));
+  const s0 = await state();
+  if (s0.open === 'true') await toggle();
+  await page.evaluate(() => { window.__anim = []; });
+  await toggle(); const exp = await state();
+  L.check('6: expanding animates the list in, 200ms decelerate', exp.open === 'true' && exp.list && exp.anim.some(a => a.cls === 'page-items' && a.opt.duration === 200 && a.opt.easing === 'cubic-bezier(0, 0, 0, 1)'), exp);
+  await toggle(); const col = await state();
+  L.check('6: collapsing animates the list out, 200ms accelerate, then removes it', col.open === 'false' && !col.list && col.anim.some(a => a.cls === 'page-items' && a.opt.duration === 200 && a.opt.easing === 'cubic-bezier(1, 0, 1, 1)'), col);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await toggle(); const red = await state(); await toggle(); const red2 = await state();
+  L.check('6: reduced motion toggles with no animation', red.open === 'true' && red.list && !red.anim.length && red2.open === 'false' && !red2.list && !red2.anim.length, { red, red2 });
   await ctx.close(); await L.done(browser);
 })();

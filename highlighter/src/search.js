@@ -127,6 +127,17 @@
     }
 
     let everythingItemSeq = 0;
+    // Slides a page's list open or shut: its height and opacity, from or to nothing.
+    function slideList(list, grow) {
+        const h = `${list.getBoundingClientRect().height}px`;
+        const frames = [{ height: h, opacity: 1 }, { height: '0px', opacity: 0 }];
+        if (grow) frames.reverse();
+        list.style.overflow = 'hidden';
+        const a = list.animate(frames, { duration: 200, easing: grow ? 'cubic-bezier(0, 0, 0, 1)' : 'cubic-bezier(1, 0, 1, 1)' });
+        a.finished.then(() => { list.style.overflow = ''; }, () => {});
+        return a;
+    }
+
     function renderEverything() {
         const terms = everythingFilter.value.toLowerCase().split(/\s+/).filter(Boolean);
         const matches = s => terms.every(t => s.includes(t));
@@ -235,10 +246,23 @@
         const head = e.target.closest('.page-head');
         if (head) {
             const key = head.dataset.key;
-            if (everythingToggled.has(key)) everythingToggled.delete(key); else everythingToggled.add(key);
-            renderEverything();
-            const again = Array.from(everythingList.querySelectorAll('.page-head')).find(h => h.dataset.key === key);
-            if (again) again.focus({ preventScroll: true });
+            const toggle = () => {
+                if (everythingToggled.has(key)) everythingToggled.delete(key); else everythingToggled.add(key);
+                renderEverything();
+                const again = Array.from(everythingList.querySelectorAll('.page-head')).find(h => h.dataset.key === key);
+                if (again) again.focus({ preventScroll: true });
+                return again;
+            };
+            // Fluent motion: a page's list grows in (decelerate) and shrinks out (accelerate), over durationNormal.
+            const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const list = head.parentElement.querySelector('.page-items');
+            if (list && !calm) {
+                if (!list.getAnimations().length) slideList(list, false).finished.then(toggle, toggle);
+            } else {
+                const again = toggle();
+                const grown = again && !calm && again.parentElement.querySelector('.page-items');
+                if (grown) slideList(grown, true);
+            }
             return;
         }
         const link = e.target.closest('a.item-main');

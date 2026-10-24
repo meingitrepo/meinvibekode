@@ -3845,10 +3845,10 @@
         .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
         .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
-        .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 16px 0 0; }
-        .everything-box .panel-header { margin: 0 12px 8px 16px; }
-        .everything-box .field { flex: none; margin: 0 16px 8px; }
-        .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 12px 12px; overscroll-behavior: contain; }
+        .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 12px 0 0; }
+        .everything-box .panel-header { margin: -8px 8px 4px 12px; }
+        .everything-box .field { flex: none; margin: 0 12px 8px; }
+        .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .page-head {
             display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 6px 4px; border: 0;
             border-radius: var(--borderRadiusMedium); background: none; font: inherit; color: inherit; text-align: left;
@@ -3917,7 +3917,6 @@
         .item .check { margin: 10px 8px 0 4px; opacity: 0; }
         .item:hover .check, .item .check:checked, .item .check:focus-visible { opacity: 1; }
         @media (hover: none) { .item .check { opacity: 1; } }
-        .everything .item .check { margin: 10px 4px 0 8px; }
         .item { display: flex; align-items: flex-start; border-radius: var(--borderRadiusMedium); }
         .item + .item { margin-top: 2px; }
         .item:has(.check:checked) { background: var(--colorSubtleBackgroundSelected); }
@@ -6400,7 +6399,7 @@
                     link.style.setProperty('--swatch', resolveStyle(a.key, dark).color);
                     const check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-labelledby': link.firstChild.id });
                     check.checked = everythingChecked.has(everythingId(p, a));
-                    list.appendChild(makeEl('div', { class: 'item', role: 'treeitem', 'aria-level': '2' }, [check, link]));
+                    list.appendChild(makeEl('div', { class: 'item', role: 'treeitem', 'aria-level': '2' }, [link, check]));
                 });
                 section.appendChild(list);
             }

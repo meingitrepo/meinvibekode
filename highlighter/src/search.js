@@ -171,7 +171,7 @@
                     link.style.setProperty('--swatch', resolveStyle(a.key, dark).color);
                     const check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-labelledby': link.firstChild.id });
                     check.checked = everythingChecked.has(everythingId(p, a));
-                    list.appendChild(makeEl('div', { class: 'item', role: 'treeitem', 'aria-level': '2' }, [check, link]));
+                    list.appendChild(makeEl('div', { class: 'item', role: 'treeitem', 'aria-level': '2' }, [link, check]));
                 });
                 section.appendChild(list);
             }

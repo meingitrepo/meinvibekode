@@ -71,8 +71,10 @@ async function main(browser) {
   await clickHead(p, 0);
   const hdr = await p.evaluate(() => { const r = window.__hl; const kids = Array.from(r.everythingSelectAll.parentElement.children);
     const item = r.everythingList.querySelector('.item'); return { order: kids.map(b => [r.everythingSelectAll, r.everythingCopy, r.everythingForget, r.everythingClose].indexOf(b)).join(''),
-      copyOff: r.everythingCopy.disabled, forgetOff: r.everythingForget.disabled, checkFirst: item.firstElementChild.classList.contains('check') }; });
-  check('header order select/copy/forget/close, copy grayed, tick on the left', hdr.order === '0123' && hdr.copyOff && hdr.forgetOff && hdr.checkFirst, hdr);
+      copyOff: r.everythingCopy.disabled, forgetOff: r.everythingForget.disabled, checkLast: item.lastElementChild.classList.contains('check'),
+      pad: [r.everythingList, r.everythingList.previousElementSibling].map(e => getComputedStyle(e).paddingLeft + '/' + getComputedStyle(e).marginLeft).join(' '), boxPad: getComputedStyle(r.everythingList.parentElement).paddingTop, listPad: getComputedStyle(r.everythingList).padding }; });
+  check('header order select/copy/forget/close, copy grayed, tick on the right', hdr.order === '0123' && hdr.copyOff && hdr.forgetOff && hdr.checkLast, hdr);
+  check('paddings match Alt+O: box 12px, list 0 8px 8px', hdr.boxPad === '12px' && hdr.listPad === '0px 8px 8px', hdr);
   await p.evaluate(() => window.__hl.everythingSelectAll.click());
   const sel = await p.evaluate(() => ({ n: window.__hl.everythingCount.textContent, copyOn: !window.__hl.everythingCopy.disabled }));
   check('select all ticks everything, count and copy follow', sel.n === '4 Annotations selected on 3 pages' && sel.copyOn, sel);

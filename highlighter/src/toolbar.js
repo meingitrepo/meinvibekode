@@ -251,10 +251,15 @@
     }
 
     function scheduleToolbar() {
-        if (!ENABLE_SELECTION_TOOLBAR) return;
         clearTimeout(toolbarTimer);
         // Wait for the selection to settle; while a pointer is down the user is still selecting.
-        toolbarTimer = setTimeout(() => { if (!pointerIsDown) updateToolbar(); }, 200);
+        // The note preview of a just-selected annotation (previewDue) opens in the same moment.
+        toolbarTimer = setTimeout(() => {
+            if (pointerIsDown) return;
+            if (ENABLE_SELECTION_TOOLBAR) updateToolbar();
+            else toolbarTimer = null;
+            showDuePreview();
+        }, 200);
     }
 
     // --- Idle fade-out: the toolbar fades away after TOOLBAR_IDLE_MS with no pointer or keyboard

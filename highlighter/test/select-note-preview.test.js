@@ -16,6 +16,12 @@ const store = { [KEY]: JSON.stringify([rec('//*[@id="p1"]', P1, 'alpha note', 'g
   await click(['#p1', 'alpha note']); await page.waitForTimeout(450);
   L.check('selecting an annotation with a note shows its note', (await shown()) === 'Note A', await shown());
   L.check('the toolbar is up with it', !!(await L.toolbar(page)), null);
+  await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+  // The preview and the toolbar open in the same frame.
+  await page.evaluate(() => { const h = window.__hl; window.__t = {}; (function f() { const n = performance.now(); if (!h.noteCardEl.hidden && !window.__t.card) window.__t.card = n; if (!h.toolbarEl.hidden && !window.__t.bar) window.__t.bar = n; if (!(window.__t.card && window.__t.bar)) requestAnimationFrame(f); })(); });
+  await click(['#p1', 'alpha note']); await page.waitForTimeout(450);
+  const t = await page.evaluate(() => window.__t);
+  L.check('preview and toolbar appear in the same frame', !!t.card && !!t.bar && Math.abs(t.card - t.bar) < 20, t);
   await page.mouse.move(300, 400); await page.mouse.move(310, 410); await page.waitForTimeout(500);
   L.check('moving the pointer elsewhere keeps it', (await shown()) === 'Note A', await shown());
   await page.waitForTimeout(3300);

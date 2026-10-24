@@ -57,15 +57,21 @@
         ensureUi();
         if (!selectFrame) followSelectBoxes();
         scheduleToolbar();   // the selection toolbar, for these annotations (see showGroupToolbar)
-        if (selectedGroups.join() !== previewedGroups) previewSelectedNote(selectedGroups);
+        if (selectedGroups.join() !== previewedGroups) previewDue = selectedGroups.join();   // shown with the toolbar (see scheduleToolbar)
         previewedGroups = selectedGroups.join();
     }
     let previewedGroups = '';
+    let previewDue = '';
+
+    function showDuePreview() {
+        if (previewDue && previewDue === selectedGroups.join()) previewSelectedNote(selectedGroups);
+        previewDue = '';
+    }
 
     function clearSelectedGroups() {
         if (editor) { if (selectedGroups.join() !== editor.group) setSelectedGroups([]); return; }   // all but the editor's (see setSelectedGroups)
         selectedGroups = [];
-        previewedGroups = '';
+        previewedGroups = previewDue = '';
         if (selectPreview) hideNoteCard();
         cancelAnimationFrame(selectFrame);
         selectFrame = 0;

@@ -144,14 +144,14 @@
         visible.forEach(({ p, items }) => {
             // Pages start closed, and opened while searching; a click turns that round.
             const open = everythingToggled.has(p.key) !== terms.length > 0;
-            const head = makeEl('button', { type: 'button', class: 'page-head', 'aria-expanded': String(open), 'data-key': p.key }, [
+            const head = makeEl('button', { type: 'button', class: 'page-head', role: 'treeitem', 'aria-level': '1', 'aria-expanded': String(open), 'data-key': p.key }, [
                 fluentIcon(open ? 'chevron_down_16_regular' : 'chevron_right_16_regular'),
                 makeEl('span', { class: 'page-name' }, [makeEl('span', { class: 'page-host', text: p.host }), makeEl('span', { class: 'page-path', text: p.path })]),
                 makeEl('span', { class: 'page-meta', text: `${(() => { const n = items.filter(a => everythingChecked.has(everythingId(p, a))).length; return n ? `${n}/${items.length}` : items.length; })()}${p.time ? ` · ${formatDate(p.time)}` : ''}` })
             ]);
-            const section = makeEl('div', { class: 'page', role: 'listitem' }, [head]);
+            const section = makeEl('div', { class: 'page', role: 'none' }, [head]);
             if (open) {
-                const list = makeEl('div', { class: 'page-items' });
+                const list = makeEl('div', { class: 'page-items', role: 'group' });
                 items.forEach(a => {
                     const link = makeEl('a', { class: 'item-main', href: a.url, target: '_blank', rel: 'noopener', 'data-key': p.key, 'data-group': a.group },
                         [makeEl('div', { class: 'item-text', id: `rnh-ei-${++everythingItemSeq}`, text: a.text })]);
@@ -160,7 +160,7 @@
                     link.style.setProperty('--swatch', resolveStyle(a.key, dark).color);
                     const check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-labelledby': link.firstChild.id });
                     check.checked = everythingChecked.has(everythingId(p, a));
-                    list.appendChild(makeEl('div', { class: 'item' }, [check, link]));
+                    list.appendChild(makeEl('div', { class: 'item', role: 'treeitem', 'aria-level': '2' }, [check, link]));
                 });
                 section.appendChild(list);
             }

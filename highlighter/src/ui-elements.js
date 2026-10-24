@@ -82,7 +82,7 @@
     ]);
 
     // The pen (Alt+P, see setPen): a pill at the top of the view while it is on.
-    const penText = makeEl('span', { class: 'pen-text' });   // the pen's state in words, for screen readers
+    const penText = makeEl('span', { class: 'pen-text' });   // the pen's state in words
     const penOff = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const penEl = makeEl('div', { class: 'surface pen', role: 'toolbar', 'aria-label': 'Pen', hidden: '' }, [penText, penOff]);
 
@@ -97,7 +97,7 @@
     const everythingFilter = makeEl('input', { type: 'search', placeholder: 'Search every page\'s annotations and notes', 'aria-label': 'Search saved annotations', spellcheck: 'false', autocomplete: 'off' });
     const everythingIcon = fluentIcon('search_20_regular');
     everythingIcon.classList.add('search-icon');
-    const everythingList = makeEl('div', { class: 'everything-list', role: 'list' });
+    const everythingList = makeEl('div', { class: 'everything-list', role: 'tree', 'aria-label': 'Saved annotations' });
     const everythingEl = makeEl('div', { class: 'everything', hidden: '' }, [
         makeEl('div', { class: 'surface everything-box', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'All saved annotations' }, [
             makeEl('div', { class: 'panel-header' }, [

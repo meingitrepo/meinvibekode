@@ -14,13 +14,13 @@ const SHADOW8 = /0px 4px 8px/, SHADOW16 = /0px 8px 16px/, SHADOW64 = /0px 32px 6
   await page.evaluate(() => window.__hl.showToast('A toast title that is long enough to wrap onto a second line when the toast is narrow, to test the width')); await page.waitForTimeout(300);
   // 13: toast
   const toast = await css('window.__hl.toastEl', ['borderTopLeftRadius', 'right', 'bottom']);
-  L.check('13: toast radius 4px (Fluent Toast)', toast.borderTopLeftRadius === '4px', toast);
+  L.check('13 (reversed): toast radius 8px (matches Edge)', toast.borderTopLeftRadius === '8px', toast);
   L.check('13: toast width 292px (Fluent Toaster)', toast.w === 292, toast);
   L.check('13: toast offset 16px from the corner', toast.right === '16px' && toast.bottom === '16px', toast);
   // 18: note card, note editor, annotations panel
   for (const [name, get] of [['card', 'window.__hl.noteCardEl'], ['editor', 'window.__hl.editorEl'], ['panel', 'window.__hl.panelEl']]) {
     const s = await css(get, ['borderTopLeftRadius', 'boxShadow']);
-    L.check(`18: ${name} radius 4px (Fluent Popover)`, s.borderTopLeftRadius === '4px', s);
+    L.check(`18 (reversed): ${name} radius 8px (matches Edge)`, s.borderTopLeftRadius === '8px', s);
     L.check(`18: ${name} has a 16px shadow`, SHADOW16.test(s.boxShadow) || (name === 'panel' && SHADOW64.test(s.boxShadow)), s);
   }
   // 22: Alt+Shift+O dialog and the panel (Fluent Dialog / Drawer)

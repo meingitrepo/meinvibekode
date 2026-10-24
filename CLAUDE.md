@@ -21,6 +21,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 ## Tests
 - `node highlighter/test/run.js <word>` (Playwright 1.56.1 + Chromium, `NODE_PATH=/opt/node22/lib/node_modules`).
 - Tests first: for any behaviour change, write or update the test from the requested behaviour and see it fail, then change the code until it passes. Never edit a test afterwards just to match what the code does. Report pre-existing failures; never silently rewrite them.
+- Plan first, scaled to the task, inside the same turn as the first work (no separate planning turn, no plan file): small fix = 2-4 lines (cause or goal, files/functions to touch, the test that proves it, risk); larger work = numbered tasks, each with an acceptance check and a "tests first" step, in dependency order, built in thin slices (one `verify.sh` per slice). Put missing details in the one batched question. Re-plan only if the plan turns out wrong.
 - Run only suites related to the change; no full run before PUSH (exception: a task about the tests themselves, e.g. stale-test cleanup).
 - Visual bug (spacing, widths, colors): reproduce it first with `shot.sh` or a test, at the trigger named in the brief (device pixel ratio, zoom, dark mode, high contrast). If the first attempt does not reproduce it, stop and ask in one short question; don't loop.
 - A suite that reports 0 checks crashed. Report it even if untouched; don't ignore it.

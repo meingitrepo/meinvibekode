@@ -37,7 +37,6 @@
   "enabledPlugins": {
     "frontend-design@anthropic-plugin-directory": true,
     "superpowers@anthropic-plugin-directory": true,
-    "playwright@anthropic-plugin-directory": false
   },
   "skillOverrides": {
     "anthropic-skills:docx": "off",

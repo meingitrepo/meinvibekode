@@ -142,15 +142,6 @@
         [pageStyle, hideStyle, textColorStyle].forEach(s => s.remove());
     }
 
-    function toggleSite() {
-        const disable = running;
-        setSiteEnabled(!disable);
-        if (disable) stop();
-        else start();
-        renderSiteMenu();
-        refreshMenu();
-    }
-
     function clearAllSaved() {
         if (typeof GM_listValues !== 'function' || typeof GM_deleteValue !== 'function') {
             console.warn(`${LOG} GM_listValues/GM_deleteValue not granted; cannot bulk-clear storage.`);
@@ -213,9 +204,6 @@
                 : keysSwitchedOff() ? 'Turn shortcut keys on' : 'Turn shortcut keys off',
                 () => { if (running) toggleKeysSwitch(); }]);
         }
-        const site = location.hostname || (location.protocol === 'file:' ? 'local files' : siteId());
-        if (!canRelabel) items.push([`Turn on/off for ${site}`, toggleSite]);
-        else items.push([running ? `Turn off for ${site}` : `Turn on for ${site}`, toggleSite]);
         if (shown) {
             if (!canRelabel) {
                 items.push(['Forget missing annotations', forgetMissingAnnotations]);
@@ -242,8 +230,7 @@
     // =====================================================================
 
     if (typeof GM_addValueChangeListener === 'function') GM_addValueChangeListener(SETTINGS_KEY, onSettingsChanged);
-    migrateEnabledSites();
-    if (siteEnabled()) start();
+    start();
     renderSiteMenu();
     refreshMenu();
 })();

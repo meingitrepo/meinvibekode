@@ -56,7 +56,7 @@ async function run(browser) {
   await alt(p, 'o');
 
   await alt(p, 'k', true);
-  check('Alt+Shift+K turns our keys off, saying so', /Shortcut keys off/.test(await L.toast(p) || '') && JSON.parse(await p.evaluate(() => window.__gm['rnh:settings'])).keysOff === true, await L.toast(p));
+  check('Alt+Shift+K turns our keys off, saying so', /Shortcut keys off/.test(await L.toast(p) || '') && !JSON.parse(await p.evaluate(() => window.__gm['rnh:settings'])).keysOnSites.includes('example.test'), await L.toast(p));
   await alt(p, 'z');
   await alt(p, 'u');
   check('keys off: the site\'s access keys and Alt handlers run', JSON.stringify(await site(p)) === '["main","js U"]', null);

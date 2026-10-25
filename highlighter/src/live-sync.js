@@ -83,17 +83,10 @@
         if (resave) saveHighlights();
     }
 
-    // The per-site switch, flipped in another tab, applies here too.
+    // The toolbar and shortcut switches flipped in another tab apply here too.
     function onSettingsChanged(name, oldRaw, newRaw, remote) {
         if (!remote) return;
-        let sites = [];
-        try {
-            const s = JSON.parse(newRaw || '{}');
-            if (s && Array.isArray(s.enabledSites)) sites = s.enabledSites;
-        } catch (e) { return; }
-        const off = !sites.includes(siteId());
-        if (off && running) stop();
-        else if (!off && !running) start();
+        if (toolbarSwitchedOff()) hideToolbar();
         renderSiteMenu();
         refreshMenu();
     }

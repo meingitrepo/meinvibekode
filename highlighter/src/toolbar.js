@@ -304,7 +304,7 @@
         toolbarGroups = null;
     }
 
-    // Alt+T, and the menu: the toolbar off or on again on every site. The keys work either way.
+    // Alt+T, and the menu: the toolbar off or on again on this site. The keys work either way.
     function toggleToolbarSwitch() {
         const off = !toolbarSwitchedOff();
         setToolbarSwitchedOff(off);

@@ -373,7 +373,11 @@
         /* The sticky menu: the site switch, with a column of icon buttons expanding below it. */
         .sitemenu { padding: 8px; width: max-content; cursor: grab; }
         .sitemenu .btn { cursor: pointer; }
-        .sitemenu-master { display: flex; justify-content: center; }
+        .sitemenu-handle { height: 12px; margin: -4px -4px 0; cursor: grab; color: var(--colorNeutralForeground3); background: radial-gradient(circle, currentColor 1px, transparent 1.5px) center / 6px 6px repeat-x; }
+        .sitemenu-expand { display: flex; justify-content: center; }
+        .sitemenu-expand .icon { transition: transform var(--durationNormal) var(--curveDecelerateMid); }
+        .sitemenu-expand [aria-expanded="true"] .icon { transform: rotate(180deg); }
+        @media (prefers-reduced-motion: reduce) { .sitemenu-expand .icon { transition: none; } }
         .sitemenu-tools { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--durationNormal) var(--curveDecelerateMid), opacity var(--durationNormal) var(--curveDecelerateMid); }
         .sitemenu[data-open] .sitemenu-tools { grid-template-rows: 1fr; opacity: 1; }
         .sitemenu-inner { overflow: hidden; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 2px; }

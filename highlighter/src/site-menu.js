@@ -1,5 +1,5 @@
     // =====================================================================
-    // The sticky menu: this site's switch on top, a column of tool buttons below it
+    // The sticky menu: a handle, one expand button, then a column of tool buttons
     // =====================================================================
 
     function menuHiddenHere() {
@@ -20,7 +20,9 @@
     const menuHost = makeEl('div', { [UI_ATTR]: '' });
     menuHost.style.cssText = 'all: initial !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 0 !important; z-index: 2147483647 !important;';
     const menuRoot = menuHost.attachShadow({ mode: 'closed' });
-    const menuMaster = fluentButton({ icon: fluentIcon('power_20_regular') });   // pressed while the site is on
+    const menuHandle = makeEl('div', { class: 'sitemenu-handle', 'aria-hidden': 'true' });
+    const menuExpand = fluentButton({ icon: fluentIcon('chevron_down_16_regular') });
+    let menuOpen = false;   // not kept: every page starts with the menu collapsed
     const menuClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const menuTip = makeEl('div', { class: 'surface tip', role: 'tooltip', hidden: '' });
     let menuTipTimer = null;
@@ -58,19 +60,18 @@
         return b;
     }
 
-    // id, label, shortcut, icon, click. Undo, redo and the two panels are actions; the pen, the
-    // selection toolbar and the shortcuts are modes, shown pressed while on.
+    // id, label, shortcut, icon, click, in groups: the modes (shown pressed while on), history, then the views.
     const menuButtons = new Map([
+        ['pen', menuButton('Pen', 'Alt+P', fluentIcon('edit_20_regular'), () => togglePen())],
+        ['toolbar', menuButton('Selection toolbar', 'Alt+T', fluentIcon('highlight_20_regular'), () => toggleToolbarSwitch())],
+        ['keys', menuButton('Shortcuts', 'Alt+Shift+K', fluentIcon('keyboard_20_regular'), () => toggleKeysSwitch())],
         ['undo', menuButton('Undo', 'Alt+Z', fluentIcon('arrow_undo_20_regular'), () => undoLastAction())],
         ['redo', menuButton('Redo', 'Alt+Y', fluentIcon('arrow_redo_20_regular'), () => redoLastAction())],
         ['panel', menuButton('Annotations', 'Alt+O', fluentIcon('text_bullet_list_20_regular'), () => togglePanel())],
         ['search', menuButton('Search all pages', 'Alt+Shift+O', fluentIcon('search_20_regular'), () => toggleEverything())],
-        ['hide', menuButton('Hide annotations', 'Alt+V', fluentIcon('eye_off_20_regular'), () => toggleAnnotationsHidden())],
-        ['pen', menuButton('Pen', 'Alt+P', fluentIcon('edit_20_regular'), () => togglePen())],
-        ['toolbar', menuButton('Selection toolbar', 'Alt+T', fluentIcon('highlight_20_regular'), () => toggleToolbarSwitch())],
-        ['keys', menuButton('Shortcuts', 'Alt+Shift+K', fluentIcon('keyboard_20_regular'), () => toggleKeysSwitch())]
+        ['hide', menuButton('Hide annotations', 'Alt+V', fluentIcon('eye_off_20_regular'), () => toggleAnnotationsHidden())]
     ]);
-    addMenuTip(menuMaster, 'Turn highlighter on for this site');
+    addMenuTip(menuExpand, 'Expand');
     addMenuTip(menuClose, 'Hide the menu', 'Alt+Shift+M');
 
     function addMenuTip(b, label, shortcut) {
@@ -85,19 +86,19 @@
     const menuTools = makeEl('div', { class: 'sitemenu-tools' }, [
         makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons.values(), menuClose])
     ]);
-    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'vertical', 'aria-label': 'Highlighter', hidden: '' }, [makeEl('div', { class: 'sitemenu-master' }, [menuMaster]), menuTools]);
+    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'vertical', 'aria-label': 'Highlighter', hidden: '' }, [menuHandle, makeEl('div', { class: 'sitemenu-expand' }, [menuExpand]), menuTools]);
     menuRoot.append(makeEl('style', { text: UI_CSS }), menuEl, menuTip);
     ['keydown', 'keyup', 'keypress'].forEach(type => menuHost.addEventListener(type, e => e.stopPropagation()));
     menuEl.addEventListener('mousedown', e => e.preventDefault());
     menuEl.addEventListener('pointerenter', () => renderSiteMenu());
 
     function renderSiteMenu() {
-        const on = siteEnabled();
-        menuMaster.setAttribute('aria-pressed', String(on));
-        menuMaster.dataset.label = on ? 'Turn highlighter off for this site' : 'Turn highlighter on for this site';
-        menuMaster.setAttribute('aria-label', menuMaster.dataset.label);
-        menuEl.toggleAttribute('data-open', on);
-        menuTools.toggleAttribute('inert', !on);
+        const label = menuOpen ? 'Collapse' : 'Expand';
+        menuExpand.setAttribute('aria-expanded', String(menuOpen));
+        menuExpand.dataset.label = label;
+        menuExpand.setAttribute('aria-label', label);
+        menuEl.toggleAttribute('data-open', menuOpen);
+        menuTools.toggleAttribute('inert', !menuOpen);
         const pressed = { pen: !!penKey, toolbar: !toolbarSwitchedOff(), keys: !keysSwitchedOff() };
         menuButtons.forEach((b, id) => {
             if (id in pressed) b.setAttribute('aria-pressed', String(pressed[id]));
@@ -122,10 +123,10 @@
         }
     }
 
-    menuMaster.addEventListener('click', () => toggleSite());
+    menuExpand.addEventListener('click', () => { menuOpen = !menuOpen; hideMenuTip(); renderSiteMenu(); });
     menuClose.addEventListener('click', () => { setMenuHidden(true); renderSiteMenu(); refreshMenu(); if (running) showToast('Menu hidden. Alt+Shift+M brings it back'); });
 
-    // Dragging the menu by its edge moves it; the place is kept for every site.
+    // Dragging the menu by its handle or edge moves it; the place is kept for every site.
     menuEl.addEventListener('pointerdown', e => {
         if (e.button || e.target.closest('button')) return;
         e.preventDefault();
@@ -144,7 +145,7 @@
         }, { once: true });
     });
 
-    // Alt+Shift+M shows or hides the menu on this site, whether the site is on or off.
+    // Alt+Shift+M shows or hides the menu on this site, on every page.
     function toggleSiteMenu() {
         setMenuHidden(!menuHiddenHere());
         renderSiteMenu();

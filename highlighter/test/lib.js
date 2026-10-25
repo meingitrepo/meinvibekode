@@ -5,11 +5,12 @@ const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
 const SCRIPT = process.env.HL_SCRIPT || path.resolve(__dirname, '../Highlighter.user.js');
-const BOOT = '    if (siteEnabled()) start();';
+const BOOT = '    start();\n    renderSiteMenu();\n    refreshMenu();';
 function instrument(src) {
+  src = src.replace(/\r\n/g, '\n');
   if (!src.includes(BOOT)) throw new Error('boot anchor missing');
   const names = ['panelEl', 'panelList', 'panelFilter', 'panelCount', 'panelCopy', 'panelErase', 'panelSelectAll', 'toastEl', 'toastText', 'toastAction', 'noteCardEl', 'cardHint', 'cardText', 'cardPin',
-    'editorEl', 'noteInput', 'uiRoot', 'uiHost', 'undoStack', 'redoStack', 'toolbarEl', 'labelTipEl', 'lateWatcher', 'currentKey', 'menuIds', 'running', 'darkMode', 'hoveredWrapper', 'annotationsHidden', 'cardWrapper', 'penEl', 'penKey', 'lastStyleKey', 'everythingEl', 'everythingFilter', 'everythingList', 'everythingCount', 'everythingSelectAll', 'everythingCopy', 'everythingForget', 'everythingClose', 'selectBoxesEl', 'selectedGroups', 'shownWrappers', 'menuEl', 'menuMaster', 'menuButtons', 'menuClose'];
+    'editorEl', 'noteInput', 'uiRoot', 'uiHost', 'undoStack', 'redoStack', 'toolbarEl', 'labelTipEl', 'lateWatcher', 'currentKey', 'menuIds', 'running', 'darkMode', 'hoveredWrapper', 'annotationsHidden', 'cardWrapper', 'penEl', 'penKey', 'lastStyleKey', 'everythingEl', 'everythingFilter', 'everythingList', 'everythingCount', 'everythingSelectAll', 'everythingCopy', 'everythingForget', 'everythingClose', 'selectBoxesEl', 'selectedGroups', 'shownWrappers', 'menuEl', 'menuExpand', 'menuHandle', 'menuButtons', 'menuClose'];
   const get = n => `get ${n}() { try { return ${n}; } catch (e) { return undefined; } }`;
   return src.replace(BOOT, `    window.__hl = { ${names.map(get).join(', ')}, get editor() { return editor; }, get pending() { return pendingRecords; }, get jumpGroup() { return jumpGroup; },
       showToast, allWrappers, getSvg, openPanel, closePanel, copyAnnotations, renderPanel, pageAnnotations, groupTime, getCurrentRecords, saveEditor: () => saveEditor(),
@@ -44,11 +45,11 @@ async function open(browser, opts) {
   page.on('pageerror', e => page.__errors.push('PAGEERR ' + e.message));
   page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') page.__errors.push(`[${m.type()}] ${m.text()}`); });
   page.on('dialog', d => { page.__errors.push('DIALOG ' + d.message()); d.accept(); });
-  await page.route('https://example.test/**', r => r.fulfill({ status: 200, contentType: 'text/html', headers: opts.headers || {}, body: (routes && routes[new URL(r.request().url()).pathname + new URL(r.request().url()).search]) || html }));
-  // Sites are off until switched on: the pages under test start switched on, unless the test sets its own sites.
+  await page.route('https://*.test/**', r => r.fulfill({ status: 200, contentType: 'text/html', headers: opts.headers || {}, body: (routes && routes[new URL(r.request().url()).pathname + new URL(r.request().url()).search]) || html }));
+  // The toolbar and the shortcuts are off on every site until switched on: the pages under test start with both on, unless the test sets opts.defaults.
   const seeded = Object.assign({}, store);
   let cfg = {}; try { cfg = JSON.parse(seeded['rnh:settings'] || '{}'); } catch (e) { /* kept as is */ }
-  if (!opts.siteOff && !('enabledSites' in cfg)) seeded['rnh:settings'] = JSON.stringify(Object.assign(cfg, { enabledSites: [new URL(url).hostname], sitesMigrated: true }));
+  if (!opts.defaults && !('toolbarOnSites' in cfg) && !('keysOnSites' in cfg)) seeded['rnh:settings'] = JSON.stringify(Object.assign(cfg, { toolbarOnSites: [new URL(url).hostname], keysOnSites: [new URL(url).hostname] }));
   // The sticky menu sits top left over the pages' text: hidden here unless the test is about it (opts.menu).
   if (!opts.menu && !/menuHiddenSites/.test(seeded['rnh:settings'] || '')) seeded['rnh:settings'] = JSON.stringify(Object.assign(JSON.parse(seeded['rnh:settings'] || '{}'), { menuHiddenSites: [new URL(url).hostname] }));
   await page.addInitScript(s => { window.__gm = JSON.parse(s); }, JSON.stringify(seeded));

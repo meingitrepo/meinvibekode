@@ -303,7 +303,7 @@
         if (json !== raw) GM_setValue(currentKey, json);
     }
 
-    // --- Per-site on/off ---
+    // --- Per-site settings ---
 
     function siteId() {
         return location.hostname || location.protocol;
@@ -318,69 +318,35 @@
         }
     }
 
-    function enabledSites() {
-        const list = readSettings().enabledSites;
-        return Array.isArray(list) ? list : [];
+    // The shortcut keys (Alt+Shift+K) and the selection toolbar (Alt+T) are per site and off until
+    // switched on. Read afresh each time, so a switch made in another tab counts here too.
+    function siteListed(key) {
+        const list = readSettings()[key];
+        return Array.isArray(list) && list.includes(siteId());
     }
 
-    function siteEnabled() {
-        return enabledSites().includes(siteId());
-    }
-
-    function setSiteEnabled(on) {
+    function setSiteListed(key, on) {
         const settings = readSettings();
-        const sites = new Set(enabledSites());
+        const sites = new Set(Array.isArray(settings[key]) ? settings[key] : []);
         if (on) sites.add(siteId());
         else sites.delete(siteId());
-        settings.enabledSites = Array.from(sites);
+        settings[key] = Array.from(sites);
         GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
     }
 
-    // Sites are off until switched on. Once, when this version first runs, every site that already
-    // has saved annotations is switched on, so nobody loses sight of their notes.
-    function migrateEnabledSites() {
-        const settings = readSettings();
-        if (settings.sitesMigrated) return;
-        const sites = new Set(enabledSites());
-        const old = Array.isArray(settings.disabledSites) ? settings.disabledSites : [];
-        if (typeof GM_listValues === 'function') {
-            GM_listValues().forEach(k => {
-                if (k === SETTINGS_KEY) return;
-                let host;
-                try { const u = new URL(k); host = u.hostname || u.protocol; } catch (e) { return; }
-                if (!old.includes(host) && readRecords(k)) sites.add(host);
-            });
-        }
-        settings.enabledSites = Array.from(sites);
-        settings.sitesMigrated = true;
-        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
-    }
-
-    // --- The shortcut keys on/off (Alt+Shift+K), for every site at once ---
-
-    // Read afresh each time, so a switch made in another tab counts here too.
     function keysSwitchedOff() {
-        return readSettings().keysOff === true;
+        return !siteListed('keysOnSites');
     }
 
     function setKeysSwitchedOff(off) {
-        const settings = readSettings();
-        if (off) settings.keysOff = true;
-        else delete settings.keysOff;
-        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+        setSiteListed('keysOnSites', !off);
     }
 
-    // --- Selection toolbar on/off (Alt+T), for every site at once ---
-
-    // Read afresh each time, so a switch made in another tab counts here too.
     function toolbarSwitchedOff() {
-        return readSettings().toolbarOff === true;
+        return !siteListed('toolbarOnSites');
     }
 
     function setToolbarSwitchedOff(off) {
-        const settings = readSettings();
-        if (off) settings.toolbarOff = true;
-        else delete settings.toolbarOff;
-        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+        setSiteListed('toolbarOnSites', !off);
     }
 

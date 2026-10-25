@@ -50,13 +50,8 @@ const html = `<html><body style="font:16px sans-serif;margin:40px">
   L.check('clear in A empties B', wb.length === 0, wb);
 
   const menu = (p, re) => p.evaluate(src => { const re = new RegExp(src); Object.keys(window.__menu).forEach(k => { if (re.test(k)) window.__menu[k](); }); }, re);
-  await L.selStr(A, '#p', 'golf'); await L.altKey(A, 'KeyH'); await settle();
-  await menu(A, '^Turn off for'); await settle();
-  L.check('site off in A turns B off', await B.evaluate(() => window.__hl.running === false && window.__hl.allWrappers().length === 0), null);
-  await menu(B, '^Turn on for'); await settle();
-  L.check('site on in B turns A on, annotation back', await A.evaluate(() => window.__hl.running) && (await L.wr(A).catch(() => [])).length >= 0, null);
-  await A.waitForTimeout(1200);
-  L.check('A shows its annotation again', (await L.wr(A)).length === 1, await L.wr(A));
+  await menu(A, '^Turn toolbar off'); await settle();
+  L.check('toolbar switched off in A shows as off in the menu of B', await B.evaluate(() => Object.keys(window.__menu).some(k => /^Turn toolbar on/.test(k))), await B.evaluate(() => Object.keys(window.__menu)));
   for (const p of pages) if (p.__errors.filter(e => !e.startsWith('DIALOG')).length) L.check('no page errors', false, p.__errors);
   await b.close();
   console.log(L.fails ? `${L.fails} FAILED` : 'all passed');

@@ -2195,7 +2195,7 @@
         if (json !== raw) GM_setValue(currentKey, json);
     }
 
-    // --- Per-site on/off ---
+    // --- Per-site settings ---
 
     function siteId() {
         return location.hostname || location.protocol;
@@ -2210,70 +2210,36 @@
         }
     }
 
-    function enabledSites() {
-        const list = readSettings().enabledSites;
-        return Array.isArray(list) ? list : [];
+    // The shortcut keys (Alt+Shift+K) and the selection toolbar (Alt+T) are per site and off until
+    // switched on. Read afresh each time, so a switch made in another tab counts here too.
+    function siteListed(key) {
+        const list = readSettings()[key];
+        return Array.isArray(list) && list.includes(siteId());
     }
 
-    function siteEnabled() {
-        return enabledSites().includes(siteId());
-    }
-
-    function setSiteEnabled(on) {
+    function setSiteListed(key, on) {
         const settings = readSettings();
-        const sites = new Set(enabledSites());
+        const sites = new Set(Array.isArray(settings[key]) ? settings[key] : []);
         if (on) sites.add(siteId());
         else sites.delete(siteId());
-        settings.enabledSites = Array.from(sites);
+        settings[key] = Array.from(sites);
         GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
     }
 
-    // Sites are off until switched on. Once, when this version first runs, every site that already
-    // has saved annotations is switched on, so nobody loses sight of their notes.
-    function migrateEnabledSites() {
-        const settings = readSettings();
-        if (settings.sitesMigrated) return;
-        const sites = new Set(enabledSites());
-        const old = Array.isArray(settings.disabledSites) ? settings.disabledSites : [];
-        if (typeof GM_listValues === 'function') {
-            GM_listValues().forEach(k => {
-                if (k === SETTINGS_KEY) return;
-                let host;
-                try { const u = new URL(k); host = u.hostname || u.protocol; } catch (e) { return; }
-                if (!old.includes(host) && readRecords(k)) sites.add(host);
-            });
-        }
-        settings.enabledSites = Array.from(sites);
-        settings.sitesMigrated = true;
-        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
-    }
-
-    // --- The shortcut keys on/off (Alt+Shift+K), for every site at once ---
-
-    // Read afresh each time, so a switch made in another tab counts here too.
     function keysSwitchedOff() {
-        return readSettings().keysOff === true;
+        return !siteListed('keysOnSites');
     }
 
     function setKeysSwitchedOff(off) {
-        const settings = readSettings();
-        if (off) settings.keysOff = true;
-        else delete settings.keysOff;
-        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+        setSiteListed('keysOnSites', !off);
     }
 
-    // --- Selection toolbar on/off (Alt+T), for every site at once ---
-
-    // Read afresh each time, so a switch made in another tab counts here too.
     function toolbarSwitchedOff() {
-        return readSettings().toolbarOff === true;
+        return !siteListed('toolbarOnSites');
     }
 
     function setToolbarSwitchedOff(off) {
-        const settings = readSettings();
-        if (off) settings.toolbarOff = true;
-        else delete settings.toolbarOff;
-        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+        setSiteListed('toolbarOnSites', !off);
     }
 
     // =====================================================================
@@ -3883,7 +3849,11 @@
         /* The sticky menu: the site switch, with a column of icon buttons expanding below it. */
         .sitemenu { padding: 8px; width: max-content; cursor: grab; }
         .sitemenu .btn { cursor: pointer; }
-        .sitemenu-master { display: flex; justify-content: center; }
+        .sitemenu-handle { height: 12px; margin: -4px -4px 0; cursor: grab; color: var(--colorNeutralForeground3); background: radial-gradient(circle, currentColor 1px, transparent 1.5px) center / 6px 6px repeat-x; }
+        .sitemenu-expand { display: flex; justify-content: center; }
+        .sitemenu-expand .icon { transition: transform var(--durationNormal) var(--curveDecelerateMid); }
+        .sitemenu-expand [aria-expanded="true"] .icon { transform: rotate(180deg); }
+        @media (prefers-reduced-motion: reduce) { .sitemenu-expand .icon { transition: none; } }
         .sitemenu-tools { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--durationNormal) var(--curveDecelerateMid), opacity var(--durationNormal) var(--curveDecelerateMid); }
         .sitemenu[data-open] .sitemenu-tools { grid-template-rows: 1fr; opacity: 1; }
         .sitemenu-inner { overflow: hidden; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 2px; }
@@ -4558,7 +4528,7 @@
         toolbarGroups = null;
     }
 
-    // Alt+T, and the menu: the toolbar off or on again on every site. The keys work either way.
+    // Alt+T, and the menu: the toolbar off or on again on this site. The keys work either way.
     function toggleToolbarSwitch() {
         const off = !toolbarSwitchedOff();
         setToolbarSwitchedOff(off);
@@ -6717,7 +6687,7 @@
         }
     });
     // =====================================================================
-    // The sticky menu: this site's switch on top, a column of tool buttons below it
+    // The sticky menu: a handle, one expand button, then a column of tool buttons
     // =====================================================================
 
     function menuHiddenHere() {
@@ -6738,7 +6708,9 @@
     const menuHost = makeEl('div', { [UI_ATTR]: '' });
     menuHost.style.cssText = 'all: initial !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 0 !important; z-index: 2147483647 !important;';
     const menuRoot = menuHost.attachShadow({ mode: 'closed' });
-    const menuMaster = fluentButton({ icon: fluentIcon('power_20_regular') });   // pressed while the site is on
+    const menuHandle = makeEl('div', { class: 'sitemenu-handle', 'aria-hidden': 'true' });
+    const menuExpand = fluentButton({ icon: fluentIcon('chevron_down_16_regular') });
+    let menuOpen = false;   // not kept: every page starts with the menu collapsed
     const menuClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const menuTip = makeEl('div', { class: 'surface tip', role: 'tooltip', hidden: '' });
     let menuTipTimer = null;
@@ -6776,19 +6748,18 @@
         return b;
     }
 
-    // id, label, shortcut, icon, click. Undo, redo and the two panels are actions; the pen, the
-    // selection toolbar and the shortcuts are modes, shown pressed while on.
+    // id, label, shortcut, icon, click, in groups: the modes (shown pressed while on), history, then the views.
     const menuButtons = new Map([
+        ['pen', menuButton('Pen', 'Alt+P', fluentIcon('edit_20_regular'), () => togglePen())],
+        ['toolbar', menuButton('Selection toolbar', 'Alt+T', fluentIcon('highlight_20_regular'), () => toggleToolbarSwitch())],
+        ['keys', menuButton('Shortcuts', 'Alt+Shift+K', fluentIcon('keyboard_20_regular'), () => toggleKeysSwitch())],
         ['undo', menuButton('Undo', 'Alt+Z', fluentIcon('arrow_undo_20_regular'), () => undoLastAction())],
         ['redo', menuButton('Redo', 'Alt+Y', fluentIcon('arrow_redo_20_regular'), () => redoLastAction())],
         ['panel', menuButton('Annotations', 'Alt+O', fluentIcon('text_bullet_list_20_regular'), () => togglePanel())],
         ['search', menuButton('Search all pages', 'Alt+Shift+O', fluentIcon('search_20_regular'), () => toggleEverything())],
-        ['hide', menuButton('Hide annotations', 'Alt+V', fluentIcon('eye_off_20_regular'), () => toggleAnnotationsHidden())],
-        ['pen', menuButton('Pen', 'Alt+P', fluentIcon('edit_20_regular'), () => togglePen())],
-        ['toolbar', menuButton('Selection toolbar', 'Alt+T', fluentIcon('highlight_20_regular'), () => toggleToolbarSwitch())],
-        ['keys', menuButton('Shortcuts', 'Alt+Shift+K', fluentIcon('keyboard_20_regular'), () => toggleKeysSwitch())]
+        ['hide', menuButton('Hide annotations', 'Alt+V', fluentIcon('eye_off_20_regular'), () => toggleAnnotationsHidden())]
     ]);
-    addMenuTip(menuMaster, 'Turn highlighter on for this site');
+    addMenuTip(menuExpand, 'Expand');
     addMenuTip(menuClose, 'Hide the menu', 'Alt+Shift+M');
 
     function addMenuTip(b, label, shortcut) {
@@ -6803,19 +6774,19 @@
     const menuTools = makeEl('div', { class: 'sitemenu-tools' }, [
         makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons.values(), menuClose])
     ]);
-    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'vertical', 'aria-label': 'Highlighter', hidden: '' }, [makeEl('div', { class: 'sitemenu-master' }, [menuMaster]), menuTools]);
+    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'vertical', 'aria-label': 'Highlighter', hidden: '' }, [menuHandle, makeEl('div', { class: 'sitemenu-expand' }, [menuExpand]), menuTools]);
     menuRoot.append(makeEl('style', { text: UI_CSS }), menuEl, menuTip);
     ['keydown', 'keyup', 'keypress'].forEach(type => menuHost.addEventListener(type, e => e.stopPropagation()));
     menuEl.addEventListener('mousedown', e => e.preventDefault());
     menuEl.addEventListener('pointerenter', () => renderSiteMenu());
 
     function renderSiteMenu() {
-        const on = siteEnabled();
-        menuMaster.setAttribute('aria-pressed', String(on));
-        menuMaster.dataset.label = on ? 'Turn highlighter off for this site' : 'Turn highlighter on for this site';
-        menuMaster.setAttribute('aria-label', menuMaster.dataset.label);
-        menuEl.toggleAttribute('data-open', on);
-        menuTools.toggleAttribute('inert', !on);
+        const label = menuOpen ? 'Collapse' : 'Expand';
+        menuExpand.setAttribute('aria-expanded', String(menuOpen));
+        menuExpand.dataset.label = label;
+        menuExpand.setAttribute('aria-label', label);
+        menuEl.toggleAttribute('data-open', menuOpen);
+        menuTools.toggleAttribute('inert', !menuOpen);
         const pressed = { pen: !!penKey, toolbar: !toolbarSwitchedOff(), keys: !keysSwitchedOff() };
         menuButtons.forEach((b, id) => {
             if (id in pressed) b.setAttribute('aria-pressed', String(pressed[id]));
@@ -6840,10 +6811,10 @@
         }
     }
 
-    menuMaster.addEventListener('click', () => toggleSite());
+    menuExpand.addEventListener('click', () => { menuOpen = !menuOpen; hideMenuTip(); renderSiteMenu(); });
     menuClose.addEventListener('click', () => { setMenuHidden(true); renderSiteMenu(); refreshMenu(); if (running) showToast('Menu hidden. Alt+Shift+M brings it back'); });
 
-    // Dragging the menu by its edge moves it; the place is kept for every site.
+    // Dragging the menu by its handle or edge moves it; the place is kept for every site.
     menuEl.addEventListener('pointerdown', e => {
         if (e.button || e.target.closest('button')) return;
         e.preventDefault();
@@ -6862,7 +6833,7 @@
         }, { once: true });
     });
 
-    // Alt+Shift+M shows or hides the menu on this site, whether the site is on or off.
+    // Alt+Shift+M shows or hides the menu on this site, on every page.
     function toggleSiteMenu() {
         setMenuHidden(!menuHiddenHere());
         renderSiteMenu();
@@ -6960,17 +6931,10 @@
         if (resave) saveHighlights();
     }
 
-    // The per-site switch, flipped in another tab, applies here too.
+    // The toolbar and shortcut switches flipped in another tab apply here too.
     function onSettingsChanged(name, oldRaw, newRaw, remote) {
         if (!remote) return;
-        let sites = [];
-        try {
-            const s = JSON.parse(newRaw || '{}');
-            if (s && Array.isArray(s.enabledSites)) sites = s.enabledSites;
-        } catch (e) { return; }
-        const off = !sites.includes(siteId());
-        if (off && running) stop();
-        else if (!off && !running) start();
+        if (toolbarSwitchedOff()) hideToolbar();
         renderSiteMenu();
         refreshMenu();
     }
@@ -7118,15 +7082,6 @@
         [pageStyle, hideStyle, textColorStyle].forEach(s => s.remove());
     }
 
-    function toggleSite() {
-        const disable = running;
-        setSiteEnabled(!disable);
-        if (disable) stop();
-        else start();
-        renderSiteMenu();
-        refreshMenu();
-    }
-
     function clearAllSaved() {
         if (typeof GM_listValues !== 'function' || typeof GM_deleteValue !== 'function') {
             console.warn(`${LOG} GM_listValues/GM_deleteValue not granted; cannot bulk-clear storage.`);
@@ -7189,9 +7144,6 @@
                 : keysSwitchedOff() ? 'Turn shortcut keys on' : 'Turn shortcut keys off',
                 () => { if (running) toggleKeysSwitch(); }]);
         }
-        const site = location.hostname || (location.protocol === 'file:' ? 'local files' : siteId());
-        if (!canRelabel) items.push([`Turn on/off for ${site}`, toggleSite]);
-        else items.push([running ? `Turn off for ${site}` : `Turn on for ${site}`, toggleSite]);
         if (shown) {
             if (!canRelabel) {
                 items.push(['Forget missing annotations', forgetMissingAnnotations]);
@@ -7218,8 +7170,7 @@
     // =====================================================================
 
     if (typeof GM_addValueChangeListener === 'function') GM_addValueChangeListener(SETTINGS_KEY, onSettingsChanged);
-    migrateEnabledSites();
-    if (siteEnabled()) start();
+    start();
     renderSiteMenu();
     refreshMenu();
 })();

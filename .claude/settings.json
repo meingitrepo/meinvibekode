@@ -1,6 +1,7 @@
 {
   "permissions": {
     "deny": [
+      "Read(./.cache/**)",
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(./secrets/**/*)",

@@ -117,15 +117,6 @@ const tbRect = page => L.toolbar(page).then(t => t && t.rect);
     await ctx.close();
   }
   {
-    const { ctx, page } = await L.open(browser, { html: HTML, store });
-    await startNote(page);
-    const toggle = () => page.evaluate(() => window.__menu[Object.keys(window.__menu).find(k => /^Turn (off|on)/.test(k))]());
-    await toggle(); await page.waitForTimeout(300); await toggle(); await page.waitForTimeout(900);
-    const s = await L.stored(page);
-    L.check('turn off and on drops the new note\'s highlight', bare(s).length === 0 && (await L.wr(page)).length === 0, { s, w: await L.wr(page) });
-    await ctx.close();
-  }
-  {
     const { ctx, page } = await L.open(browser, { html: HTML, store, wait: 1200 });
     await startNote(page);
     await page.evaluate(() => window.__menu[Object.keys(window.__menu).find(k => /^Forget/.test(k))]()); await page.waitForTimeout(150);

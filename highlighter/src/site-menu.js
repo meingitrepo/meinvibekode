@@ -107,6 +107,7 @@
         menuButtons.get('redo').disabled = !redoStack.length;
         const hideBtn = menuButtons.get('hide');
         hideBtn.dataset.label = annotationsHidden ? 'Show annotations' : 'Hide annotations';
+        hideBtn.replaceChildren(fluentIcon(annotationsHidden ? 'eye_20_regular' : 'eye_off_20_regular'));
         hideBtn.setAttribute('aria-label', `${hideBtn.dataset.label} (Alt+V)`);
         hideBtn.setAttribute('aria-pressed', String(!!annotationsHidden));
         const dark = computeDarkMode();

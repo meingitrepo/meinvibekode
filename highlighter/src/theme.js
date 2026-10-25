@@ -313,6 +313,7 @@
         textColorStyle.media = hidden ? 'not all' : 'all';
         if (hidden) { hideNoteCard(); unpinNoteCard(); }
         else if (toastRun === showAnnotations) hideToast();   // "Annotations hidden" is no longer true
+        renderSiteMenu();   // the menu's hide button shows the eye for what it does next
     }
 
     function showAnnotations() {

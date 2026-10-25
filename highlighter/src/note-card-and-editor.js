@@ -152,7 +152,7 @@
         pinnedCards.set(mark, card);
         mark.setAttribute(NOTE_PIN_ATTR, '');
         const pin = card.querySelector('.card-actions button');
-        pin.replaceChildren(fluentIcon('pin_20_regular'));
+        pin.replaceChildren(fluentIcon('pin_20_filled'));
         pin.dataset.label = 'Unpin note';
         pin.setAttribute('aria-label', 'Unpin note');
         pin.setAttribute('aria-pressed', 'true');
@@ -412,6 +412,7 @@
         if (hadFocus && returnFocus && returnFocus.isConnected && typeof returnFocus.focus === 'function') {
             returnFocus.focus({ preventScroll: true });
         }
+        if (penKey) setPen(penKey);   // the pen bar's note button works again
     }
 
     // Drops the annotation made for a note that never got written.
@@ -430,6 +431,11 @@
     }
 
     function saveEditor() {
+        saveEditorNow();
+        if (penKey) setPen(penKey);   // the pen bar's note button: Add note becomes Edit note
+    }
+
+    function saveEditorNow() {
         if (!editor) return;
         const { group, original, step } = editor;
         const text = noteDraft();

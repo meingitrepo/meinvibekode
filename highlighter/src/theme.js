@@ -161,6 +161,7 @@
             if (!panelOpen()) applyUiTheme(next);   // an open panel keeps the theme of what it is next to
             if (!toastEl.hidden) toastEl.setAttribute('data-theme', next ? 'dark' : 'light');
             if (penKey) setPen(penKey);
+            renderSiteMenu();
         }
         if (!panelEl.hidden) setPanelTheme(next);
         // Those whose background changed are all rebuilt first, then drawn together: one layout

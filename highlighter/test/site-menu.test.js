@@ -86,6 +86,11 @@ const state = page => page.evaluate(() => ({
   L.check('close hides the menu on this site', !(await state(page)).shown);
   await L.altKey(page, 'm', true); await page.waitForTimeout(300);
   L.check('Alt+Shift+M brings it back', (await state(page)).shown);
+  const theme = () => page.evaluate(() => window.__hl.menuEl.getRootNode().host.getAttribute('data-theme'));
+  const lightTheme = await theme();
+  await page.evaluate(() => { document.documentElement.style.background = '#111'; document.body.style.background = '#111'; document.body.style.color = '#eee'; document.documentElement.classList.add('dark'); });
+  await page.waitForTimeout(2500);
+  L.check('the page turns dark while the menu is idle: the menu follows', lightTheme === 'light' && await theme() === 'dark', { lightTheme, now: await theme() });
   await ctx.close(); await browser.close();
   console.log('FAILS', L.fails);
 })().catch(e => { console.error(e); process.exit(1); });

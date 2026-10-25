@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.137
+// @version      8.138
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -521,6 +521,7 @@
             if (!panelOpen()) applyUiTheme(next);   // an open panel keeps the theme of what it is next to
             if (!toastEl.hidden) toastEl.setAttribute('data-theme', next ? 'dark' : 'light');
             if (penKey) setPen(penKey);
+            renderSiteMenu();
         }
         if (!panelEl.hidden) setPanelTheme(next);
         // Those whose background changed are all rebuilt first, then drawn together: one layout

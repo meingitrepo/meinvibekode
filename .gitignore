@@ -8,3 +8,4 @@ playwright-report/
 *.bak
 .DS_Store
 Thumbs.db
+docs/

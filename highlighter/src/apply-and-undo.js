@@ -221,7 +221,7 @@
 
     // Tells the user what an action removed, with an Undo that reverts exactly that step, as
     // long as it is still the latest one.
-    function offerUndo(message, step, icon = 'eraser_20_regular') {
+    function offerUndo(message, step, icon = 'eraser') {
         if (!step) return;
         showToast(message, {
             icon,
@@ -297,7 +297,7 @@
         if (!running) return;
         syncLocation();
         if (!countAnnotations(missingRecords())) {
-            showToast('No annotations missing', { intent: 'success', icon: 'checkmark_20_regular' });
+            showToast('No annotations missing', { intent: 'success', icon: 'check' });
             return;
         }
         const unsaved = cancelEditor({ offer: false });
@@ -310,7 +310,7 @@
             pendingRecords = pendingRecords.filter(r => !missing.includes(r));
         });
         startLateWatcher();
-        offerUndo(doneText('forgotten', n), step, 'delete_20_regular');
+        offerUndo(doneText('forgotten', n), step, 'trash');
         if (unsaved) offerDraft(unsaved);
     }
 

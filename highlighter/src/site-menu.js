@@ -21,9 +21,9 @@
     menuHost.style.cssText = 'all: initial !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 0 !important; z-index: 2147483647 !important;';
     const menuRoot = menuHost.attachShadow({ mode: 'closed' });
     const menuHandle = makeEl('div', { class: 'sitemenu-handle', 'aria-hidden': 'true' });
-    const menuExpand = fluentButton({ icon: fluentIcon('chevron_down_16_regular') });
+    const menuExpand = fluentButton({ icon: phosphorIcon('caret-down') });
     let menuOpen = false;   // not kept: every page starts with the menu collapsed
-    const menuClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
+    const menuClose = fluentButton({ icon: phosphorIcon('x') });
     const menuTip = makeEl('div', { class: 'surface tip', role: 'tooltip', hidden: '' });
     let menuTipTimer = null;
 
@@ -62,14 +62,14 @@
 
     // id, label, shortcut, icon, click, in groups: the modes (shown pressed while on), history, then the views.
     const menuButtons = new Map([
-        ['pen', menuButton('Pen', 'Alt+P', fluentIcon('edit_20_regular'), () => togglePen())],
-        ['toolbar', menuButton('Selection toolbar', 'Alt+T', fluentIcon('highlight_20_regular'), () => toggleToolbarSwitch())],
-        ['keys', menuButton('Shortcuts', 'Alt+Shift+K', fluentIcon('keyboard_20_regular'), () => toggleKeysSwitch())],
-        ['undo', menuButton('Undo', 'Alt+Z', fluentIcon('arrow_undo_20_regular'), () => undoLastAction())],
-        ['redo', menuButton('Redo', 'Alt+Y', fluentIcon('arrow_redo_20_regular'), () => redoLastAction())],
-        ['panel', menuButton('Annotations', 'Alt+O', fluentIcon('text_bullet_list_20_regular'), () => togglePanel())],
-        ['search', menuButton('Search all pages', 'Alt+Shift+O', fluentIcon('search_20_regular'), () => toggleEverything())],
-        ['hide', menuButton('Hide annotations', 'Alt+V', fluentIcon('eye_off_20_regular'), () => toggleAnnotationsHidden())]
+        ['pen', menuButton('Pen', 'Alt+P', phosphorIcon('pencil-simple'), () => togglePen())],
+        ['toolbar', menuButton('Selection toolbar', 'Alt+T', phosphorIcon('highlighter'), () => toggleToolbarSwitch())],
+        ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon('keyboard'), () => toggleKeysSwitch())],
+        ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
+        ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())],
+        ['panel', menuButton('Annotations', 'Alt+O', phosphorIcon('list-bullets'), () => togglePanel())],
+        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('magnifying-glass'), () => toggleEverything())],
+        ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye-slash'), () => toggleAnnotationsHidden())]
     ]);
     addMenuTip(menuExpand, 'Expand');
     addMenuTip(menuClose, 'Hide the menu', 'Alt+Shift+M');
@@ -107,7 +107,7 @@
         menuButtons.get('redo').disabled = !redoStack.length;
         const hideBtn = menuButtons.get('hide');
         hideBtn.dataset.label = annotationsHidden ? 'Show annotations' : 'Hide annotations';
-        hideBtn.replaceChildren(fluentIcon(annotationsHidden ? 'eye_20_regular' : 'eye_off_20_regular'));
+        hideBtn.replaceChildren(phosphorIcon(annotationsHidden ? 'eye' : 'eye-slash'));
         hideBtn.setAttribute('aria-label', `${hideBtn.dataset.label} (Alt+V)`);
         hideBtn.setAttribute('aria-pressed', String(!!annotationsHidden));
         const dark = computeDarkMode();

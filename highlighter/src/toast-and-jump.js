@@ -7,10 +7,10 @@
     let toastKeepsEditor = false; // its action leaves a note being written open
 
     // A message in the bottom-right corner, as Fluent's Toast: an intent icon, a title, an
-    // action and Dismiss. `icon` is a FLUENT_ICONS name; `intent`
+    // action and Dismiss. `icon` is a PHOSPHOR_ICONS name; `intent`
     // is info, success or warning; `action` adds a button, { label, run, keep, keepEditor, tip, shortcut },
     // such as Undo; `tip` and `shortcut` are for its tooltip.
-    function showToast(message, { icon = 'info_20_regular', intent = 'info', action = null } = {}) {
+    function showToast(message, { icon = 'info', intent = 'info', action = null } = {}) {
         // A plain message doesn't take the place of one still offering Undo or Restore.
         if (!action && !toastEl.hidden && toastRun) return;
         // The toast has the page's theme, set on it alone: a panel open next to a box of the
@@ -18,7 +18,7 @@
         const dark = computeDarkMode();
         ensureUi(panelOpen() && uiDark !== null ? uiDark : dark);
         toastEl.setAttribute('data-theme', dark ? 'dark' : 'light');
-        const nextIcon = fluentIcon(icon);
+        const nextIcon = phosphorIcon(icon);
         toastIcon.replaceWith(nextIcon);
         toastIcon = nextIcon;
         toastEl.setAttribute('data-intent', intent);
@@ -29,7 +29,7 @@
         toastKeepsEditor = !!(action && action.keepEditor);
         if (action) {
             toastAction.dataset.action = action.label;
-            toastAction.replaceChildren(fluentIcon(TOAST_ACTION_ICONS[action.label] || 'arrow_undo_20_regular'));
+            toastAction.replaceChildren(phosphorIcon(TOAST_ACTION_ICONS[action.label] || 'arrow-u-up-left'));
         }
         toastAction.hidden = !action;
         if (action) {
@@ -67,7 +67,7 @@
 
     toastDismiss.addEventListener('click', hideToast);
     addLabelTip(toastDismiss, 'Dismiss', '', () => false);
-    const TOAST_ACTION_ICONS = { Undo: 'arrow_undo_20_regular', Restore: 'arrow_reset_20_regular', Show: 'eye_20_regular' };
+    const TOAST_ACTION_ICONS = { Undo: 'arrow-u-up-left', Restore: 'arrow-counter-clockwise', Show: 'eye' };
     addLabelTip(toastAction, 'Undo', '', () => false);   // its label and shortcut are set per toast, see showToast
 
     toastAction.addEventListener('click', () => {

@@ -3,8 +3,8 @@
 const L = require('./lib');
 const html = `<html><body style="font:16px sans-serif;margin:40px">
 <p id="p">Alpha bravo charlie delta echo foxtrot golf hotel india juliet.</p></body></html>`;
-const d = (el) => el.evaluate(e => { const p = e.querySelector('svg path.ic-r'); return p && p.getAttribute('d').slice(0, 14); });
-const START = { add: 'M10 5.5a4.5 4.', edit: 'M3 14.18A3 3 0', pencil: 'M17.18 2.93a2', pinFill: 'M13.33 2.62a2', pin: 'M10.12 3.14a2', eye: 'M3.25909 11.60', eyeOff: 'M2.85 2.15a.5.' };
+const d = (el) => el.evaluate(e => { const p = e.querySelector('svg path.ic'); return p && p.getAttribute('d').slice(0, 14); });
+const START = { add: 'M90,96a6,6,0,0', edit: 'M228.24,59.76l', pencil: 'M225.9,74.78,1', pinFill: 'M235.33,104l-5', pin: 'M233.91,82.79,', eye: 'M245.48,125.57', eyeOff: 'M52.44,36A6,6,' };
 (async () => {
   const b = await L.launch();
   const { page } = await L.open(b, { html });
@@ -23,9 +23,9 @@ const START = { add: 'M10 5.5a4.5 4.', edit: 'M3 14.18A3 3 0', pencil: 'M17.18 2
   await page.keyboard.press('Enter'); await page.waitForTimeout(300);
   n = await noteBtn('penEl');
   L.check('pen bar: Edit note uses the note-edit icon', (await d(n)) === START.edit, await d(n));
-  L.check('site menu: pen keeps the pencil', await page.evaluate(s => { const p = window.__hl.menuButtons.get('pen').querySelector('svg path.ic-r'); return p.getAttribute('d').startsWith(s); }, START.pencil), null);
+  L.check('site menu: pen keeps the pencil', await page.evaluate(s => { const p = window.__hl.menuButtons.get('pen').querySelector('svg path.ic'); return p.getAttribute('d').startsWith(s); }, START.pencil), null);
   await L.altKey(page, 'KeyP');
-  const hide = () => page.evaluate(() => { const p = window.__hl.menuButtons.get('hide').querySelector('svg path.ic-r'); return p.getAttribute('d').slice(0, 14); });
+  const hide = () => page.evaluate(() => { const p = window.__hl.menuButtons.get('hide').querySelector('svg path.ic'); return p.getAttribute('d').slice(0, 14); });
   L.check('hide button shows eye-off while visible', (await hide()) === START.eyeOff, await hide());
   await L.altKey(page, 'KeyV'); await page.waitForTimeout(300);
   L.check('hide button shows eye while hidden', (await hide()) === START.eye, await hide());

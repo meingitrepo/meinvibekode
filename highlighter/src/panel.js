@@ -24,7 +24,7 @@
         closeNoteForPanel(group);
         if (!pendingRecords.some(r => recordOwner(r) === group)) return;
         const step = runUndoable(() => { pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group); });
-        offerUndo(doneText('forgotten', 1), step, 'delete_20_regular');
+        offerUndo(doneText('forgotten', 1), step, 'trash');
     }
 
     // Re-anchors a saved annotation that can't be found to the text selected now. It keeps its
@@ -70,7 +70,7 @@
         });
         const sel = window.getSelection();
         if (sel) sel.removeAllRanges();
-        if (!created.length) showToast('Couldn\'t annotate that text', { intent: 'error', icon: 'error_circle_20_regular' });
+        if (!created.length) showToast('Couldn\'t annotate that text', { intent: 'error', icon: 'warning-circle' });
     }
 
     // --- Annotations panel (Alt+O) ---
@@ -228,7 +228,7 @@
         const allTicked = !!total && ticked === total;
         const label = allTicked ? 'Select none' : midLabel || 'Select all';
         selectAll.dataset.all = String(allTicked);
-        selectAll.replaceChildren(fluentIcon(allTicked ? 'select_all_off_20_regular' : 'select_all_on_20_regular'));
+        selectAll.replaceChildren(phosphorIcon(allTicked ? 'square' : 'check-square'));
         selectAll.setAttribute('aria-label', label);
         selectAll.dataset.label = label;
         copy.disabled = !ticked;
@@ -237,7 +237,7 @@
     }
 
     function panelButton(icon, label, act) {
-        const b = fluentButton({ icon: fluentIcon(icon) });
+        const b = fluentButton({ icon: phosphorIcon(icon) });
         b.dataset.act = act;
         return addLabelTip(b, label, '', () => false);
     }
@@ -268,7 +268,7 @@
             const attach = fluentButton({ text: 'Attach to selection' });
             attach.dataset.act = 'attach';
             attach.title = 'Select the text this annotation belongs to on the page, then click here';
-            actions.append(attach, panelButton('delete_20_regular', 'Forget annotation', 'forget'));
+            actions.append(attach, panelButton('trash', 'Forget annotation', 'forget'));
         } else {
             check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-labelledby': main.firstChild.id });
             check.checked = panelChecked.has(a.group);

@@ -26,7 +26,7 @@
     // Icon only, like the note editor's Save and Delete; its tooltip is added with addLabelTip().
     // The 16px pencil: the 20px one spans its box corner to corner and looks bigger than Save
     // and Delete; Fluent's 16px drawing has the same ink size as Save (14px) at full line weight.
-    const cardPin = fluentButton({ icon: fluentIcon('pin_20_regular') });
+    const cardPin = fluentButton({ icon: phosphorIcon('push-pin') });
     const cardHint = makeEl('span', { class: 'card-hint' });   // the date it was added (see showNoteCard)
     const noteCardEl = makeEl('div', { class: 'surface card', hidden: '' }, [
         cardText,
@@ -36,9 +36,9 @@
     const editorTitle = makeEl('div', { class: 'editor-title', id: 'highlighter-note-title' });
     const noteInput = makeEl('textarea', { maxlength: String(NOTE_MAX_LENGTH), 'aria-labelledby': 'highlighter-note-title', placeholder: 'Start typing here...' });
     // Labels and tooltips are added with addLabelTip() further down.
-    const noteSave = fluentButton({ icon: fluentIcon('checkmark_20_regular'), appearance: 'primary' });
-    const noteDiscard = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
-    const noteDelete = fluentButton({ icon: fluentIcon('eraser_20_regular') });
+    const noteSave = fluentButton({ icon: phosphorIcon('check'), appearance: 'primary' });
+    const noteDiscard = fluentButton({ icon: phosphorIcon('x') });
+    const noteDelete = fluentButton({ icon: phosphorIcon('eraser') });
     // Save (or Enter) saves, Discard (or Esc, or opening another note) discards the changes,
     // and Delete deletes.
     const editorEl = makeEl('div', { class: 'surface editor', role: 'dialog', 'aria-labelledby': 'highlighter-note-title', hidden: '' }, [
@@ -47,12 +47,12 @@
         makeEl('div', { class: 'field-hint', text: 'Enter to save, Esc to cancel' })
     ]);
 
-    let toastIcon = fluentIcon('info_20_regular');   // replaced per message
+    let toastIcon = phosphorIcon('info');   // replaced per message
     const toastText = makeEl('div', { class: 'toast-text' });
     const toastContent = makeEl('div', { class: 'toast-content' }, [toastText]);
-    const toastAction = fluentButton({ icon: fluentIcon('arrow_undo_20_regular') });   // an icon button (Undo, Restore, Show); icon, label and tooltip set per toast
+    const toastAction = fluentButton({ icon: phosphorIcon('arrow-u-up-left') });   // an icon button (Undo, Restore, Show); icon, label and tooltip set per toast
     toastAction.hidden = true;
-    const toastDismiss = fluentButton({ icon: fluentIcon('dismiss_20_regular'), label: 'Dismiss' });
+    const toastDismiss = fluentButton({ icon: phosphorIcon('x'), label: 'Dismiss' });
     const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastDismiss]);
 
     // A panel's title: the counts in the quiet colour around the bold word "Annotations".
@@ -62,14 +62,14 @@
 
     // The annotations panel (see openPanel). Its list is built by renderPanel.
     const panelCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });   // the whole title, see setPanelTitle
-    const panelErase = fluentButton({ icon: fluentIcon('eraser_20_regular') });
+    const panelErase = fluentButton({ icon: phosphorIcon('eraser') });
     panelErase.disabled = true;
-    const panelSelectAll = fluentButton({ icon: fluentIcon('select_all_on_20_regular') });
-    const panelCopy = fluentButton({ icon: fluentIcon('copy_20_regular') });
+    const panelSelectAll = fluentButton({ icon: phosphorIcon('check-square') });
+    const panelCopy = fluentButton({ icon: phosphorIcon('copy') });
     panelCopy.disabled = true;
-    const panelClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
+    const panelClose = fluentButton({ icon: phosphorIcon('x') });
     const panelFilter = makeEl('input', { type: 'search', placeholder: 'Filter by text or note', 'aria-label': 'Filter annotations by text or note', spellcheck: 'false', autocomplete: 'off' });
-    const searchIcon = fluentIcon('search_20_regular');
+    const searchIcon = phosphorIcon('magnifying-glass');
     searchIcon.classList.add('search-icon');
     const panelList = makeEl('div', { class: 'panel-list' });
     const panelEl = makeEl('div', { class: 'surface panel', role: 'complementary', 'aria-label': 'Annotations', hidden: '' }, [
@@ -86,14 +86,14 @@
 
     // Everything saved (Alt+Shift+O, see openEverything): a dialog over the dimmed page.
     const everythingCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });   // the whole title, see setPanelTitle
-    const everythingSelectAll = fluentButton({ icon: fluentIcon('select_all_on_20_regular') });
-    const everythingCopy = fluentButton({ icon: fluentIcon('copy_20_regular') });
+    const everythingSelectAll = fluentButton({ icon: phosphorIcon('check-square') });
+    const everythingCopy = fluentButton({ icon: phosphorIcon('copy') });
     everythingCopy.disabled = true;
-    const everythingForget = fluentButton({ icon: fluentIcon('eraser_20_regular') });
+    const everythingForget = fluentButton({ icon: phosphorIcon('eraser') });
     everythingForget.disabled = true;
-    const everythingClose = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
+    const everythingClose = fluentButton({ icon: phosphorIcon('x') });
     const everythingFilter = makeEl('input', { type: 'search', placeholder: 'Search every page\'s annotations and notes', 'aria-label': 'Search saved annotations', spellcheck: 'false', autocomplete: 'off' });
-    const everythingIcon = fluentIcon('search_20_regular');
+    const everythingIcon = phosphorIcon('magnifying-glass');
     everythingIcon.classList.add('search-icon');
     const everythingList = makeEl('div', { class: 'everything-list', role: 'tree', 'aria-label': 'Saved annotations' });
     const everythingEl = makeEl('div', { class: 'everything', hidden: '' }, [

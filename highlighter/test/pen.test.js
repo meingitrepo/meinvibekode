@@ -84,9 +84,6 @@ async function keyboardAndFields(browser) {
   const ed = await p.evaluate(() => !!window.__hl.editor);
   await p.keyboard.press('Escape'); await p.waitForTimeout(150);
   check('Esc in the note editor closes the editor and keeps the pen', ed && !(await p.evaluate(() => !!window.__hl.editor)) && (await pill(p)) !== null, { ed, pill: await pill(p) });
-  // the pill's button
-  await p.evaluate(() => [...window.__hl.penEl.querySelectorAll('button')].pop().click()); await p.waitForTimeout(100);
-  check('the pill\'s button turns it off', (await pill(p)) === null, await pill(p));
   check('no page errors', p.__errors.length === 0, p.__errors);
   await ctx.close();
 }

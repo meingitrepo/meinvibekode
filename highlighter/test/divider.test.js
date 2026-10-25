@@ -16,7 +16,7 @@ const spaces = (p, bar) => p.evaluate(b => {
   await L.altKey(p, 'p');
   await p.waitForTimeout(700);
   const pen = await spaces(p, 'penEl');
-  check('pen bar has dividers', pen.length >= 3, pen);
+  check('pen bar has dividers', pen.length >= 2, pen);
   check('pen dividers are identical, 1px wide, 12px each side', new Set(pen).size === 1 && pen[0].startsWith('1,24,12,12,'), pen);
   await L.altKey(p, 'p');
   await L.drag(p, '#p1', 'plain words');

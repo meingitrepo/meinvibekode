@@ -28,7 +28,10 @@ const bar = (page, fn, arg) => page.evaluate(([f, a]) => { const bs = [...window
   await page.keyboard.press('Escape'); await page.waitForTimeout(200);
   await page.keyboard.press('Escape'); await page.waitForTimeout(200);
   L.check('deselected: no note button, pen on', await page.evaluate(() => !!window.__hl.penKey && !window.__hl.selectedGroups.length), null);
-  L.check('deselected: bar has no note button', await bar(page, "!bs.some(x => /note/i.test(x.dataset.label))"), null);
+  L.check('deselected: note button stays, grayed out', await bar(page, "bs.some(x => /note/i.test(x.dataset.label) && x.disabled)"), null);
+  L.check('no X button in the pen bar', await bar(page, "!bs.some(x => /turn off/i.test(x.dataset.label || '')) && bs[bs.length - 1].querySelector('[class*=dismiss]') === null && bs.every(x => !x.matches('.pen-off'))"), null);
+  L.check('selected: note button enabled', await (async () => { await page.mouse.click(pt.x, pt.y); await page.waitForTimeout(300); return bar(page, "bs.some(x => /note/i.test(x.dataset.label) && !x.disabled)"); })(), null);
+  await page.keyboard.press('Escape'); await page.waitForTimeout(200);
   await page.mouse.click(pt.x, pt.y); await page.waitForTimeout(300);
   await bar(page, "bs.find(x => /erase/i.test(x.dataset.label)).click()");
   await page.waitForTimeout(200);

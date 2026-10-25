@@ -34,18 +34,22 @@
             b.tabIndex = on ? 0 : -1;
             tools.push(b);
         });
+        // The note button always shows, grayed out until an annotation is selected, as in the selection toolbar.
+        const noteLabel = pickedWrappers.some(w => w.getAttribute(NOTE_ATTR)) ? 'Edit note' : 'Add note';
+        const note = toolButton(fluentIcon('edit_20_regular'), noteLabel, 'Alt+N', () => picked && openNoteEditor(picked));
+        note.disabled = !pickedKey;
+        note.tabIndex = -1;
         if (pickedKey) {
-            const noteLabel = pickedWrappers.some(w => w.getAttribute(NOTE_ATTR)) ? 'Edit note' : 'Add note';
             const erase = toolButton(fluentIcon('eraser_20_regular'), 'Erase annotation', 'Alt+D', () => deleteGroups([picked]));
             erase.tabIndex = -1;
-            tools.push(toolbarDivider(), toolButton(fluentIcon('edit_20_regular'), noteLabel, 'Alt+N', () => openNoteEditor(picked)), erase);
+            tools.push(toolbarDivider(), note, erase);
         } else {
             const eraser = toolButton(fluentIcon('eraser_20_regular'), 'Eraser', 'Alt+D', () => setPen(PEN_ERASER), penKey === PEN_ERASER);
             eraser.tabIndex = penKey === PEN_ERASER ? 0 : -1;
-            tools.push(toolbarDivider(), eraser);
+            tools.push(toolbarDivider(), note, eraser);
         }
         if ((pickedKey || penKey !== PEN_ERASER) && !tools.some(b => b.tabIndex === 0)) tools.find(b => b.tagName === 'BUTTON').tabIndex = 0;
-        penEl.replaceChildren(...tools, toolbarDivider(), penOff);
+        penEl.replaceChildren(...tools);
         penEl.hidden = false;
     }
 
@@ -68,12 +72,10 @@
         annotateSelection(penKey, { sel, range: selected });
     }
 
-    penOff.addEventListener('click', () => togglePen());
-
     // Arrow keys, Home and End move between the pen toolbar's buttons, as in the selection toolbar.
     penEl.addEventListener('keydown', e => {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
-        const buttons = Array.from(penEl.querySelectorAll('button'));
+        const buttons = Array.from(penEl.querySelectorAll('button:not(:disabled)'));
         const i = buttons.indexOf(uiRoot.activeElement);
         const to = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: buttons.length - 1 }[e.key];
         if (i < 0 || to === undefined) return;

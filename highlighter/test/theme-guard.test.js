@@ -1,0 +1,15 @@
+const L = require('./lib');
+const white = `<html><body style="background:#fff"><p>Alpha</p></body></html>`;
+const dark = `<html><body style="background:#111"><p>Alpha</p></body></html>`;
+const fails = async (page, scheme) => L.assertTheme(page, scheme).then(() => false, () => true);
+(async () => { const b = await L.launch();
+  const w = (await L.open(b, { html: white, scheme: 'dark' })).page;
+  L.check('dark scheme on a white page is refused', await fails(w, 'dark'));
+  const wl = (await L.open(b, { html: white, scheme: 'light' })).page;
+  L.check('light scheme on a white page passes', !(await fails(wl, 'light')));
+  const d = (await L.open(b, { html: dark, scheme: 'dark' })).page;
+  L.check('dark scheme on a dark page passes', !(await fails(d, 'dark')));
+  L.check('light scheme on a dark page is refused', await fails(d, 'light'));
+  const e = (await L.open(b, { html: white, scheme: 'dark' })).page;
+  L.check('ensureTheme turns a white page dark', await L.ensureTheme(e, 'dark').then(() => true, () => false));
+  await b.close(); process.exit(L.fails ? 1 : 0); })();

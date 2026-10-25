@@ -7,5 +7,5 @@
 #   e.g. shot.sh /tmp/p.png dark "__hl.openPanel()"
 set -euo pipefail
 [ $# -ge 1 ] || { echo 'usage: shot.sh <out.png> [light|dark|both] [js]'; exit 2; }
-export NODE_PATH=${NODE_PATH:-/opt/node22/lib/node_modules}
+. "$(dirname "$0")/test-env.sh"   # Playwright: /opt/node22 on the sandbox, else the repo-root .cache/playwright
 exec node "$(dirname "$0")/shot.js" "$@"

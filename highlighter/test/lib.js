@@ -113,7 +113,31 @@ const until = (page, fn, arg, timeout = 5000) => page.waitForFunction(fn, arg, {
 // Waits until the page has stopped scrolling (scroll position unchanged for 250 ms), e.g. after a smooth scroll.
 const scrolled = page => until(page, () => { const y = scrollY, now = performance.now();
   if (window.__scrollY !== y) { window.__scrollY = y; window.__scrollAt = now; } return now - window.__scrollAt >= 250; });
-module.exports = { until, scrolled, items, done, setHidden, menu, launch, open, selStr, altKey, toast, wr, stored, toolbar, check, get fails() { return fails; } };
+// Throws unless the page really looks like `scheme` (its background, not just prefers-color-scheme): the script judges dark by what is behind it, so a
+// white page under colorScheme 'dark' renders light. Use it before any dark shot.
+async function assertTheme(page, scheme) {
+  const luma = await page.evaluate(() => {
+    for (const el of [document.body, document.documentElement]) {
+      const m = el && getComputedStyle(el).backgroundColor.match(/[\d.]+/g).map(Number);
+      if (m && (m.length < 4 || m[3] > 0)) return (m[0] + m[1] + m[2]) / 3;
+    }
+    return 255;
+  });
+  if ((scheme === 'dark') !== (luma < 128)) throw new Error(`page is not ${scheme}: background luma ${luma}`);
+}
+// Makes the page look `scheme` for a screenshot: the playground's html.dark class, then, if the page is still light (a custom page),
+// a dark background and text; light needs nothing. Ends with assertTheme, so a shot can no longer be the wrong theme unnoticed.
+async function ensureTheme(page, scheme) {
+  if (scheme === 'dark') {
+    await page.evaluate(() => document.documentElement.classList.add('dark'));
+    if (await assertTheme(page, 'dark').then(() => false, () => true)) {
+      await page.addStyleTag({ content: 'html,body{background:#1f1f1f!important;color:#f5f5f5!important}' });
+    }
+    await page.waitForTimeout(300);
+  }
+  await assertTheme(page, scheme);
+}
+module.exports = { ensureTheme, assertTheme, until, scrolled, items, done, setHidden, menu, launch, open, selStr, altKey, toast, wr, stored, toolbar, check, get fails() { return fails; } };
 // 7.32: the viewport rectangles of `str` inside `sel` (one per line), for real mouse input.
 module.exports.rects = (page, sel, str) => page.evaluate(([sel, str]) => {
   const el = document.querySelector(sel); const a = el.textContent.indexOf(str);

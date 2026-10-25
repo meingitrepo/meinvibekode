@@ -4,5 +4,5 @@
 #   e.g. film.sh /tmp/f dark "__hl.openEverything()"  -> /tmp/f-0.png ... /tmp/f-5.png
 set -euo pipefail
 [ $# -ge 3 ] || { echo 'usage: film.sh <out-prefix> [light|dark] <js> [frames] [gap-ms]'; exit 2; }
-export NODE_PATH=${NODE_PATH:-/opt/node22/lib/node_modules}
+. "$(dirname "$0")/test-env.sh"   # Playwright: /opt/node22 on the sandbox, else the repo-root .cache/playwright
 exec node "$(dirname "$0")/film.js" "$@"

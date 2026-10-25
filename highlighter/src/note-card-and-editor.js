@@ -142,8 +142,8 @@
         const card = noteCardEl.cloneNode(true);
         card.setAttribute('data-pinned', '');
         card.style.animation = 'highlighter-pin var(--durationNormal) var(--curveDecelerateMax)';
-        // The hover card is replaced on the spot: fading out under the copy doubled their shadows
-        // into a dark flash. The copy only lifts its shadow (see highlighter-pin).
+        // The hover card is replaced on the spot: fading out under the copy doubled their borders
+        // into a dark flash. The copy only darkens its border at first (see highlighter-pin).
         noteCardEl.style.transition = 'none';
         hideNoteCard();
         noteCardEl.offsetWidth;

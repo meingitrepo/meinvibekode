@@ -1,4 +1,4 @@
-// Fluent v9 button states: pressed (hover or key-held), Regular icon kept on hover, selected, disabled.
+// Button states: pressed (hover or key-held), Regular icon kept on hover, selected, disabled.
 const L = require('./lib');
 const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title></head><body style="font:18px/1.6 serif;margin:40px"><p id="p1">Some plain words to mark.</p></body></html>`;
 const results = [];
@@ -22,7 +22,7 @@ async function states(browser) {
   const prs = await info();
   check('pressed changes the background from hover', prs.bg !== hov.bg, { hov, prs });
   await p.mouse.up(); await p.mouse.move(5, 5);
-  // key-held press with the pointer away: Fluent's :active:focus-visible
+  // key-held press with the pointer away: :active:focus-visible
   await p.evaluate(() => [...window.__hl.penEl.querySelectorAll('button')].find(x => x.dataset.label === 'Eraser').focus());
   await p.keyboard.press('Tab'); await p.keyboard.press('Shift+Tab'); await p.waitForTimeout(250);
   const foc = await info();

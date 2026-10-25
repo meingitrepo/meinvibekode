@@ -1,12 +1,11 @@
     // =====================================================================
     // On-page UI: selection toolbar, note card, note editor and toast.
     //
-    // Styled after Fluent 2, Microsoft's current Fluent UI design language (the look of Fluent UI
-    // React v9 and Fluent UI Web Components v3): its web light and dark theme tokens, type ramp,
-    // corner radii, shadows and motion, and the anatomy of its Button, Toolbar, Tooltip, Popover,
-    // Textarea and Toast. The Fluent libraries themselves aren't loaded: they need React or the
-    // page's custom-element registry, which a userscript can't rely on. Icons are Fluent UI
-    // System Icons.
+    // Styled after Anthropic's own interfaces: warm parchment surfaces, a serif for text and a sans
+    // for chrome, hairline borders instead of shadows, and one clay accent that only the primary
+    // action (Save) uses. Icons are Fluent UI System Icons, kept as the icon set (drawn in slate
+    // here). Fonts are never loaded: the stacks name Anthropic's fonts first, then Georgia and
+    // Inter, so the script looks right where those are installed (see the notes at the top).
     //
     // Everything lives in a closed shadow root, so page CSS can't restyle it and its CSS can't
     // leak into the page. Built with createElement (never innerHTML) so pages that enforce
@@ -81,63 +80,68 @@
         return svg;
     }
 
-    const FLUENT_FONT = '"Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif';
+    const SANS_FONT = '"Anthropic Sans", Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+    const SERIF_FONT = '"Anthropic Serif", Georgia, Cambria, "Times New Roman", ui-serif, serif';
 
-    // Token names and values are Fluent 2's webLightTheme / webDarkTheme. The annotations panel
-    // and the toast follow the page's theme, which can differ from that of the other panels
-    // (see openPanel and showToast).
+    // Colors from the Anthropic style reference: slate #141413, ivory #faf9f5 / #f0eee6, oat #e3dacc,
+    // manilla #f5e3c7, stone #cccbc8, cloud #b0aea5 / #87867f, clay #d97757 / #c6613f. The token names
+    // are kept from before (so the CSS below didn't need renaming), but "Brand" now means slate; only
+    // the --colorClay* tokens are the accent. The annotations panel and the toast follow the page's
+    // theme, which can differ from that of the other panels (see openPanel and showToast).
     const LIGHT_TOKENS = `
-        --colorNeutralForeground1: #242424;
-        --colorNeutralForeground2: #424242;
-        --colorNeutralForegroundDisabled: #bdbdbd;
-        --colorNeutralForeground2Hover: #242424;
-        --colorNeutralForeground2Pressed: #242424;
-        --colorNeutralForeground2Selected: #242424;
-        --colorNeutralForeground2BrandHover: #0f6cbd;
-        --colorNeutralForeground2BrandPressed: #115ea3;
-        --colorNeutralForeground2BrandSelected: #0f6cbd;
-        --colorNeutralForeground3: #616161;
-        --colorNeutralForeground4: #707070;
-        --colorNeutralBackground1: #ffffff;
-        --colorSubtleBackgroundHover: #f5f5f5;
-        --colorSubtleBackgroundPressed: #e0e0e0;
-        --colorSubtleBackgroundSelected: #ebebeb;
-        --colorNeutralStroke1: #d1d1d1;
-        --colorNeutralStroke1Hover: #c7c7c7;
-        --colorNeutralStroke1Pressed: #b3b3b3;
-        --colorNeutralStrokeAccessible: #616161;
-        --colorNeutralStrokeAccessibleHover: #575757;
-        --colorCompoundBrandStroke: #0f6cbd;
-        --colorCompoundBrandBackground: #0f6cbd;
-        --colorCompoundBrandBackgroundHover: #115ea3;
-        --colorNeutralStrokeAccessiblePressed: #4d4d4d;
-        --colorNeutralStrokeDisabled: #e0e0e0;
-        --colorCompoundBrandBackgroundPressed: #0f548c;
-        --colorCompoundBrandStrokeHover: #115ea3;
-        --colorCompoundBrandStrokePressed: #0f548c;
-        --colorCompoundBrandForeground1: #0f6cbd;
-        --colorCompoundBrandForeground1Hover: #115ea3;
-        --colorCompoundBrandForeground1Pressed: #0f548c;
-        --colorNeutralForegroundOnBrand: #ffffff;
-        --colorBrandForeground1: #0f6cbd;
-        --colorPaletteRedForeground1: #b10e1c;
-        --colorPaletteGreenForeground1: #107c10;
-        --colorPaletteDarkOrangeForeground1: #bc4b09;
-        --colorBrandForegroundLink: #115ea3;
-        --colorBrandForegroundLinkHover: #0f548c;
-        --colorBrandForegroundLinkPressed: #0c3b5e;
-        --colorStrokeFocus1: #ffffff;
-        --colorStrokeFocus2: #000000;
+        --colorNeutralForeground1: #141413;
+        --colorNeutralForeground2: #3d3d3a;
+        --colorNeutralForegroundDisabled: #b0aea5;
+        --colorNeutralForeground2Hover: #141413;
+        --colorNeutralForeground2Pressed: #141413;
+        --colorNeutralForeground2Selected: #141413;
+        --colorNeutralForeground2BrandHover: #141413;
+        --colorNeutralForeground2BrandPressed: #141413;
+        --colorNeutralForeground2BrandSelected: #141413;
+        --colorNeutralForeground3: #66655f;
+        --colorNeutralForeground4: #87867f;
+        --colorNeutralBackground1: #faf9f5;
+        --colorSubtleBackgroundHover: #f0eee6;
+        --colorSubtleBackgroundPressed: #e3dacc;
+        --colorSubtleBackgroundSelected: #f5e3c7;
+        --colorNeutralStroke1: #cccbc8;
+        --colorNeutralStroke1Hover: #b0aea5;
+        --colorNeutralStroke1Pressed: #87867f;
+        --colorNeutralStrokeAccessible: #87867f;
+        --colorNeutralStrokeAccessibleHover: #66655f;
+        --colorCompoundBrandStroke: #141413;
+        --colorCompoundBrandBackground: #141413;
+        --colorCompoundBrandBackgroundHover: #3d3d3a;
+        --colorNeutralStrokeAccessiblePressed: #3d3d3a;
+        --colorNeutralStrokeDisabled: #e3dacc;
+        --colorCompoundBrandBackgroundPressed: #141413;
+        --colorCompoundBrandStrokeHover: #3d3d3a;
+        --colorCompoundBrandStrokePressed: #141413;
+        --colorCompoundBrandForeground1: #141413;
+        --colorCompoundBrandForeground1Hover: #3d3d3a;
+        --colorCompoundBrandForeground1Pressed: #141413;
+        --colorNeutralForegroundOnBrand: #faf9f5;
+        --colorBrandForeground1: #141413;
+        --colorPaletteRedForeground1: #a8321a;
+        --colorPaletteGreenForeground1: #55683c;
+        --colorPaletteDarkOrangeForeground1: #b4532f;
+        --colorBrandForegroundLink: #141413;
+        --colorBrandForegroundLinkHover: #3d3d3a;
+        --colorBrandForegroundLinkPressed: #141413;
+        --colorClay: #d97757;
+        --colorClayHover: #c6613f;
+        --colorClayPressed: #b0553a;
+        --colorOnClay: #141413;
+        --colorStrokeFocus1: #faf9f5;
+        --colorStrokeFocus2: #141413;
         --colorTransparentStroke: transparent;
-        --colorBackgroundOverlay: rgba(0, 0, 0, 0.4);
-        --shadow8: 0 0 2px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.14);
-        --shadow16: 0 0 2px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.14);
-        --shadow64: 0 0 8px rgba(0, 0, 0, 0.12), 0 32px 64px rgba(0, 0, 0, 0.14);
+        --colorBackgroundOverlay: rgba(20, 20, 19, 0.4);
         --borderRadiusSmall: 2px;
         --borderRadiusMedium: 4px;
-        --borderRadiusXLarge: 8px;
-        /* Not a Fluent token: the separator color measured from Edge's PDF selection toolbar. */
-        --toolbarDivider: #c6c6c6;
+        --borderRadiusButton: 8px;
+        --borderRadiusXLarge: 12px;
+        --borderRadiusCard: 16px;
+        --toolbarDivider: #cccbc8;
         --durationFaster: 100ms;
         --durationNormal: 200ms;
         --durationSlow: 300ms;
@@ -148,53 +152,52 @@
         --curveAccelerateMax: cubic-bezier(0.9, 0.1, 1, 0.2);
         --colorScheme: light;
     `;
+    // The reference only has a dark footer, so dark is its inversion: slate surfaces, ivory text,
+    // darker hairlines.
     const DARK_TOKENS = `
-        --colorNeutralForeground1: #ffffff;
-        --colorNeutralForeground2: #d6d6d6;
-        --colorNeutralForegroundDisabled: #5c5c5c;
-        --colorNeutralForeground2Hover: #ffffff;
-        --colorNeutralForeground2Pressed: #ffffff;
-        --colorNeutralForeground2Selected: #ffffff;
-        --colorNeutralForeground2BrandHover: #479ef5;
-        --colorNeutralForeground2BrandPressed: #2886de;
-        --colorNeutralForeground2BrandSelected: #479ef5;
-        --colorNeutralForeground3: #adadad;
-        --colorNeutralForeground4: #999999;
-        --colorNeutralBackground1: #292929;
-        --colorSubtleBackgroundHover: #383838;
-        --colorSubtleBackgroundPressed: #2e2e2e;
-        --colorSubtleBackgroundSelected: #333333;
-        --colorNeutralStroke1: #666666;
-        --colorNeutralStroke1Hover: #757575;
-        --colorNeutralStroke1Pressed: #6b6b6b;
-        --colorNeutralStrokeAccessible: #adadad;
-        --colorNeutralStrokeAccessibleHover: #bdbdbd;
-        --colorCompoundBrandStroke: #479ef5;
-        --colorCompoundBrandBackground: #479ef5;
-        --colorCompoundBrandBackgroundHover: #62abf5;
-        --colorNeutralStrokeAccessiblePressed: #b3b3b3;
-        --colorNeutralStrokeDisabled: #424242;
-        --colorCompoundBrandBackgroundPressed: #2886de;
-        --colorCompoundBrandStrokeHover: #62abf5;
-        --colorCompoundBrandStrokePressed: #2886de;
-        --colorCompoundBrandForeground1: #479ef5;
-        --colorCompoundBrandForeground1Hover: #62abf5;
-        --colorCompoundBrandForeground1Pressed: #2886de;
-        --colorNeutralForegroundOnBrand: #ffffff;
-        --colorBrandForeground1: #479ef5;
-        --colorPaletteRedForeground1: #dc626d;
-        --colorPaletteGreenForeground1: #54b054;
-        --colorPaletteDarkOrangeForeground1: #f4a082;
-        --colorBrandForegroundLink: #479ef5;
-        --colorBrandForegroundLinkHover: #62abf5;
-        --colorBrandForegroundLinkPressed: #2886de;
-        --colorStrokeFocus1: #000000;
-        --colorStrokeFocus2: #ffffff;
+        --colorNeutralForeground1: #faf9f5;
+        --colorNeutralForeground2: #cccbc8;
+        --colorNeutralForegroundDisabled: #5c5b56;
+        --colorNeutralForeground2Hover: #faf9f5;
+        --colorNeutralForeground2Pressed: #faf9f5;
+        --colorNeutralForeground2Selected: #faf9f5;
+        --colorNeutralForeground2BrandHover: #faf9f5;
+        --colorNeutralForeground2BrandPressed: #faf9f5;
+        --colorNeutralForeground2BrandSelected: #faf9f5;
+        --colorNeutralForeground3: #b0aea5;
+        --colorNeutralForeground4: #87867f;
+        --colorNeutralBackground1: #141413;
+        --colorSubtleBackgroundHover: #1f1f1d;
+        --colorSubtleBackgroundPressed: #2a2a28;
+        --colorSubtleBackgroundSelected: #262624;
+        --colorNeutralStroke1: #3d3d3a;
+        --colorNeutralStroke1Hover: #4d4d49;
+        --colorNeutralStroke1Pressed: #5c5b56;
+        --colorNeutralStrokeAccessible: #87867f;
+        --colorNeutralStrokeAccessibleHover: #b0aea5;
+        --colorCompoundBrandStroke: #faf9f5;
+        --colorCompoundBrandBackground: #faf9f5;
+        --colorCompoundBrandBackgroundHover: #cccbc8;
+        --colorNeutralStrokeAccessiblePressed: #cccbc8;
+        --colorNeutralStrokeDisabled: #3d3d3a;
+        --colorCompoundBrandBackgroundPressed: #b0aea5;
+        --colorCompoundBrandStrokeHover: #cccbc8;
+        --colorCompoundBrandStrokePressed: #b0aea5;
+        --colorCompoundBrandForeground1: #faf9f5;
+        --colorCompoundBrandForeground1Hover: #cccbc8;
+        --colorCompoundBrandForeground1Pressed: #b0aea5;
+        --colorNeutralForegroundOnBrand: #141413;
+        --colorBrandForeground1: #faf9f5;
+        --colorPaletteRedForeground1: #e5867a;
+        --colorPaletteGreenForeground1: #a3b88a;
+        --colorPaletteDarkOrangeForeground1: #e58f6f;
+        --colorBrandForegroundLink: #faf9f5;
+        --colorBrandForegroundLinkHover: #cccbc8;
+        --colorBrandForegroundLinkPressed: #b0aea5;
+        --colorStrokeFocus1: #141413;
+        --colorStrokeFocus2: #faf9f5;
         --colorBackgroundOverlay: rgba(0, 0, 0, 0.5);
-        --shadow8: 0 0 2px rgba(0, 0, 0, 0.24), 0 4px 8px rgba(0, 0, 0, 0.28);
-        --shadow16: 0 0 2px rgba(0, 0, 0, 0.24), 0 8px 16px rgba(0, 0, 0, 0.28);
-        --shadow64: 0 0 8px rgba(0, 0, 0, 0.24), 0 32px 64px rgba(0, 0, 0, 0.28);
-        --toolbarDivider: #666666;
+        --toolbarDivider: #3d3d3a;
         --colorScheme: dark;
     `;
     const UI_CSS = `
@@ -216,34 +219,32 @@
         .surface, .everything { color-scheme: var(--colorScheme); }
 
         /* Every floating panel (toolbar, note preview, note editor, toast, tooltip) shares this
-           surface: 8px corners, matched to Edge's PDF selection toolbar, and shadow8. The tooltip uses
-           Fluent's 4px corners; the note preview, note editor and panel, a Fluent Popover's
-           shadow16 (the panel's shadow64, as a Drawer). */
+           surface: flat parchment with a 1px hairline instead of a shadow, 12px corners. The cards
+           (note preview, note editor, panel, dialog, toast) take 16px, the tooltip 4px. */
         .surface {
             position: fixed; top: 0; left: 0; box-sizing: border-box;
-            font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; font-weight: 400;
+            font-family: ${SANS_FONT}; font-size: 14px; line-height: 20px; font-weight: 400;
             color: var(--colorNeutralForeground1); background: var(--colorNeutralBackground1);
-            border: 1px solid var(--colorTransparentStroke); border-radius: var(--borderRadiusXLarge);
-            box-shadow: var(--shadow8);
+            border: 1px solid var(--colorNeutralStroke1); border-radius: var(--borderRadiusXLarge);
+            box-shadow: none;
             animation: highlighter-enter var(--durationNormal) var(--curveDecelerateMax);
         }
         /* In the page, not the window: they scroll with their text (see uiHost). */
         .surface.toolbar, .surface.tip, .surface.card, .surface.editor { position: absolute; }
-        .surface.card, .surface.editor, .surface.panel { box-shadow: var(--shadow16); }
-        .surface.panel, .surface.everything-box { box-shadow: var(--shadow64); }
-        @keyframes highlighter-pin { from { box-shadow: var(--shadow8); } }
+        .surface.card, .surface.editor, .surface.panel, .surface.everything-box, .surface.toast { border-radius: var(--borderRadiusCard); }
+        @keyframes highlighter-pin { from { border-color: var(--colorNeutralStroke1Pressed); } }
         @keyframes highlighter-enter { from { opacity: 0; transform: translateY(4px); } }
 
         .icon { display: block; flex: none; fill: currentColor; }
         .icon-20 { width: 20px; height: 20px; }
         .icon-16 { width: 16px; height: 16px; }
 
-        /* Button: Fluent's subtle appearance, size medium (32px), the same in the toolbar and the
+        /* Button: subtle appearance, size medium (32px), the same in the toolbar and the
            panels, so every icon has the same padding (6px), hover square and spacing. */
         .btn {
             box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
             gap: 6px; min-width: 64px; height: 32px; margin: 0; padding: 0 12px;
-            border: 1px solid transparent; border-radius: var(--borderRadiusMedium);
+            border: 1px solid transparent; border-radius: var(--borderRadiusButton);
             font-family: inherit; font-size: 14px; line-height: 20px; font-weight: 400;
             cursor: pointer; outline: none; user-select: none; -webkit-tap-highlight-color: transparent;
             transition: background-color var(--durationFaster) var(--curveEasyEase),
@@ -253,17 +254,23 @@
         .btn:not(.btn-icon) { font-weight: 600; }
         .btn-icon { min-width: 0; width: 32px; padding: 0; }
         .btn-subtle { background: transparent; color: var(--colorNeutralForeground2); }
-        /* A style the selected text already has: Fluent's subtle ToggleButton, checked. */
+        /* A style the selected text already has: a subtle toggle button, checked. */
         .btn-subtle[aria-pressed="true"] { background: var(--colorSubtleBackgroundSelected); color: var(--colorNeutralForeground2Selected); }
         .btn-subtle[aria-pressed="true"] .icon { color: var(--colorNeutralForeground2BrandSelected); }
         .btn-subtle:hover { background: var(--colorSubtleBackgroundHover); color: var(--colorNeutralForeground2Hover); }
-        /* Fluent's pressed selector: also while a key holds a focused button down. */
+        /* Pressed: also while a key holds a focused button down. */
         .btn-subtle:hover:active, .btn-subtle:active:focus-visible { background: var(--colorSubtleBackgroundPressed); color: var(--colorNeutralForeground2Pressed); }
         .btn-subtle:hover .icon { color: var(--colorNeutralForeground2BrandHover); }
         .btn-subtle:hover:active .icon, .btn-subtle:active:focus-visible .icon { color: var(--colorNeutralForeground2BrandPressed); }
-        /* Fluent's createFocusOutlineStyle: focus border plus a 1px inset ring; the transparent outline shows in forced colors. */
+        /* Focus: border plus a 1px inset ring; the transparent outline shows in forced colors. */
         .btn:focus-visible { border-color: var(--colorStrokeFocus2); outline: 2px solid var(--colorTransparentStroke); box-shadow: inset 0 0 0 1px var(--colorStrokeFocus2); z-index: 1; }
-        /* Fluent's disabled subtle button: the note editor's Save while there is nothing to save. */
+        /* The one primary action, the note editor's Save: clay, with only its bottom corners rounded (the
+           reference's filled button). Disabled while there is nothing to save, then as quiet as a subtle one. */
+        .btn-primary { background: var(--colorClay); color: var(--colorOnClay); border-radius: 0 0 var(--borderRadiusButton) var(--borderRadiusButton); }
+        .btn-primary:hover { background: var(--colorClayHover); }
+        .btn-primary:hover:active, .btn-primary:active:focus-visible { background: var(--colorClayPressed); }
+        .btn-primary:disabled, .btn-primary:disabled:hover, .btn-primary:disabled:active { background: transparent; color: var(--colorNeutralForegroundDisabled); cursor: not-allowed; }
+        /* The disabled subtle button: */
         .btn-subtle:disabled, .btn-subtle:disabled:hover, .btn-subtle:disabled:active { background: transparent; color: var(--colorNeutralForegroundDisabled); cursor: not-allowed; }
         .btn-subtle:disabled .icon, .btn-subtle:disabled:hover .icon, .btn-subtle:disabled:active .icon { color: var(--colorNeutralForegroundDisabled); }
 
@@ -275,8 +282,8 @@
         .select-box path { fill: none; stroke: currentColor; stroke-width: 1; stroke-linejoin: round; }
 
         /* Toolbar */
-        /* Matched to Edge's PDF selection toolbar: 8px corners, a lighter shadow, and longer,
-           darker separators. */
+        /* Flat like the other surfaces, with longer,
+           hairline separators. */
         /* 4px padding: with 32px buttons the toolbar is 40px high, close to Edge's (about 42px). */
         .toolbar { display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
         /* Idle fade-out (see TOOLBAR_IDLE_MS). Pointing at the toolbar brings it back at once. */
@@ -296,8 +303,8 @@
 
         /* Note preview */
         .card { width: max-content; min-width: 160px; max-width: min(320px, calc(100vw - 16px)); padding: 12px; }
-        .card-text { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 240px; overflow: auto; overscroll-behavior: contain; }
-        .card-text a { color: var(--colorBrandForegroundLink); text-decoration: underline; border-radius: var(--borderRadiusMedium); outline: none; }
+        .card-text { font-family: ${SERIF_FONT}; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 240px; overflow: auto; overscroll-behavior: contain; }
+        .card-text a { color: var(--colorBrandForegroundLink); text-decoration: underline; text-underline-offset: 2px; border-radius: var(--borderRadiusMedium); outline: none; }
         .card-text a:hover { color: var(--colorBrandForegroundLinkHover); }
         .card-text a:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
         .card[data-pinned] .card-footer { cursor: move; user-select: none; }
@@ -336,7 +343,7 @@
         .field:hover::before { background: var(--colorNeutralStrokeAccessibleHover); }
         .field:active, .field:focus-within { border-color: var(--colorNeutralStroke1Pressed); }
         .field:active::before, .field:focus-within::before { background: var(--colorNeutralStrokeAccessiblePressed); }
-        /* Focus line: one solid 2px bar that grows from the center on focus, as in Fluent. */
+        /* Focus line: one solid 2px bar that grows from the center on focus. */
         .field::after {
             height: 2px; background: var(--colorCompoundBrandStroke);
             transform: scaleX(0); transition: transform 50ms var(--curveEasyEase);
@@ -349,7 +356,7 @@
             display: block; box-sizing: border-box; width: 292px; min-width: 292px; margin: 0; padding: 5px 11px;
             min-height: 30px; max-width: min(640px, calc(100vw - 50px)); max-height: 60vh;   /* 30px: one line */
             border: 0; outline: 0; resize: both; overflow-y: auto; overscroll-behavior: contain; background: transparent;
-            color: var(--colorNeutralForeground1); font: inherit;
+            color: var(--colorNeutralForeground1); font: inherit; font-family: ${SERIF_FONT};
         }
         textarea::placeholder { color: var(--colorNeutralForeground4); opacity: 1; }
         /* width 0 + min-width 100%: the hint wraps to the note box's width instead of widening the
@@ -366,7 +373,7 @@
         .toast-text { font-weight: 600; }
         .toast .btn-icon { margin: -6px 0; }
         .toast .btn-icon:last-child { margin-right: -6px; }
-        /* The toast's action (Undo, Restore, Show): Fluent's small subtle button. */
+        /* The toast's action (Undo, Restore, Show): a small subtle button. */
         .btn-small { min-width: 0; height: 24px; padding: 0 8px; font-size: 12px; line-height: 16px; border-radius: var(--borderRadiusMedium); }
         .toast .btn-small { flex: none; margin: -2px 0; }
         .toast .btn-small[hidden] { display: none; }
@@ -388,7 +395,7 @@
         .sitemenu-inner > :first-child { margin-left: 2px; }
         @media (prefers-reduced-motion: reduce) { .sitemenu-tools { transition: none; } }
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
-        .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${FLUENT_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
+        .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${SANS_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
         .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 12px 0 0; }
         .everything-box .panel-header { margin: -8px 8px 4px 12px; }
         .everything-box .field { flex: none; margin: 0 12px 8px; }
@@ -408,7 +415,7 @@
         .page-items { padding-left: 20px; }
         a.item-main { text-decoration: none; }
 
-        /* Annotations panel: a Fluent Drawer-like panel along the right edge, above the page. */
+        /* Annotations panel: a panel along the right edge, above the page. */
         .panel {
             top: 8px; left: auto; right: 8px; display: flex; flex-direction: column;
             width: min(360px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
@@ -428,8 +435,8 @@
         .panel-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .section-title { margin: 8px 4px 4px; font-size: 12px; line-height: 16px; font-weight: 600; color: var(--colorNeutralForeground3); }
         .empty { margin: 4px 4px 8px; color: var(--colorNeutralForeground3); }
-        /* Fluent's checkbox: a 16px square with 2px corners, the brand color and a check mark when
-           on, a brand outline with a smaller rounded square when mixed. */
+        /* Checkbox: a 16px square with 2px corners, slate and a check mark when
+           on, a slate outline with a smaller rounded square when mixed. */
         .check {
             appearance: none; flex: none; position: relative; width: 16px; height: 16px; margin: 0; cursor: pointer;
             border: 1px solid var(--colorNeutralStrokeAccessible); border-radius: var(--borderRadiusSmall); background: transparent;
@@ -474,7 +481,7 @@
         }
         .item-main:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: -2px; }
         .item-main::before { content: ""; position: absolute; left: 4px; top: 8px; bottom: 8px; width: 4px; border-radius: 2px; background: var(--swatch); }
-        .item-text, .item-note { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+        .item-text, .item-note { font-family: ${SERIF_FONT}; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
         .item-text { -webkit-line-clamp: 3; }
         .item-note { -webkit-line-clamp: 4; white-space: pre-wrap; margin-top: 2px; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground2); }
         .item-meta { margin-top: 2px; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      8.144
+// @version      8.145
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -102,6 +102,11 @@
  *
  * Annotations are drawn by the script itself (straight SVG strokes); it loads no library. New
  * ones draw in from the left, or appear at once where Windows is set to show fewer animations.
+ *
+ * Fonts: the panels use the Anthropic look, set in Georgia (text and notes) and Inter (buttons and
+ * labels). Georgia is part of Windows; Inter is not, so install it (https://rsms.me/inter/) for the
+ * intended look. Without it the panels fall back to the system font. Nothing is downloaded: the
+ * script never loads fonts from the web.
  *
  * This file is built from the files in src/ by build.js: edit those, then run node build.js.
  */

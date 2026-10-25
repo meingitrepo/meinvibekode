@@ -22,14 +22,14 @@ const HTML = `<!doctype html><html><body style="font: 16px/1.5 sans-serif; margi
   const pressed = await bg();
   await page.mouse.up();
   L.check('row rest is transparent', rest === 'rgba(0, 0, 0, 0)', rest);
-  L.check('row hover is SubtleBackgroundHover', hover === 'rgb(245, 245, 245)', hover);
-  L.check('row pressed is SubtleBackgroundPressed', pressed === 'rgb(224, 224, 224)', pressed);
+  L.check('row hover is SubtleBackgroundHover', hover === 'rgb(240, 238, 230)', hover);
+  L.check('row pressed is SubtleBackgroundPressed', pressed === 'rgb(227, 218, 204)', pressed);
   // Ticked row: SubtleBackgroundSelected.
   await page.evaluate(() => { const c = window.__hl.panelList.querySelector('.item .check'); c.checked = true; });
   await page.mouse.move(5, 5);
   await page.waitForTimeout(150);
   const selected = await bg();
-  L.check('ticked row is SubtleBackgroundSelected', selected === 'rgb(235, 235, 235)', selected);
+  L.check('ticked row is SubtleBackgroundSelected', selected === 'rgb(245, 227, 199)', selected);
   await page.evaluate(() => { window.__hl.panelList.querySelector('.item .check').checked = false; });
   // Forced colors.
   await page.emulateMedia({ forcedColors: 'active' });

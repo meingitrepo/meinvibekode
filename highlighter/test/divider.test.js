@@ -1,4 +1,4 @@
-// Pen bar and selection toolbar dividers: identical, 1px line with Fluent's 12px of space each side.
+// Pen bar and selection toolbar dividers: identical, 1px line with 12px of space each side.
 const L = require('./lib');
 const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title></head><body style="font:18px/1.6 serif;margin:40px"><p id="p1">Some plain words to select here.</p></body></html>`;
 const results = [];

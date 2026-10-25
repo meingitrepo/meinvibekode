@@ -1,4 +1,4 @@
-// Note actions use Fluent's note icons (add / edit) and a filled pin once pinned; the site menu's
+// Note actions use the note icons (add / edit) and a filled pin once pinned; the site menu's
 // hide button shows the eye that matches its next action. Pen mode keeps the pencil.
 const L = require('./lib');
 const html = `<html><body style="font:16px sans-serif;margin:40px">

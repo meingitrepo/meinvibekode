@@ -36,7 +36,7 @@
     const editorTitle = makeEl('div', { class: 'editor-title', id: 'highlighter-note-title' });
     const noteInput = makeEl('textarea', { maxlength: String(NOTE_MAX_LENGTH), 'aria-labelledby': 'highlighter-note-title', placeholder: 'Start typing here...' });
     // Labels and tooltips are added with addLabelTip() further down.
-    const noteSave = fluentButton({ icon: fluentIcon('checkmark_20_regular') });
+    const noteSave = fluentButton({ icon: fluentIcon('checkmark_20_regular'), appearance: 'primary' });
     const noteDiscard = fluentButton({ icon: fluentIcon('dismiss_20_regular') });
     const noteDelete = fluentButton({ icon: fluentIcon('eraser_20_regular') });
     // Save (or Enter) saves, Discard (or Esc, or opening another note) discards the changes,

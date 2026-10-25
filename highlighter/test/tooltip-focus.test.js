@@ -1,4 +1,4 @@
-// Tooltips show on hover and keyboard focus-visible, not on mouse-click focus (Fluent v9 Tooltip).
+// Tooltips show on hover and keyboard focus-visible, not on mouse-click focus.
 const L = require('./lib');
 const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title></head><body style="font:18px/1.6 serif;margin:40px">
 <p id="p1">Plain words to mark in the first paragraph here.</p></body></html>`;

@@ -1,5 +1,5 @@
     // =====================================================================
-    // The sticky menu: a handle, one expand button, then a column of tool buttons
+    // The sticky menu: a handle, one expand button, then a row of tool buttons
     // =====================================================================
 
     function menuHiddenHere() {
@@ -35,10 +35,10 @@
             if (button.dataset.shortcut) menuTip.appendChild(makeEl('span', { class: 'kbd', text: button.dataset.shortcut }));
             menuTip.hidden = false;
             const r = button.getBoundingClientRect(), t = menuTip.getBoundingClientRect();
-            const right = r.right + 8 + t.width <= window.innerWidth;
+            const below = r.bottom + 8 + t.height <= window.innerHeight;
             menuTip.style.position = 'fixed';
-            menuTip.style.left = `${Math.round(right ? r.right + 8 : Math.max(4, r.left - 8 - t.width))}px`;
-            menuTip.style.top = `${Math.round(r.top + (r.height - t.height) / 2)}px`;
+            menuTip.style.left = `${Math.round(Math.min(Math.max(4, r.left + (r.width - t.width) / 2), window.innerWidth - 4 - t.width))}px`;
+            menuTip.style.top = `${Math.round(below ? r.bottom + 8 : Math.max(4, r.top - 8 - t.height))}px`;
         }, 250);
     }
 
@@ -86,7 +86,7 @@
     const menuTools = makeEl('div', { class: 'sitemenu-tools' }, [
         makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons.values(), menuClose])
     ]);
-    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'vertical', 'aria-label': 'Highlighter', hidden: '' }, [menuHandle, makeEl('div', { class: 'sitemenu-expand' }, [menuExpand]), menuTools]);
+    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'horizontal', 'aria-label': 'Highlighter', hidden: '' }, [menuHandle, makeEl('div', { class: 'sitemenu-expand' }, [menuExpand]), menuTools]);
     menuRoot.append(makeEl('style', { text: UI_CSS }), menuEl, menuTip);
     ['keydown', 'keyup', 'keypress'].forEach(type => menuHost.addEventListener(type, e => e.stopPropagation()));
     menuEl.addEventListener('mousedown', e => e.preventDefault());

@@ -28,6 +28,9 @@ const state = page => page.evaluate(() => ({
   L.check('no power button any more', await page.evaluate(() => !window.__hl.menuEl.querySelector('[aria-label^="Turn highlighter"]')));
   const hr = await rectOf(page, 'menuHandle'), er = await rectOf(page, 'menuExpand');
   L.check('the handle is on top, then the expand icon button', s.expandIsIconButton && hr.bottom <= er.top + 1 && hr.top < er.top, { hr, er });
+  const mr = s.rect, gap = { top: hr.top - mr.top, left: er.left - mr.left, right: mr.right - er.right, bottom: mr.bottom - er.bottom };
+  L.check('collapsed: the same small padding on every side, and a narrow menu', Math.max(...Object.values(gap)) - Math.min(...Object.values(gap)) <= 1 && gap.left <= 6 && mr.width <= 44, { gap, width: mr.width });
+  L.check('the handle is a centred pill bar, not dots', await page.evaluate(() => { const c = getComputedStyle(window.__hl.menuHandle, '::before'); return c.width === '24px' && c.height === '4px' && getComputedStyle(window.__hl.menuHandle).backgroundImage === 'none'; }));
   L.check('every button has a name with its shortcut', s.labels.every(l => /\(Alt\+/.test(l)), s.labels);
   L.check('fresh site: toolbar and shortcuts show off', s.pressed.toolbar === 'false' && s.pressed.keys === 'false', s.pressed);
   await L.selStr(page, '#p1', 'words to select'); await page.waitForTimeout(400);

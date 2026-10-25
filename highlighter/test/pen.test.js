@@ -70,7 +70,7 @@ async function keyboardAndFields(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML });
   await L.altKey(p, 'p');
   await L.selStr(p, '#p2', 'plain words'); await p.waitForTimeout(400);
-  check('a keyboard (non-mouse) selection is not drawn on: the toolbar shows', (await L.wr(p)).length === 0 && (await L.toolbar(p)) !== null, await L.wr(p));
+  check('a keyboard (non-mouse) selection is not drawn on: no toolbar either (the pen bar is the toolbar)', (await L.wr(p)).length === 0 && (await L.toolbar(p)) === null, await L.wr(p));
   await p.evaluate(() => getSelection().removeAllRanges());
   const f = await p.$('#f'); const b = await f.boundingBox();
   await p.mouse.move(b.x + 3, b.y + b.height / 2); await p.mouse.down(); await p.mouse.move(b.x + b.width - 3, b.y + b.height / 2, { steps: 4 }); await p.mouse.up(); await p.waitForTimeout(300);

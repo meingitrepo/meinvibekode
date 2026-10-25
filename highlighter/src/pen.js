@@ -17,7 +17,11 @@
         const dark = computeDarkMode();
         ensureUi(panelOpen() && uiDark !== null ? uiDark : dark);
         penEl.setAttribute('data-theme', dark ? 'dark' : 'light');
-        // One button per style: the pen's own shows pressed; clicking another changes the pen.
+        // One button per style: the pen's own shows pressed; clicking another changes the pen. With one
+        // annotation selected by click, the bar acts on it instead, as the selection toolbar would.
+        const picked = selectedGroups.length === 1 && !editor ? selectedGroups[0] : null;
+        const pickedWrappers = picked ? groupWrappers(picked) : [];
+        const pickedKey = pickedWrappers.length ? pickedWrappers[0].getAttribute(STYLE_ATTR) : null;
         const tools = [];
         let lastGroup = null;
         Object.keys(STYLES).forEach(k => {
@@ -25,20 +29,28 @@
             const group = STYLES[k].type === 'highlight' ? 'highlight' : 'line';
             if (lastGroup && group !== lastGroup) tools.push(toolbarDivider());
             lastGroup = group;
-            const b = toolButton(styleIcon(k, dark), styleLabel(k), shortcutText(k), () => setPen(k), k === penKey);
-            b.tabIndex = k === penKey ? 0 : -1;
+            const on = pickedKey ? k === pickedKey : k === penKey;
+            const b = toolButton(styleIcon(k, dark), styleLabel(k), shortcutText(k), pickedKey ? () => { restyleGroups([picked], k); setPen(penKey); } : () => setPen(k), on);
+            b.tabIndex = on ? 0 : -1;
             tools.push(b);
         });
-        const eraser = toolButton(fluentIcon('eraser_20_regular'), 'Eraser', 'Alt+D', () => setPen(PEN_ERASER), penKey === PEN_ERASER);
-        eraser.tabIndex = penKey === PEN_ERASER ? 0 : -1;
-        tools.push(toolbarDivider(), eraser);
-        if (penKey !== PEN_ERASER && !tools.some(b => b.tabIndex === 0)) tools.find(b => b.tagName === 'BUTTON').tabIndex = 0;
+        if (pickedKey) {
+            const noteLabel = pickedWrappers.some(w => w.getAttribute(NOTE_ATTR)) ? 'Edit note' : 'Add note';
+            const erase = toolButton(fluentIcon('eraser_20_regular'), 'Erase annotation', 'Alt+D', () => deleteGroups([picked]));
+            erase.tabIndex = -1;
+            tools.push(toolbarDivider(), toolButton(fluentIcon('edit_20_regular'), noteLabel, 'Alt+N', () => openNoteEditor(picked)), erase);
+        } else {
+            const eraser = toolButton(fluentIcon('eraser_20_regular'), 'Eraser', 'Alt+D', () => setPen(PEN_ERASER), penKey === PEN_ERASER);
+            eraser.tabIndex = penKey === PEN_ERASER ? 0 : -1;
+            tools.push(toolbarDivider(), eraser);
+        }
+        if ((pickedKey || penKey !== PEN_ERASER) && !tools.some(b => b.tabIndex === 0)) tools.find(b => b.tagName === 'BUTTON').tabIndex = 0;
         penEl.replaceChildren(...tools, toolbarDivider(), penOff);
         penEl.hidden = false;
     }
 
     function togglePen() {
-        if (penKey) { setPen(null); showToast('Pen off'); return; }
+        if (penKey) { setPen(null); showToast('Pen off'); scheduleToolbar(); return; }
         hideToolbar();
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
     }

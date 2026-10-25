@@ -154,7 +154,7 @@
     function updateToolbar() {
         toolbarTimer = null;
         if (!running || editor) return;
-        if (toolbarSwitchedOff()) { hideToolbar(); return; }
+        if (toolbarSwitchedOff() || penKey) { hideToolbar(); return; }   // with the pen on, its bar is the toolbar (see setPen)
         const selected = toolbarSelection();
         const range = selected && cleanRange(selected);   // what an action would annotate
         const rect = range && range.getBoundingClientRect();

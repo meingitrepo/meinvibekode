@@ -57,6 +57,7 @@
         ensureUi();
         if (!selectFrame) followSelectBoxes();
         scheduleToolbar();   // the selection toolbar, for these annotations (see showGroupToolbar)
+        if (penKey) setPen(penKey);   // with the pen on, its bar takes the toolbar's place
         if (selectedGroups.join() !== previewedGroups) previewDue = selectedGroups.join();   // shown with the toolbar (see scheduleToolbar)
         previewedGroups = selectedGroups.join();
     }
@@ -79,6 +80,7 @@
         selectBoxes.clear();
         selectWrappers = null;
         if (toolbarGroups) hideToolbar();
+        if (penKey) setPen(penKey);
     }
 
     function unmarkNoteSelect(group) {

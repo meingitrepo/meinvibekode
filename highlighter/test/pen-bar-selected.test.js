@@ -1,0 +1,38 @@
+// With the pen on there is no selection toolbar; the pen bar acts on the one annotation selected by click.
+const L = require('./lib');
+const html = `<html><body style="font:16px sans-serif;margin:40px">
+<p id="p">Alpha bravo charlie delta echo foxtrot golf hotel india juliet.</p></body></html>`;
+const bar = (page, fn, arg) => page.evaluate(([f, a]) => { const bs = [...window.__hl.penEl.querySelectorAll('button')]; return (new Function('bs', 'a', 'return ' + f))(bs, a); }, [fn, arg]);
+(async () => {
+  const b = await L.launch();
+  const { page } = await L.open(b, { html });
+  await L.selStr(page, '#p', 'bravo', { endStr: 'charlie' });
+  await L.altKey(page, 'KeyH');
+  await page.mouse.move(800, 600);
+  await L.altKey(page, 'KeyP');
+  const pen0 = await page.evaluate(() => window.__hl.penKey);
+  const pt = await page.evaluate(() => { const r = window.__hl.allWrappers()[0].getClientRects()[0]; return { x: r.left + 5, y: r.top + r.height / 2 }; });
+  await page.mouse.click(pt.x, pt.y); await page.waitForTimeout(500);
+  L.check('no floating toolbar with pen on', await page.evaluate(() => window.__hl.toolbarEl.hidden), null);
+  L.check('bar has a note button', await bar(page, "bs.some(x => /note/i.test(x.dataset.label))"), null);
+  const style = await page.evaluate(() => window.__hl.allWrappers()[0].getAttribute('data-style-key'));
+  L.check('annotation style shown pressed', await bar(page, "bs.filter(x => x.getAttribute('aria-pressed') === 'true').length === 1"), null);
+  await bar(page, "bs.find(x => x.getAttribute('aria-pressed') === 'false' && !/note|eraser/i.test(x.dataset.label)).click()");
+  await page.waitForTimeout(200);
+  L.check('style click restyles annotation', await page.evaluate(s => window.__hl.allWrappers()[0].getAttribute('data-style-key') !== s, style), null);
+  L.check('pen style unchanged', await page.evaluate(p => window.__hl.penKey === p, pen0), null);
+  L.check('bar still has note button after restyle', await bar(page, "bs.some(x => /note/i.test(x.dataset.label))"), null);
+  await bar(page, "bs.find(x => /note/i.test(x.dataset.label)).click()");
+  await page.waitForTimeout(200);
+  L.check('note button opens editor', await page.evaluate(() => !!window.__hl.editor), null);
+  await page.keyboard.press('Escape'); await page.waitForTimeout(200);
+  await page.keyboard.press('Escape'); await page.waitForTimeout(200);
+  L.check('deselected: no note button, pen on', await page.evaluate(() => !!window.__hl.penKey && !window.__hl.selectedGroups.length), null);
+  L.check('deselected: bar has no note button', await bar(page, "!bs.some(x => /note/i.test(x.dataset.label))"), null);
+  await page.mouse.click(pt.x, pt.y); await page.waitForTimeout(300);
+  await bar(page, "bs.find(x => /erase/i.test(x.dataset.label)).click()");
+  await page.waitForTimeout(200);
+  L.check('eraser deletes annotation', await page.evaluate(() => window.__hl.allWrappers().length === 0), null);
+  await L.altKey(page, 'KeyP');
+  await b.close();
+})();

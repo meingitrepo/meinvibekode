@@ -20,7 +20,7 @@ const PARTS = [
     'apply-and-undo.js',            // applying and removing annotations, undo and redo
     'input.js',                     // keyboard shortcuts
     'notes.js',
-    'ui-style.js',                  // makeEl, Fluent icons, theme tokens, UI_CSS
+    'ui-style.js',                  // makeEl, Phosphor icons, theme tokens, UI_CSS
     'ui-elements.js',               // the shadow root and its elements, panel placement
     'toolbar.js',                   // selection toolbar and its tooltips
     'pen.js',                       // Alt+P: every mouse selection annotated at once

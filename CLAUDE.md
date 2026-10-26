@@ -16,7 +16,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Economy: fewer turns is the main saving. Chain build, test and diffstat in one Bash call (`tools/verify.sh <keyword>`), batch independent commands, subagents allowed when Superpowers calls for them, at most one review pass, status updates at milestones only.
 
 ## Tests
-- `node highlighter/test/run.js <word>` (Playwright 1.56.1 + Chromium). `NODE_PATH`: on Mhmd's Windows PC `C:/Users/Admin/AppData/Local/pi-node/current/node_modules` (browsers, incl. the headless shell, in `C:/Users/Admin/AppData/Local/ms-playwright`, found automatically); on Linux/cloud `/opt/node22/lib/node_modules`.
+- `node highlighter/test/run.js <word>` (Playwright 1.56.1 + Chromium). On Mhmd's Windows PC both live in the repo's git-ignored `.cache/playwright/`; set first (works from the main checkout and from worktrees): `C="$(cd "$(git rev-parse --git-common-dir)/.." && pwd)/.cache/playwright"; export NODE_PATH="$C/node_modules" PLAYWRIGHT_BROWSERS_PATH="$C/browsers"`. On Linux/cloud: `NODE_PATH=/opt/node22/lib/node_modules`.
 - Tests first (Superpowers TDD): for any behaviour change, write the test first and run it to see it fail, then implement, then run it to see it pass. Never edit a test afterwards just to match the code. Report pre-existing failures; never silently rewrite them.
 - Run only suites related to the change; no full run before PUSH (exception: tasks about the tests themselves).
 - A suite that reports 0 checks crashed. Report it even if untouched.

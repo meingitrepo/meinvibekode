@@ -128,15 +128,11 @@
     }
 
     let everythingItemSeq = 0;
-    // Slides a page's list open or shut: its height and opacity, from or to nothing.
-    function slideList(list, grow) {
-        const h = `${list.getBoundingClientRect().height}px`;
-        const frames = [{ height: h, opacity: 1 }, { height: '0px', opacity: 0 }];
+    // Fades a page's list in or out (Anthropic motion: a short ease-out fade, no slide).
+    function fadeList(list, grow) {
+        const frames = [{ opacity: 1 }, { opacity: 0 }];
         if (grow) frames.reverse();
-        list.style.overflow = 'hidden';
-        const a = list.animate(frames, { duration: 200, easing: grow ? 'cubic-bezier(0, 0, 0, 1)' : 'cubic-bezier(1, 0, 1, 1)' });
-        a.finished.then(() => { list.style.overflow = ''; }, () => {});
-        return a;
+        return list.animate(frames, { duration: 150, easing: 'ease-out' });   // --durationNormal, --easeOut
     }
 
     function renderEverything() {
@@ -333,15 +329,15 @@
                 if (again) again.focus({ preventScroll: true });
                 return again;
             };
-            // Fluent motion: a page's list grows in (decelerate) and shrinks out (accelerate), over durationNormal.
+            // A page's list fades in or out, then the tree re-renders.
             const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
             const list = head.parentElement.querySelector('.page-items');
             if (list && !calm) {
-                if (!list.getAnimations().length) slideList(list, false).finished.then(toggle, toggle);
+                if (!list.getAnimations().length) fadeList(list, false).finished.then(toggle, toggle);
             } else {
                 const again = toggle();
                 const grown = again && !calm && again.parentElement.querySelector('.page-items');
-                if (grown) slideList(grown, true);
+                if (grown) fadeList(grown, true);
             }
             return;
         }

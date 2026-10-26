@@ -49,5 +49,8 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', STONE = 'rgb(204,
   const built = require('fs').readFileSync(require('path').join(__dirname, '..', 'Highlighter.user.js'), 'utf8');
   L.check('no remote font loading', !/fonts\.googleapis|@import url|@font-face/.test(built));
   L.check('no Fluent shadow tokens remain', !/--shadow(8|16|64)\s*:/.test(built));
+  // 9.2: Anthropic motion: short ease-out fades; no Fluent decelerate/accelerate curves, surfaces don't slide in.
+  L.check('no Fluent motion curves remain', !/curve(Decelerate|Accelerate|EasyEase)|cubic-bezier\((0\.1, 0\.9|0\.9, 0\.1|0, 0, 0, 1|1, 0, 1, 1)/.test(built));
+  L.check('surfaces fade in without sliding', !/@keyframes highlighter-enter \{[^}]*translate/.test(built) && !/\[hidden\] \{[^}]*translateY/.test(built));
   await ctx.close(); await L.done(browser);
 })();

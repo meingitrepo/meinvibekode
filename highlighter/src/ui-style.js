@@ -141,13 +141,9 @@
         --borderRadiusCard: 16px;
         --toolbarDivider: #cccbc8;
         --durationFaster: 100ms;
-        --durationNormal: 200ms;
+        --durationNormal: 150ms;
         --durationSlow: 300ms;
-        --curveEasyEase: cubic-bezier(0.33, 0, 0.67, 1);
-        --curveDecelerateMid: cubic-bezier(0, 0, 0, 1);
-        --curveAccelerateMid: cubic-bezier(1, 0, 1, 1);
-        --curveDecelerateMax: cubic-bezier(0.1, 0.9, 0.2, 1);
-        --curveAccelerateMax: cubic-bezier(0.9, 0.1, 1, 0.2);
+        --easeOut: ease-out;   /* Anthropic motion: short, calm fades */
         --colorScheme: light;
     `;
     // The reference only has a dark footer, so dark is its inversion: slate surfaces, ivory text,
@@ -206,12 +202,12 @@
         [hidden]:not(.surface):not(.everything), .tip[hidden] { display: none !important; }
         /* Surfaces fade out rather than vanish: display flips last (allow-discrete), so the hidden attribute
            still takes effect at once for scripts. */
-        .surface:not(.tip) { transition: opacity var(--durationNormal) var(--curveAccelerateMax), transform var(--durationNormal) var(--curveAccelerateMax), display var(--durationNormal) allow-discrete; }
-        .everything { transition: opacity var(--durationNormal) var(--curveAccelerateMax), display var(--durationNormal) allow-discrete; }
+        .surface:not(.tip) { transition: opacity var(--durationNormal) var(--easeOut), display var(--durationNormal) allow-discrete; }
+        .everything { transition: opacity var(--durationNormal) var(--easeOut), display var(--durationNormal) allow-discrete; }
         .everything[hidden] { display: none; opacity: 0; pointer-events: none; }
-        .everything:not([hidden]) { animation: highlighter-fade var(--durationNormal) var(--curveDecelerateMax); }
+        .everything:not([hidden]) { animation: highlighter-fade var(--durationNormal) var(--easeOut); }
         @keyframes highlighter-fade { from { opacity: 0; } }
-        .surface:not(.tip)[hidden] { display: none; opacity: 0; transform: translateY(4px); pointer-events: none; }
+        .surface:not(.tip)[hidden] { display: none; opacity: 0; pointer-events: none; }
         /* Scrollbars (note box, card text, lists) follow our theme, not the page's. Set here, not on
            :host: the host's inline all: initial !important would reset it. */
         .surface, .everything { color-scheme: var(--colorScheme); }
@@ -225,13 +221,13 @@
             color: var(--colorNeutralForeground1); background: var(--colorNeutralBackground1);
             border: 1px solid var(--colorNeutralStroke1); border-radius: var(--borderRadiusXLarge);
             box-shadow: none;
-            animation: highlighter-enter var(--durationNormal) var(--curveDecelerateMax);
+            animation: highlighter-enter var(--durationNormal) var(--easeOut);
         }
         /* In the page, not the window: they scroll with their text (see uiHost). */
         .surface.toolbar, .surface.tip, .surface.card, .surface.editor { position: absolute; }
         .surface.card, .surface.editor, .surface.panel, .surface.everything-box, .surface.toast { border-radius: var(--borderRadiusCard); }
         @keyframes highlighter-pin { from { border-color: var(--colorNeutralStroke1Pressed); } }
-        @keyframes highlighter-enter { from { opacity: 0; transform: translateY(4px); } }
+        @keyframes highlighter-enter { from { opacity: 0; } }
 
         .icon { display: block; flex: none; fill: currentColor; }
         .icon-20 { width: 20px; height: 20px; }
@@ -245,9 +241,9 @@
             border: 1px solid transparent; border-radius: var(--borderRadiusButton);
             font-family: inherit; font-size: 14px; line-height: 20px; font-weight: 400;
             cursor: pointer; outline: none; user-select: none; -webkit-tap-highlight-color: transparent;
-            transition: background-color var(--durationFaster) var(--curveEasyEase),
-                        border-color var(--durationFaster) var(--curveEasyEase),
-                        color var(--durationFaster) var(--curveEasyEase);
+            transition: background-color var(--durationFaster) var(--easeOut),
+                        border-color var(--durationFaster) var(--easeOut),
+                        color var(--durationFaster) var(--easeOut);
         }
         .btn:not(.btn-icon) { font-weight: 600; }
         .btn-icon { min-width: 0; width: 32px; padding: 0; }
@@ -285,7 +281,7 @@
         /* 4px padding: with 32px buttons the toolbar is 40px high, close to Edge's (about 42px). */
         .toolbar { display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
         /* Idle fade-out (see TOOLBAR_IDLE_MS). Pointing at the toolbar brings it back at once. */
-        .toolbar.fading { opacity: 0; transition: opacity var(--durationSlow) var(--curveEasyEase); }
+        .toolbar.fading { opacity: 0; transition: opacity var(--durationSlow) var(--easeOut); }
         .divider { flex: none; width: calc(1px / var(--dpr, 1)); height: 24px; margin: 0 round(10px, calc(1px / var(--dpr, 1))); background: var(--toolbarDivider); }
         @media (pointer: coarse) { .toolbar .btn-icon { width: 40px; height: 40px; } }
 
@@ -365,10 +361,10 @@
         .sitemenu-handle { position: relative; align-self: stretch; width: 12px; cursor: grab; }
         .sitemenu-handle::before { content: ''; position: absolute; top: 50%; left: 4px; width: 4px; height: 24px; margin-top: -12px; border-radius: 2px; background: var(--colorNeutralForeground3); opacity: 0.6; }
         .sitemenu-expand { display: flex; justify-content: center; }
-        .sitemenu-expand .icon { transform: rotate(-90deg); transition: transform var(--durationNormal) var(--curveDecelerateMid); }
+        .sitemenu-expand .icon { transform: rotate(-90deg); transition: transform var(--durationNormal) var(--easeOut); }
         .sitemenu-expand [aria-expanded="true"] .icon { transform: rotate(90deg); }
         @media (prefers-reduced-motion: reduce) { .sitemenu-expand .icon { transition: none; } }
-        .sitemenu-tools { display: grid; grid-template-columns: 0fr; opacity: 0; transition: grid-template-columns var(--durationNormal) var(--curveDecelerateMid), opacity var(--durationNormal) var(--curveDecelerateMid); }
+        .sitemenu-tools { display: grid; grid-template-columns: 0fr; opacity: 0; transition: grid-template-columns var(--durationNormal) var(--easeOut), opacity var(--durationNormal) var(--easeOut); }
         .sitemenu[data-open] .sitemenu-tools { grid-template-columns: 1fr; opacity: 1; }
         .sitemenu-inner { overflow: hidden; min-width: 0; display: flex; align-items: center; gap: 2px; }
         .sitemenu-inner > :first-child { margin-left: 2px; }

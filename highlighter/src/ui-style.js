@@ -321,33 +321,14 @@
         .editor-title { font-weight: 600; }
         .field {
             position: relative; box-sizing: border-box; background: var(--colorNeutralBackground1);
-            /* No bottom border: browsers round border widths to device pixels (1px becomes 0.8px at
-               125% scaling), so a line positioned to cover a border always misses it by a fraction
-               and looks doubled. The bottom edge is drawn by ::before and ::after instead, both
-               anchored to the same edge (bottom: 0), so they can't drift apart. */
-            border: 1px solid var(--colorNeutralStroke1); border-bottom: 0;
-            /* Square bottom corners, so the bottom lines are plain straight lines. */
-            border-radius: var(--borderRadiusMedium) var(--borderRadiusMedium) 0 0;
-            /* Clips the textarea (and its scrollbar) to the rounded top corners. */
+            /* Anthropic input: one plain hairline on all four sides that darkens to the text color on focus. */
+            border: 1px solid var(--colorNeutralStroke1); border-radius: var(--borderRadiusMedium);
+            /* Clips the textarea (and its scrollbar) to the rounded corners. */
             overflow: hidden;
-            /* A 2px strip under the textarea for the bottom lines, so the focus bar never covers
-               the textarea's resize grip. */
-            padding-bottom: 2px;
+            transition: border-color 100ms ease-out;
         }
         .field:hover { border-color: var(--colorNeutralStroke1Hover); }
-        .field::before, .field::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; pointer-events: none; }
-        /* The box's bottom edge (what the bottom border used to be). */
-        .field::before { height: 1px; background: var(--colorNeutralStrokeAccessible); }
-        .field:hover::before { background: var(--colorNeutralStrokeAccessibleHover); }
-        .field:active, .field:focus-within { border-color: var(--colorNeutralStroke1Pressed); }
-        .field:active::before, .field:focus-within::before { background: var(--colorNeutralStrokeAccessiblePressed); }
-        /* Focus line: one solid 2px bar that grows from the center on focus. */
-        .field::after {
-            height: 2px; background: var(--colorCompoundBrandStroke);
-            transform: scaleX(0); transition: transform 50ms var(--curveEasyEase);
-        }
-        .field:focus-within::after { transform: scaleX(1); transition: transform var(--durationNormal) var(--curveDecelerateMax); }
-        .field:active::after { background: var(--colorCompoundBrandStrokePressed); }
+        .field:focus-within { border-color: var(--colorNeutralForeground1); }
         textarea {
             /* Height is set by sizeNoteInput(): NOTE_MIN_LINES to NOTE_MAX_LINES, then it scrolls.
                The corner handle resizes it (and the panel) for the current edit only. */

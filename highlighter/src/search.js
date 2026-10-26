@@ -132,7 +132,7 @@
     function fadeList(list, grow) {
         const frames = [{ opacity: 1 }, { opacity: 0 }];
         if (grow) frames.reverse();
-        return list.animate(frames, { duration: 150, easing: 'ease-out' });   // --durationNormal, --easeOut
+        return list.animate(frames, { duration: 150, easing: 'ease-out' });   // --duration-normal, --ease-out
     }
 
     function renderEverything() {

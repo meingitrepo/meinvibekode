@@ -238,7 +238,7 @@
         return n === 1 ? '1 annotation' : `${n} annotations`;
     }
 
-    // Toasts say what happened, as Fluent's do: "2 annotations erased".
+    // Toasts say what happened, in past tense: "2 annotations erased".
     function doneText(verb, n) {
         return `${annotationsText(n)} ${verb}`;
     }

@@ -6,7 +6,7 @@
     let toastKeep = false;        // it survives undo and redo (see resetUi)
     let toastKeepsEditor = false; // its action leaves a note being written open
 
-    // A message in the bottom-right corner, as Fluent's Toast: an intent icon, a title, an
+    // A message in the bottom-right corner (structure from Fluent's Toast): an intent icon, a title, an
     // action and Dismiss. `icon` is a PHOSPHOR_ICONS name; `intent`
     // is info, success or warning; `action` adds a button, { label, run, keep, keepEditor, tip, shortcut },
     // such as Undo; `tip` and `shortcut` are for its tooltip.

@@ -23,10 +23,11 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Before asking PUSH on a behaviour change, grep `highlighter/test` for the changed feature/keys/colors; update tests expecting old behaviour; remove checks for retired behaviour rather than skipping.
 - CI runs only a quick gate per push (`node build.js --check` + `node --check` on the built file). The full Playwright suite is local-only.
 
-## UI / Fluent
+## UI / Anthropic style
 - Screenshots: take or send them only when Mhmd asks. Never add before/after or showcase shots by default. When asked, crop to the changed component (`SHOT_CLIP`), never a whole-window shot; the same crop for before/after and light/dark.
-- Vanilla Fluent 2, no library. References: https://github.com/microsoft/fluentui and https://storybooks.fluentui.dev/react/. Before building or changing UI, look up the real Fluent v9 component, don't guess.
-- Lookup order: saved notes in `/mnt/project-files/fluent/` first; then source in microsoft/fluentui `packages/react-components/react-<name>` (raw.githubusercontent.com or sparse clone); then the Storybook rendered with Playwright (plain fetch gets no content; check it's reachable, the network may block it). Save new findings to `/mnt/project-files/fluent/`.
+- Look (since 9.0): Anthropic style, no library. Tokens in `src/ui-style.js` are named by role (`--ink*`, `--surface*`, `--line*`, `--accent*` = clay, only for the one primary action); serif for reading text, sans for chrome; flat with hairlines, no shadows; short ease-out fades. Icons: Phosphor Light. `test/anthropic-style.test.js` guards this.
+- Behaviour (keyboard, focus, ARIA) still follows Fluent v9 components. References: https://github.com/microsoft/fluentui and https://storybooks.fluentui.dev/react/. Before building or changing a control's behaviour, look up the real Fluent v9 component, don't guess; never copy its visuals.
+- Fluent lookup order: saved notes in `/mnt/project-files/fluent/` first; then source in microsoft/fluentui `packages/react-components/react-<name>` (raw.githubusercontent.com or sparse clone); then the Storybook rendered with Playwright (plain fetch gets no content; check it's reachable, the network may block it). Save new findings to `/mnt/project-files/fluent/`.
 - Visual bug (spacing, widths, colors): reproduce it first with a test (or `shot.sh` for your own check; don't send the shot unless asked), at the trigger named in the brief (device pixel ratio, zoom, dark mode, high contrast). If the first attempt does not reproduce it, stop and ask in one short question; don't loop.
 
 ## Scripts (`highlighter/tools/`; use them instead of redoing these steps by hand)

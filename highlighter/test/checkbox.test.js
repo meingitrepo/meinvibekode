@@ -25,9 +25,9 @@ const HTML = `<!doctype html><html><body style="font: 16px/1.5 sans-serif; margi
     out.disCursor = cs(dis).cursor;
     const root = host.getRootNode(), sheet = Array.from(root.styleSheets || []).concat(root.adoptedStyleSheets || []);
     const rules = sheet.flatMap(s => Array.from(s.cssRules)).map(r => r.cssText || '').join('\n');
-    out.pressedUn = /\.check:active\s*\{[^}]*colorNeutralStrokeAccessiblePressed/.test(rules);
-    out.pressedOn = /\.check:checked:active\s*\{[^}]*colorCompoundBrandBackgroundPressed/.test(rules);
-    out.pressedMix = /\.check:indeterminate:active::after\s*\{[^}]*colorCompoundBrandForeground1Pressed/.test(rules);
+    out.pressedUn = /\.check:active\s*\{[^}]*var\(--ink-2\)/.test(rules);
+    out.pressedOn = /\.check:checked:active\s*\{[^}]*ink-pressed/.test(rules);
+    out.pressedMix = /\.check:indeterminate:active::after\s*\{[^}]*ink-pressed/.test(rules);
     [un, on, mix, dis].forEach(c => c.remove());
     return out;
   });

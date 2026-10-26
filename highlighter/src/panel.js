@@ -237,7 +237,7 @@
     }
 
     function panelButton(icon, label, act) {
-        const b = fluentButton({ icon: phosphorIcon(icon) });
+        const b = makeButton({ icon: phosphorIcon(icon) });
         b.dataset.act = act;
         return addLabelTip(b, label, '', () => false);
     }
@@ -265,7 +265,7 @@
         const actions = makeEl('div', { class: 'item-actions' });
         let check = null;
         if (missing) {
-            const attach = fluentButton({ text: 'Attach to selection' });
+            const attach = makeButton({ text: 'Attach to selection' });
             attach.dataset.act = 'attach';
             attach.title = 'Select the text this annotation belongs to on the page, then click here';
             actions.append(attach, panelButton('trash', 'Forget annotation', 'forget'));

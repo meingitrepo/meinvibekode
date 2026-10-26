@@ -162,7 +162,7 @@
             closeEverything();
             return;
         }
-        // Tab stays inside everything saved, like a Fluent Dialog.
+        // Tab stays inside everything saved, as in a modal dialog.
         if (e.key === 'Tab' && !everythingEl.hidden) {
             const stops = Array.from(everythingEl.querySelectorAll('button, input, [tabindex]')).filter(el => !el.disabled && !el.hidden && el.tabIndex >= 0 && el.getClientRects().length);
             if (!stops.length) { e.preventDefault(); return; }

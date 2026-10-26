@@ -14,7 +14,6 @@ const HTML = `<!doctype html><html><body style="font: 16px/1.5 sans-serif; margi
     return { rules, left: ib.left - fb.left, gap: input.getBoundingClientRect().left + parseFloat(getComputedStyle(input).paddingLeft) - ib.right };
   });
   const has = re => re.test(r.rules);
-  L.check('--colorNeutralStroke1Pressed token exists', has(/--colorNeutralStroke1Pressed:/));
   // 9.2: Anthropic inputs: a plain 1px hairline on all four sides that darkens to slate on focus; no Fluent focus bar.
   const f = await page.evaluate(async () => {   // opening the panel focuses its filter, so blur first
     const field = window.__hl.panelEl.querySelector('.field'), input = field.querySelector('input');

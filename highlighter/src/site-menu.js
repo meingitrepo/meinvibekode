@@ -21,9 +21,9 @@
     menuHost.style.cssText = 'all: initial !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 0 !important; z-index: 2147483647 !important;';
     const menuRoot = menuHost.attachShadow({ mode: 'closed' });
     const menuHandle = makeEl('div', { class: 'sitemenu-handle', 'aria-hidden': 'true' });
-    const menuExpand = fluentButton({ icon: phosphorIcon('caret-down') });
+    const menuExpand = makeButton({ icon: phosphorIcon('caret-down') });
     let menuOpen = false;   // not kept: every page starts with the menu collapsed
-    const menuClose = fluentButton({ icon: phosphorIcon('x') });
+    const menuClose = makeButton({ icon: phosphorIcon('x') });
     const menuTip = makeEl('div', { class: 'surface tip', role: 'tooltip', hidden: '' });
     let menuTipTimer = null;
 
@@ -48,7 +48,7 @@
     }
 
     function menuButton(label, shortcut, icon, onClick) {
-        const b = fluentButton({ icon });
+        const b = makeButton({ icon });
         b.setAttribute('aria-label', shortcut ? `${label} (${shortcut})` : label);
         b.dataset.label = label;
         if (shortcut) { b.dataset.shortcut = shortcut; b.setAttribute('aria-keyshortcuts', shortcut); }

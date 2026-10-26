@@ -36,7 +36,7 @@
         }
     }
 
-    // --- Fluent tooltips for icon buttons (selection toolbar, note editor) ---
+    // --- Tooltips for icon buttons (selection toolbar, note editor) ---
 
     let labelTipTimer = null;
 
@@ -58,7 +58,7 @@
         labelTipEl.hidden = true;
     }
 
-    // Gives an icon button an accessible name and a Fluent tooltip showing its label and shortcut.
+    // Gives an icon button an accessible name and a tooltip showing its label and shortcut.
     function addLabelTip(button, label, shortcut, preferBelow) {
         button.setAttribute('aria-label', shortcut ? `${label} (${shortcut})` : label);
         button.dataset.label = label;
@@ -77,7 +77,7 @@
     // `pressed`: true or false makes it a toggle button (a style, which shows pressed when the
     // selected text has it).
     function toolButton(icon, label, shortcut, onClick, pressed = null) {
-        const b = fluentButton({ icon, appearance: 'subtle' });
+        const b = makeButton({ icon, appearance: 'subtle' });
         if (pressed !== null) b.setAttribute('aria-pressed', String(pressed));
         // On the side of the toolbar away from the selection, so the text stays visible.
         addLabelTip(b, label, shortcut, () => toolbarSide === 'below');
@@ -125,7 +125,7 @@
         toolbarEl.querySelectorAll('button').forEach((b, i) => { b.tabIndex = i ? -1 : 0; });
     }
 
-    // Arrow keys, Home and End move focus between the toolbar's buttons (Fluent's Toolbar).
+    // Arrow keys, Home and End move focus between the toolbar's buttons (the keyboard pattern of Fluent's Toolbar).
     toolbarEl.addEventListener('keydown', e => {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
         const buttons = Array.from(toolbarEl.querySelectorAll('button'));
@@ -281,7 +281,7 @@
             if (toolbarEl.matches(':hover')) return;
             hideLabelTip();
             toolbarEl.classList.add('fading');
-            const fadeMs = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300;   // --durationSlow
+            const fadeMs = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300;   // --duration-slow
             toolbarFadeTimer = setTimeout(hideToolbar, fadeMs);
         }, TOOLBAR_IDLE_MS);
     }

@@ -34,7 +34,7 @@
     ]);
 
     const editorTitle = makeEl('div', { class: 'editor-title', id: 'highlighter-note-title' });
-    const noteInput = makeEl('textarea', { maxlength: String(NOTE_MAX_LENGTH), 'aria-labelledby': 'highlighter-note-title', placeholder: 'Start typing here...' });
+    const noteInput = makeEl('textarea', { maxlength: String(NOTE_MAX_LENGTH), 'aria-labelledby': 'highlighter-note-title', placeholder: 'Add a note' });
     // Labels and tooltips are added with addLabelTip() further down.
     const noteSave = makeButton({ icon: phosphorIcon('check'), appearance: 'primary' });
     const noteDiscard = makeButton({ icon: phosphorIcon('x') });

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.1
+// @version      9.2
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -174,8 +174,8 @@
     const NOTE_MAX_LINES = 12;                  // grows with the text up to this (the note card's 240px), then scrolls
     const NOTE_BADGE_SIZE = 10;                 // px, at least; the speech-bubble badge on annotations with a note,
     const NOTE_BADGE_EM = 0.6;                  // which grows with the font (0.6em: 10px at 16px, 19px on a 32px heading)
-    const NOTE_BADGE_COLOR = '#0F6CBD';         // Fluent's blue: the badge while its note is pinned,
-    const NOTE_BADGE_DARK_COLOR = '#479EF5';    // and its lighter tint on dark backgrounds
+    const NOTE_BADGE_COLOR = '#d97757';         // clay, the Anthropic accent: the badge while its note is pinned,
+    const NOTE_BADGE_DARK_COLOR = '#d97757';    // and on dark backgrounds (clay reads on both)
     const FLASH_MS = 900;                       // an annotation jumped to blinks twice in this time
     const MARKDOWN_FRAGMENT_WORDS = 5;          // a long quote's link names its passage by this many words at each end
     const TRACKING_PARAM_RE = /^(utm_|fbclid$|gclid$|dclid$|msclkid$|mc_eid$|mc_cid$|igshid$|yclid$|_ga$|ref_src$)/i;
@@ -3022,7 +3022,7 @@
         return n === 1 ? '1 annotation' : `${n} annotations`;
     }
 
-    // Toasts say what happened, as Fluent's do: "2 annotations erased".
+    // Toasts say what happened, in past tense: "2 annotations erased".
     function doneText(verb, n) {
         return `${annotationsText(n)} ${verb}`;
     }
@@ -3262,7 +3262,7 @@
             closeEverything();
             return;
         }
-        // Tab stays inside everything saved, like a Fluent Dialog.
+        // Tab stays inside everything saved, as in a modal dialog.
         if (e.key === 'Tab' && !everythingEl.hidden) {
             const stops = Array.from(everythingEl.querySelectorAll('button, input, [tabindex]')).filter(el => !el.disabled && !el.hidden && el.tabIndex >= 0 && el.getClientRects().length);
             if (!stops.length) { e.preventDefault(); return; }
@@ -3565,121 +3565,81 @@
     const SERIF_FONT = '"Anthropic Serif", Georgia, Cambria, "Times New Roman", ui-serif, serif';
 
     // Colors from the Anthropic style reference: slate #141413, ivory #faf9f5 / #f0eee6, oat #e3dacc,
-    // manilla #f5e3c7, stone #cccbc8, cloud #b0aea5 / #87867f, clay #d97757 / #c6613f. The token names
-    // are kept from before (so the CSS below didn't need renaming), but "Brand" now means slate; only
-    // the --colorClay* tokens are the accent. The annotations panel and the toast follow the page's
+    // manilla #f5e3c7, stone #cccbc8, cloud #b0aea5 / #87867f, clay #d97757 / #c6613f. Tokens are named by role:
+    // --ink* for text and filled controls (slate in light, ivory in dark), --surface* for backgrounds,
+    // --line* for hairlines, and --accent* (clay) for the one primary action only. The annotations panel and the toast follow the page's
     // theme, which can differ from that of the other panels (see openPanel and showToast).
     const LIGHT_TOKENS = `
-        --colorNeutralForeground1: #141413;
-        --colorNeutralForeground2: #3d3d3a;
-        --colorNeutralForegroundDisabled: #b0aea5;
-        --colorNeutralForeground2Hover: #141413;
-        --colorNeutralForeground2Pressed: #141413;
-        --colorNeutralForeground2Selected: #141413;
-        --colorNeutralForeground2BrandHover: #141413;
-        --colorNeutralForeground2BrandPressed: #141413;
-        --colorNeutralForeground2BrandSelected: #141413;
-        --colorNeutralForeground3: #66655f;
-        --colorNeutralForeground4: #87867f;
-        --colorNeutralBackground1: #faf9f5;
-        --colorSubtleBackgroundHover: #f0eee6;
-        --colorSubtleBackgroundPressed: #e3dacc;
-        --colorSubtleBackgroundSelected: #f5e3c7;
-        --colorNeutralStroke1: #cccbc8;
-        --colorNeutralStroke1Hover: #b0aea5;
-        --colorNeutralStroke1Pressed: #87867f;
-        --colorNeutralStrokeAccessible: #87867f;
-        --colorNeutralStrokeAccessibleHover: #66655f;
-        --colorCompoundBrandStroke: #141413;
-        --colorCompoundBrandBackground: #141413;
-        --colorCompoundBrandBackgroundHover: #3d3d3a;
-        --colorNeutralStrokeAccessiblePressed: #3d3d3a;
-        --colorNeutralStrokeDisabled: #e3dacc;
-        --colorCompoundBrandBackgroundPressed: #141413;
-        --colorCompoundBrandStrokeHover: #3d3d3a;
-        --colorCompoundBrandStrokePressed: #141413;
-        --colorCompoundBrandForeground1: #141413;
-        --colorCompoundBrandForeground1Hover: #3d3d3a;
-        --colorCompoundBrandForeground1Pressed: #141413;
-        --colorNeutralForegroundOnBrand: #faf9f5;
-        --colorBrandForeground1: #141413;
-        --colorPaletteRedForeground1: #a8321a;
-        --colorPaletteGreenForeground1: #55683c;
-        --colorPaletteDarkOrangeForeground1: #b4532f;
-        --colorBrandForegroundLink: #141413;
-        --colorBrandForegroundLinkHover: #3d3d3a;
-        --colorBrandForegroundLinkPressed: #141413;
-        --colorClay: #d97757;
-        --colorClayHover: #c6613f;
-        --colorClayPressed: #b0553a;
-        --colorOnClay: #141413;
-        --colorStrokeFocus1: #faf9f5;
-        --colorStrokeFocus2: #141413;
-        --colorTransparentStroke: transparent;
-        --colorBackgroundOverlay: rgba(20, 20, 19, 0.4);
-        --borderRadiusSmall: 2px;
-        --borderRadiusMedium: 4px;
-        --borderRadiusButton: 8px;
-        --borderRadiusXLarge: 12px;
-        --borderRadiusCard: 16px;
-        --toolbarDivider: #cccbc8;
-        --durationFaster: 100ms;
-        --durationNormal: 200ms;
-        --durationSlow: 300ms;
-        --curveEasyEase: cubic-bezier(0.33, 0, 0.67, 1);
-        --curveDecelerateMid: cubic-bezier(0, 0, 0, 1);
-        --curveAccelerateMid: cubic-bezier(1, 0, 1, 1);
-        --curveDecelerateMax: cubic-bezier(0.1, 0.9, 0.2, 1);
-        --curveAccelerateMax: cubic-bezier(0.9, 0.1, 1, 0.2);
-        --colorScheme: light;
+        --ink: #141413;
+        --ink-2: #3d3d3a;
+        --ink-disabled: #b0aea5;
+        --ink-3: #66655f;
+        --ink-4: #73726c;   /* placeholders: 4.6:1 on ivory (cloud #87867f is 3.5:1) */
+        --surface: #faf9f5;
+        --surface-hover: #f0eee6;
+        --surface-pressed: #e3dacc;
+        --surface-selected: #f5e3c7;
+        --line: #cccbc8;
+        --line-hover: #b0aea5;
+        --line-pressed: #87867f;
+        --line-strong: #87867f;
+        --line-disabled: #e3dacc;
+        --ink-pressed: #141413;
+        --on-ink: #faf9f5;
+        --danger: #a8321a;
+        --success: #55683c;
+        --warning: #b4532f;
+        --accent: #d97757;
+        --accent-hover: #c6613f;
+        --accent-pressed: #b0553a;
+        --on-accent: #141413;
+        --focus-inner: #faf9f5;
+        --focus: #141413;
+        --transparent-stroke: transparent;
+        --overlay: rgba(20, 20, 19, 0.4);
+        --radius-sm: 2px;
+        --radius-md: 4px;
+        --radius-button: 8px;
+        --radius-lg: 12px;
+        --radius-card: 16px;
+        --text-sm: 12px;   /* type scale: captions, hints, meta */
+        --leading-sm: 16px;
+        --text-md: 14px;   /* body and controls */
+        --leading-md: 20px;
+        --divider: #cccbc8;
+        --duration-fast: 100ms;
+        --duration-normal: 150ms;
+        --duration-slow: 300ms;
+        --ease-out: ease-out;   /* Anthropic motion: short, calm fades */
+        --color-scheme: light;
     `;
     // The reference only has a dark footer, so dark is its inversion: slate surfaces, ivory text,
     // darker hairlines.
     const DARK_TOKENS = `
-        --colorNeutralForeground1: #faf9f5;
-        --colorNeutralForeground2: #cccbc8;
-        --colorNeutralForegroundDisabled: #5c5b56;
-        --colorNeutralForeground2Hover: #faf9f5;
-        --colorNeutralForeground2Pressed: #faf9f5;
-        --colorNeutralForeground2Selected: #faf9f5;
-        --colorNeutralForeground2BrandHover: #faf9f5;
-        --colorNeutralForeground2BrandPressed: #faf9f5;
-        --colorNeutralForeground2BrandSelected: #faf9f5;
-        --colorNeutralForeground3: #b0aea5;
-        --colorNeutralForeground4: #87867f;
-        --colorNeutralBackground1: #141413;
-        --colorSubtleBackgroundHover: #1f1f1d;
-        --colorSubtleBackgroundPressed: #2a2a28;
-        --colorSubtleBackgroundSelected: #262624;
-        --colorNeutralStroke1: #3d3d3a;
-        --colorNeutralStroke1Hover: #4d4d49;
-        --colorNeutralStroke1Pressed: #5c5b56;
-        --colorNeutralStrokeAccessible: #87867f;
-        --colorNeutralStrokeAccessibleHover: #b0aea5;
-        --colorCompoundBrandStroke: #faf9f5;
-        --colorCompoundBrandBackground: #faf9f5;
-        --colorCompoundBrandBackgroundHover: #cccbc8;
-        --colorNeutralStrokeAccessiblePressed: #cccbc8;
-        --colorNeutralStrokeDisabled: #3d3d3a;
-        --colorCompoundBrandBackgroundPressed: #b0aea5;
-        --colorCompoundBrandStrokeHover: #cccbc8;
-        --colorCompoundBrandStrokePressed: #b0aea5;
-        --colorCompoundBrandForeground1: #faf9f5;
-        --colorCompoundBrandForeground1Hover: #cccbc8;
-        --colorCompoundBrandForeground1Pressed: #b0aea5;
-        --colorNeutralForegroundOnBrand: #141413;
-        --colorBrandForeground1: #faf9f5;
-        --colorPaletteRedForeground1: #e5867a;
-        --colorPaletteGreenForeground1: #a3b88a;
-        --colorPaletteDarkOrangeForeground1: #e58f6f;
-        --colorBrandForegroundLink: #faf9f5;
-        --colorBrandForegroundLinkHover: #cccbc8;
-        --colorBrandForegroundLinkPressed: #b0aea5;
-        --colorStrokeFocus1: #141413;
-        --colorStrokeFocus2: #faf9f5;
-        --colorBackgroundOverlay: rgba(0, 0, 0, 0.5);
-        --toolbarDivider: #3d3d3a;
-        --colorScheme: dark;
+        --ink: #faf9f5;
+        --ink-2: #cccbc8;
+        --ink-disabled: #5c5b56;
+        --ink-3: #b0aea5;
+        --ink-4: #87867f;
+        --surface: #141413;
+        --surface-hover: #1f1f1d;
+        --surface-pressed: #2a2a28;
+        --surface-selected: #262624;
+        --line: #3d3d3a;
+        --line-hover: #4d4d49;
+        --line-pressed: #5c5b56;
+        --line-strong: #87867f;
+        --line-disabled: #3d3d3a;
+        --ink-pressed: #b0aea5;
+        --on-ink: #141413;
+        --danger: #e5867a;
+        --success: #a3b88a;
+        --warning: #e58f6f;
+        --focus-inner: #141413;
+        --focus: #faf9f5;
+        --overlay: rgba(0, 0, 0, 0.5);
+        --divider: #3d3d3a;
+        --color-scheme: dark;
     `;
     const UI_CSS = `
         :host { all: initial; ${LIGHT_TOKENS} }
@@ -3689,32 +3649,32 @@
         [hidden]:not(.surface):not(.everything), .tip[hidden] { display: none !important; }
         /* Surfaces fade out rather than vanish: display flips last (allow-discrete), so the hidden attribute
            still takes effect at once for scripts. */
-        .surface:not(.tip) { transition: opacity var(--durationNormal) var(--curveAccelerateMax), transform var(--durationNormal) var(--curveAccelerateMax), display var(--durationNormal) allow-discrete; }
-        .everything { transition: opacity var(--durationNormal) var(--curveAccelerateMax), display var(--durationNormal) allow-discrete; }
+        .surface:not(.tip) { transition: opacity var(--duration-normal) var(--ease-out), display var(--duration-normal) allow-discrete; }
+        .everything { transition: opacity var(--duration-normal) var(--ease-out), display var(--duration-normal) allow-discrete; }
         .everything[hidden] { display: none; opacity: 0; pointer-events: none; }
-        .everything:not([hidden]) { animation: highlighter-fade var(--durationNormal) var(--curveDecelerateMax); }
+        .everything:not([hidden]) { animation: highlighter-fade var(--duration-normal) var(--ease-out); }
         @keyframes highlighter-fade { from { opacity: 0; } }
-        .surface:not(.tip)[hidden] { display: none; opacity: 0; transform: translateY(4px); pointer-events: none; }
+        .surface:not(.tip)[hidden] { display: none; opacity: 0; pointer-events: none; }
         /* Scrollbars (note box, card text, lists) follow our theme, not the page's. Set here, not on
            :host: the host's inline all: initial !important would reset it. */
-        .surface, .everything { color-scheme: var(--colorScheme); }
+        .surface, .everything { color-scheme: var(--color-scheme); }
 
         /* Every floating panel (toolbar, note preview, note editor, toast, tooltip) shares this
            surface: flat parchment with a 1px hairline instead of a shadow, 12px corners. The cards
            (note preview, note editor, panel, dialog, toast) take 16px, the tooltip 4px. */
         .surface {
             position: fixed; top: 0; left: 0; box-sizing: border-box;
-            font-family: ${SANS_FONT}; font-size: 14px; line-height: 20px; font-weight: 400;
-            color: var(--colorNeutralForeground1); background: var(--colorNeutralBackground1);
-            border: 1px solid var(--colorNeutralStroke1); border-radius: var(--borderRadiusXLarge);
+            font-family: ${SANS_FONT}; font-size: var(--text-md); line-height: var(--leading-md); font-weight: 400;
+            color: var(--ink); background: var(--surface);
+            border: 1px solid var(--line); border-radius: var(--radius-lg);
             box-shadow: none;
-            animation: highlighter-enter var(--durationNormal) var(--curveDecelerateMax);
+            animation: highlighter-enter var(--duration-normal) var(--ease-out);
         }
         /* In the page, not the window: they scroll with their text (see uiHost). */
         .surface.toolbar, .surface.tip, .surface.card, .surface.editor { position: absolute; }
-        .surface.card, .surface.editor, .surface.panel, .surface.everything-box, .surface.toast { border-radius: var(--borderRadiusCard); }
-        @keyframes highlighter-pin { from { border-color: var(--colorNeutralStroke1Pressed); } }
-        @keyframes highlighter-enter { from { opacity: 0; transform: translateY(4px); } }
+        .surface.card, .surface.editor, .surface.panel, .surface.everything-box, .surface.toast { border-radius: var(--radius-card); }
+        @keyframes highlighter-pin { from { border-color: var(--line-pressed); } }
+        @keyframes highlighter-enter { from { opacity: 0; } }
 
         .icon { display: block; flex: none; fill: currentColor; }
         .icon-20 { width: 20px; height: 20px; }
@@ -3725,35 +3685,35 @@
         .btn {
             box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
             gap: 6px; min-width: 64px; height: 32px; margin: 0; padding: 0 12px;
-            border: 1px solid transparent; border-radius: var(--borderRadiusButton);
-            font-family: inherit; font-size: 14px; line-height: 20px; font-weight: 400;
+            border: 1px solid transparent; border-radius: var(--radius-button);
+            font-family: inherit; font-size: var(--text-md); line-height: var(--leading-md); font-weight: 400;
             cursor: pointer; outline: none; user-select: none; -webkit-tap-highlight-color: transparent;
-            transition: background-color var(--durationFaster) var(--curveEasyEase),
-                        border-color var(--durationFaster) var(--curveEasyEase),
-                        color var(--durationFaster) var(--curveEasyEase);
+            transition: background-color var(--duration-fast) var(--ease-out),
+                        border-color var(--duration-fast) var(--ease-out),
+                        color var(--duration-fast) var(--ease-out);
         }
         .btn:not(.btn-icon) { font-weight: 600; }
         .btn-icon { min-width: 0; width: 32px; padding: 0; }
-        .btn-subtle { background: transparent; color: var(--colorNeutralForeground2); }
+        .btn-subtle { background: transparent; color: var(--ink-2); }
         /* A style the selected text already has: a subtle toggle button, checked. */
-        .btn-subtle[aria-pressed="true"] { background: var(--colorSubtleBackgroundSelected); color: var(--colorNeutralForeground2Selected); }
-        .btn-subtle[aria-pressed="true"] .icon { color: var(--colorNeutralForeground2BrandSelected); }
-        .btn-subtle:hover { background: var(--colorSubtleBackgroundHover); color: var(--colorNeutralForeground2Hover); }
+        .btn-subtle[aria-pressed="true"] { background: var(--surface-selected); color: var(--ink); }
+        .btn-subtle[aria-pressed="true"] .icon { color: var(--ink); }
+        .btn-subtle:hover { background: var(--surface-hover); color: var(--ink); }
         /* Pressed: also while a key holds a focused button down. */
-        .btn-subtle:hover:active, .btn-subtle:active:focus-visible { background: var(--colorSubtleBackgroundPressed); color: var(--colorNeutralForeground2Pressed); }
-        .btn-subtle:hover .icon { color: var(--colorNeutralForeground2BrandHover); }
-        .btn-subtle:hover:active .icon, .btn-subtle:active:focus-visible .icon { color: var(--colorNeutralForeground2BrandPressed); }
+        .btn-subtle:hover:active, .btn-subtle:active:focus-visible { background: var(--surface-pressed); color: var(--ink); }
+        .btn-subtle:hover .icon { color: var(--ink); }
+        .btn-subtle:hover:active .icon, .btn-subtle:active:focus-visible .icon { color: var(--ink); }
         /* Focus: border plus a 1px inset ring; the transparent outline shows in forced colors. */
-        .btn:focus-visible { border-color: var(--colorStrokeFocus2); outline: 2px solid var(--colorTransparentStroke); box-shadow: inset 0 0 0 1px var(--colorStrokeFocus2); z-index: 1; }
+        .btn:focus-visible { border-color: var(--focus); outline: 2px solid var(--transparent-stroke); box-shadow: inset 0 0 0 1px var(--focus); z-index: 1; }
         /* The one primary action, the note editor's Save: clay, with only its bottom corners rounded (the
            reference's filled button). Disabled while there is nothing to save, then as quiet as a subtle one. */
-        .btn-primary { background: var(--colorClay); color: var(--colorOnClay); border-radius: 0 0 var(--borderRadiusButton) var(--borderRadiusButton); }
-        .btn-primary:hover { background: var(--colorClayHover); }
-        .btn-primary:hover:active, .btn-primary:active:focus-visible { background: var(--colorClayPressed); }
-        .btn-primary:disabled, .btn-primary:disabled:hover, .btn-primary:disabled:active { background: transparent; color: var(--colorNeutralForegroundDisabled); cursor: not-allowed; }
+        .btn-primary { background: var(--accent); color: var(--on-accent); border-radius: 0 0 var(--radius-button) var(--radius-button); }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-primary:hover:active, .btn-primary:active:focus-visible { background: var(--accent-pressed); }
+        .btn-primary:disabled, .btn-primary:disabled:hover, .btn-primary:disabled:active { background: transparent; color: var(--ink-disabled); cursor: not-allowed; }
         /* The disabled subtle button: */
-        .btn-subtle:disabled, .btn-subtle:disabled:hover, .btn-subtle:disabled:active { background: transparent; color: var(--colorNeutralForegroundDisabled); cursor: not-allowed; }
-        .btn-subtle:disabled .icon, .btn-subtle:disabled:hover .icon, .btn-subtle:disabled:active .icon { color: var(--colorNeutralForegroundDisabled); }
+        .btn-subtle:disabled, .btn-subtle:disabled:hover, .btn-subtle:disabled:active { background: transparent; color: var(--ink-disabled); cursor: not-allowed; }
+        .btn-subtle:disabled .icon, .btn-subtle:disabled:hover .icon, .btn-subtle:disabled:active .icon { color: var(--ink-disabled); }
 
         /* Annotations selected by clicking them: a solid 1px outline around their lines' shape,
            black, or white on a dark page. */
@@ -3768,15 +3728,15 @@
         /* 4px padding: with 32px buttons the toolbar is 40px high, close to Edge's (about 42px). */
         .toolbar { display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
         /* Idle fade-out (see TOOLBAR_IDLE_MS). Pointing at the toolbar brings it back at once. */
-        .toolbar.fading { opacity: 0; transition: opacity var(--durationSlow) var(--curveEasyEase); }
-        .divider { flex: none; width: calc(1px / var(--dpr, 1)); height: 24px; margin: 0 round(10px, calc(1px / var(--dpr, 1))); background: var(--toolbarDivider); }
+        .toolbar.fading { opacity: 0; transition: opacity var(--duration-slow) var(--ease-out); }
+        .divider { flex: none; width: calc(1px / var(--dpr, 1)); height: 24px; margin: 0 round(10px, calc(1px / var(--dpr, 1))); background: var(--divider); }
         @media (pointer: coarse) { .toolbar .btn-icon { width: 40px; height: 40px; } }
 
         /* Tooltip */
         /* One line, kept inside the view: nowrap measures the tip at its full width wherever it last
            stood, so placePanel() can move it in from the edge instead of the edge squeezing it. */
-        .tip { white-space: nowrap; max-width: calc(100vw - 8px); overflow: hidden; text-overflow: ellipsis; padding: 4px 11px 6px; font-size: 12px; line-height: 16px; border-radius: var(--borderRadiusMedium); pointer-events: none; }
-        .tip .kbd { margin-left: 8px; color: var(--colorNeutralForeground3); }
+        .tip { white-space: nowrap; max-width: calc(100vw - 8px); overflow: hidden; text-overflow: ellipsis; padding: 4px 11px 6px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); pointer-events: none; }
+        .tip .kbd { margin-left: 8px; color: var(--ink-3); }
 
         /* Panels (note preview, note editor, toast) all have 12px padding. Their 32px icon buttons
            are pulled out by 4px with negative margins, so every button sits 8px from the panel's
@@ -3785,13 +3745,13 @@
         /* Note preview */
         .card { width: max-content; min-width: 160px; max-width: min(320px, calc(100vw - 16px)); padding: 12px; }
         .card-text { font-family: ${SERIF_FONT}; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 240px; overflow: auto; overscroll-behavior: contain; }
-        .card-text a { color: var(--colorBrandForegroundLink); text-decoration: underline; text-underline-offset: 2px; border-radius: var(--borderRadiusMedium); outline: none; }
-        .card-text a:hover { color: var(--colorBrandForegroundLinkHover); }
-        .card-text a:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
+        .card-text a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; border-radius: var(--radius-md); outline: none; }
+        .card-text a:hover { color: var(--ink-2); }
+        .card-text a:focus-visible { outline: 2px solid var(--focus); }
         .card[data-pinned] .card-footer { cursor: move; user-select: none; }
         .card[data-pinned] { z-index: -1; }   /* pinned previews sit under the Alt+O and Alt+Shift+O panels */
         .card-footer { display: flex; align-items: center; gap: 12px; margin: 4px -4px -8px 0; }
-        .card-hint { flex: 1; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
+        .card-hint { flex: 1; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         .card-actions { display: flex; gap: 2px; }
 
         /* Note editor, with an outline Textarea */
@@ -3803,96 +3763,77 @@
         .editor-actions { display: flex; align-items: center; gap: 2px; }
         .editor-title { font-weight: 600; }
         .field {
-            position: relative; box-sizing: border-box; background: var(--colorNeutralBackground1);
-            /* No bottom border: browsers round border widths to device pixels (1px becomes 0.8px at
-               125% scaling), so a line positioned to cover a border always misses it by a fraction
-               and looks doubled. The bottom edge is drawn by ::before and ::after instead, both
-               anchored to the same edge (bottom: 0), so they can't drift apart. */
-            border: 1px solid var(--colorNeutralStroke1); border-bottom: 0;
-            /* Square bottom corners, so the bottom lines are plain straight lines. */
-            border-radius: var(--borderRadiusMedium) var(--borderRadiusMedium) 0 0;
-            /* Clips the textarea (and its scrollbar) to the rounded top corners. */
+            position: relative; box-sizing: border-box; background: var(--surface);
+            /* Anthropic input: one plain hairline on all four sides that darkens to the text color on focus. */
+            border: 1px solid var(--line); border-radius: var(--radius-md);
+            /* Clips the textarea (and its scrollbar) to the rounded corners. */
             overflow: hidden;
-            /* A 2px strip under the textarea for the bottom lines, so the focus bar never covers
-               the textarea's resize grip. */
-            padding-bottom: 2px;
+            transition: border-color 100ms ease-out;
         }
-        .field:hover { border-color: var(--colorNeutralStroke1Hover); }
-        .field::before, .field::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; pointer-events: none; }
-        /* The box's bottom edge (what the bottom border used to be). */
-        .field::before { height: 1px; background: var(--colorNeutralStrokeAccessible); }
-        .field:hover::before { background: var(--colorNeutralStrokeAccessibleHover); }
-        .field:active, .field:focus-within { border-color: var(--colorNeutralStroke1Pressed); }
-        .field:active::before, .field:focus-within::before { background: var(--colorNeutralStrokeAccessiblePressed); }
-        /* Focus line: one solid 2px bar that grows from the center on focus. */
-        .field::after {
-            height: 2px; background: var(--colorCompoundBrandStroke);
-            transform: scaleX(0); transition: transform 50ms var(--curveEasyEase);
-        }
-        .field:focus-within::after { transform: scaleX(1); transition: transform var(--durationNormal) var(--curveDecelerateMax); }
-        .field:active::after { background: var(--colorCompoundBrandStrokePressed); }
+        .field:hover { border-color: var(--line-hover); }
+        .field:focus-within { border-color: var(--ink); }
         textarea {
             /* Height is set by sizeNoteInput(): NOTE_MIN_LINES to NOTE_MAX_LINES, then it scrolls.
                The corner handle resizes it (and the panel) for the current edit only. */
             display: block; box-sizing: border-box; width: 292px; min-width: 292px; margin: 0; padding: 5px 11px;
             min-height: 30px; max-width: min(640px, calc(100vw - 50px)); max-height: 60vh;   /* 30px: one line */
             border: 0; outline: 0; resize: both; overflow-y: auto; overscroll-behavior: contain; background: transparent;
-            color: var(--colorNeutralForeground1); font: inherit; font-family: ${SERIF_FONT};
+            color: var(--ink); font: inherit; font-family: ${SERIF_FONT};
         }
-        textarea::placeholder { color: var(--colorNeutralForeground4); opacity: 1; }
+        textarea::placeholder { color: var(--ink-4); opacity: 1; }
         /* width 0 + min-width 100%: the hint wraps to the note box's width instead of widening the
            panel, which would leave the box's border wider than the textarea and its scrollbar. */
-        .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
+        .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         /* Toast */
         .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; width: min(292px, calc(100vw - 32px)); padding: 12px; }
-        .toast .icon { color: var(--colorNeutralForeground2); }
-        .toast[data-intent="success"] > .icon { color: var(--colorPaletteGreenForeground1); }
-        .toast[data-intent="warning"] > .icon { color: var(--colorPaletteDarkOrangeForeground1); }
-        .toast[data-intent="error"] > .icon { color: var(--colorPaletteRedForeground1); }
+        .toast .icon { color: var(--ink-2); }
+        .toast[data-intent="success"] > .icon { color: var(--success); }
+        .toast[data-intent="warning"] > .icon { color: var(--warning); }
+        .toast[data-intent="error"] > .icon { color: var(--danger); }
         .toast > .icon { width: 16px; height: 16px; margin-top: 2px; }
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 600; }
         .toast .btn-icon { margin: -6px 0; }
         .toast .btn-icon:last-child { margin-right: -6px; }
         /* The toast's action (Undo, Restore, Show): a small subtle button. */
-        .btn-small { min-width: 0; height: 24px; padding: 0 8px; font-size: 12px; line-height: 16px; border-radius: var(--borderRadiusMedium); }
+        .btn-small { min-width: 0; height: 24px; padding: 0 8px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
         .toast .btn-small { flex: none; margin: -2px 0; }
         .toast .btn-small[hidden] { display: none; }
-        .toast:focus-visible { outline: 2px solid var(--colorStrokeFocus2); }
+        .toast:focus-visible { outline: 2px solid var(--focus); }
         /* The pen's bar, centred at the top of the view. */
         .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
         /* The sticky menu: the site switch, with a row of icon buttons expanding to its right. */
         .sitemenu { display: flex; align-items: center; padding: 4px; width: max-content; cursor: grab; }
         .sitemenu .btn { cursor: pointer; }
         .sitemenu-handle { position: relative; align-self: stretch; width: 12px; cursor: grab; }
-        .sitemenu-handle::before { content: ''; position: absolute; top: 50%; left: 4px; width: 4px; height: 24px; margin-top: -12px; border-radius: 2px; background: var(--colorNeutralForeground3); opacity: 0.6; }
+        .sitemenu-handle::before { content: ''; position: absolute; top: 50%; left: 4px; width: 4px; height: 24px; margin-top: -12px; border-radius: 2px; background: var(--ink-3); opacity: 0.6; }
         .sitemenu-expand { display: flex; justify-content: center; }
-        .sitemenu-expand .icon { transform: rotate(-90deg); transition: transform var(--durationNormal) var(--curveDecelerateMid); }
+        .sitemenu-expand .icon { transform: rotate(-90deg); transition: transform var(--duration-normal) var(--ease-out); }
         .sitemenu-expand [aria-expanded="true"] .icon { transform: rotate(90deg); }
         @media (prefers-reduced-motion: reduce) { .sitemenu-expand .icon { transition: none; } }
-        .sitemenu-tools { display: grid; grid-template-columns: 0fr; opacity: 0; transition: grid-template-columns var(--durationNormal) var(--curveDecelerateMid), opacity var(--durationNormal) var(--curveDecelerateMid); }
+        .sitemenu-tools { display: grid; grid-template-columns: 0fr; opacity: 0; transition: grid-template-columns var(--duration-normal) var(--ease-out), opacity var(--duration-normal) var(--ease-out); }
         .sitemenu[data-open] .sitemenu-tools { grid-template-columns: 1fr; opacity: 1; }
         .sitemenu-inner { overflow: hidden; min-width: 0; display: flex; align-items: center; gap: 2px; }
         .sitemenu-inner > :first-child { margin-left: 2px; }
         @media (prefers-reduced-motion: reduce) { .sitemenu-tools { transition: none; } }
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
-        .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--colorBackgroundOverlay); font-family: ${SANS_FONT}; font-size: 14px; line-height: 20px; color: var(--colorNeutralForeground1); }
+        .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--overlay); font-family: ${SANS_FONT}; font-size: var(--text-md); line-height: var(--leading-md); color: var(--ink); }
         .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 12px 0 0; }
         .everything-box .panel-header { margin: -8px 8px 4px 12px; }
         .everything-box .field { flex: none; margin: 0 12px 8px; }
         .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .page-head {
             display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 6px 4px; border: 0;
-            border-radius: var(--borderRadiusMedium); background: none; font: inherit; color: inherit; text-align: left;
+            border-radius: var(--radius-md); background: none; font: inherit; color: inherit; text-align: left;
             cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent;
         }
-        .page-head:hover { background: var(--colorSubtleBackgroundHover); }
-        .page-head:hover:active { background: var(--colorSubtleBackgroundPressed); }
-        .page-head:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: -2px; }
+        .page-head:hover { background: var(--surface-hover); }
+        .page-head:hover:active { background: var(--surface-pressed); }
+        .page-head:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
         .page-name { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
         .page-host { font-weight: 600; }
-        .page-path { margin-left: 6px; color: var(--colorNeutralForeground3); }
-        .page-meta { flex: none; font-size: 12px; color: var(--colorNeutralForeground3); }
+        .page-path { margin-left: 6px; color: var(--ink-3); }
+        .page-meta { flex: none; font-size: var(--text-sm); color: var(--ink-3); }
         .page-items { padding-left: 20px; }
         a.item-main { text-decoration: none; }
 
@@ -3902,70 +3843,70 @@
             width: min(360px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
         }
         .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }
-        .panel-title { font-weight: 600; color: var(--colorNeutralForeground1); }
-        .panel-count { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--colorNeutralForeground3); }
+        .panel-title { font-weight: 600; color: var(--ink); }
+        .panel-count { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-3); }
         .panel-actions { display: flex; align-items: center; gap: 2px; }
         .panel .field { flex: none; margin: 0 12px 8px; padding-bottom: 0; }
-        .search-icon { position: absolute; left: 9px; top: 6px; color: var(--colorNeutralForeground3); pointer-events: none; }
+        .search-icon { position: absolute; left: 9px; top: 6px; color: var(--ink-3); pointer-events: none; }
         .field input {
             display: block; box-sizing: border-box; width: 100%; height: 31px; margin: 0; padding: 0 10px 0 33px;
-            border: 0; outline: 0; background: transparent; color: var(--colorNeutralForeground1); font: inherit;
+            border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit;
         }
-        .field input::placeholder { color: var(--colorNeutralForeground4); opacity: 1; }
+        .field input::placeholder { color: var(--ink-4); opacity: 1; }
         .field input::-webkit-search-cancel-button { display: none; }
         .panel-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
-        .section-title { margin: 8px 4px 4px; font-size: 12px; line-height: 16px; font-weight: 600; color: var(--colorNeutralForeground3); }
-        .empty { margin: 4px 4px 8px; color: var(--colorNeutralForeground3); }
+        .section-title { margin: 8px 4px 4px; font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: 600; color: var(--ink-3); }
+        .empty { margin: 4px 4px 8px; color: var(--ink-3); }
         /* Checkbox: a 16px square with 2px corners, slate and a check mark when
            on, a slate outline with a smaller rounded square when mixed. */
         .check {
             appearance: none; flex: none; position: relative; width: 16px; height: 16px; margin: 0; cursor: pointer;
-            border: 1px solid var(--colorNeutralStrokeAccessible); border-radius: var(--borderRadiusSmall); background: transparent;
+            border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: transparent;
             transition: background-color 100ms, border-color 100ms; box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent;
         }
-        .check:hover { border-color: var(--colorNeutralStrokeAccessibleHover); }
-        .check:active { border-color: var(--colorNeutralStrokeAccessiblePressed); }
-        .check:checked { border-color: var(--colorCompoundBrandBackground); background: var(--colorCompoundBrandBackground); }
-        .check:checked:hover { border-color: var(--colorCompoundBrandBackgroundHover); background: var(--colorCompoundBrandBackgroundHover); }
-        .check:checked:active { border-color: var(--colorCompoundBrandBackgroundPressed); background: var(--colorCompoundBrandBackgroundPressed); }
+        .check:hover { border-color: var(--ink-3); }
+        .check:active { border-color: var(--ink-2); }
+        .check:checked { border-color: var(--ink); background: var(--ink); }
+        .check:checked:hover { border-color: var(--ink-2); background: var(--ink-2); }
+        .check:checked:active { border-color: var(--ink-pressed); background: var(--ink-pressed); }
         .check:checked::after, .check:indeterminate::after {
-            content: ""; position: absolute; inset: 0; background: var(--colorNeutralForegroundOnBrand);
+            content: ""; position: absolute; inset: 0; background: var(--on-ink);
             -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M9.76 3.2c.3.29.32.76.04 1.06l-4.25 4.5a.75.75 0 0 1-1.08.02L2.22 6.53a.75.75 0 0 1 1.06-1.06l1.7 1.7L8.7 3.24a.75.75 0 0 1 1.06-.04'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
             mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M9.76 3.2c.3.29.32.76.04 1.06l-4.25 4.5a.75.75 0 0 1-1.08.02L2.22 6.53a.75.75 0 0 1 1.06-1.06l1.7 1.7L8.7 3.24a.75.75 0 0 1 1.06-.04'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
         }
-        .check:indeterminate { border-color: var(--colorCompoundBrandStroke); }
+        .check:indeterminate { border-color: var(--ink); }
         .check:indeterminate::after {
-            background: var(--colorCompoundBrandForeground1);
+            background: var(--ink);
             -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4Z'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
             mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4Z'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
         }
-        .check:indeterminate:hover { border-color: var(--colorCompoundBrandStrokeHover); }
-        .check:indeterminate:hover::after { background: var(--colorCompoundBrandForeground1Hover); }
-        .check:indeterminate:active { border-color: var(--colorCompoundBrandStrokePressed); }
-        .check:indeterminate:active::after { background: var(--colorCompoundBrandForeground1Pressed); }
-        .check:disabled, .check:disabled:hover, .check:disabled:active { cursor: default; border-color: var(--colorNeutralStrokeDisabled); background: transparent; }
-        .check:disabled::after { background: var(--colorNeutralForegroundDisabled); }
-        .check:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: 1px; }
+        .check:indeterminate:hover { border-color: var(--ink-2); }
+        .check:indeterminate:hover::after { background: var(--ink-2); }
+        .check:indeterminate:active { border-color: var(--ink-pressed); }
+        .check:indeterminate:active::after { background: var(--ink-pressed); }
+        .check:disabled, .check:disabled:hover, .check:disabled:active { cursor: default; border-color: var(--line-disabled); background: transparent; }
+        .check:disabled::after { background: var(--ink-disabled); }
+        .check:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
         .item .check { margin: 10px 8px 0 4px; opacity: 0; }
         .item:hover .check, .item .check:checked, .item .check:focus-visible { opacity: 1; }
         @media (hover: none) { .item .check { opacity: 1; } }
-        .item { display: flex; align-items: flex-start; border-radius: var(--borderRadiusMedium); }
+        .item { display: flex; align-items: flex-start; border-radius: var(--radius-md); }
         .item + .item { margin-top: 2px; }
-        .item:has(.check:checked) { background: var(--colorSubtleBackgroundSelected); }
-        .item:hover { background: var(--colorSubtleBackgroundHover); }
-        .item:hover:active { background: var(--colorSubtleBackgroundPressed); }
+        .item:has(.check:checked) { background: var(--surface-selected); }
+        .item:hover { background: var(--surface-hover); }
+        .item:hover:active { background: var(--surface-pressed); }
         /* The annotation itself: a button that scrolls to it. The bar at its left is its color. */
         .item-main {
             position: relative; flex: 1; min-width: 0; display: block; margin: 0; padding: 6px 4px 6px 14px;
-            border: 0; border-radius: var(--borderRadiusMedium); background: none; text-align: left;
+            border: 0; border-radius: var(--radius-md); background: none; text-align: left;
             font: inherit; color: inherit; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent;
         }
-        .item-main:focus-visible { outline: 2px solid var(--colorStrokeFocus2); outline-offset: -2px; }
+        .item-main:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
         .item-main::before { content: ""; position: absolute; left: 4px; top: 8px; bottom: 8px; width: 4px; border-radius: 2px; background: var(--swatch); }
         .item-text, .item-note { font-family: ${SERIF_FONT}; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
         .item-text { -webkit-line-clamp: 3; }
-        .item-note { -webkit-line-clamp: 4; white-space: pre-wrap; margin-top: 2px; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground2); }
-        .item-meta { margin-top: 2px; font-size: 12px; line-height: 16px; color: var(--colorNeutralForeground3); }
+        .item-note { -webkit-line-clamp: 4; white-space: pre-wrap; margin-top: 2px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-2); }
+        .item-meta { margin-top: 2px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         .item-actions { display: flex; align-items: center; gap: 2px; padding: 4px 4px 0 0; opacity: 0; }
         .item:hover .item-actions, .item:focus-within .item-actions { opacity: 1; }
         @media (hover: none) { .item-actions { opacity: 1; } }
@@ -4001,8 +3942,8 @@
         }
     `;
 
-    // A Fluent Button. appearance: 'subtle' and size: 'medium' are the only ones the UI uses.
-    function fluentButton({ text = '', icon = null, appearance = 'subtle', size = 'medium', label = '' }) {
+    // A button in the Anthropic style. appearance: 'subtle' and size: 'medium' are the only ones the UI uses.
+    function makeButton({ text = '', icon = null, appearance = 'subtle', size = 'medium', label = '' }) {
         const b = makeEl('button', { type: 'button', class: `btn btn-${appearance} btn-${size}${text ? '' : ' btn-icon'}` });
         if (icon) b.appendChild(icon);
         if (text) b.appendChild(makeEl('span', { text }));
@@ -4028,8 +3969,8 @@
     const cardText = makeEl('div', { class: 'card-text' });
     // Icon only, like the note editor's Save and Delete; its tooltip is added with addLabelTip().
     // The 16px pencil: the 20px one spans its box corner to corner and looks bigger than Save
-    // and Delete; Fluent's 16px drawing has the same ink size as Save (14px) at full line weight.
-    const cardPin = fluentButton({ icon: phosphorIcon('push-pin') });
+    // and Delete; the 16px drawing has the same ink size as Save (14px) at full line weight.
+    const cardPin = makeButton({ icon: phosphorIcon('push-pin') });
     const cardHint = makeEl('span', { class: 'card-hint' });   // the date it was added (see showNoteCard)
     const noteCardEl = makeEl('div', { class: 'surface card', hidden: '' }, [
         cardText,
@@ -4037,11 +3978,11 @@
     ]);
 
     const editorTitle = makeEl('div', { class: 'editor-title', id: 'highlighter-note-title' });
-    const noteInput = makeEl('textarea', { maxlength: String(NOTE_MAX_LENGTH), 'aria-labelledby': 'highlighter-note-title', placeholder: 'Start typing here...' });
+    const noteInput = makeEl('textarea', { maxlength: String(NOTE_MAX_LENGTH), 'aria-labelledby': 'highlighter-note-title', placeholder: 'Add a note' });
     // Labels and tooltips are added with addLabelTip() further down.
-    const noteSave = fluentButton({ icon: phosphorIcon('check'), appearance: 'primary' });
-    const noteDiscard = fluentButton({ icon: phosphorIcon('x') });
-    const noteDelete = fluentButton({ icon: phosphorIcon('eraser') });
+    const noteSave = makeButton({ icon: phosphorIcon('check'), appearance: 'primary' });
+    const noteDiscard = makeButton({ icon: phosphorIcon('x') });
+    const noteDelete = makeButton({ icon: phosphorIcon('eraser') });
     // Save (or Enter) saves, Discard (or Esc, or opening another note) discards the changes,
     // and Delete deletes.
     const editorEl = makeEl('div', { class: 'surface editor', role: 'dialog', 'aria-labelledby': 'highlighter-note-title', hidden: '' }, [
@@ -4053,9 +3994,9 @@
     let toastIcon = phosphorIcon('info');   // replaced per message
     const toastText = makeEl('div', { class: 'toast-text' });
     const toastContent = makeEl('div', { class: 'toast-content' }, [toastText]);
-    const toastAction = fluentButton({ icon: phosphorIcon('arrow-u-up-left') });   // an icon button (Undo, Restore, Show); icon, label and tooltip set per toast
+    const toastAction = makeButton({ icon: phosphorIcon('arrow-u-up-left') });   // an icon button (Undo, Restore, Show); icon, label and tooltip set per toast
     toastAction.hidden = true;
-    const toastDismiss = fluentButton({ icon: phosphorIcon('x'), label: 'Dismiss' });
+    const toastDismiss = makeButton({ icon: phosphorIcon('x'), label: 'Dismiss' });
     const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastDismiss]);
 
     // A panel's title: the counts in the quiet colour around the bold word "Annotations".
@@ -4065,12 +4006,12 @@
 
     // The annotations panel (see openPanel). Its list is built by renderPanel.
     const panelCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });   // the whole title, see setPanelTitle
-    const panelErase = fluentButton({ icon: phosphorIcon('eraser') });
+    const panelErase = makeButton({ icon: phosphorIcon('eraser') });
     panelErase.disabled = true;
-    const panelSelectAll = fluentButton({ icon: phosphorIcon('check-square') });
-    const panelCopy = fluentButton({ icon: phosphorIcon('copy') });
+    const panelSelectAll = makeButton({ icon: phosphorIcon('check-square') });
+    const panelCopy = makeButton({ icon: phosphorIcon('copy') });
     panelCopy.disabled = true;
-    const panelClose = fluentButton({ icon: phosphorIcon('x') });
+    const panelClose = makeButton({ icon: phosphorIcon('x') });
     const panelFilter = makeEl('input', { type: 'search', placeholder: 'Filter by text or note', 'aria-label': 'Filter annotations by text or note', spellcheck: 'false', autocomplete: 'off' });
     const searchIcon = phosphorIcon('magnifying-glass');
     searchIcon.classList.add('search-icon');
@@ -4089,16 +4030,16 @@
 
     // Everything saved (Alt+Shift+O, see openEverything): a dialog over the dimmed page.
     const everythingCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });   // the whole title, see setPanelTitle
-    const everythingSelectAll = fluentButton({ icon: phosphorIcon('check-square') });
-    const everythingCopy = fluentButton({ icon: phosphorIcon('copy') });
+    const everythingSelectAll = makeButton({ icon: phosphorIcon('check-square') });
+    const everythingCopy = makeButton({ icon: phosphorIcon('copy') });
     everythingCopy.disabled = true;
-    const everythingForget = fluentButton({ icon: phosphorIcon('eraser') });
+    const everythingForget = makeButton({ icon: phosphorIcon('eraser') });
     everythingForget.disabled = true;
-    const everythingClose = fluentButton({ icon: phosphorIcon('x') });
+    const everythingClose = makeButton({ icon: phosphorIcon('x') });
     const everythingFilter = makeEl('input', { type: 'search', placeholder: 'Search every page\'s annotations and notes', 'aria-label': 'Search saved annotations', spellcheck: 'false', autocomplete: 'off' });
     const everythingIcon = phosphorIcon('magnifying-glass');
     everythingIcon.classList.add('search-icon');
-    const everythingList = makeEl('div', { class: 'everything-list', role: 'tree', 'aria-label': 'Saved annotations' });
+    const everythingList = makeEl('div', { class: 'everything-list', role: 'tree', 'aria-multiselectable': 'true', 'aria-label': 'Saved annotations' });
     const everythingEl = makeEl('div', { class: 'everything', hidden: '' }, [
         makeEl('div', { class: 'surface everything-box', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'All saved annotations' }, [
             makeEl('div', { class: 'panel-header' }, [
@@ -4276,7 +4217,7 @@
         }
     }
 
-    // --- Fluent tooltips for icon buttons (selection toolbar, note editor) ---
+    // --- Tooltips for icon buttons (selection toolbar, note editor) ---
 
     let labelTipTimer = null;
 
@@ -4298,7 +4239,7 @@
         labelTipEl.hidden = true;
     }
 
-    // Gives an icon button an accessible name and a Fluent tooltip showing its label and shortcut.
+    // Gives an icon button an accessible name and a tooltip showing its label and shortcut.
     function addLabelTip(button, label, shortcut, preferBelow) {
         button.setAttribute('aria-label', shortcut ? `${label} (${shortcut})` : label);
         button.dataset.label = label;
@@ -4317,7 +4258,7 @@
     // `pressed`: true or false makes it a toggle button (a style, which shows pressed when the
     // selected text has it).
     function toolButton(icon, label, shortcut, onClick, pressed = null) {
-        const b = fluentButton({ icon, appearance: 'subtle' });
+        const b = makeButton({ icon, appearance: 'subtle' });
         if (pressed !== null) b.setAttribute('aria-pressed', String(pressed));
         // On the side of the toolbar away from the selection, so the text stays visible.
         addLabelTip(b, label, shortcut, () => toolbarSide === 'below');
@@ -4365,7 +4306,7 @@
         toolbarEl.querySelectorAll('button').forEach((b, i) => { b.tabIndex = i ? -1 : 0; });
     }
 
-    // Arrow keys, Home and End move focus between the toolbar's buttons (Fluent's Toolbar).
+    // Arrow keys, Home and End move focus between the toolbar's buttons (the keyboard pattern of Fluent's Toolbar).
     toolbarEl.addEventListener('keydown', e => {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
         const buttons = Array.from(toolbarEl.querySelectorAll('button'));
@@ -4521,7 +4462,7 @@
             if (toolbarEl.matches(':hover')) return;
             hideLabelTip();
             toolbarEl.classList.add('fading');
-            const fadeMs = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300;   // --durationSlow
+            const fadeMs = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300;   // --duration-slow
             toolbarFadeTimer = setTimeout(hideToolbar, fadeMs);
         }, TOOLBAR_IDLE_MS);
     }
@@ -4800,7 +4741,7 @@
         if (!mark || pinnedCards.has(mark)) return;
         const card = noteCardEl.cloneNode(true);
         card.setAttribute('data-pinned', '');
-        card.style.animation = 'highlighter-pin var(--durationNormal) var(--curveDecelerateMax)';
+        card.style.animation = 'highlighter-pin var(--duration-normal) var(--ease-out)';
         // The hover card is replaced on the spot: fading out under the copy doubled their borders
         // into a dark flash. The copy only darkens its border at first (see highlighter-pin).
         noteCardEl.style.transition = 'none';
@@ -5227,7 +5168,7 @@
     let toastKeep = false;        // it survives undo and redo (see resetUi)
     let toastKeepsEditor = false; // its action leaves a note being written open
 
-    // A message in the bottom-right corner, as Fluent's Toast: an intent icon, a title, an
+    // A message in the bottom-right corner (structure from Fluent's Toast): an intent icon, a title, an
     // action and Dismiss. `icon` is a PHOSPHOR_ICONS name; `intent`
     // is info, success or warning; `action` adds a button, { label, run, keep, keepEditor, tip, shortcut },
     // such as Undo; `tip` and `shortcut` are for its tooltip.
@@ -6204,7 +6145,7 @@
     }
 
     function panelButton(icon, label, act) {
-        const b = fluentButton({ icon: phosphorIcon(icon) });
+        const b = makeButton({ icon: phosphorIcon(icon) });
         b.dataset.act = act;
         return addLabelTip(b, label, '', () => false);
     }
@@ -6232,7 +6173,7 @@
         const actions = makeEl('div', { class: 'item-actions' });
         let check = null;
         if (missing) {
-            const attach = fluentButton({ text: 'Attach to selection' });
+            const attach = makeButton({ text: 'Attach to selection' });
             attach.dataset.act = 'attach';
             attach.title = 'Select the text this annotation belongs to on the page, then click here';
             actions.append(attach, panelButton('trash', 'Forget annotation', 'forget'));
@@ -6498,15 +6439,11 @@
     }
 
     let everythingItemSeq = 0;
-    // Slides a page's list open or shut: its height and opacity, from or to nothing.
-    function slideList(list, grow) {
-        const h = `${list.getBoundingClientRect().height}px`;
-        const frames = [{ height: h, opacity: 1 }, { height: '0px', opacity: 0 }];
+    // Fades a page's list in or out (Anthropic motion: a short ease-out fade, no slide).
+    function fadeList(list, grow) {
+        const frames = [{ opacity: 1 }, { opacity: 0 }];
         if (grow) frames.reverse();
-        list.style.overflow = 'hidden';
-        const a = list.animate(frames, { duration: 200, easing: grow ? 'cubic-bezier(0, 0, 0, 1)' : 'cubic-bezier(1, 0, 1, 1)' });
-        a.finished.then(() => { list.style.overflow = ''; }, () => {});
-        return a;
+        return list.animate(frames, { duration: 150, easing: 'ease-out' });   // --duration-normal, --ease-out
     }
 
     function renderEverything() {
@@ -6536,14 +6473,17 @@
             if (open) {
                 const list = makeEl('div', { class: 'page-items', role: 'group' });
                 items.forEach(a => {
-                    const link = makeEl('a', { class: 'item-main', href: a.url, target: '_blank', rel: 'noopener', 'data-key': p.key, 'data-group': a.group },
+                    const ticked = everythingChecked.has(everythingId(p, a));
+                    // The focusable link is the treeitem, so its level and selection are announced on focus.
+                    const link = makeEl('a', { class: 'item-main', role: 'treeitem', 'aria-level': '2', 'aria-selected': String(ticked), href: a.url, target: '_blank', rel: 'noopener', 'data-key': p.key, 'data-group': a.group },
                         [makeEl('div', { class: 'item-text', id: `rnh-ei-${++everythingItemSeq}`, text: a.text })]);
                     if (a.note) link.appendChild(makeEl('div', { class: 'item-note', text: a.note }));
                     link.appendChild(makeEl('div', { class: 'item-meta', text: [styleLabel(a.key), a.time ? `added ${formatDate(a.time)}` : ''].filter(Boolean).join(' · ') }));
                     link.style.setProperty('--swatch', resolveStyle(a.key, dark).color);
-                    const check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-labelledby': link.firstChild.id });
-                    check.checked = everythingChecked.has(everythingId(p, a));
-                    list.appendChild(makeEl('div', { class: 'item', role: 'treeitem', 'aria-level': '2' }, [link, check]));
+                    // A mouse aid only: keyboard and screen-reader users tick with Space on the treeitem.
+                    const check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-hidden': 'true', tabindex: '-1' });
+                    check.checked = ticked;
+                    list.appendChild(makeEl('div', { class: 'item', role: 'none' }, [link, check]));
                 });
                 section.appendChild(list);
             }
@@ -6663,14 +6603,17 @@
         focusEverythingStop(first);
     });
 
-    // Shift+Space ticks the rows from the last ticked one to the focused quote.
+    // Space ticks the focused quote; Shift+Space ticks the rows from the last ticked one to it.
     everythingList.addEventListener('keydown', e => {
         if (/^Arrow(Up|Down|Left|Right)$/.test(e.key) && !e.altKey && !e.ctrlKey && !e.metaKey && everythingArrow(e)) { e.preventDefault(); return; }
-        const row = e.key === ' ' && e.shiftKey ? e.target.closest('a.item-main') : null;
+        const row = e.key === ' ' && !e.altKey && !e.ctrlKey && !e.metaKey ? e.target.closest('a.item-main') : null;
         if (!row) return;
         e.preventDefault();
-        tickEverythingRows(`${row.dataset.key}\n${row.dataset.group}`, !!everythingAnchor);
+        const id = stopId(row);
+        tickEverythingRows(id, e.shiftKey && !!everythingAnchor);
         renderEverything();
+        const again = everythingStops().find(s => !s.classList.contains('page-head') && stopId(s) === id);
+        if (again) focusEverythingStop(again);
     });
     everythingList.addEventListener('click', e => {
         const box = e.target.closest('input.check');
@@ -6703,15 +6646,15 @@
                 if (again) again.focus({ preventScroll: true });
                 return again;
             };
-            // Fluent motion: a page's list grows in (decelerate) and shrinks out (accelerate), over durationNormal.
+            // A page's list fades in or out, then the tree re-renders.
             const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
             const list = head.parentElement.querySelector('.page-items');
             if (list && !calm) {
-                if (!list.getAnimations().length) slideList(list, false).finished.then(toggle, toggle);
+                if (!list.getAnimations().length) fadeList(list, false).finished.then(toggle, toggle);
             } else {
                 const again = toggle();
                 const grown = again && !calm && again.parentElement.querySelector('.page-items');
-                if (grown) slideList(grown, true);
+                if (grown) fadeList(grown, true);
             }
             return;
         }
@@ -6746,9 +6689,9 @@
     menuHost.style.cssText = 'all: initial !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 0 !important; z-index: 2147483647 !important;';
     const menuRoot = menuHost.attachShadow({ mode: 'closed' });
     const menuHandle = makeEl('div', { class: 'sitemenu-handle', 'aria-hidden': 'true' });
-    const menuExpand = fluentButton({ icon: phosphorIcon('caret-down') });
+    const menuExpand = makeButton({ icon: phosphorIcon('caret-down') });
     let menuOpen = false;   // not kept: every page starts with the menu collapsed
-    const menuClose = fluentButton({ icon: phosphorIcon('x') });
+    const menuClose = makeButton({ icon: phosphorIcon('x') });
     const menuTip = makeEl('div', { class: 'surface tip', role: 'tooltip', hidden: '' });
     let menuTipTimer = null;
 
@@ -6773,7 +6716,7 @@
     }
 
     function menuButton(label, shortcut, icon, onClick) {
-        const b = fluentButton({ icon });
+        const b = makeButton({ icon });
         b.setAttribute('aria-label', shortcut ? `${label} (${shortcut})` : label);
         b.dataset.label = label;
         if (shortcut) { b.dataset.shortcut = shortcut; b.setAttribute('aria-keyshortcuts', shortcut); }

@@ -24,6 +24,8 @@ const HTML = `<!doctype html><html><body style="font: 16px/1.5 sans-serif; margi
   L.check('field: 1px hairline on all sides, 4px corners', f.rest.w === '1px,1px' && f.rest.radius === '4px', f.rest);
   L.check('field: no Fluent focus bar or drawn bottom line', f.rest.bar === 'none' && f.rest.line === 'none', f.rest);
   L.check('field: border darkens to slate on focus', f.focus.bottom === 'rgb(20, 20, 19)' && f.rest.bottom !== f.focus.bottom, f);
+  const ph = await page.evaluate(() => window.__hl.editorEl.querySelector('textarea').placeholder);
+  L.check('note box placeholder says what to do', ph === 'Add a note', ph);
   L.check('search icon sits 10px from the field edge', Math.abs(r.left - 10) < 0.6, r.left);
   L.check('4px gap between icon and text', Math.abs(r.gap - 4) < 0.6, r.gap);
   await ctx.close(); await L.done(browser);

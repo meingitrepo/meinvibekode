@@ -119,6 +119,10 @@
         --radius-button: 8px;
         --radius-lg: 12px;
         --radius-card: 16px;
+        --text-sm: 12px;   /* type scale: captions, hints, meta */
+        --leading-sm: 16px;
+        --text-md: 14px;   /* body and controls */
+        --leading-md: 20px;
         --divider: #cccbc8;
         --duration-fast: 100ms;
         --duration-normal: 150ms;
@@ -177,7 +181,7 @@
            (note preview, note editor, panel, dialog, toast) take 16px, the tooltip 4px. */
         .surface {
             position: fixed; top: 0; left: 0; box-sizing: border-box;
-            font-family: ${SANS_FONT}; font-size: 14px; line-height: 20px; font-weight: 400;
+            font-family: ${SANS_FONT}; font-size: var(--text-md); line-height: var(--leading-md); font-weight: 400;
             color: var(--ink); background: var(--surface);
             border: 1px solid var(--line); border-radius: var(--radius-lg);
             box-shadow: none;
@@ -199,7 +203,7 @@
             box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
             gap: 6px; min-width: 64px; height: 32px; margin: 0; padding: 0 12px;
             border: 1px solid transparent; border-radius: var(--radius-button);
-            font-family: inherit; font-size: 14px; line-height: 20px; font-weight: 400;
+            font-family: inherit; font-size: var(--text-md); line-height: var(--leading-md); font-weight: 400;
             cursor: pointer; outline: none; user-select: none; -webkit-tap-highlight-color: transparent;
             transition: background-color var(--duration-fast) var(--ease-out),
                         border-color var(--duration-fast) var(--ease-out),
@@ -248,7 +252,7 @@
         /* Tooltip */
         /* One line, kept inside the view: nowrap measures the tip at its full width wherever it last
            stood, so placePanel() can move it in from the edge instead of the edge squeezing it. */
-        .tip { white-space: nowrap; max-width: calc(100vw - 8px); overflow: hidden; text-overflow: ellipsis; padding: 4px 11px 6px; font-size: 12px; line-height: 16px; border-radius: var(--radius-md); pointer-events: none; }
+        .tip { white-space: nowrap; max-width: calc(100vw - 8px); overflow: hidden; text-overflow: ellipsis; padding: 4px 11px 6px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); pointer-events: none; }
         .tip .kbd { margin-left: 8px; color: var(--ink-3); }
 
         /* Panels (note preview, note editor, toast) all have 12px padding. Their 32px icon buttons
@@ -264,7 +268,7 @@
         .card[data-pinned] .card-footer { cursor: move; user-select: none; }
         .card[data-pinned] { z-index: -1; }   /* pinned previews sit under the Alt+O and Alt+Shift+O panels */
         .card-footer { display: flex; align-items: center; gap: 12px; margin: 4px -4px -8px 0; }
-        .card-hint { flex: 1; font-size: 12px; line-height: 16px; color: var(--ink-3); }
+        .card-hint { flex: 1; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         .card-actions { display: flex; gap: 2px; }
 
         /* Note editor, with an outline Textarea */
@@ -296,7 +300,7 @@
         textarea::placeholder { color: var(--ink-4); opacity: 1; }
         /* width 0 + min-width 100%: the hint wraps to the note box's width instead of widening the
            panel, which would leave the box's border wider than the textarea and its scrollbar. */
-        .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--ink-3); }
+        .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         /* Toast */
         .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; width: min(292px, calc(100vw - 32px)); padding: 12px; }
         .toast .icon { color: var(--ink-2); }
@@ -309,7 +313,7 @@
         .toast .btn-icon { margin: -6px 0; }
         .toast .btn-icon:last-child { margin-right: -6px; }
         /* The toast's action (Undo, Restore, Show): a small subtle button. */
-        .btn-small { min-width: 0; height: 24px; padding: 0 8px; font-size: 12px; line-height: 16px; border-radius: var(--radius-md); }
+        .btn-small { min-width: 0; height: 24px; padding: 0 8px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
         .toast .btn-small { flex: none; margin: -2px 0; }
         .toast .btn-small[hidden] { display: none; }
         .toast:focus-visible { outline: 2px solid var(--focus); }
@@ -330,7 +334,7 @@
         .sitemenu-inner > :first-child { margin-left: 2px; }
         @media (prefers-reduced-motion: reduce) { .sitemenu-tools { transition: none; } }
         /* Everything saved (Alt+Shift+O): a dialog over the dimmed page. */
-        .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--overlay); font-family: ${SANS_FONT}; font-size: 14px; line-height: 20px; color: var(--ink); }
+        .everything { position: fixed; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; box-sizing: border-box; background: var(--overlay); font-family: ${SANS_FONT}; font-size: var(--text-md); line-height: var(--leading-md); color: var(--ink); }
         .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 12px 0 0; }
         .everything-box .panel-header { margin: -8px 8px 4px 12px; }
         .everything-box .field { flex: none; margin: 0 12px 8px; }
@@ -346,7 +350,7 @@
         .page-name { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
         .page-host { font-weight: 600; }
         .page-path { margin-left: 6px; color: var(--ink-3); }
-        .page-meta { flex: none; font-size: 12px; color: var(--ink-3); }
+        .page-meta { flex: none; font-size: var(--text-sm); color: var(--ink-3); }
         .page-items { padding-left: 20px; }
         a.item-main { text-decoration: none; }
 
@@ -368,7 +372,7 @@
         .field input::placeholder { color: var(--ink-4); opacity: 1; }
         .field input::-webkit-search-cancel-button { display: none; }
         .panel-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
-        .section-title { margin: 8px 4px 4px; font-size: 12px; line-height: 16px; font-weight: 600; color: var(--ink-3); }
+        .section-title { margin: 8px 4px 4px; font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: 600; color: var(--ink-3); }
         .empty { margin: 4px 4px 8px; color: var(--ink-3); }
         /* Checkbox: a 16px square with 2px corners, slate and a check mark when
            on, a slate outline with a smaller rounded square when mixed. */
@@ -418,8 +422,8 @@
         .item-main::before { content: ""; position: absolute; left: 4px; top: 8px; bottom: 8px; width: 4px; border-radius: 2px; background: var(--swatch); }
         .item-text, .item-note { font-family: ${SERIF_FONT}; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
         .item-text { -webkit-line-clamp: 3; }
-        .item-note { -webkit-line-clamp: 4; white-space: pre-wrap; margin-top: 2px; font-size: 12px; line-height: 16px; color: var(--ink-2); }
-        .item-meta { margin-top: 2px; font-size: 12px; line-height: 16px; color: var(--ink-3); }
+        .item-note { -webkit-line-clamp: 4; white-space: pre-wrap; margin-top: 2px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-2); }
+        .item-meta { margin-top: 2px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         .item-actions { display: flex; align-items: center; gap: 2px; padding: 4px 4px 0 0; opacity: 0; }
         .item:hover .item-actions, .item:focus-within .item-actions { opacity: 1; }
         @media (hover: none) { .item-actions { opacity: 1; } }

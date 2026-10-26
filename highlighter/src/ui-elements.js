@@ -95,7 +95,7 @@
     const everythingFilter = makeEl('input', { type: 'search', placeholder: 'Search every page\'s annotations and notes', 'aria-label': 'Search saved annotations', spellcheck: 'false', autocomplete: 'off' });
     const everythingIcon = phosphorIcon('magnifying-glass');
     everythingIcon.classList.add('search-icon');
-    const everythingList = makeEl('div', { class: 'everything-list', role: 'tree', 'aria-label': 'Saved annotations' });
+    const everythingList = makeEl('div', { class: 'everything-list', role: 'tree', 'aria-multiselectable': 'true', 'aria-label': 'Saved annotations' });
     const everythingEl = makeEl('div', { class: 'everything', hidden: '' }, [
         makeEl('div', { class: 'surface everything-box', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'All saved annotations' }, [
             makeEl('div', { class: 'panel-header' }, [

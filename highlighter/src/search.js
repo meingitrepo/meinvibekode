@@ -162,14 +162,17 @@
             if (open) {
                 const list = makeEl('div', { class: 'page-items', role: 'group' });
                 items.forEach(a => {
-                    const link = makeEl('a', { class: 'item-main', href: a.url, target: '_blank', rel: 'noopener', 'data-key': p.key, 'data-group': a.group },
+                    const ticked = everythingChecked.has(everythingId(p, a));
+                    // The focusable link is the treeitem, so its level and selection are announced on focus.
+                    const link = makeEl('a', { class: 'item-main', role: 'treeitem', 'aria-level': '2', 'aria-selected': String(ticked), href: a.url, target: '_blank', rel: 'noopener', 'data-key': p.key, 'data-group': a.group },
                         [makeEl('div', { class: 'item-text', id: `rnh-ei-${++everythingItemSeq}`, text: a.text })]);
                     if (a.note) link.appendChild(makeEl('div', { class: 'item-note', text: a.note }));
                     link.appendChild(makeEl('div', { class: 'item-meta', text: [styleLabel(a.key), a.time ? `added ${formatDate(a.time)}` : ''].filter(Boolean).join(' · ') }));
                     link.style.setProperty('--swatch', resolveStyle(a.key, dark).color);
-                    const check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-labelledby': link.firstChild.id });
-                    check.checked = everythingChecked.has(everythingId(p, a));
-                    list.appendChild(makeEl('div', { class: 'item', role: 'treeitem', 'aria-level': '2' }, [link, check]));
+                    // A mouse aid only: keyboard and screen-reader users tick with Space on the treeitem.
+                    const check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-hidden': 'true', tabindex: '-1' });
+                    check.checked = ticked;
+                    list.appendChild(makeEl('div', { class: 'item', role: 'none' }, [link, check]));
                 });
                 section.appendChild(list);
             }
@@ -289,14 +292,17 @@
         focusEverythingStop(first);
     });
 
-    // Shift+Space ticks the rows from the last ticked one to the focused quote.
+    // Space ticks the focused quote; Shift+Space ticks the rows from the last ticked one to it.
     everythingList.addEventListener('keydown', e => {
         if (/^Arrow(Up|Down|Left|Right)$/.test(e.key) && !e.altKey && !e.ctrlKey && !e.metaKey && everythingArrow(e)) { e.preventDefault(); return; }
-        const row = e.key === ' ' && e.shiftKey ? e.target.closest('a.item-main') : null;
+        const row = e.key === ' ' && !e.altKey && !e.ctrlKey && !e.metaKey ? e.target.closest('a.item-main') : null;
         if (!row) return;
         e.preventDefault();
-        tickEverythingRows(`${row.dataset.key}\n${row.dataset.group}`, !!everythingAnchor);
+        const id = stopId(row);
+        tickEverythingRows(id, e.shiftKey && !!everythingAnchor);
         renderEverything();
+        const again = everythingStops().find(s => !s.classList.contains('page-head') && stopId(s) === id);
+        if (again) focusEverythingStop(again);
     });
     everythingList.addEventListener('click', e => {
         const box = e.target.closest('input.check');

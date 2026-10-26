@@ -43,11 +43,18 @@ const HTML = `<!doctype html><html><body style="font: 16px/1.5 sans-serif; margi
   L.check('no shadow tokens in the built script', !/--shadow(8|16|64)s*:/.test(built));
   // 25: pages are tree items, annotations their children
   const tree = await page.evaluate(() => { const r = window.__hl; let head = r.everythingList.querySelector('.page-head'); head.click(); head = r.everythingList.querySelector('.page-head'); const page = head.closest('.page');
-    const item = r.everythingList.querySelector('.item');
-    return { list: r.everythingList.getAttribute('role'), page: page.getAttribute('role'), head: [head.getAttribute('role'), head.getAttribute('aria-level'), head.getAttribute('aria-expanded')], group: r.everythingList.querySelector('.page-items')?.getAttribute('role'), item: [item?.getAttribute('role'), item?.getAttribute('aria-level')] }; });
-  L.check('25: list is a tree', tree.list === 'tree', tree);
+    const row = r.everythingList.querySelector('.item'), item = row?.querySelector('a.item-main'), box = row?.querySelector('.check');
+    return { list: r.everythingList.getAttribute('role'), multi: r.everythingList.getAttribute('aria-multiselectable'), page: page.getAttribute('role'), head: [head.getAttribute('role'), head.getAttribute('aria-level'), head.getAttribute('aria-expanded')], group: r.everythingList.querySelector('.page-items')?.getAttribute('role'),
+      row: row?.getAttribute('role'), item: [item?.getAttribute('role'), item?.getAttribute('aria-level'), item?.getAttribute('aria-selected')], box: [box?.getAttribute('aria-hidden'), box?.tabIndex] }; });
+  L.check('25: list is a multi-select tree', tree.list === 'tree' && tree.multi === 'true', tree);
   L.check('25: page head is a level-1 treeitem with aria-expanded', tree.page === 'none' && tree.head[0] === 'treeitem' && tree.head[1] === '1' && tree.head[2] === 'true', tree);
-  L.check('25: annotations are level-2 treeitems in a group', tree.group === 'group' && tree.item[0] === 'treeitem' && tree.item[1] === '2', tree);
+  // 9.2: the focusable quote link is the level-2 treeitem (so screen readers announce its level and
+  // selection when it gets focus); its row wrapper is presentational; the checkbox is a mouse aid only.
+  L.check('25: annotations: the focused link is a level-2 treeitem in a group, unselected', tree.group === 'group' && tree.row === 'none' && tree.item.join() === 'treeitem,2,false', tree);
+  L.check('25: row checkbox is hidden from screen readers and out of the Tab order', tree.box[0] === 'true' && tree.box[1] === -1, tree);
+  const spaced = await page.evaluate(() => { const a = window.__hl.everythingList.querySelector('a.item-main'); a.focus(); a.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+    const b = window.__hl.everythingList.querySelector('a.item-main'); return { sel: b.getAttribute('aria-selected'), checked: b.closest('.item').querySelector('.check').checked, focused: window.__hl.uiRoot.activeElement === b }; });
+  L.check('25: Space ticks the focused annotation (aria-selected, checkbox) and keeps focus on it', spaced.sel === 'true' && spaced.checked && spaced.focused, spaced);
   await page.keyboard.press('Escape');
   // 9: toolbar padding; 10 reversed: no pen label
   const tb = await page.evaluate(() => { const r = window.__hl; const c = e => getComputedStyle(e); return { toolbar: c(r.toolbarEl).padding, pen: c(r.penEl).padding }; });

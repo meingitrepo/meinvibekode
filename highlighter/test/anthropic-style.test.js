@@ -36,6 +36,13 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', STONE = 'rgb(204,
     // Clay is used nowhere else.
     const clayElsewhere = await page.evaluate(CLAY => [...window.__hl.panelEl.querySelectorAll('*'), ...window.__hl.toolbarEl.querySelectorAll('*')].filter(e => { const s = getComputedStyle(e); return s.backgroundColor === CLAY || s.borderTopColor === CLAY || s.color === CLAY; }).length, CLAY);
     L.check(`${scheme}: clay not used in panel or toolbar`, clayElsewhere === 0, clayElsewhere);
+    // 9.2: placeholder and secondary text meet WCAG AA (4.5:1) on the surface.
+    const lum = c => { const v = c.match(/\d+/g).slice(0, 3).map(n => n / 255).map(x => x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+    const ratio = (a, b) => { const [h, l] = [lum(a), lum(b)].sort((x, y) => y - x); return (h + 0.05) / (l + 0.05); };
+    const ph = await page.evaluate(() => { const f = window.__hl.panelEl.querySelector('.field input'), t = document.createElement('div'); t.className = 'section-title'; window.__hl.panelList.appendChild(t);
+      const r = { placeholder: getComputedStyle(f, '::placeholder').color, secondary: getComputedStyle(t).color, bg: getComputedStyle(window.__hl.panelEl).backgroundColor }; t.remove(); return r; });
+    L.check(`${scheme}: placeholder text is at least 4.5:1`, ratio(ph.placeholder, ph.bg) >= 4.5, { ...ph, ratio: ratio(ph.placeholder, ph.bg).toFixed(2) });
+    L.check(`${scheme}: secondary text is at least 4.5:1`, ratio(ph.secondary, ph.bg) >= 4.5, { ...ph, ratio: ratio(ph.secondary, ph.bg).toFixed(2) });
     // Checked checkbox follows slate (ivory in dark), not clay.
     const cb = await page.evaluate(() => { const c = document.createElement('input'); c.type = 'checkbox'; c.className = 'check'; c.checked = true; window.__hl.panelList.appendChild(c); const bg = getComputedStyle(c).backgroundColor; c.remove(); return bg; });
     L.check(`${scheme}: checked checkbox is ${scheme === 'light' ? 'slate' : 'ivory'}`, cb === (scheme === 'light' ? SLATE : IVORY), cb);

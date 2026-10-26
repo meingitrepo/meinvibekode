@@ -91,7 +91,7 @@
         --ink-2: #3d3d3a;
         --ink-disabled: #b0aea5;
         --ink-3: #66655f;
-        --ink-4: #87867f;
+        --ink-4: #73726c;   /* placeholders: 4.6:1 on ivory (cloud #87867f is 3.5:1) */
         --surface: #faf9f5;
         --surface-hover: #f0eee6;
         --surface-pressed: #e3dacc;

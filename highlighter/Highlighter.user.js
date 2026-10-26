@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.3
+// @version      9.4
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3806,7 +3806,10 @@
         .sitemenu { display: flex; align-items: center; padding: 4px; width: max-content; cursor: grab; }
         .sitemenu .btn { cursor: pointer; }
         .sitemenu-handle { position: relative; align-self: stretch; width: 12px; cursor: grab; }
-        .sitemenu-handle::before { content: ''; position: absolute; top: 50%; left: 4px; width: 4px; height: 24px; margin-top: -12px; border-radius: 2px; background: var(--ink-3); opacity: 0.6; }
+        /* A hairline bar, darker under the pointer. */
+        .sitemenu-handle::before { content: ''; position: absolute; top: 50%; left: 5px; width: 2px; height: 16px; margin-top: -8px; border-radius: 1px; background: var(--line-strong); transition: background-color var(--duration-fast) var(--ease-out); }
+        .sitemenu-handle:hover::before, .sitemenu-handle:active::before { background: var(--ink-3); }
+        @media (prefers-reduced-motion: reduce) { .sitemenu-handle::before { transition: none; } }
         .sitemenu-expand { display: flex; justify-content: center; }
         .sitemenu-expand .icon { transform: rotate(-90deg); transition: transform var(--duration-normal) var(--ease-out); }
         .sitemenu-expand [aria-expanded="true"] .icon { transform: rotate(90deg); }
@@ -3939,6 +3942,7 @@
             .item-main:focus-visible, .page-head:focus-visible, .check:focus-visible { outline-color: CanvasText; }
             .item-main::before { forced-color-adjust: none; }
             .select-box path { stroke: Highlight; }
+            .sitemenu-handle::before, .sitemenu-handle:hover::before, .sitemenu-handle:active::before { forced-color-adjust: none; background: CanvasText; }
         }
     `;
 

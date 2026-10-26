@@ -30,7 +30,23 @@ const state = page => page.evaluate(() => ({
   L.check('the handle is on the left, then the expand icon button', s.expandIsIconButton && hr.right <= er.left + 1 && hr.left < er.left, { hr, er });
   const mr = s.rect, gap = { top: er.top - mr.top, left: hr.left - mr.left, right: mr.right - er.right, bottom: mr.bottom - er.bottom };
   L.check('collapsed: the same small padding on every side, and a short menu', Math.max(...Object.values(gap)) - Math.min(...Object.values(gap)) <= 1 && gap.left <= 6 && mr.height <= 44, { gap, height: mr.height });
-  L.check('the handle is a centred vertical pill bar, not dots', await page.evaluate(() => { const c = getComputedStyle(window.__hl.menuHandle, '::before'); return c.width === '4px' && c.height === '24px' && getComputedStyle(window.__hl.menuHandle).backgroundImage === 'none'; }));
+  const handleLook = () => page.evaluate(() => {
+    const h = window.__hl.menuHandle, c = getComputedStyle(h, '::before');
+    const probe = (bg) => { const d = document.createElement('div'); d.style.background = bg; h.parentNode.appendChild(d); const v = getComputedStyle(d).backgroundColor; d.remove(); return v; };
+    return { width: c.width, height: c.height, radius: c.borderRadius, bg: c.backgroundColor, opacity: c.opacity, transition: c.transition, handleBg: getComputedStyle(h).backgroundImage,
+      lineStrong: probe('var(--line-strong)'), ink3: probe('var(--ink-3)'), canvasText: probe('CanvasText') };
+  });
+  let hl = await handleLook();
+  L.check('the handle is a thin centred hairline bar (2x16, --line-strong, no opacity tint), not dots', hl.width === '2px' && hl.height === '16px' && hl.radius === '1px' && hl.bg === hl.lineStrong && hl.opacity === '1' && hl.handleBg === 'none', hl);
+  L.check('the handle bar fades with the calm ease-out motion', /background-color/.test(hl.transition) && !/cubic-bezier\(0\.33/.test(hl.transition), hl.transition);
+  const hdr = await rectOf(page, 'menuHandle'); await page.mouse.move(hdr.left + hdr.width / 2, hdr.top + hdr.height / 2); await page.waitForTimeout(300);
+  hl = await handleLook();
+  L.check('hovering the handle darkens the bar to --ink-3', hl.bg === hl.ink3, hl);
+  await page.mouse.move(600, 600); await page.waitForTimeout(300);
+  await page.emulateMedia({ forcedColors: 'active' }); await page.waitForTimeout(300);
+  hl = await handleLook();
+  L.check('forced colors: the handle bar is drawn in CanvasText', hl.bg === hl.canvasText && hl.bg !== 'rgba(0, 0, 0, 0)', hl);
+  await page.emulateMedia({ forcedColors: 'none' });
   L.check('every button has a name with its shortcut', s.labels.every(l => /\(Alt\+/.test(l)), s.labels);
   L.check('fresh site: toolbar and shortcuts show off', s.pressed.toolbar === 'false' && s.pressed.keys === 'false', s.pressed);
   await L.selStr(page, '#p1', 'words to select'); await page.waitForTimeout(400);

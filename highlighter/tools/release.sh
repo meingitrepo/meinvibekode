@@ -7,6 +7,7 @@
 set -euo pipefail
 [ $# -eq 3 ] || { echo 'usage: release.sh "Theme" "What'"'"'s in it" "Commit message"'; exit 2; }
 theme=$1 what=$2 msg=$3
+tools=$(cd "$(dirname "$0")" && pwd)
 cd "$(git rev-parse --show-toplevel)"
 H=highlighter
 
@@ -17,8 +18,7 @@ if [ -n "$(git status --porcelain -- $H)" ]; then
 fi
 
 for attempt in 1 2 3; do
-    tools=$(dirname "$0")
-    $tools/sync.sh || exit 1
+    "$tools/sync.sh" || exit 1
     [ -n "$(git log --oneline origin/main..HEAD)" ] || { echo 'nothing to release'; exit 1; }
     code=$(git rev-parse HEAD)
     cur=$(git show origin/main:$H/src/header.js | sed -n 's/^\/\/ @version *//p' | head -1)

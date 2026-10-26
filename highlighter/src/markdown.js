@@ -179,11 +179,11 @@
             markdown = annotationsMarkdown(list);
         } catch (e) {
             console.warn(`${LOG} could not build Markdown`, e);
-            showToast('Couldn\'t copy', { intent: 'error', icon: 'error_circle_20_regular' });
+            showToast('Couldn\'t copy', { intent: 'error', icon: 'warning-circle' });
             return;
         }
         writeClipboard(markdown).then(
-            () => showToast(doneText('copied', list.length), { icon: 'checkmark_20_regular', intent: 'success' }),
-            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'error_circle_20_regular' }); });
+            () => showToast(doneText('copied', list.length), { icon: 'check', intent: 'success' }),
+            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'warning-circle' }); });
     }
 

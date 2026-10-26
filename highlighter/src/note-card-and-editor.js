@@ -152,7 +152,7 @@
         pinnedCards.set(mark, card);
         mark.setAttribute(NOTE_PIN_ATTR, '');
         const pin = card.querySelector('.card-actions button');
-        pin.replaceChildren(fluentIcon('pin_20_filled'));
+        pin.replaceChildren(phosphorIcon('push-pin-fill'));
         pin.dataset.label = 'Unpin note';
         pin.setAttribute('aria-label', 'Unpin note');
         pin.setAttribute('aria-pressed', 'true');
@@ -171,7 +171,7 @@
         const mark = wrappers.find(w => w.hasAttribute(NOTE_MARK_ATTR));
         if (mark && pinnedCards.has(mark)) { unpinNoteCard(mark); return; }
         const note = !editor && !annotationsHidden && wrappers.filter(w => w.hasAttribute(NOTE_ATTR) && w.getClientRects().length).pop();
-        if (!note || !note.getAttribute(NOTE_ATTR)) { showToast('No note to pin', { intent: 'warning', icon: 'warning_20_regular' }); return; }
+        if (!note || !note.getAttribute(NOTE_ATTR)) { showToast('No note to pin', { intent: 'warning', icon: 'warning' }); return; }
         showNoteCard(note);
         pinNoteCard();
     }
@@ -502,7 +502,7 @@
 
     // Only Save saves, but text closed without saving can be brought back from the toast. For a
     // new note, `records` is the highlight that was made for it, which comes back too.
-    function offerDraft({ group, draft, records }, message = 'Note not saved', icon = 'edit_20_regular') {
+    function offerDraft({ group, draft, records }, message = 'Note not saved', icon = 'pencil-simple') {
         showToast(message, {
             icon,
             action: { label: 'Restore', tip: 'Restore the note', keep: true, run: () => restoreDraft(group, draft, records) }
@@ -532,7 +532,7 @@
     // with the highlight that was made for it, and what was typed in it can be restored, both.
     noteDelete.addEventListener('click', () => {
         const unsaved = editor && editor.step && noteDraft() ? cancelEditor({ offer: false }) : null;
-        if (unsaved) { offerDraft(unsaved, 'Note erased', 'eraser_20_regular'); return; }
+        if (unsaved) { offerDraft(unsaved, 'Note erased', 'eraser'); return; }
         noteInput.value = '';
         saveEditor();
     });

@@ -1,4 +1,4 @@
-// Button states: pressed (hover or key-held), Regular icon kept on hover, selected, disabled.
+// Button states: pressed (hover or key-held), outline icon kept on hover, selected, disabled.
 const L = require('./lib');
 const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title></head><body style="font:18px/1.6 serif;margin:40px"><p id="p1">Some plain words to mark.</p></body></html>`;
 const results = [];
@@ -10,14 +10,14 @@ async function states(browser) {
   const info = () => p.evaluate(() => {
     const b = [...window.__hl.penEl.querySelectorAll('button')].find(x => x.dataset.label === 'Eraser');
     const cs = getComputedStyle(b);
-    return { bg: cs.backgroundColor, fg: cs.color, f: b.querySelectorAll('.ic-f').length, r: getComputedStyle(b.querySelector('.ic-r')).display };
+    return { bg: cs.backgroundColor, fg: cs.color, f: b.querySelectorAll('svg > path:not([fill])').length - 1, r: getComputedStyle(b.querySelector('svg > path.ic')).display };
   });
   const rest = await info();
-  check('at rest the Regular icon shows and no Filled path exists', rest.r !== 'none' && rest.f === 0, rest);
+  check('at rest the icon shows as one outline path', rest.r !== 'none' && rest.f === 0, rest);
   const box = await p.evaluate(() => { const r = [...window.__hl.penEl.querySelectorAll('button')].find(x => x.dataset.label === 'Eraser').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
   await p.mouse.move(box.x, box.y); await p.waitForTimeout(250);
   const hov = await info();
-  check('hover keeps the Regular icon (no Filled swap)', hov.f === 0 && hov.r !== 'none', hov);
+  check('hover keeps the outline icon (no weight swap)', hov.f === 0 && hov.r !== 'none', hov);
   await p.mouse.down(); await p.waitForTimeout(250);
   const prs = await info();
   check('pressed changes the background from hover', prs.bg !== hov.bg, { hov, prs });
@@ -46,7 +46,7 @@ async function hoverVisible(browser) {
         await p.mouse.move(box.x, box.y); if (press) await p.mouse.down(); await p.waitForTimeout(250);
         const r = await p.evaluate(i => {
           const b = [...window.__hl.toolbarEl.querySelectorAll('button')][i];
-          const shown = [...b.querySelectorAll('.ic-r, .ic-f')].filter(x => getComputedStyle(x).display !== 'none');
+          const shown = [...b.querySelectorAll('svg > path.ic')].filter(x => getComputedStyle(x).display !== 'none');
           const lum = c => { const v = c.match(/[\d.]+/g).slice(0, 3).map(x => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
           const a = lum(getComputedStyle(b.querySelector('.icon')).color), g = lum(getComputedStyle(b).backgroundColor);
           return { label: b.dataset.label, shown: shown.length, contrast: (Math.max(a, g) + 0.05) / (Math.min(a, g) + 0.05) };

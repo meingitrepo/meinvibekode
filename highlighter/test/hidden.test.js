@@ -21,7 +21,7 @@ async function toggle(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store });
   await L.altKey(p, 'v');
   check('Alt+V hides and says so', (await hiddenNow(p)) === true && (await L.toast(p)) === 'Annotations hidden · Show', await L.toast(p));
-  check('with the eye-off icon', (await icon(p)) === 'M2.85 2.15a.5.5 0 1 ', await icon(p));
+  check('with the eye-off icon', (await icon(p)) === 'M52.44,36A6,6,0,0,0,', await icon(p));
   await L.altKey(p, 'v');
   check('Alt+V again shows them and takes the message down, with no other message', (await hiddenNow(p)) === false && (await L.toast(p)) === null, await L.toast(p));
   await L.altKey(p, 'v');

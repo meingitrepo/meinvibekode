@@ -122,9 +122,9 @@
                 pendingRecords = pendingRecords.filter(r => !here.includes(recordOwner(r)));
             });
             // Undo covers only this page, so it is offered only when nothing else was forgotten.
-            if (!elsewhere.size) { offerUndo(doneText('forgotten', selected.length), step, 'eraser_20_regular'); return; }
+            if (!elsewhere.size) { offerUndo(doneText('forgotten', selected.length), step, 'eraser'); return; }
         }
-        showToast(doneText('forgotten', selected.length), { icon: 'eraser_20_regular' });
+        showToast(doneText('forgotten', selected.length), { icon: 'eraser' });
     }
 
     let everythingItemSeq = 0;
@@ -158,7 +158,7 @@
             // Pages start closed, and opened while searching; a click turns that round.
             const open = everythingToggled.has(p.key) !== terms.length > 0;
             const head = makeEl('button', { type: 'button', class: 'page-head', role: 'treeitem', 'aria-level': '1', 'aria-expanded': String(open), 'data-key': p.key }, [
-                fluentIcon(open ? 'chevron_down_16_regular' : 'chevron_right_16_regular'),
+                phosphorIcon(open ? 'caret-down' : 'caret-right'),
                 makeEl('span', { class: 'page-name' }, [makeEl('span', { class: 'page-host', text: p.host }), makeEl('span', { class: 'page-path', text: p.path })]),
                 makeEl('span', { class: 'page-meta', text: `${(() => { const n = items.filter(a => everythingChecked.has(everythingId(p, a))).length; return n ? `${n}/${items.length}` : items.length; })()}${p.time ? ` · ${formatDate(p.time)}` : ''}` })
             ]);
@@ -222,8 +222,8 @@
         const selected = everythingShown.filter(s => everythingChecked.has(s.id));
         if (!selected.length) return;
         writeClipboard(savedMarkdown(selected)).then(
-            () => showToast(doneText('copied', selected.length), { icon: 'checkmark_20_regular', intent: 'success' }),
-            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'error_circle_20_regular' }); });
+            () => showToast(doneText('copied', selected.length), { icon: 'check', intent: 'success' }),
+            e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'warning-circle' }); });
     });
     everythingForget.addEventListener('click', () => {
         if (!running) return;

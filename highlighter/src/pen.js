@@ -36,15 +36,15 @@
         });
         // The note button always shows, grayed out until an annotation is selected, as in the selection toolbar.
         const noteLabel = pickedWrappers.some(w => w.getAttribute(NOTE_ATTR)) ? 'Edit note' : 'Add note';
-        const note = toolButton(fluentIcon(noteLabel === 'Edit note' ? 'note_edit_20_regular' : 'note_add_20_regular'), noteLabel, 'Alt+N', () => picked && openNoteEditor(picked));
+        const note = toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note-pencil' : 'note'), noteLabel, 'Alt+N', () => picked && openNoteEditor(picked));
         note.disabled = !pickedKey;
         note.tabIndex = -1;
         if (pickedKey) {
-            const erase = toolButton(fluentIcon('eraser_20_regular'), 'Erase annotation', 'Alt+D', () => deleteGroups([picked]));
+            const erase = toolButton(phosphorIcon('eraser'), 'Erase annotation', 'Alt+D', () => deleteGroups([picked]));
             erase.tabIndex = -1;
             tools.push(toolbarDivider(), note, erase);
         } else {
-            const eraser = toolButton(fluentIcon('eraser_20_regular'), 'Eraser', 'Alt+D', () => setPen(PEN_ERASER), penKey === PEN_ERASER);
+            const eraser = toolButton(phosphorIcon('eraser'), 'Eraser', 'Alt+D', () => setPen(PEN_ERASER), penKey === PEN_ERASER);
             eraser.tabIndex = penKey === PEN_ERASER ? 0 : -1;
             tools.push(toolbarDivider(), note, eraser);
         }

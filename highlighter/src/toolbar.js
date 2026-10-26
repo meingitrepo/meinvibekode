@@ -23,16 +23,16 @@
         switch (type) {
             case 'highlight':
                 // The highlighter's cap and tip (its accent layer) in the highlight color.
-                return fluentIcon('highlight_20_regular', { under: [svgEl('path', { d: FLUENT_ICONS.highlight_accent_20_filled, fill: color })] });
+                return phosphorIcon('highlighter', { under: [svgEl('path', { d: 'M88,136.5L127.5,176L94.4,209.1L35.1,189.4Z', fill: color })] });
             case 'underline':
-                // The icon's own underline bar (x 5-15, y 16-17), repainted in the style's color.
-                return fluentIcon('text_underline_20_regular', { over: [svgEl('rect', { x: 5, y: 15.75, width: 10, height: 1.5, rx: 0.75, fill: color })] });
+                // The icon's own underline bar (x 58-198, y 218-230 on the 256 grid), repainted in the style's color.
+                return phosphorIcon('text-underline', { over: [svgEl('rect', { x: 58, y: 218, width: 140, height: 12, rx: 6, fill: color })] });
             case 'strike-through':
-                // The icon's own strike bar (x 3-17, y 10-11), repainted in the style's color.
-                return fluentIcon('text_strikethrough_20_regular', { over: [svgEl('rect', { x: 3, y: 9.75, width: 14, height: 1.5, rx: 0.75, fill: color })] });
+                // The icon's own strike bar (x 34-222, y 122-134 on the 256 grid), repainted in the style's color.
+                return phosphorIcon('text-strikethrough', { over: [svgEl('rect', { x: 34, y: 122, width: 188, height: 12, rx: 6, fill: color })] });
             default:
                 // The highlighter's cap and tip (its accent layer) in the highlight color.
-                return fluentIcon('highlight_20_regular', { under: [svgEl('path', { d: FLUENT_ICONS.highlight_accent_20_filled, fill: color })] });
+                return phosphorIcon('highlighter', { under: [svgEl('path', { d: 'M88,136.5L127.5,176L94.4,209.1L35.1,189.4Z', fill: color })] });
         }
     }
 
@@ -116,9 +116,9 @@
         });
         items.push(toolbarDivider());
         const noteLabel = overlaps.length && overlaps[0].note ? 'Edit note' : 'Add note';
-        items.push(toolButton(fluentIcon(noteLabel === 'Edit note' ? 'note_edit_20_regular' : 'note_add_20_regular'), noteLabel, 'Alt+N', act ? act.note : () => runToolbarAction(noteSelection)));
+        items.push(toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note-pencil' : 'note'), noteLabel, 'Alt+N', act ? act.note : () => runToolbarAction(noteSelection)));
         if (overlaps.length) {
-            items.push(toolButton(fluentIcon('eraser_20_regular'), act ? act.removeLabel : 'Erase', act ? act.removeKey : 'Alt+D', act ? act.remove : () => runToolbarAction(removeInSelection)));
+            items.push(toolButton(phosphorIcon('eraser'), act ? act.removeLabel : 'Erase', act ? act.removeKey : 'Alt+D', act ? act.remove : () => runToolbarAction(removeInSelection)));
         }
         toolbarEl.replaceChildren(...items);
         // One Tab stop for the whole toolbar, on its first button; the arrow keys move along it.

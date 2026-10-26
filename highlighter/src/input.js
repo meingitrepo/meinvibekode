@@ -236,7 +236,7 @@
             const group = selected ? null : pointedGroup();
             if (selected) noteSelection(active);
             else if (group) openNoteEditor(group);
-            else showToast('Nothing to add a note to', { intent: 'warning', icon: 'warning_20_regular' });
+            else showToast('Nothing to add a note to', { intent: 'warning', icon: 'warning' });
             return;
         }
 

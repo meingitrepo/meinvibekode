@@ -125,7 +125,7 @@
         toolbarEl.querySelectorAll('button').forEach((b, i) => { b.tabIndex = i ? -1 : 0; });
     }
 
-    // Arrow keys, Home and End move focus between the toolbar's buttons (the keyboard pattern of Fluent's Toolbar).
+    // Arrow keys, Home and End move focus between the toolbar's buttons.
     toolbarEl.addEventListener('keydown', e => {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
         const buttons = Array.from(toolbarEl.querySelectorAll('button'));

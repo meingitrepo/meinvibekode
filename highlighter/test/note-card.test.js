@@ -60,7 +60,7 @@ async function delay(browser) {
 // 8.34: the card's pin button keeps its note open, the badge blue (8.42); the pinned copy's pin button or Esc (8.35) lets it go.
 // 8.38: clicks elsewhere keep it; it drags by its footer; the editor does not move, and opening it unpins its note.
 // 8.39: several can be pinned; a pinned note scrolls away with its badge; clicking outside the editor keeps it.
-const DARKER = 'rgb(217, 119, 87)';   // 9.2: pinned badges are clay, the Anthropic accent (were Fluent blue)
+const DARKER = 'rgb(217, 119, 87)';   // 9.2: pinned badges are clay, the Anthropic accent
 async function pin(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store });
   await p.evaluate(() => { document.body.style.paddingBottom = '2000px'; });

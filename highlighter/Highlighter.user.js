@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.4
+// @version      9.5
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -4310,7 +4310,7 @@
         toolbarEl.querySelectorAll('button').forEach((b, i) => { b.tabIndex = i ? -1 : 0; });
     }
 
-    // Arrow keys, Home and End move focus between the toolbar's buttons (the keyboard pattern of Fluent's Toolbar).
+    // Arrow keys, Home and End move focus between the toolbar's buttons.
     toolbarEl.addEventListener('keydown', e => {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
         const buttons = Array.from(toolbarEl.querySelectorAll('button'));
@@ -5172,7 +5172,7 @@
     let toastKeep = false;        // it survives undo and redo (see resetUi)
     let toastKeepsEditor = false; // its action leaves a note being written open
 
-    // A message in the bottom-right corner (structure from Fluent's Toast): an intent icon, a title, an
+    // A message in the bottom-right corner: an intent icon, a title, an
     // action and Dismiss. `icon` is a PHOSPHOR_ICONS name; `intent`
     // is info, success or warning; `action` adds a button, { label, run, keep, keepEditor, tip, shortcut },
     // such as Undo; `tip` and `shortcut` are for its tooltip.

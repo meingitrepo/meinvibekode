@@ -69,7 +69,7 @@ for (const [date, ver, tier, , attempts, cycle, ...stat] of rows) {
     rework = later.length ? `${later.length} (${later[later.length - 1].split(' ')[0]}...)` : 'no';
   }
   const st = stat.join(' '), n = re => (st.match(re) || [, 0])[1];
-  out.push([ver, tier, cycle.replace('cycle=', ''), `${n(/(d+) file/)}f +${n(/(d+) insertion/)} -${n(/(d+) deletion/)}`,
+  out.push([ver, tier, cycle.replace('cycle=', ''), `${n(/(\d+) file/)}f +${n(/(\d+) insertion/)} -${n(/(\d+) deletion/)}`,
     s ? s.turns : '?', s ? s.testFirst : '?', touch, rework]);
 }
 const w = out[0].map((_, i) => Math.max(...out.map(r => String(r[i]).length)));

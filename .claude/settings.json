@@ -33,14 +33,9 @@
       "Read(./**/*.pdf)"
     ]
   },
-  "skillOverrides": {
-    "anthropic-skills:docx": "off",
-    "anthropic-skills:pptx": "off",
-    "anthropic-skills:xlsx": "off"
-  },
+  "skillOverrides": {},
   "enabledPlugins": {
-    "frontend-design@anthropic-plugin-directory": true,
-    "superpowers@anthropic-plugin-directory": true,
-    "agent-skills@addy-agent-skills": true
+    "agent-skills@addy-agent-skills": true,
+    "superpowers@anthropic-plugin-directory": true
   }
 }

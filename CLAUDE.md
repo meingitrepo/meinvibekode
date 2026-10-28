@@ -17,9 +17,10 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 
 ## Tiers (pick one before starting, state it in one line; method background in `docs/METHOD.md`, read only when asked)
 - T0 no behaviour change (copy, comment, constant): do it, one verify call, no test, no review.
-- T1 bug or tweak in one area: 2-4 line plan (cause or goal, files/functions, the proving test, risk), test first, then fix. No review.
-- T2 feature across files: written spec (`superpowers:brainstorming` + `agent-skills:spec-driven-development`, saved to `docs/specs/<topic>.md`, committed with the change: goal, done criteria, constraints, boundaries), `superpowers:writing-plans`, thin slices. One review only if big.
-- T3 risky (stored-data shape, injected HTML, page-wide listeners, restore-on-load): T2 plus the matching gate from the agent-skills line below. The one review is a fresh-context doubt pass (`agent-skills:doubt-driven-development`) on the plan before building, plus five-axis review of the diff (`agent-skills:code-review-and-quality`).
+- T1 bug or tweak in one area: 2-4 line plan (cause or goal, files/functions, the proving test, risk), test first (`superpowers:test-driven-development`), then fix. No review.
+- T2 feature across files: written spec (`superpowers:brainstorming` + `agent-skills:spec-driven-development`, saved to `docs/specs/<topic>.md`, git-ignored, not committed: goal, done criteria, constraints, boundaries), `superpowers:writing-plans`, thin slices. One review only if big.
+- T3 risky (stored-data shape, injected HTML, page-wide listeners, restore-on-load, irreversible ops such as deleting stored data): T2 plus the matching gate from the agent-skills line below. The one review is a fresh-context doubt pass (`agent-skills:doubt-driven-development`) on the plan before building, plus five-axis review of the diff (`agent-skills:code-review-and-quality`).
+- Any bug, visual or not, any tier: reproduce it first, at the trigger named in the brief (e.g. device pixel ratio, zoom, dark mode, high contrast); the first test captures it. If the first attempt does not reproduce it, stop and ask in one short question; don't loop.
 
 ## Guardrails (before every commit)
 - Scan the diff for a lowered bar: new suppressions, skipped/deleted/loosened assertions, stubs, edited thresholds. Report it; never hide it.
@@ -28,7 +29,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 
 ## Workflow
 - Superpowers: follow `superpowers:using-superpowers`; Tiers set the depth. Overrides: `superpowers:subagent-driven-development` only for large plans, `superpowers:requesting-code-review` only where Tiers allow a review. Never invoke `superpowers:finishing-a-development-branch` (it conflicts with the no-branches rule below). `superpowers:using-git-worktrees` only for T3 or parallel threads touching the same files: the worktree is local, never pushed, and lands on main only through `release.sh`.
-- `agent-skills` fills gaps only (Superpowers stays primary; never use its `using-agent-skills`, workflow, git or CI skills): `security-and-hardening` for page content, storage or injected HTML; `performance-optimization` for page-wide listeners or restore-on-load; `deprecation-and-migration` for any stored-data shape change; `code-simplification` on big changes before PUSH; `constraint-driven-development` when Mhmd asks to set or enforce a quality bar (it writes CONSTRAINTS.md).
+- `agent-skills` fills gaps only (Superpowers stays primary; never use its `using-agent-skills`, workflow, git or CI skills): `security-and-hardening` for page content, storage or injected HTML; `performance-optimization` for page-wide listeners or restore-on-load; `deprecation-and-migration` for any stored-data shape change; `code-simplification` on big changes before PUSH; `constraint-driven-development` only once Mhmd names a measurable target (speed, size, contrast); every threshold it writes to CONSTRAINTS.md is checked by a script or test, never measured by hand. Until then the bar is the tests plus the Guardrails.
 - Ask Mhmd for any missing detail in one short batched question. Do only what is asked, nothing extra.
 - Never push, open PRs or make branches on your own. Finish, commit locally, show the result, ask "Reply PUSH to push it to main." Only the word PUSH authorises a push. Never force-push main.
 - After PUSH run ONE Bash call: `TIER=T0|T1|T2|T3 highlighter/tools/release.sh "Theme" "What's in it" "Commit message"`. Never bump @version or commit the built file by hand. On conflict: keep BOTH sides, rerun related tests, rerun the script, mention the merged-in change. After pushing, reply only with the script's PUSHED and METRICS lines (METRICS is also appended to the git-ignored `.cache/metrics.tsv`: date, version, tier, push attempts, cycle time, diffstat). Mhmd reviews that log to judge whether a tier is too heavy or too light.
@@ -37,7 +38,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 
 ## Tests
 - `highlighter/tools/test-env.sh <word>` runs the suites (same arguments as `node highlighter/test/run.js`). Playwright 1.56.1 + Chromium come from the main checkout's git-ignored `.cache/playwright/` (shared by worktrees, installed on first use); on Linux/cloud it uses `/opt/node22`.
-- Tests first for T1+ (`superpowers:test-driven-development`). Never edit a test afterwards just to match the code. Report pre-existing failures; never silently rewrite them.
+- Never edit a test afterwards just to match the code. Report pre-existing failures; never silently rewrite them.
 - Run only suites related to the change; no full run before PUSH (exception: tasks about the tests themselves).
 - A suite that reports 0 checks crashed. Report it even if untouched.
 - Before asking PUSH on a behaviour change, grep `highlighter/test` for the changed feature/keys/colors; update tests expecting old behaviour; remove checks for retired behaviour rather than skipping.
@@ -46,8 +47,6 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 ## UI / Anthropic style
 - Screenshots: send them only when Mhmd asks. Never add before/after or showcase shots by default. `shot.sh` crops to the visible highlighter UI by itself (override: `SHOT_CLIP`); use the same crop for before/after and light/dark.
 - Look (since 9.0): Anthropic style, no library. Tokens in `src/ui-style.js` are named by role (`--ink*`, `--surface*`, `--line*`, `--accent*` = clay, only for the one primary action); serif for reading text, sans for chrome; flat with hairlines, no shadows; short ease-out fades. Icons: Phosphor Light. `test/anthropic-style.test.js` guards this.
-- Visual bug (spacing, widths, colors): reproduce it at the trigger named in the brief (device pixel ratio, zoom, dark mode, high contrast). If the first attempt does not reproduce it, stop and ask in one short question; don't loop.
-
 ## Scripts (`highlighter/tools/`; use them instead of redoing these steps by hand)
 - `build.sh` build+check; `tests-for.sh <keyword>` find and run suites mentioning it; `stale-checks.sh <old-term>` test lines for retired behaviour
 - `sync.sh` rebase onto latest origin/main, rebuild, report conflicts/overlap; `preflight.sh` sync, diffstat, release.sh line; `release.sh` post-PUSH release (logs METRICS); `node highlighter/tools/metrics-report.js` joins that log with git and transcripts (turns, test-first, rework); run it only when Mhmd asks

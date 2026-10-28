@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.13
+// @version      9.14
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*

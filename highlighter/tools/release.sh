@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Releases the local highlighter change to main in one go, after Mhmd's PUSH:
+# Releases the local highlighter change to main in one go, after the User's PUSH:
 # commit (if needed), fetch, rebase, pick @version as main's + 1,
 # build, check, push; on a rejected push it starts again from the fetch.
 # Usage: highlighter/tools/release.sh "Theme" "What's in it" "Commit message (body and trailers allowed)"

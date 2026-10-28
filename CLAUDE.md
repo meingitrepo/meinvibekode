@@ -19,7 +19,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - T0 no behaviour change (copy, comment, constant): do it, one verify call, no test, no review.
 - T1 bug or tweak in one area: 2-4 line plan (cause or goal, files/functions, the proving test, risk), test first, then fix. No review.
 - T2 feature across files: written spec (`superpowers:brainstorming` + `agent-skills:spec-driven-development`, saved to `docs/specs/<topic>.md`, committed with the change: goal, done criteria, constraints, boundaries), `superpowers:writing-plans`, thin slices. One review only if big.
-- T3 risky (stored-data shape, injected HTML, page-wide listeners, restore-on-load): T2 plus the matching agent-skills gate below. The one review is a fresh-context doubt pass (`agent-skills:doubt-driven-development`) on the plan before building, plus five-axis review of the diff (`agent-skills:code-review-and-quality`).
+- T3 risky (stored-data shape, injected HTML, page-wide listeners, restore-on-load): T2 plus the matching gate from the agent-skills line below. The one review is a fresh-context doubt pass (`agent-skills:doubt-driven-development`) on the plan before building, plus five-axis review of the diff (`agent-skills:code-review-and-quality`).
 
 ## Guardrails (before every commit)
 - Scan the diff for a lowered bar: new suppressions, skipped/deleted/loosened assertions, stubs, edited thresholds. Report it; never hide it.
@@ -27,7 +27,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Stop signs: "too simple to test", "tests after", "just this once", "the test is wrong".
 
 ## Workflow
-- Superpowers: follow `superpowers:using-superpowers`, with these overrides. Brainstorming and writing-plans scale by tier (see Tiers). `superpowers:subagent-driven-development` only for large plans, `superpowers:requesting-code-review` only for big features. Never invoke `superpowers:using-git-worktrees` or `superpowers:finishing-a-development-branch` (they conflict with the no-branches rule below). Build in thin slices (one `verify.sh` per slice).
+- Superpowers: follow `superpowers:using-superpowers`, ; Tiers set the depth. Overrides: `superpowers:subagent-driven-development` only for large plans, `superpowers:requesting-code-review` only where Tiers allow a review. Never invoke `superpowers:using-git-worktrees` or `superpowers:finishing-a-development-branch` (they conflict with the no-branches rule below).
 - `agent-skills` fills gaps only (Superpowers stays primary; never use its `using-agent-skills`, workflow, git or CI skills): `security-and-hardening` for page content, storage or injected HTML; `performance-optimization` for page-wide listeners or restore-on-load; `deprecation-and-migration` for any stored-data shape change; `code-simplification` on big changes before PUSH; `constraint-driven-development` when Mhmd asks to set or enforce a quality bar (it writes CONSTRAINTS.md).
 - Ask Mhmd for any missing detail in one short batched question. Do only what is asked, nothing extra.
 - Never push, open PRs or make branches on your own. Finish, commit locally, show the result, ask "Reply PUSH to push it to main." Only the word PUSH authorises a push. Never force-push main.
@@ -44,13 +44,13 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - CI runs only a quick gate per push (`node build.js --check` + `node --check` on the built file). The full Playwright suite is local-only.
 
 ## UI / Anthropic style
-- Screenshots: send them only when Mhmd asks. Never add before/after or showcase shots by default. When asked, crop to the changed component (`SHOT_CLIP`), never a whole-window shot; the same crop for before/after and light/dark.
+- Screenshots: send them only when Mhmd asks. Never add before/after or showcase shots by default. `shot.sh` crops to the visible highlighter UI by itself (override: `SHOT_CLIP`); use the same crop for before/after and light/dark.
 - Look (since 9.0): Anthropic style, no library. Tokens in `src/ui-style.js` are named by role (`--ink*`, `--surface*`, `--line*`, `--accent*` = clay, only for the one primary action); serif for reading text, sans for chrome; flat with hairlines, no shadows; short ease-out fades. Icons: Phosphor Light. `test/anthropic-style.test.js` guards this.
-- Visual bug (spacing, widths, colors): reproduce it first with a test (or `shot.sh` for your own check), at the trigger named in the brief (device pixel ratio, zoom, dark mode, high contrast). If the first attempt does not reproduce it, stop and ask in one short question; don't loop.
+- Visual bug (spacing, widths, colors): reproduce it at the trigger named in the brief (device pixel ratio, zoom, dark mode, high contrast). If the first attempt does not reproduce it, stop and ask in one short question; don't loop.
 
 ## Scripts (`highlighter/tools/`; use them instead of redoing these steps by hand)
 - `build.sh` build+check; `tests-for.sh <keyword>` find and run suites mentioning it; `stale-checks.sh <old-term>` test lines for retired behaviour
-- `sync.sh` rebase onto latest origin/main, rebuild, report conflicts/overlap; `preflight.sh` sync, diffstat, release.sh line; `release.sh` post-PUSH release
+- `sync.sh` rebase onto latest origin/main, rebuild, report conflicts/overlap; `preflight.sh` sync, diffstat, release.sh line; `release.sh` post-PUSH release (logs METRICS); `node highlighter/tools/metrics-report.js` joins that log with git and transcripts (turns, test-first, rework); run it only when Mhmd asks
 - `film.sh <out-prefix> [light|dark] <js> [frames] [gap-ms]` captures animation frames of the playground; source `test-env.sh` to only set the Playwright env
 - `verify.sh <keyword...>` build, matching suites, diffstat in one call; `shot.sh <out.png> [light|dark|both] [js]` playground screenshot; component presets (panel, all) crop to the element at 2x, other shots: `SHOT_CLIP=<selector|__hl.name>` (+`SHOT_PAD`)
 

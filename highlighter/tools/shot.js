@@ -12,13 +12,15 @@ const PRESETS = {
   'all-ticked': `${ALL} const hs=()=>__hl.everythingList.querySelectorAll('.page-head'); hs()[0].click(); setTimeout(()=>{${TICK} hs()[1].click(); setTimeout(()=>{${TICK}},100)},100)`
 };
 // Component presets crop to their element by default; SHOT_CLIP=<css selector | __hl.name> overrides, SHOT_CLIP=none takes the whole window.
+// Custom js with no SHOT_CLIP crops to the union of whichever of these highlighter UI elements is visible after the js ran (whole window if none is).
+const AUTO = ['panelEl', 'everythingEl', 'toolbarEl', 'toastEl', 'noteCardEl', 'editorEl', 'penEl', 'menuEl', 'labelTipEl'];
 const CLIPS = { panel: '__hl.panelEl', 'panel-ticked': '__hl.panelEl', all: '__hl.everythingEl', 'all-ticked': '__hl.everythingEl' };
 (async () => {
   const [out, scheme = 'light', arg] = process.argv.slice(2);
   const js = PRESETS[arg] || arg;
   if (PRESETS[arg] && !process.env.SHOT_FIXTURE) process.env.SHOT_FIXTURE = path.resolve(__dirname, 'shot-fixture.json');
-  const clipSel = process.env.SHOT_CLIP || CLIPS[arg];
-  const clipOn = clipSel && clipSel !== 'none';
+  const clipSel = process.env.SHOT_CLIP || CLIPS[arg] || (js ? 'auto' : '');
+  let clipOn = clipSel && clipSel !== 'none';
   if (clipOn && !process.env.DSF) process.env.DSF = '2';   // cropped shots are viewed small, so render at 2x
   const pad = +(process.env.SHOT_PAD || 16);
   let clip = null;   // measured once (light) and reused so every panel of a both shot has the same crop
@@ -34,14 +36,20 @@ const CLIPS = { panel: '__hl.panelEl', 'panel-ticked': '__hl.panelEl', all: '__h
     // The playground themes itself with html.dark, not prefers-color-scheme; ensureTheme sets it and checks the page really is that theme.
     try { await lib.ensureTheme(page, sc); } catch (e) { console.error('shot: ' + e.message); process.exit(1); }
     if (js) { await page.evaluate(js); await page.waitForTimeout(400); }
+    let r = null;
     if (clipOn && !clip) {
-      const r = await page.evaluate(sel => {
-        const el = sel.startsWith('__hl.') ? window.__hl[sel.slice(5)] : document.querySelector(sel);
-        if (!el) return null;
-        const b = el.getBoundingClientRect();
-        return { x: b.x, y: b.y, width: b.width, height: b.height };
-      }, clipSel);
-      if (!r || !r.width || !r.height) { console.error(`SHOT_CLIP target not found or empty: ${clipSel}`); process.exit(1); }
+      r = await page.evaluate(([sel, auto]) => {
+        const els = sel === 'auto' ? auto.map(n => window.__hl[n]).filter(e => e && !e.hidden)
+          : [sel.startsWith('__hl.') ? window.__hl[sel.slice(5)] : document.querySelector(sel)];
+        const bs = els.filter(Boolean).map(e => e.getBoundingClientRect()).filter(b => b.width && b.height);
+        if (!bs.length) return null;
+        const x0 = Math.min(...bs.map(b => b.left)), y0 = Math.min(...bs.map(b => b.top));
+        return { x: x0, y: y0, width: Math.max(...bs.map(b => b.right)) - x0, height: Math.max(...bs.map(b => b.bottom)) - y0 };
+      }, [clipSel, AUTO]);
+      if (!r && clipSel === 'auto') { clipOn = false; }
+      else if (!r) { console.error(`SHOT_CLIP target not found or empty: ${clipSel}`); process.exit(1); }
+    }
+    if (r && !clip) {
       const x = Math.max(0, r.x - pad), y = Math.max(0, r.y - pad), vp = page.viewportSize();
       clip = { x, y, width: Math.min(vp.width - x, r.width + 2 * pad), height: Math.min(vp.height - y, r.height + 2 * pad) };
     }

@@ -34,7 +34,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Never push, open PRs or make branches on your own. Finish, commit locally, show the result, ask "Reply PUSH to push it to main." Only the word PUSH authorises a push. Never force-push main.
 - After PUSH run ONE Bash call: `TIER=T0|T1|T2|T3 highlighter/tools/release.sh "Theme" "What's in it" "Commit message"`. Never bump @version or commit the built file by hand. On conflict: keep BOTH sides, rerun related tests, rerun the script, mention the merged-in change. After pushing, reply only with the script's PUSHED and METRICS lines (METRICS is also appended to the git-ignored `.cache/metrics.tsv`: date, version, tier, push attempts, cycle time, diffstat). the User reviews that log to judge whether a tier is too heavy or too light.
 - One task per thread; new thread per follow-up/revert. Open-ended "find problems" asks: one ranking thread that fixes nothing, then one short thread per item the User picks.
-- Economy: fewer turns is the main saving. Chain build, test and diffstat in one Bash call (`tools/verify.sh <keyword>`), batch independent commands, subagents allowed when Superpowers calls for them, review only per tier, status updates at milestones only.
+- Economy: fewer turns is the main saving. Chain build, test and diffstat in one Bash call (`tools/verify.sh <keyword>`), batch independent commands, status updates at milestones only.
 
 ## Tests
 - `highlighter/tools/test-env.sh <word>` runs the suites (same arguments as `node highlighter/test/run.js`). Playwright 1.56.1 + Chromium come from the main checkout's git-ignored `.cache/playwright/` (shared by worktrees, installed on first use); on Linux/cloud it uses `/opt/node22`.
@@ -52,6 +52,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - `sync.sh` rebase onto latest origin/main, rebuild, report conflicts/overlap; `preflight.sh` sync, diffstat, release.sh line; `release.sh` post-PUSH release (logs METRICS); `node highlighter/tools/metrics-report.js` joins that log with git and transcripts (turns, test-first, rework); run it only when the User asks
 - `film.sh <out-prefix> [light|dark] <js> [frames] [gap-ms]` captures animation frames of the playground; source `test-env.sh` to only set the Playwright env
 - `verify.sh <keyword...>` build, matching suites, diffstat in one call; `shot.sh <out.png> [light|dark|both] [js]` playground screenshot; component presets (panel, all) crop to the element at 2x, other shots: `SHOT_CLIP=<selector|__hl.name>` (+`SHOT_PAD`)
+- Git's LF/CRLF warnings on commit and release are harmless; ignore them.
 
 ## Automation candidates
 - Only when a repeated step would cut significant manual work or tokens across threads, end the reply with one terse line suggesting a script like `release.sh` (with the idea). Skip one-liners and trivial wrappers. If nothing qualifies, say nothing, not even "none".

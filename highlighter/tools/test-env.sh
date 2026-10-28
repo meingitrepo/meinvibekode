@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# Runs the Playwright suites with a local, git-ignored Playwright + Chromium (repo-root .cache/playwright),
+# Runs the Playwright suites with a local, git-ignored Playwright + Chromium (main checkout .cache/playwright, shared by worktrees),
 # installed once on first use. On the Linux sandbox (/opt/node22) it uses what is already there.
 # Usage: highlighter/tools/test-env.sh <word>   (same arguments as node highlighter/test/run.js)
 # Source it (. test-env.sh) to only set the environment.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+MAIN="$(cd "$ROOT" && cd "$(git rev-parse --git-common-dir)/.." && pwd)"   # main checkout: worktrees share its cache
 if [ -d /opt/node22/lib/node_modules ]; then
     export NODE_PATH=/opt/node22/lib/node_modules
 else
-    PW="$ROOT/.cache/playwright"
+    PW="$MAIN/.cache/playwright"
     export NODE_PATH="$PW/node_modules"
     export PLAYWRIGHT_BROWSERS_PATH="$PW/browsers"
     if [ ! -d "$NODE_PATH/playwright" ] || [ ! -d "$PLAYWRIGHT_BROWSERS_PATH" ]; then

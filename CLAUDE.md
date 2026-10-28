@@ -4,11 +4,19 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 
 ## Invariants (violating these is expensive)
 - Edit only `highlighter/src/*.js`, then `node build.js` in `highlighter/`; `node build.js --check` must say "up to date". Never edit the built .user.js.
+- Adding, renaming or removing a file in `src/`: update the src map below in the same commit.
 - Keep storage key `rnh:settings` and page keys unchanged (renaming loses saved data). Never change @namespace.
-- Reading: grep src/ first, read only the line ranges needed. Never read the built .user.js or all of src.
+- Reading: pick the file from the src map below, grep it, read only the line ranges needed. Never read the built .user.js or all of src.
+
+## src map (`highlighter/src/`, concatenated by build.js in its own order)
+- Boot/state: `header.js` (userscript header), `config.js`, `page-css-and-state.js`, `start-and-boot.js` (page-wide events), `navigation-and-selection.js` (SPA URL changes)
+- Storage: `storage.js` (page identity, `rnh:settings`), `live-sync.js` (cross-tab), `restore.js`
+- Annotations: `apply-and-undo.js`, `strokes.js` (SVG drawing), `wrappers.js` (wrapper bookkeeping), `text-anchoring.js` (XPath/offsets), `annotation-select.js`, `pen.js`
+- Notes/export: `notes.js`, `note-card-and-editor.js`, `markdown.js`
+- UI: `ui-style.js` (tokens/CSS), `ui-elements.js`, `theme.js`, `toolbar.js`, `site-menu.js`, `panel.js`, `search.js` (Alt+Shift+O), `toast-and-jump.js`, `input.js`
 
 ## Workflow
-- Superpowers: invoke the real skills with the Skill tool (`superpowers:<name>`), not just the methodology. New feature or behaviour change: `superpowers:brainstorming`, then `superpowers:writing-plans`, then `superpowers:executing-plans` (or `superpowers:subagent-driven-development` for large plans), with `superpowers:test-driven-development` for every code change. Bugs: `superpowers:systematic-debugging`. Before asking PUSH: `superpowers:verification-before-completion`, and `superpowers:requesting-code-review` for big features. Small fixes may skip brainstorming and writing-plans (2-4 line plan, cause or goal, files/functions, the proving test, risk). Never invoke `superpowers:using-git-worktrees` or `superpowers:finishing-a-development-branch` (they conflict with the no-branches rule below). Build in thin slices (one `verify.sh` per slice).
+- Superpowers: follow `superpowers:using-superpowers`, with these overrides. Small fixes may skip brainstorming and writing-plans (2-4 line plan: cause or goal, files/functions, the proving test, risk). `superpowers:subagent-driven-development` only for large plans, `superpowers:requesting-code-review` only for big features. Never invoke `superpowers:using-git-worktrees` or `superpowers:finishing-a-development-branch` (they conflict with the no-branches rule below). Build in thin slices (one `verify.sh` per slice).
 - Ask Mhmd for any missing detail in one short batched question. Never assume anything unnecessary. Do only what is asked, nothing extra.
 - Never push, open PRs or make branches on your own. Finish, commit locally, show the result, ask "Reply PUSH to push it to main." Only the word PUSH authorises a push. Never force-push main. Say nothing about commit or push state.
 - After PUSH run ONE Bash call: `highlighter/tools/release.sh "Theme" "What's in it" "Commit message"`. Never bump @version or commit the built file by hand. On conflict: keep BOTH sides, rerun related tests, rerun the script, mention the merged-in change. After pushing just say it's pushed.
@@ -16,8 +24,8 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Economy: fewer turns is the main saving. Chain build, test and diffstat in one Bash call (`tools/verify.sh <keyword>`), batch independent commands, subagents allowed when Superpowers calls for them, at most one review pass, status updates at milestones only.
 
 ## Tests
-- `node highlighter/test/run.js <word>` (Playwright 1.56.1 + Chromium). On Mhmd's Windows PC both live in the repo's git-ignored `.cache/playwright/`; set first (works from the main checkout and from worktrees): `C="$(cd "$(git rev-parse --git-common-dir)/.." && pwd)/.cache/playwright"; export NODE_PATH="$C/node_modules" PLAYWRIGHT_BROWSERS_PATH="$C/browsers"`. On Linux/cloud: `NODE_PATH=/opt/node22/lib/node_modules`.
-- Tests first (Superpowers TDD): for any behaviour change, write the test first and run it to see it fail, then implement, then run it to see it pass. Never edit a test afterwards just to match the code. Report pre-existing failures; never silently rewrite them.
+- `highlighter/tools/test-env.sh <word>` runs the suites (same arguments as `node highlighter/test/run.js`). Playwright 1.56.1 + Chromium come from the main checkout's git-ignored `.cache/playwright/` (shared by worktrees, installed on first use); on Linux/cloud it uses `/opt/node22`.
+- Tests first (`superpowers:test-driven-development`). Never edit a test afterwards just to match the code. Report pre-existing failures; never silently rewrite them.
 - Run only suites related to the change; no full run before PUSH (exception: tasks about the tests themselves).
 - A suite that reports 0 checks crashed. Report it even if untouched.
 - Before asking PUSH on a behaviour change, grep `highlighter/test` for the changed feature/keys/colors; update tests expecting old behaviour; remove checks for retired behaviour rather than skipping.
@@ -31,6 +39,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 ## Scripts (`highlighter/tools/`; use them instead of redoing these steps by hand)
 - `build.sh` build+check; `tests-for.sh <keyword>` find and run suites mentioning it; `stale-checks.sh <old-term>` test lines for retired behaviour
 - `sync.sh` rebase onto latest origin/main, rebuild, report conflicts/overlap; `preflight.sh` sync, diffstat, release.sh line; `release.sh` post-PUSH release
+- `test-env.sh <word>` sets up Playwright (installs once into `.cache/playwright`) and runs `test/run.js`; source it to only set the env. `film.sh <out-prefix> [light|dark] <js> [frames] [gap-ms]` captures animation frames of the playground (send only when asked)
 - `verify.sh <keyword...>` build, matching suites, diffstat in one call; `shot.sh <out.png> [light|dark|both] [js]` playground screenshot; component presets (panel, all) crop to the element at 2x, other shots: `SHOT_CLIP=<selector|__hl.name>` (+`SHOT_PAD`)
 
 ## Automation candidates

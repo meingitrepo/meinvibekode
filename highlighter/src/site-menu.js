@@ -125,7 +125,7 @@
     }
 
     menuExpand.addEventListener('click', () => { menuOpen = !menuOpen; hideMenuTip(); renderSiteMenu(); });
-    menuClose.addEventListener('click', () => { setMenuHidden(true); renderSiteMenu(); refreshMenu(); if (running) showToast('Menu hidden. Alt+Shift+M brings it back'); });
+    menuClose.addEventListener('click', () => { setMenuHidden(true); renderSiteMenu(); refreshMenu(); });
 
     // Dragging the menu by its handle or edge moves it; the place is kept for every site.
     menuEl.addEventListener('pointerdown', e => {

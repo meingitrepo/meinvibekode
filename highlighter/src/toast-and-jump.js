@@ -9,9 +9,9 @@
     // A message in the bottom-right corner: an intent icon, a title, an
     // action and Dismiss. `icon` is a PHOSPHOR_ICONS name; `intent`
     // is info, success or warning; `action` adds a button, { label, run, keep, keepEditor, tip, shortcut },
-    // such as Undo; `tip` and `shortcut` are for its tooltip.
+    // such as Show; `tip` and `shortcut` are for its tooltip.
     function showToast(message, { icon = 'info', intent = 'info', action = null } = {}) {
-        // A plain message doesn't take the place of one still offering Undo or Restore.
+        // A plain message doesn't take the place of one still offering an action.
         if (!action && !toastEl.hidden && toastRun) return;
         // The toast has the page's theme, set on it alone: a panel open next to a box of the
         // other theme keeps its own, and opening one later doesn't switch the toast's.
@@ -29,7 +29,7 @@
         toastKeepsEditor = !!(action && action.keepEditor);
         if (action) {
             toastAction.dataset.action = action.label;
-            toastAction.replaceChildren(phosphorIcon(TOAST_ACTION_ICONS[action.label] || 'arrow-u-up-left'));
+            toastAction.replaceChildren(phosphorIcon(TOAST_ACTION_ICONS[action.label] || 'eye'));
         }
         toastAction.hidden = !action;
         if (action) {
@@ -67,8 +67,8 @@
 
     toastDismiss.addEventListener('click', hideToast);
     addLabelTip(toastDismiss, 'Dismiss', '', () => false);
-    const TOAST_ACTION_ICONS = { Undo: 'arrow-u-up-left', Restore: 'arrow-counter-clockwise', Show: 'eye' };
-    addLabelTip(toastAction, 'Undo', '', () => false);   // its label and shortcut are set per toast, see showToast
+    const TOAST_ACTION_ICONS = { Show: 'eye' };
+    addLabelTip(toastAction, 'Show', '', () => false);   // its label and shortcut are set per toast, see showToast
 
     toastAction.addEventListener('click', () => {
         const run = toastRun;
@@ -79,10 +79,8 @@
         syncLocation();
         // Not for a page the tab has since left.
         if (run && running && currentKey === key) {
-            // Undo would close a note being written without a word: it is offered back instead.
-            const unsaved = keepsEditor ? null : cancelEditor({ offer: false });
+            if (!keepsEditor) cancelEditor();
             run();
-            if (unsaved) offerDraft(unsaved);
         }
         // Keyboard focus goes back to where it was, unless the action gave it a place (a note it reopened).
         const now = document.activeElement;

@@ -33,10 +33,8 @@
     function removeInSelection({ sel, range: selected }) {
         const range = cleanRange(selected);
         const overlaps = range ? findOverlaps(range) : [];
-        const step = overlaps.length ? runUndoable(() => eraseOverlaps(overlaps)) : null;
+        if (overlaps.length) runUndoable(() => eraseOverlaps(overlaps));
         sel.removeAllRanges();
-        // Annotations erased only in part count too.
-        offerUndo(doneText('erased', new Set(overlaps.map(o => o.group)).size), step);
     }
 
     // What the keys act on when no text is selected: the annotation selected by clicking it, else
@@ -132,7 +130,6 @@
         const off = !keysSwitchedOff();
         setKeysSwitchedOff(off);
         if (off) releaseAccessKeys();
-        showToast(off ? 'Shortcut keys off' : 'Shortcut keys on');
         refreshMenu();
     }
 

@@ -117,14 +117,11 @@
         if (here.length) {
             syncLocation();
             const live = here.filter(g => groupWrappers(g).length);
-            const step = runUndoable(() => {
+            runUndoable(() => {
                 live.forEach(g => unwrapMany(groupWrappers(g)));
                 pendingRecords = pendingRecords.filter(r => !here.includes(recordOwner(r)));
             });
-            // Undo covers only this page, so it is offered only when nothing else was forgotten.
-            if (!elsewhere.size) { offerUndo(doneText('forgotten', selected.length), step, 'eraser'); return; }
         }
-        showToast(doneText('forgotten', selected.length), { icon: 'eraser' });
     }
 
     let everythingItemSeq = 0;
@@ -221,7 +218,7 @@
         const selected = everythingShown.filter(s => everythingChecked.has(s.id));
         if (!selected.length) return;
         writeClipboard(savedMarkdown(selected)).then(
-            () => showToast(doneText('copied', selected.length), { icon: 'check', intent: 'success' }),
+            () => flashCopied(everythingCopy),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'warning-circle' }); });
     });
     everythingForget.addEventListener('click', () => {

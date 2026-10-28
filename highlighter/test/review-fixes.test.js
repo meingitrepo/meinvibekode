@@ -50,20 +50,15 @@ const clickWrapper = async (page, i = 0) => {
     L.check('keys behind everything saved change nothing', w.length === 1 && w[0].k === 'h', w);
     await page.keyboard.press('Escape'); await page.waitForTimeout(100);
 
-    // Delete on a new note takes the highlight made for it, and Restore brings both back.
+    // Delete on a new note takes the highlight made for it.
     await L.selStr(page, '#p2', 'echo foxtrot'); await L.altKey(page, 'KeyN');
     await page.keyboard.type('my words'); await page.keyboard.press('Delete'); await page.waitForTimeout(300);
     w = await L.wr(page);
     L.check('Delete on a new note: its highlight goes', w.length === 1, w);
-    L.check('with Restore offered', (await L.toast(page)) === 'Note erased · Restore', await L.toast(page));
-    await page.evaluate(() => window.__hl.toastAction.click()); await page.waitForTimeout(300);
-    const back = await page.evaluate(() => ({ open: !!window.__hl.editor, text: window.__hl.noteInput.value }));
-    L.check('Restore: highlight and text back, editor open', (await L.wr(page)).length === 2 && back.open && back.text === 'my words', back);
-    await page.keyboard.press('Enter'); await page.waitForTimeout(200);
     // An empty new note's Delete just drops it, as before.
     await L.selStr(page, '#p3', 'golf'); await L.altKey(page, 'KeyN');
     await page.keyboard.press('Delete'); await page.waitForTimeout(300);
-    L.check('Delete on an empty new note: dropped, no message', (await L.wr(page)).length === 2 && !(await L.toast(page)), [await L.wr(page), await L.toast(page)]);
+    L.check('Delete on an empty new note: dropped, no message', (await L.wr(page)).length === 1 && !(await L.toast(page)), [await L.wr(page), await L.toast(page)]);
 
     // Reduced motion: a new annotation is there at once.
     await page.emulateMedia({ reducedMotion: 'reduce' });

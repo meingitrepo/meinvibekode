@@ -62,7 +62,7 @@ async function scenarioNotice(browser) {
   // Forget from the menu; the label goes, Clear's count follows
   await p.evaluate(() => window.__menu['Forget 1 annotation not found']());
   await p.waitForTimeout(200);
-  check('Forget from the menu', (await L.toast(p)) === '1 annotation forgotten · Undo', await L.toast(p));
+  check('Forget from the menu: no toast', (await L.toast(p)) === null, await L.toast(p));
   await p.waitForTimeout(1200);
   menu = await L.menu(p);
   check('menu after Forget: no Forget item, Clear 2', !menu.some(m => m.startsWith('Forget')) && menu.includes('Clear 2 annotations on this page'), menu);
@@ -182,7 +182,7 @@ async function scenarioPages(browser) {
   check('pages: panel lists it under Saved on other pages', panel.length === 5 && panel[1] === 'Not found on the page (1)' && !panel[2].includes(' on ') && panel[3] === 'Saved on other pages (1)' && panel[4].endsWith(' · on /t'), panel);
   await p.evaluate(() => window.__menu['Clear 2 annotations on this page']());
   await p.waitForTimeout(300);
-  check('pages: Clear says what it cleared', (await L.toast(p)) === '2 annotations cleared · Undo', await L.toast(p));
+  check('pages: Clear shows no toast', (await L.toast(p)) === null, await L.toast(p));
   st = await L.stored(p, CANON);
   check('pages: Clear keeps the other page\'s annotation', st.length === 1 && st[0].group === 'gP1', st);
   await ctx.close();

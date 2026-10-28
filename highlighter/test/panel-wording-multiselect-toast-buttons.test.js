@@ -65,15 +65,10 @@ const eTicks = page => page.evaluate(() => Array.from(window.__hl.everythingList
   await click(page, 'E .check', 4, { shiftKey: true });
   L.check('saved list: Shift+click on a tick reaches the end', (await eTicks(page)).endsWith('1'), await eTicks(page));
   await L.altKey(page, 'o', true); await page.waitForTimeout(100);
-  // 3 + 4: toast buttons
+  // 3 + 4: toast buttons (Show is the only one left; erasing no longer offers Undo)
   await L.selStr(page, '#p0', 'alpha'); await L.altKey(page, 'd'); await page.waitForTimeout(300);
-  const b = await page.evaluate(() => { const r = window.__hl, a = r.toastAction; return { cls: a.className, tag: a.tagName, text: a.textContent, icon: !!a.querySelector('svg'), label: a.dataset.label, key: a.dataset.shortcut, aria: a.getAttribute('aria-label'), h: Math.round(a.getBoundingClientRect().height) }; });
-  L.check('Undo is a subtle icon-only button', b.tag === 'BUTTON' && /\bbtn\b/.test(b.cls) && /btn-subtle/.test(b.cls) && /btn-icon/.test(b.cls) && b.text === '' && b.icon && b.h <= 32, b);
-  L.check('Undo tooltip names the shortcut', b.label === 'Undo' && b.key === 'Alt+Z' && b.aria === 'Undo (Alt+Z)', b);
-  await page.evaluate(() => window.__hl.toastAction.dispatchEvent(new MouseEvent('mouseenter'))); await page.waitForTimeout(450);
-  const tip = await page.evaluate(() => { const t = window.__hl.uiRoot.querySelector('.tip'); return t && !t.hidden ? t.textContent : null; });
-  L.check('hovering shows the tooltip', tip === 'UndoAlt+Z', tip);
-  await page.evaluate(() => window.__hl.toastAction.click()); await page.waitForTimeout(200);
+  L.check('erase shows no toast', (await L.toast(page)) === null, await L.toast(page));
+  await L.altKey(page, 'z'); await page.waitForTimeout(200);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
   const s = await page.evaluate(() => { const a = window.__hl.toastAction; return { text: a.textContent, icon: !!a.querySelector('svg'), label: a.dataset.label, key: a.dataset.shortcut || '', cls: a.className }; });
   L.check('Show (annotations hidden) is an icon button with a tooltip and Alt+V', s.text === '' && s.icon && /btn-icon/.test(s.cls) && s.label === 'Show annotations' && s.key === 'Alt+V', s);

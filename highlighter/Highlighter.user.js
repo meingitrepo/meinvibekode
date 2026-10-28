@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.6
+// @version      9.7
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3003,16 +3003,6 @@
         return step;
     }
 
-    // Tells the user what an action removed, with an Undo that reverts exactly that step, as
-    // long as it is still the latest one.
-    function offerUndo(message, step, icon = 'eraser') {
-        if (!step) return;
-        showToast(message, {
-            icon,
-            action: { label: 'Undo', shortcut: 'Alt+Z', run: () => { if (undoStack[undoStack.length - 1] === step) undoLastAction(); } }
-        });
-    }
-
     // How many annotations the records make up (the pieces of one annotation share a group).
     function countAnnotations(records) {
         return new Set(records.map(r => r.group || recordSignature(r))).size;
@@ -3062,17 +3052,14 @@
     function clearPageAnnotations() {
         if (!running) return;
         syncLocation();
-        const unsaved = cancelEditor({ offer: false });
+        cancelEditor();
         resetUi();
-        const n = pageCounts().total;
-        const step = runUndoable(() => {
+        runUndoable(() => {
             stopLateWatcher();
             pendingRecords = pendingRecords.filter(isOtherPage);   // they belong to other pages
             unwrapAll();
         });
         startLateWatcher();
-        offerUndo(doneText('cleared', n), step);
-        if (unsaved) offerDraft(unsaved);
     }
 
     // Annotations of a style that no longer exists aren't missing, only hidden, and those made on
@@ -3080,22 +3067,16 @@
     function forgetMissingAnnotations() {
         if (!running) return;
         syncLocation();
-        if (!countAnnotations(missingRecords())) {
-            showToast('No annotations missing', { intent: 'success', icon: 'check' });
-            return;
-        }
-        const unsaved = cancelEditor({ offer: false });
+        if (!countAnnotations(missingRecords())) return;
+        cancelEditor();
         // Read after the note closes: dropping a new note's highlight goes back a step (see
         // discardStep), which rebuilds the list of waiting records.
         const missing = missingRecords();
-        const n = countAnnotations(missing);
-        const step = runUndoable(() => {
+        runUndoable(() => {
             stopLateWatcher();
             pendingRecords = pendingRecords.filter(r => !missing.includes(r));
         });
         startLateWatcher();
-        offerUndo(doneText('forgotten', n), step, 'trash');
-        if (unsaved) offerDraft(unsaved);
     }
 
     // =====================================================================
@@ -3133,10 +3114,8 @@
     function removeInSelection({ sel, range: selected }) {
         const range = cleanRange(selected);
         const overlaps = range ? findOverlaps(range) : [];
-        const step = overlaps.length ? runUndoable(() => eraseOverlaps(overlaps)) : null;
+        if (overlaps.length) runUndoable(() => eraseOverlaps(overlaps));
         sel.removeAllRanges();
-        // Annotations erased only in part count too.
-        offerUndo(doneText('erased', new Set(overlaps.map(o => o.group)).size), step);
     }
 
     // What the keys act on when no text is selected: the annotation selected by clicking it, else
@@ -3232,7 +3211,6 @@
         const off = !keysSwitchedOff();
         setKeysSwitchedOff(off);
         if (off) releaseAccessKeys();
-        showToast(off ? 'Shortcut keys off' : 'Shortcut keys on');
         refreshMenu();
     }
 
@@ -4494,7 +4472,6 @@
         setToolbarSwitchedOff(off);
         if (off) hideToolbar();
         else scheduleToolbar();   // for text that is selected now
-        showToast(off ? 'Selection toolbar off' : 'Selection toolbar on');
         refreshMenu();
     }
 
@@ -4570,7 +4547,7 @@
     }
 
     function togglePen() {
-        if (penKey) { setPen(null); showToast('Pen off'); scheduleToolbar(); return; }
+        if (penKey) { setPen(null); scheduleToolbar(); return; }
         hideToolbar();
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
     }
@@ -4868,12 +4845,11 @@
         return groupWrappers(group).some(w => w.getAttribute(NOTE_ATTR));
     }
 
-    // Removes the note; the annotation stays, and Undo brings the note back.
+    // Removes the note; the annotation stays, and Alt+Z brings the note back.
     function deleteGroupNote(group) {
         syncLocation();
         if (editor) cancelEditor();
-        const changed = runUndoable(() => setGroupNote(group, ''));
-        offerUndo('Note erased', changed);
+        runUndoable(() => setGroupNote(group, ''));
     }
 
     // --- Note editor ---
@@ -4970,12 +4946,10 @@
         }
     }
 
-    // `draft` reopens a note with text that wasn't saved (see offerDraft).
     // `returnFocus`: where focus goes when the editor closes (by default, what had it before).
-    function openNoteEditor(group, { step = null, draft = null, returnFocus = null } = {}) {
+    function openNoteEditor(group, { step = null, returnFocus = null } = {}) {
         if (editor) {
             if (editor.group === group) {
-                if (draft !== null) { noteInput.value = draft; updateSaveState(); sizeNoteInput(); }
                 focusNoteInput();
                 return;
             }
@@ -4994,7 +4968,7 @@
         wrappers.forEach(w => w.setAttribute(NOTE_EDIT_ATTR, ''));
         setSelectedGroups(selectedGroups.concat(group));   // its outline; no toolbar while the editor is open
         editorTitle.textContent = original ? 'Edit note' : 'Add note';
-        noteInput.value = draft === null ? original : draft;
+        noteInput.value = original;
         updateSaveState();
         editorEl.hidden = false;
         resetNoteInputSize();
@@ -5055,38 +5029,25 @@
                 return;
             }
         }
-        if (text !== original) {
-            const changed = runUndoable(() => setGroupNote(group, text));
-            if (!text) offerUndo('Note erased', changed);
-        }
+        if (text !== original) runUndoable(() => setGroupNote(group, text));
     }
 
     // The site redrew the annotation's text while its note was open: the note goes on the
-    // records waiting for that text, or, if there are none, is offered back.
+    // records waiting for that text, and is dropped if there are none.
     function saveWaitingNote(group, original, step, text) {
         if (step && !text) { discardStep(step); return; }
         if (text === original) return;
         const waiting = waitingRecords(group);
-        if (!waiting.length) {
-            if (text) offerDraft({ group, draft: text, records: null });
-            return;
-        }
-        const changed = runUndoable(() => waiting.forEach(r => { r.note = text || undefined; }));
-        if (!text) offerUndo('Note erased', changed);
+        if (!waiting.length) return;
+        runUndoable(() => waiting.forEach(r => { r.note = text || undefined; }));
     }
 
-    // Returns the unsaved text, if any, as { group, draft, records } (see offerDraft), which
-    // `offer: false` leaves to the caller to offer.
-    function cancelEditor({ offer = true } = {}) {
-        if (!editor) return null;
-        const { group, original, step } = editor;
-        const draft = noteDraft();
+    // Closes the editor without saving; the highlight made for a new note goes with it.
+    function cancelEditor() {
+        if (!editor) return;
+        const { step } = editor;
         closeEditor();
-        const dropped = step ? discardStep(step) : null;
-        if (!draft || draft === original) return null;
-        const unsaved = { group, draft, records: dropped ? dropped.records.filter(r => r.group === group) : null };
-        if (offer) offerDraft(unsaved);
-        return unsaved;
+        if (step) discardStep(step);
     }
 
     // A note being written when its page goes away (the site shows another page, or the script
@@ -5104,39 +5065,12 @@
         else GM_deleteValue(currentKey);
     }
 
-    // Only Save saves, but text closed without saving can be brought back from the toast. For a
-    // new note, `records` is the highlight that was made for it, which comes back too.
-    function offerDraft({ group, draft, records }, message = 'Note not saved', icon = 'pencil-simple') {
-        showToast(message, {
-            icon,
-            action: { label: 'Restore', tip: 'Restore the note', keep: true, run: () => restoreDraft(group, draft, records) }
-        });
-    }
-
-    function restoreDraft(group, draft, records) {
-        syncLocation();
-        // Another note being written closes first, while its own highlight can still go with it.
-        if (editor && editor.group !== group) cancelEditor();
-        let step = null;
-        if (records && records.length && !groupWrappers(group).length) {
-            step = runUndoable(() => { renderRecords(records, { animate: false }); });
-        }
-        if (groupWrappers(group).length) { openNoteEditor(group, { step, draft }); return; }
-        // Its text has been annotated since: the draft goes to that annotation instead.
-        const located = records && records.length ? locateRecord(records[0], buildTextIndex) : null;
-        const cover = located && candidateWrappers(located.range)[0];
-        if (!cover) return;
-        const existing = cover.getAttribute(NOTE_ATTR);
-        openNoteEditor(cover.getAttribute(GROUP_ATTR), { draft: existing ? clipNote(`${existing}\n\n${draft}`) : draft });
-    }
-
     noteSave.addEventListener('click', () => saveEditor());
     noteDiscard.addEventListener('click', () => cancelEditor());
-    // An existing note is removed (its annotation stays), with Undo; a new one is dropped along
-    // with the highlight that was made for it, and what was typed in it can be restored, both.
+    // An existing note is removed (its annotation stays, Alt+Z brings the note back); a new one
+    // is dropped along with the highlight that was made for it.
     noteDelete.addEventListener('click', () => {
-        const unsaved = editor && editor.step && noteDraft() ? cancelEditor({ offer: false }) : null;
-        if (unsaved) { offerDraft(unsaved, 'Note erased', 'eraser'); return; }
+        if (editor && editor.step && noteDraft()) { cancelEditor(); return; }
         noteInput.value = '';
         saveEditor();
     });
@@ -5175,9 +5109,9 @@
     // A message in the bottom-right corner: an intent icon, a title, an
     // action and Dismiss. `icon` is a PHOSPHOR_ICONS name; `intent`
     // is info, success or warning; `action` adds a button, { label, run, keep, keepEditor, tip, shortcut },
-    // such as Undo; `tip` and `shortcut` are for its tooltip.
+    // such as Show; `tip` and `shortcut` are for its tooltip.
     function showToast(message, { icon = 'info', intent = 'info', action = null } = {}) {
-        // A plain message doesn't take the place of one still offering Undo or Restore.
+        // A plain message doesn't take the place of one still offering an action.
         if (!action && !toastEl.hidden && toastRun) return;
         // The toast has the page's theme, set on it alone: a panel open next to a box of the
         // other theme keeps its own, and opening one later doesn't switch the toast's.
@@ -5195,7 +5129,7 @@
         toastKeepsEditor = !!(action && action.keepEditor);
         if (action) {
             toastAction.dataset.action = action.label;
-            toastAction.replaceChildren(phosphorIcon(TOAST_ACTION_ICONS[action.label] || 'arrow-u-up-left'));
+            toastAction.replaceChildren(phosphorIcon(TOAST_ACTION_ICONS[action.label] || 'eye'));
         }
         toastAction.hidden = !action;
         if (action) {
@@ -5233,8 +5167,8 @@
 
     toastDismiss.addEventListener('click', hideToast);
     addLabelTip(toastDismiss, 'Dismiss', '', () => false);
-    const TOAST_ACTION_ICONS = { Undo: 'arrow-u-up-left', Restore: 'arrow-counter-clockwise', Show: 'eye' };
-    addLabelTip(toastAction, 'Undo', '', () => false);   // its label and shortcut are set per toast, see showToast
+    const TOAST_ACTION_ICONS = { Show: 'eye' };
+    addLabelTip(toastAction, 'Show', '', () => false);   // its label and shortcut are set per toast, see showToast
 
     toastAction.addEventListener('click', () => {
         const run = toastRun;
@@ -5245,10 +5179,8 @@
         syncLocation();
         // Not for a page the tab has since left.
         if (run && running && currentKey === key) {
-            // Undo would close a note being written without a word: it is offered back instead.
-            const unsaved = keepsEditor ? null : cancelEditor({ offer: false });
+            if (!keepsEditor) cancelEditor();
             run();
-            if (unsaved) offerDraft(unsaved);
         }
         // Keyboard focus goes back to where it was, unless the action gave it a place (a note it reopened).
         const now = document.activeElement;
@@ -5684,14 +5616,13 @@
     function deleteGroups(groups) {
         if (groups.length === 1) { deleteAnnotation(groups[0]); return; }
         syncLocation();
-        if (editor) cancelEditor({ offer: !groups.includes(editor.group) });
+        cancelEditor();
         const live = groups.filter(g => groupWrappers(g).length);
         if (!live.length) return;
-        const step = runUndoable(() => {
+        runUndoable(() => {
             live.forEach(g => unwrapMany(groupWrappers(g)));
             pendingRecords = pendingRecords.filter(r => !live.includes(recordOwner(r)));
         });
-        offerUndo(doneText('erased', live.length), step);
     }
 
     // The keys for the selected annotations, with or without Alt (see onKeyDown). True if used.
@@ -5888,8 +5819,22 @@
         return Promise.reject(new Error('no clipboard access'));
     }
 
+    const copyFlashes = new WeakMap();   // button -> { icon: its own icon, timer }
+
+    // Copying shows no toast: the button's icon turns into a check for a moment.
+    function flashCopied(button) {
+        if (!button) return;
+        const flash = copyFlashes.get(button) || { icon: button.firstElementChild, timer: 0 };
+        clearTimeout(flash.timer);
+        const check = phosphorIcon('check');
+        button.firstElementChild.replaceWith(check);
+        flash.timer = setTimeout(() => { check.replaceWith(flash.icon); }, 1500);
+        copyFlashes.set(button, flash);
+    }
+
     // `items`: the annotations to copy (the panel passes what its filter shows); all by default.
-    function copyAnnotations(items = null) {
+    // `button`: the button that asked, which shows the check once it is copied.
+    function copyAnnotations(items = null, button = null) {
         if (!running) return;
         syncLocation();
         const list = (items || pageAnnotations()).filter(a => a.wrappers.some(w => w.isConnected));
@@ -5906,37 +5851,35 @@
             return;
         }
         writeClipboard(markdown).then(
-            () => showToast(doneText('copied', list.length), { icon: 'check', intent: 'success' }),
+            () => flashCopied(button),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'warning-circle' }); });
     }
 
     // --- Changes made from the panel ---
 
-    // A note being written closes first (and is offered back), so the highlight made for a new
-    // one is still the latest undo step and goes with it.
-    function closeNoteForPanel(group) {
-        if (editor) cancelEditor({ offer: editor.group !== group });
+    // A note being written closes first, so the highlight made for a new one is still the
+    // latest undo step and goes with it.
+    function closeNoteForPanel() {
+        cancelEditor();
     }
 
     // Removes the whole annotation, also from the keyboard (Alt+D, or its own style, with
     // the mouse on it).
     function deleteAnnotation(group) {
         syncLocation();
-        closeNoteForPanel(group);
+        closeNoteForPanel();
         if (!groupWrappers(group).length) return;
-        const step = runUndoable(() => {
+        runUndoable(() => {
             unwrapMany(groupWrappers(group));
             pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group);
         });
-        offerUndo(doneText('erased', 1), step);
     }
 
     function forgetAnnotation(group) {
         syncLocation();
-        closeNoteForPanel(group);
+        closeNoteForPanel();
         if (!pendingRecords.some(r => recordOwner(r) === group)) return;
-        const step = runUndoable(() => { pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group); });
-        offerUndo(doneText('forgotten', 1), step, 'trash');
+        runUndoable(() => { pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group); });
     }
 
     // Re-anchors a saved annotation that can't be found to the text selected now. It keeps its
@@ -5958,7 +5901,7 @@
             const endBlock = getBlockParent(range.endContainer);
             const startOff = computeOffsetWithinBlock(startBlock, range.startContainer, range.startOffset);
             const endOff = computeOffsetWithinBlock(endBlock, range.endContainer, range.endOffset);
-            closeNoteForPanel(group);
+            closeNoteForPanel();
             const sp = findNodeAtOffset(startBlock, startOff, 'start');
             const ep = findNodeAtOffset(endBlock, endOff, 'end');
             if (!sp || !ep) return;
@@ -6196,7 +6139,7 @@
     panelCopy.addEventListener('click', () => {
         renderPanel();
         const ticked = panelItems.filter(a => panelChecked.has(a.group));
-        if (ticked.length) copyAnnotations(ticked);
+        if (ticked.length) copyAnnotations(ticked, panelCopy);
     });
     panelClose.addEventListener('click', closePanel);
     addLabelTip(panelErase, 'Erase selected annotations', '', () => true);
@@ -6432,14 +6375,11 @@
         if (here.length) {
             syncLocation();
             const live = here.filter(g => groupWrappers(g).length);
-            const step = runUndoable(() => {
+            runUndoable(() => {
                 live.forEach(g => unwrapMany(groupWrappers(g)));
                 pendingRecords = pendingRecords.filter(r => !here.includes(recordOwner(r)));
             });
-            // Undo covers only this page, so it is offered only when nothing else was forgotten.
-            if (!elsewhere.size) { offerUndo(doneText('forgotten', selected.length), step, 'eraser'); return; }
         }
-        showToast(doneText('forgotten', selected.length), { icon: 'eraser' });
     }
 
     let everythingItemSeq = 0;
@@ -6536,7 +6476,7 @@
         const selected = everythingShown.filter(s => everythingChecked.has(s.id));
         if (!selected.length) return;
         writeClipboard(savedMarkdown(selected)).then(
-            () => showToast(doneText('copied', selected.length), { icon: 'check', intent: 'success' }),
+            () => flashCopied(everythingCopy),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'warning-circle' }); });
     });
     everythingForget.addEventListener('click', () => {
@@ -6797,7 +6737,7 @@
     }
 
     menuExpand.addEventListener('click', () => { menuOpen = !menuOpen; hideMenuTip(); renderSiteMenu(); });
-    menuClose.addEventListener('click', () => { setMenuHidden(true); renderSiteMenu(); refreshMenu(); if (running) showToast('Menu hidden. Alt+Shift+M brings it back'); });
+    menuClose.addEventListener('click', () => { setMenuHidden(true); renderSiteMenu(); refreshMenu(); });
 
     // Dragging the menu by its handle or edge moves it; the place is kept for every site.
     menuEl.addEventListener('pointerdown', e => {

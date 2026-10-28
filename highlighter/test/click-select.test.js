@@ -39,7 +39,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px">
     await L.altKey(page, 'd'); await page.waitForTimeout(150);
     w = await L.wr(page);
     L.check(`${scheme} Alt+D removes`, w.length === 0, w);
-    L.check(`${scheme} undo toast`, /^1 annotation erased · Undo$/.test(await L.toast(page) || ''), await L.toast(page));
+    L.check(`${scheme} no undo toast`, (await L.toast(page)) === null, await L.toast(page));
     await page.waitForTimeout(50);
     L.check(`${scheme} box gone with it`, !(await box()), await box());
     await L.altKey(page, 'KeyZ');

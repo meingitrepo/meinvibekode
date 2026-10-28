@@ -1,30 +1,28 @@
     // --- Changes made from the panel ---
 
-    // A note being written closes first (and is offered back), so the highlight made for a new
-    // one is still the latest undo step and goes with it.
-    function closeNoteForPanel(group) {
-        if (editor) cancelEditor({ offer: editor.group !== group });
+    // A note being written closes first, so the highlight made for a new one is still the
+    // latest undo step and goes with it.
+    function closeNoteForPanel() {
+        cancelEditor();
     }
 
     // Removes the whole annotation, also from the keyboard (Alt+D, or its own style, with
     // the mouse on it).
     function deleteAnnotation(group) {
         syncLocation();
-        closeNoteForPanel(group);
+        closeNoteForPanel();
         if (!groupWrappers(group).length) return;
-        const step = runUndoable(() => {
+        runUndoable(() => {
             unwrapMany(groupWrappers(group));
             pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group);
         });
-        offerUndo(doneText('erased', 1), step);
     }
 
     function forgetAnnotation(group) {
         syncLocation();
-        closeNoteForPanel(group);
+        closeNoteForPanel();
         if (!pendingRecords.some(r => recordOwner(r) === group)) return;
-        const step = runUndoable(() => { pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group); });
-        offerUndo(doneText('forgotten', 1), step, 'trash');
+        runUndoable(() => { pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group); });
     }
 
     // Re-anchors a saved annotation that can't be found to the text selected now. It keeps its
@@ -46,7 +44,7 @@
             const endBlock = getBlockParent(range.endContainer);
             const startOff = computeOffsetWithinBlock(startBlock, range.startContainer, range.startOffset);
             const endOff = computeOffsetWithinBlock(endBlock, range.endContainer, range.endOffset);
-            closeNoteForPanel(group);
+            closeNoteForPanel();
             const sp = findNodeAtOffset(startBlock, startOff, 'start');
             const ep = findNodeAtOffset(endBlock, endOff, 'end');
             if (!sp || !ep) return;
@@ -284,7 +282,7 @@
     panelCopy.addEventListener('click', () => {
         renderPanel();
         const ticked = panelItems.filter(a => panelChecked.has(a.group));
-        if (ticked.length) copyAnnotations(ticked);
+        if (ticked.length) copyAnnotations(ticked, panelCopy);
     });
     panelClose.addEventListener('click', closePanel);
     addLabelTip(panelErase, 'Erase selected annotations', '', () => true);

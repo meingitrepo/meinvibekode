@@ -54,7 +54,7 @@
     }
 
     function togglePen() {
-        if (penKey) { setPen(null); showToast('Pen off'); scheduleToolbar(); return; }
+        if (penKey) { setPen(null); scheduleToolbar(); return; }
         hideToolbar();
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
     }

@@ -309,7 +309,6 @@
         setToolbarSwitchedOff(off);
         if (off) hideToolbar();
         else scheduleToolbar();   // for text that is selected now
-        showToast(off ? 'Selection toolbar off' : 'Selection toolbar on');
         refreshMenu();
     }
 

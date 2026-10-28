@@ -40,14 +40,14 @@ async function newAnnotation(browser) {
   await ctx.close();
 }
 
-async function removalKeepsUndo(browser) {
+async function removalShowsAgain(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store });
   await L.altKey(p, 'v');
   await L.selStr(p, '#p1', 'alpha one');
   await L.altKey(p, 'd');
-  check('erasing while hidden: shown again, and the Undo message stays', (await hiddenNow(p)) === false && (await L.toast(p)) === '1 annotation erased · Undo', await L.toast(p));
+  check('erasing while hidden: shown again, no toast', (await hiddenNow(p)) === false && (await L.toast(p)) === null, await L.toast(p));
   await L.altKey(p, 'v');
-  check('hiding replaces the Undo message', (await L.toast(p)) === 'Annotations hidden · Show', await L.toast(p));
+  check('hiding shows the hidden message', (await L.toast(p)) === 'Annotations hidden · Show', await L.toast(p));
   await L.altKey(p, 'z');
   check('Alt+Z still undoes, shows them, and the message goes', (await hiddenNow(p)) === false && (await L.toast(p)) === null && (await L.wr(p)).length === 2, { t: await L.toast(p), w: await L.wr(p) });
   await ctx.close();
@@ -101,7 +101,7 @@ async function dark(browser) {
 
 (async () => {
   const browser = await L.launch();
-  await Promise.all([toggle, newAnnotation, removalKeepsUndo, otherToastSurvives, jump, empty, dark]
+  await Promise.all([toggle, newAnnotation, removalShowsAgain, otherToastSurvives, jump, empty, dark]
     .map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
   await browser.close();
   let fails = 0;

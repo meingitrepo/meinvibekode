@@ -264,12 +264,11 @@
         return groupWrappers(group).some(w => w.getAttribute(NOTE_ATTR));
     }
 
-    // Removes the note; the annotation stays, and Undo brings the note back.
+    // Removes the note; the annotation stays, and Alt+Z brings the note back.
     function deleteGroupNote(group) {
         syncLocation();
         if (editor) cancelEditor();
-        const changed = runUndoable(() => setGroupNote(group, ''));
-        offerUndo('Note erased', changed);
+        runUndoable(() => setGroupNote(group, ''));
     }
 
     // --- Note editor ---
@@ -366,12 +365,10 @@
         }
     }
 
-    // `draft` reopens a note with text that wasn't saved (see offerDraft).
     // `returnFocus`: where focus goes when the editor closes (by default, what had it before).
-    function openNoteEditor(group, { step = null, draft = null, returnFocus = null } = {}) {
+    function openNoteEditor(group, { step = null, returnFocus = null } = {}) {
         if (editor) {
             if (editor.group === group) {
-                if (draft !== null) { noteInput.value = draft; updateSaveState(); sizeNoteInput(); }
                 focusNoteInput();
                 return;
             }
@@ -390,7 +387,7 @@
         wrappers.forEach(w => w.setAttribute(NOTE_EDIT_ATTR, ''));
         setSelectedGroups(selectedGroups.concat(group));   // its outline; no toolbar while the editor is open
         editorTitle.textContent = original ? 'Edit note' : 'Add note';
-        noteInput.value = draft === null ? original : draft;
+        noteInput.value = original;
         updateSaveState();
         editorEl.hidden = false;
         resetNoteInputSize();
@@ -451,38 +448,25 @@
                 return;
             }
         }
-        if (text !== original) {
-            const changed = runUndoable(() => setGroupNote(group, text));
-            if (!text) offerUndo('Note erased', changed);
-        }
+        if (text !== original) runUndoable(() => setGroupNote(group, text));
     }
 
     // The site redrew the annotation's text while its note was open: the note goes on the
-    // records waiting for that text, or, if there are none, is offered back.
+    // records waiting for that text, and is dropped if there are none.
     function saveWaitingNote(group, original, step, text) {
         if (step && !text) { discardStep(step); return; }
         if (text === original) return;
         const waiting = waitingRecords(group);
-        if (!waiting.length) {
-            if (text) offerDraft({ group, draft: text, records: null });
-            return;
-        }
-        const changed = runUndoable(() => waiting.forEach(r => { r.note = text || undefined; }));
-        if (!text) offerUndo('Note erased', changed);
+        if (!waiting.length) return;
+        runUndoable(() => waiting.forEach(r => { r.note = text || undefined; }));
     }
 
-    // Returns the unsaved text, if any, as { group, draft, records } (see offerDraft), which
-    // `offer: false` leaves to the caller to offer.
-    function cancelEditor({ offer = true } = {}) {
-        if (!editor) return null;
-        const { group, original, step } = editor;
-        const draft = noteDraft();
+    // Closes the editor without saving; the highlight made for a new note goes with it.
+    function cancelEditor() {
+        if (!editor) return;
+        const { step } = editor;
         closeEditor();
-        const dropped = step ? discardStep(step) : null;
-        if (!draft || draft === original) return null;
-        const unsaved = { group, draft, records: dropped ? dropped.records.filter(r => r.group === group) : null };
-        if (offer) offerDraft(unsaved);
-        return unsaved;
+        if (step) discardStep(step);
     }
 
     // A note being written when its page goes away (the site shows another page, or the script
@@ -500,39 +484,12 @@
         else GM_deleteValue(currentKey);
     }
 
-    // Only Save saves, but text closed without saving can be brought back from the toast. For a
-    // new note, `records` is the highlight that was made for it, which comes back too.
-    function offerDraft({ group, draft, records }, message = 'Note not saved', icon = 'pencil-simple') {
-        showToast(message, {
-            icon,
-            action: { label: 'Restore', tip: 'Restore the note', keep: true, run: () => restoreDraft(group, draft, records) }
-        });
-    }
-
-    function restoreDraft(group, draft, records) {
-        syncLocation();
-        // Another note being written closes first, while its own highlight can still go with it.
-        if (editor && editor.group !== group) cancelEditor();
-        let step = null;
-        if (records && records.length && !groupWrappers(group).length) {
-            step = runUndoable(() => { renderRecords(records, { animate: false }); });
-        }
-        if (groupWrappers(group).length) { openNoteEditor(group, { step, draft }); return; }
-        // Its text has been annotated since: the draft goes to that annotation instead.
-        const located = records && records.length ? locateRecord(records[0], buildTextIndex) : null;
-        const cover = located && candidateWrappers(located.range)[0];
-        if (!cover) return;
-        const existing = cover.getAttribute(NOTE_ATTR);
-        openNoteEditor(cover.getAttribute(GROUP_ATTR), { draft: existing ? clipNote(`${existing}\n\n${draft}`) : draft });
-    }
-
     noteSave.addEventListener('click', () => saveEditor());
     noteDiscard.addEventListener('click', () => cancelEditor());
-    // An existing note is removed (its annotation stays), with Undo; a new one is dropped along
-    // with the highlight that was made for it, and what was typed in it can be restored, both.
+    // An existing note is removed (its annotation stays, Alt+Z brings the note back); a new one
+    // is dropped along with the highlight that was made for it.
     noteDelete.addEventListener('click', () => {
-        const unsaved = editor && editor.step && noteDraft() ? cancelEditor({ offer: false }) : null;
-        if (unsaved) { offerDraft(unsaved, 'Note erased', 'eraser'); return; }
+        if (editor && editor.step && noteDraft()) { cancelEditor(); return; }
         noteInput.value = '';
         saveEditor();
     });

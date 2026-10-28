@@ -219,16 +219,6 @@
         return step;
     }
 
-    // Tells the user what an action removed, with an Undo that reverts exactly that step, as
-    // long as it is still the latest one.
-    function offerUndo(message, step, icon = 'eraser') {
-        if (!step) return;
-        showToast(message, {
-            icon,
-            action: { label: 'Undo', shortcut: 'Alt+Z', run: () => { if (undoStack[undoStack.length - 1] === step) undoLastAction(); } }
-        });
-    }
-
     // How many annotations the records make up (the pieces of one annotation share a group).
     function countAnnotations(records) {
         return new Set(records.map(r => r.group || recordSignature(r))).size;
@@ -278,17 +268,14 @@
     function clearPageAnnotations() {
         if (!running) return;
         syncLocation();
-        const unsaved = cancelEditor({ offer: false });
+        cancelEditor();
         resetUi();
-        const n = pageCounts().total;
-        const step = runUndoable(() => {
+        runUndoable(() => {
             stopLateWatcher();
             pendingRecords = pendingRecords.filter(isOtherPage);   // they belong to other pages
             unwrapAll();
         });
         startLateWatcher();
-        offerUndo(doneText('cleared', n), step);
-        if (unsaved) offerDraft(unsaved);
     }
 
     // Annotations of a style that no longer exists aren't missing, only hidden, and those made on
@@ -296,21 +283,15 @@
     function forgetMissingAnnotations() {
         if (!running) return;
         syncLocation();
-        if (!countAnnotations(missingRecords())) {
-            showToast('No annotations missing', { intent: 'success', icon: 'check' });
-            return;
-        }
-        const unsaved = cancelEditor({ offer: false });
+        if (!countAnnotations(missingRecords())) return;
+        cancelEditor();
         // Read after the note closes: dropping a new note's highlight goes back a step (see
         // discardStep), which rebuilds the list of waiting records.
         const missing = missingRecords();
-        const n = countAnnotations(missing);
-        const step = runUndoable(() => {
+        runUndoable(() => {
             stopLateWatcher();
             pendingRecords = pendingRecords.filter(r => !missing.includes(r));
         });
         startLateWatcher();
-        offerUndo(doneText('forgotten', n), step, 'trash');
-        if (unsaved) offerDraft(unsaved);
     }
 

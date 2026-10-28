@@ -151,10 +151,7 @@ async function del(browser) {
   await L.altKey(p, 'd'); await p.waitForTimeout(150);
   let w = (await L.wr(p)).filter(x => x.g === 'gA');
   check('Delete removes the note and keeps the annotation', w.length === 1 && !w[0].n && (await card(p)) === null, w);
-  check('with an Undo message', (await L.toast(p)) === 'Note erased · Undo', await L.toast(p));
-  const eraser = require('fs').readFileSync(__dirname + '/../src/ui-style.js', 'utf8').match(/'eraser': '([^']+)'/)[1];
-  const toastPath = await p.evaluate(() => window.__hl.toastEl.querySelector('svg path').getAttribute('d'));
-  check('and the eraser icon', toastPath === eraser, toastPath);
+  check('no toast', (await L.toast(p)) === null, await L.toast(p));
   const s = (await L.stored(p)).find(r => r.group === 'gA');
   check('and it is saved', s && !s.note, s);
   await L.altKey(p, 'z');

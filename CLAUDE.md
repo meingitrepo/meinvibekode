@@ -15,7 +15,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Notes/export: `notes.js`, `note-card-and-editor.js`, `markdown.js`
 - UI: `ui-style.js` (tokens/CSS), `ui-elements.js`, `theme.js`, `toolbar.js`, `site-menu.js`, `panel.js`, `search.js` (Alt+Shift+O), `toast-and-jump.js`, `input.js`
 
-## Tiers (pick one before starting, state it in one line; method background in `docs/METHOD.md`, read only when asked)
+## Tiers (pick one before starting, state it in one line)
 - T0 no behaviour change (copy, comment, constant): do it, one verify call, no test, no review.
 - T1 bug or tweak in one area: 2-4 line plan (cause or goal, files/functions, the proving test, risk), test first (`superpowers:test-driven-development`), then fix. No review.
 - T2 feature across files: written spec (`superpowers:brainstorming` + `agent-skills:spec-driven-development`, saved to `docs/specs/<topic>.md`, git-ignored, not committed: goal, done criteria, constraints, boundaries), `superpowers:writing-plans`, thin slices. One review only if big.

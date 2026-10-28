@@ -36,6 +36,9 @@
   "skillOverrides": {},
   "enabledPlugins": {
     "agent-skills@addy-agent-skills": true,
-    "superpowers@anthropic-plugin-directory": true
+    "superpowers@anthropic-plugin-directory": true,
+    "claude-md-management@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "playwright@anthropic-plugin-directory": true
   }
 }

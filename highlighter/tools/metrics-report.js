@@ -12,9 +12,15 @@ const { execFileSync } = require('child_process');
 
 // Splits a session into one slice per release: a slice ends at the first tool result that prints
 // "PUSHED <ver>" and starts after the previous one, so each release is scored on its own work.
-function segments(lines) {
+// With withOpen, the work after the last PUSHED is returned as a final slice with version and sha null.
+function segments(lines, withOpen = false) {
   const out = [];
   let turns = 0, firstTest = -1, firstSrc = -1, i = 0, usage = new Map();
+  const slice = (version, sha) => ({
+    version, sha, turns,
+    testFirst: firstTest < 0 ? 'n/a' : (firstSrc < 0 || firstTest < firstSrc ? 'yes' : 'no'),
+    tokens: [...usage.values()].reduce((n, u) => n + (u.input_tokens || 0) + (u.output_tokens || 0) + (u.cache_creation_input_tokens || 0), 0),
+  });
   for (const l of lines) {
     i++;
     let e; try { e = JSON.parse(l); } catch { continue; }
@@ -34,14 +40,11 @@ function segments(lines) {
     }
     const m = e.type === 'user' && Array.isArray(c) && c.some(p => p.type === 'tool_result') && l.match(/PUSHED ([^ ]+) [(]([0-9a-f]{7,40})[)]/);
     if (m) {
-      out.push({
-        version: m[1], sha: m[2], turns,
-        testFirst: firstTest < 0 ? 'n/a' : (firstSrc < 0 || firstTest < firstSrc ? 'yes' : 'no'),
-        tokens: [...usage.values()].reduce((n, u) => n + (u.input_tokens || 0) + (u.output_tokens || 0) + (u.cache_creation_input_tokens || 0), 0),
-      });
+      out.push(slice(m[1], m[2]));
       turns = 0; firstTest = firstSrc = -1; usage = new Map();
     }
   }
+  if (withOpen) out.push(slice(null, null));
   return out;
 }
 // One tab-separated log row, written by release.sh: date, version, tier, attempts, files, insertions, deletions, sha.
@@ -50,7 +53,13 @@ function parseRow(line) {
   const [date, ver, tier, attempts, files, ins, del, sha = ''] = line.split('\t');
   return { date, ver, tier, attempts: +attempts, files: +files, ins: +ins, del: +del, sha };
 }
-module.exports = { segments, parseRow };
+// The transcript of the running session: Claude Code names it <CLAUDE_CODE_SESSION_ID>.jsonl.
+// Without a matching file, the most recently modified one. files is [[mtimeMs, path], ...].
+function pickSession(files, id) {
+  const mine = id && files.find(([, f]) => path.basename(f) === id + '.jsonl');
+  return (mine || [...files].sort((a, b) => b[0] - a[0])[0] || [])[1];
+}
+module.exports = { segments, parseRow, pickSession };
 if (require.main !== module) return;
 
 const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
@@ -69,6 +78,14 @@ if (fs.existsSync(projDir)) {
       sessions.push(path.join(projDir, d, f));
     }
   }
+}
+
+// --now: "<turns> <k tokens>" since the last PUSHED in the running session, for release.sh to print.
+if (process.argv[2] === '--now') {
+  const file = pickSession(sessions.map(f => [fs.statSync(f).mtimeMs, f]), process.env.CLAUDE_CODE_SESSION_ID);
+  const open = file && segments(fs.readFileSync(file, 'utf8').split('\n').filter(Boolean), true).pop();
+  if (open) console.log(`${open.turns} ${Math.round(open.tokens / 1000)}`);
+  process.exit(0);
 }
 
 const bySession = sessions.map(f => segments(fs.readFileSync(f, 'utf8').split('\n').filter(Boolean)));

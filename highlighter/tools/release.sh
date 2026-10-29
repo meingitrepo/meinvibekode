@@ -18,7 +18,10 @@ log_row() {
 show_metrics() {
     local date ver tier attempts files ins del sha
     IFS=$'\t' read -r date ver tier attempts files ins del sha <<< "$1"
-    echo "METRICS $date · $tier · attempts $attempts · ${files}f +$ins -$del"
+    # Turns and tokens since the last PUSHED in this session (the report fills them in for older rows).
+    local turns tokens
+    read -r turns tokens < <(node "$(dirname "${BASH_SOURCE[0]}")/metrics-report.js" --now 2>/dev/null || true) || true
+    echo "METRICS $date · $tier · attempts $attempts · ${files}f +$ins -$del${turns:+ · $turns turns · ${tokens}k tokens}"
 }
 
 # Files mode, for changes outside highlighter/ (settings, docs): commit only the named files, no @version bump or build.

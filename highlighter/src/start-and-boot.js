@@ -121,6 +121,7 @@
         teardown.splice(0).forEach(fn => { try { fn(); } catch (e) { /* already gone */ } });
         stopLateWatcher();
         clearTimeout(reclaimTimer);
+        clearTimeout(fontHintTimer);
         if (nav) { clearTimeout(nav.timer); nav = null; }
         clearTimeout(restoreTimer);
         clearTimeout(redrawTimer);
@@ -233,4 +234,5 @@
     start();
     renderSiteMenu();
     refreshMenu();
+    fontHintTimer = setTimeout(maybeHintMissingFonts, FONT_HINT_DELAY_MS);
 })();

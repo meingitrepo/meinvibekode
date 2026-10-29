@@ -312,9 +312,14 @@
         .toast-text { font-weight: 600; }
         .toast .btn-icon { margin: -6px 0; }
         .toast .btn-icon:last-child { margin-right: -6px; }
-        /* The toast's action (Undo, Restore, Show): a small subtle button. */
+        /* A toast's text buttons (the font hint's): small and subtle. Undo, Restore and Show are icon buttons. */
         .btn-small { min-width: 0; height: 24px; padding: 0 8px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
         .toast .btn-small { flex: none; margin: -2px 0; }
+        /* Two text buttons don't fit beside the message: they wrap to a row under it, in line with its text. */
+        .toast.two-actions { flex-wrap: wrap; }
+        .toast.two-actions .toast-content { flex: 1 1 140px; }
+        .toast.two-actions > .btn-small { order: 2; }
+        .toast.two-actions > .btn-small:first-of-type { margin-left: 24px; }
         .toast .btn-small[hidden] { display: none; }
         .toast:focus-visible { outline: 2px solid var(--focus); }
         /* The pen's bar, centred at the top of the view. */

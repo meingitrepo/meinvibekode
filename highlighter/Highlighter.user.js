@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.19
+// @version      9.20
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -18,6 +18,7 @@
 // @grant        GM_setClipboard
 // @grant        GM_addValueChangeListener
 // @grant        GM_removeValueChangeListener
+// @grant        GM_info
 // ==/UserScript==
 
 /*
@@ -3773,9 +3774,14 @@
         .toast-text { font-weight: 600; }
         .toast .btn-icon { margin: -6px 0; }
         .toast .btn-icon:last-child { margin-right: -6px; }
-        /* The toast's action (Undo, Restore, Show): a small subtle button. */
+        /* A toast's text buttons (the font hint's): small and subtle. Undo, Restore and Show are icon buttons. */
         .btn-small { min-width: 0; height: 24px; padding: 0 8px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
         .toast .btn-small { flex: none; margin: -2px 0; }
+        /* Two text buttons don't fit beside the message: they wrap to a row under it, in line with its text. */
+        .toast.two-actions { flex-wrap: wrap; }
+        .toast.two-actions .toast-content { flex: 1 1 140px; }
+        .toast.two-actions > .btn-small { order: 2; }
+        .toast.two-actions > .btn-small:first-of-type { margin-left: 24px; }
         .toast .btn-small[hidden] { display: none; }
         .toast:focus-visible { outline: 2px solid var(--focus); }
         /* The pen's bar, centred at the top of the view. */
@@ -3978,8 +3984,10 @@
     const toastContent = makeEl('div', { class: 'toast-content' }, [toastText]);
     const toastAction = makeButton({ icon: phosphorIcon('arrow-u-up-left') });   // an icon button (Undo, Restore, Show); icon, label and tooltip set per toast
     toastAction.hidden = true;
+    const toastAction2 = makeButton({ icon: phosphorIcon('arrow-u-up-left') });   // a second action, a text button (the font hint); hidden unless a toast gives one
+    toastAction2.hidden = true;
     const toastDismiss = makeButton({ icon: phosphorIcon('x'), label: 'Dismiss' });
-    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastDismiss]);
+    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastAction2, toastDismiss]);
 
     // A panel's title: the counts in the quiet colour around the bold word "Annotations".
     function setPanelTitle(el, lead, tail, word = lead === '1' ? 'Annotation' : 'Annotations') {
@@ -5105,12 +5113,38 @@
     let toastKey = null;          // the page it is about
     let toastKeep = false;        // it survives undo and redo (see resetUi)
     let toastKeepsEditor = false; // its action leaves a note being written open
+    let toastRun2 = null;         // what the second action button does
+    let toastAnywhere = false;    // its action runs even if the tab has left the page
+    let toastAnywhere2 = false;
+
+    // One of the toast's action buttons: an icon button, or a text button when the action has `text`.
+    function setToastAction(btn, action) {
+        btn.hidden = !action;
+        if (!action) {
+            // Nothing of the earlier toast stays on a button no one sees.
+            delete btn.dataset.action; delete btn.dataset.label; delete btn.dataset.shortcut;
+            btn.removeAttribute('aria-label'); btn.removeAttribute('aria-keyshortcuts'); btn.replaceChildren();
+            return;
+        }
+        btn.dataset.action = action.label;
+        btn.classList.toggle('btn-icon', !action.text);
+        btn.classList.toggle('btn-medium', !action.text);
+        btn.classList.toggle('btn-small', !!action.text);
+        btn.replaceChildren(action.text ? makeEl('span', { text: action.text }) : phosphorIcon(TOAST_ACTION_ICONS[action.label] || 'eye'));
+        // The tooltip: what it does, and its shortcut where it has one.
+        const tip = action.tip || action.label;
+        btn.dataset.label = tip;
+        btn.setAttribute('aria-label', action.shortcut ? `${tip} (${action.shortcut})` : tip);
+        if (action.shortcut) { btn.dataset.shortcut = action.shortcut; btn.setAttribute('aria-keyshortcuts', action.shortcut); }
+        else { delete btn.dataset.shortcut; btn.removeAttribute('aria-keyshortcuts'); }
+    }
 
     // A message in the bottom-right corner: an intent icon, a title, an
     // action and Dismiss. `icon` is a PHOSPHOR_ICONS name; `intent`
-    // is info, success or warning; `action` adds a button, { label, run, keep, keepEditor, tip, shortcut },
-    // such as Show; `tip` and `shortcut` are for its tooltip.
-    function showToast(message, { icon = 'info', intent = 'info', action = null } = {}) {
+    // is info, success or warning; `action` adds a button, { label, run, keep, keepEditor, tip, shortcut, text, anywhere },
+    // such as Show; `tip` and `shortcut` are for its tooltip, `text` makes it a text button, `anywhere` lets it run
+    // after the tab has left the page. `action2` adds a second, the same.
+    function showToast(message, { icon = 'info', intent = 'info', action = null, action2 = null } = {}) {
         // A plain message doesn't take the place of one still offering an action.
         if (!action && !toastEl.hidden && toastRun) return;
         // The toast has the page's theme, set on it alone: a panel open next to a box of the
@@ -5127,19 +5161,12 @@
         toastKey = currentKey;
         toastKeep = !!(action && action.keep);
         toastKeepsEditor = !!(action && action.keepEditor);
-        if (action) {
-            toastAction.dataset.action = action.label;
-            toastAction.replaceChildren(phosphorIcon(TOAST_ACTION_ICONS[action.label] || 'eye'));
-        }
-        toastAction.hidden = !action;
-        if (action) {
-            // The tooltip: what it does, and its shortcut where it has one.
-            const tip = action.tip || action.label;
-            toastAction.dataset.label = tip;
-            toastAction.setAttribute('aria-label', action.shortcut ? `${tip} (${action.shortcut})` : tip);
-            if (action.shortcut) { toastAction.dataset.shortcut = action.shortcut; toastAction.setAttribute('aria-keyshortcuts', action.shortcut); }
-            else { delete toastAction.dataset.shortcut; toastAction.removeAttribute('aria-keyshortcuts'); }
-        }
+        toastRun2 = action2 ? action2.run : null;
+        toastAnywhere = !!(action && action.anywhere);
+        toastAnywhere2 = !!(action2 && action2.anywhere);
+        setToastAction(toastAction, action);
+        setToastAction(toastAction2, action2);
+        toastEl.classList.toggle('two-actions', !!action2);
         toastEl.hidden = true;
         void toastEl.offsetWidth;   // restart the entrance animation
         toastEl.hidden = false;
@@ -5160,6 +5187,7 @@
         releaseFocus(toastEl);
         toastEl.hidden = true;
         toastRun = null;
+        toastRun2 = null;
         toastKeep = false;
     }
 
@@ -5170,22 +5198,26 @@
     const TOAST_ACTION_ICONS = { Show: 'eye' };
     addLabelTip(toastAction, 'Show', '', () => false);   // its label and shortcut are set per toast, see showToast
 
-    toastAction.addEventListener('click', () => {
-        const run = toastRun;
+    addLabelTip(toastAction2, 'Show', '', () => false);
+
+    toastAction.addEventListener('click', () => onToastAction(toastRun, toastAnywhere));
+    toastAction2.addEventListener('click', () => onToastAction(toastRun2, toastAnywhere2));
+
+    function onToastAction(run, anywhere) {
         const key = toastKey;
         const keepsEditor = toastKeepsEditor;
         const back = toastEl.contains(uiRoot.activeElement) ? toastReturnFocus : null;
         hideToast();
         syncLocation();
         // Not for a page the tab has since left.
-        if (run && running && currentKey === key) {
+        if (run && (anywhere || (running && currentKey === key))) {
             if (!keepsEditor) cancelEditor();
             run();
         }
         // Keyboard focus goes back to where it was, unless the action gave it a place (a note it reopened).
         const now = document.activeElement;
         if (back && back.isConnected && typeof back.focus === 'function' && (!now || now === document.body)) back.focus({ preventScroll: true });
-    });
+    }
     // Pointing at the toast, or focusing its button, keeps it up; leaving gives it a moment more.
     toastEl.addEventListener('mouseenter', () => clearTimeout(toastTimer));
     toastEl.addEventListener('focusin', e => {
@@ -5293,6 +5325,48 @@
         return true;
     }
 
+
+    // --- Font hint ---
+    // The UI asks for Poppins (sans) and Lora (serif). Once per version, on a site where the tool is on, say
+    // which of them is not installed and link to its download page.
+
+    const FONT_HINTS = [
+        { name: 'Poppins', fallback: 'Arial', url: 'https://fonts.google.com/specimen/Poppins' },
+        { name: 'Lora', fallback: 'Georgia', url: 'https://fonts.google.com/specimen/Lora' }
+    ];
+    const FONT_HINT_DELAY_MS = 3000;   // after the page's own restore has settled
+    let fontHintTimer = null;
+
+    // A font is missing when text in it measures the same as in the generic family it falls back to, for both
+    // monospace and serif. A failure counts as installed: no hint is better than a wrong one.
+    function fontMissing(name) {
+        try {
+            const ctx = document.createElement('canvas').getContext('2d');
+            const width = font => { ctx.font = font; return ctx.measureText('mmmmmmmmmmlli').width; };
+            return ['monospace', 'serif'].every(generic => width(`72px "${name}", ${generic}`) === width(`72px ${generic}`));
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // Recorded as shown (in the settings, as fontHintVersion) only when the toast is shown; a hidden tab, a toast
+    // already up or a site with the tool off skip it and it comes back on the next load. While the first look for
+    // late content runs (it ends with the "not found" notice) the hint waits, so it can't take that notice's place.
+    function maybeHintMissingFonts(tries = 0) {
+        if (!running) return;
+        const version = typeof GM_info !== 'undefined' && GM_info && GM_info.script && GM_info.script.version;
+        if (!version || readSettings().fontHintVersion === version) return;
+        if (!siteListed('toolbarOnSites') && !siteListed('keysOnSites')) return;
+        if (lateWatcher && !lateWatcher.slow && tries < 10) { fontHintTimer = setTimeout(() => maybeHintMissingFonts(tries + 1), 2000); return; }
+        if (document.hidden || !toastEl.hidden) return;
+        const missing = FONT_HINTS.filter(f => fontMissing(f.name));
+        if (!missing.length) return;
+        const settings = readSettings();
+        settings.fontHintVersion = version;
+        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+        const link = f => ({ label: `Get ${f.name}`, text: f.name, tip: `Open the ${f.name} download page`, keepEditor: true, anywhere: true, run: () => window.open(f.url, '_blank', 'noopener') });
+        showToast(`${missing.map(f => f.name).join(' and ')} not installed; using ${missing.map(f => f.fallback).join(' and ')}.`, { action: link(missing[0]), action2: missing[1] ? link(missing[1]) : null });
+    }
     // --- Selecting annotations by clicking them ---
 
     // A plain click on an annotation (not a drag, not on a link or a control inside it; the pen
@@ -6986,6 +7060,7 @@
         teardown.splice(0).forEach(fn => { try { fn(); } catch (e) { /* already gone */ } });
         stopLateWatcher();
         clearTimeout(reclaimTimer);
+        clearTimeout(fontHintTimer);
         if (nav) { clearTimeout(nav.timer); nav = null; }
         clearTimeout(restoreTimer);
         clearTimeout(redrawTimer);
@@ -7098,4 +7173,5 @@
     start();
     renderSiteMenu();
     refreshMenu();
+    fontHintTimer = setTimeout(maybeHintMissingFonts, FONT_HINT_DELAY_MS);
 })();

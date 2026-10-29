@@ -9,7 +9,7 @@ const BOOT = '    start();\n    renderSiteMenu();\n    refreshMenu();';
 function instrument(src) {
   src = src.replace(/\r\n/g, '\n');
   if (!src.includes(BOOT)) throw new Error('boot anchor missing');
-  const names = ['panelEl', 'panelList', 'panelFilter', 'panelCount', 'panelCopy', 'panelErase', 'panelSelectAll', 'toastEl', 'toastText', 'toastAction', 'noteCardEl', 'cardHint', 'cardText', 'cardPin',
+  const names = ['panelEl', 'panelList', 'panelFilter', 'panelCount', 'panelCopy', 'panelErase', 'panelSelectAll', 'toastEl', 'toastText', 'toastAction', 'toastAction2', 'noteCardEl', 'cardHint', 'cardText', 'cardPin',
     'editorEl', 'noteInput', 'uiRoot', 'uiHost', 'undoStack', 'redoStack', 'toolbarEl', 'labelTipEl', 'lateWatcher', 'currentKey', 'menuIds', 'running', 'darkMode', 'hoveredWrapper', 'annotationsHidden', 'cardWrapper', 'penEl', 'penKey', 'lastStyleKey', 'everythingEl', 'everythingFilter', 'everythingList', 'everythingCount', 'everythingSelectAll', 'everythingCopy', 'everythingForget', 'everythingClose', 'selectBoxesEl', 'selectedGroups', 'shownWrappers', 'menuEl', 'menuExpand', 'menuHandle', 'menuButtons', 'menuClose'];
   const get = n => `get ${n}() { try { return ${n}; } catch (e) { return undefined; } }`;
   return src.replace(BOOT, `    window.__hl = { ${names.map(get).join(', ')}, get editor() { return editor; }, get pending() { return pendingRecords; }, get jumpGroup() { return jumpGroup; },
@@ -31,6 +31,7 @@ function GM_listValues() { return Object.keys(window.__gm); }
 function GM_registerMenuCommand(l, fn) { (window.__menu = window.__menu || {})[l] = fn; window.__menuLog = (window.__menuLog || 0) + 1; return l; }
 function GM_unregisterMenuCommand(id) { if (window.__menu) delete window.__menu[id]; }
 function GM_setClipboard(t) { window.__clip = t; }
+var GM_info = window.__noGmInfo ? undefined : { script: { version: '9.99' } };
 `;
 const SRC = GM + instrument(fs.readFileSync(SCRIPT, 'utf8'));
 // onSend(page, key, old, value): called for each storage change the page makes (see live-sync.test.js).
@@ -52,7 +53,10 @@ async function open(browser, opts) {
   if (!opts.defaults && !('toolbarOnSites' in cfg) && !('keysOnSites' in cfg)) seeded['rnh:settings'] = JSON.stringify(Object.assign(cfg, { toolbarOnSites: [new URL(url).hostname], keysOnSites: [new URL(url).hostname] }));
   // The sticky menu sits top left over the pages' text: hidden here unless the test is about it (opts.menu).
   if (!opts.menu && !/menuHiddenSites/.test(seeded['rnh:settings'] || '')) seeded['rnh:settings'] = JSON.stringify(Object.assign(JSON.parse(seeded['rnh:settings'] || '{}'), { menuHiddenSites: [new URL(url).hostname] }));
+  // The font hint (9.20) is already shown for this version on the pages under test, unless the test is about it (opts.fontHint).
+  if (!opts.fontHint) { try { seeded['rnh:settings'] = JSON.stringify(Object.assign(JSON.parse(seeded['rnh:settings'] || '{}'), { fontHintVersion: '9.99' })); } catch (e) { /* corrupt settings stay as they are */ } }
   await page.addInitScript(s => { window.__gm = JSON.parse(s); }, JSON.stringify(seeded));
+  if (opts.init) await page.addInitScript(opts.init);
   if (opts.onSend) await page.exposeFunction('__send', (k, o, v) => opts.onSend(page, k, o, v));
   if (hidden !== null) await page.addInitScript(h => {
     window.__hidden = h;

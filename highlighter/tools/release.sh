@@ -14,17 +14,11 @@ log_row() {
         "$(git diff --numstat "$3" "$4" | awk '{f++; if ($1 != "-") {i += $1; d += $2}} END {printf "%d	%d	%d", f, i, d}')"
 }
 
-# Prints a log row as a labelled list.
+# Prints a log row as one readable line.
 show_metrics() {
     local date ver tier attempts files ins del
     IFS=$'	' read -r date ver tier attempts files ins del <<< "$1"
-    printf 'METRICS
-  Date      %s
-  Tier      %s
-  Attempts  %s
-  Diffstat  %sf +%s -%s
-' \
-        "$date" "$tier" "$attempts" "$files" "$ins" "$del"
+    echo "METRICS $date · $tier · attempts $attempts · ${files}f +$ins -$del"
 }
 
 # Files mode, for changes outside highlighter/ (settings, docs): commit only the named files, no @version bump or build.

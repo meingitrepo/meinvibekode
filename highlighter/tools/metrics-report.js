@@ -1,13 +1,53 @@
 // Joins .cache/metrics.tsv (written by release.sh) with git history and Claude Code transcripts.
 // Usage: node highlighter/tools/metrics-report.js [days-for-rework=7]
-//   turns       user prompts in the session that ran release.sh for that version
-//   test-first  yes if the first Edit/Write to test/ came before the first one to src/ in that session
+//   elapsed     first user prompt after the previous release -> PUSHED (idle time included)
+//   turns       user prompts in that same slice of the session
+//   test-first  yes if the first Edit/Write to test/ came before the first one to src/ in that slice
 //   test-touch  release commit changes files under highlighter/test
 //   rework      a later commit within N days touches the same src files and says fix/revert/regress
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
+
+// Splits a session into one slice per release: a slice ends at the first tool result that prints
+// "PUSHED <ver>" and starts after the previous one, so each release is scored on its own work.
+function segments(lines) {
+  const out = [];
+  let turns = 0, firstTest = -1, firstSrc = -1, i = 0, start = null;
+  for (const l of lines) {
+    i++;
+    let e; try { e = JSON.parse(l); } catch { continue; }
+    const c = e.message && e.message.content;
+    const ts = e.timestamp ? Date.parse(e.timestamp) : null;
+    if (e.type === 'user' && !e.isSidechain && c && (typeof c === 'string' || c.some(p => p.type === 'text'))) {
+      turns++;
+      if (start === null) start = ts;
+    }
+    if (e.type === 'assistant' && Array.isArray(c)) {
+      for (const p of c) {
+        if (p.type !== 'tool_use') continue;
+        const fp = ((p.input && (p.input.file_path || p.input.path)) || '').replace(/\\/g, '/');
+        if (/^(Edit|Write)$/.test(p.name)) {
+          if (fp.includes('highlighter/test/') && firstTest < 0) firstTest = i;
+          if (fp.includes('highlighter/src/') && firstSrc < 0) firstSrc = i;
+        }
+      }
+    }
+    const m = e.type === 'user' && Array.isArray(c) && c.some(p => p.type === 'tool_result') && l.match(/PUSHED ([0-9]+[.][0-9]+)/);
+    if (m) {
+      out.push({
+        version: m[1], turns,
+        testFirst: firstTest < 0 ? 'n/a' : (firstSrc < 0 || firstTest < firstSrc ? 'yes' : 'no'),
+        cycleMin: start === null || ts === null ? null : Math.round((ts - start) / 60000),
+      });
+      turns = 0; firstTest = firstSrc = -1; start = null;
+    }
+  }
+  return out;
+}
+module.exports = { segments };
+if (require.main !== module) return;
 
 const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
 const git = (...a) => execFileSync('git', a, { cwd: root, encoding: 'utf8' }).trim();
@@ -27,36 +67,12 @@ if (fs.existsSync(projDir)) {
   }
 }
 
-function readSession(file) {
-  const lines = fs.readFileSync(file, 'utf8').split('\n').filter(Boolean);
-  let turns = 0, firstTest = -1, firstSrc = -1, i = 0;
-  const pushed = new Set();
-  for (const l of lines) {
-    i++;
-    let e; try { e = JSON.parse(l); } catch { continue; }
-    const c = e.message && e.message.content;
-    if (e.type === 'user' && !e.isSidechain && c && (typeof c === 'string' || c.some(p => p.type === 'text'))) turns++;
-    if (e.type === 'assistant' && Array.isArray(c)) {
-      for (const p of c) {
-        if (p.type !== 'tool_use') continue;
-        const fp = ((p.input && (p.input.file_path || p.input.path)) || '').replace(/\\/g, '/');
-        if (/^(Edit|Write)$/.test(p.name)) {
-          if (/highlighter\/test\//.test(fp) && firstTest < 0) firstTest = i;
-          if (/highlighter\/src\//.test(fp) && firstSrc < 0) firstSrc = i;
-        }
-      }
-    }
-    const m = l.match(/PUSHED (\d+\.\d+)/g);
-    if (m) m.forEach(x => pushed.add(x.slice(7)));
-  }
-  return { turns, testFirst: firstTest < 0 ? 'n/a' : (firstSrc < 0 || firstTest < firstSrc ? 'yes' : 'no'), pushed };
-}
-const bySession = sessions.map(readSession);
+const bySession = sessions.map(f => segments(fs.readFileSync(f, 'utf8').split('\n').filter(Boolean)));
 
 const rows = fs.readFileSync(logFile, 'utf8').split('\n').filter(Boolean).map(l => l.split('\t'));
-const out = [['version', 'tier', 'cycle', 'size', 'turns', 'test-first', 'test-touch', 'rework']];
-for (const [date, ver, tier, , attempts, cycle, ...stat] of rows) {
-  const s = bySession.find(x => x.pushed.has(ver));
+const out = [['version', 'tier', 'elapsed', 'size', 'turns', 'test-first', 'test-touch', 'rework']];
+for (const [date, ver, tier, , attempts, , ...stat] of rows) {
+  const s = bySession.flat().filter(x => x.version === ver).pop();
   const sha = git('log', '--format=%H', '-1', `--grep=^${ver.replace('.', '\\.')}: `);
   let touch = '?', rework = '?';
   if (sha) {
@@ -69,7 +85,7 @@ for (const [date, ver, tier, , attempts, cycle, ...stat] of rows) {
     rework = later.length ? `${later.length} (${later[later.length - 1].split(' ')[0]}...)` : 'no';
   }
   const st = stat.join(' '), n = re => (st.match(re) || [, 0])[1];
-  out.push([ver, tier, cycle.replace('cycle=', ''), `${n(/(\d+) file/)}f +${n(/(\d+) insertion/)} -${n(/(\d+) deletion/)}`,
+  out.push([ver, tier, s && s.cycleMin !== null ? `${s.cycleMin}m` : '?', `${n(/(\d+) file/)}f +${n(/(\d+) insertion/)} -${n(/(\d+) deletion/)}`,
     s ? s.turns : '?', s ? s.testFirst : '?', touch, rework]);
 }
 const w = out[0].map((_, i) => Math.max(...out.map(r => String(r[i]).length)));

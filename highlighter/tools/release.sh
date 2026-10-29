@@ -21,7 +21,7 @@ show_metrics() {
     # Turns and tokens since the last PUSHED in this session (the report fills them in for older rows).
     local turns tokens
     read -r turns tokens < <(node "$(dirname "${BASH_SOURCE[0]}")/metrics-report.js" --now 2>/dev/null || true) || true
-    echo "${date#*-} · $tier · x$attempts · ${files}f +$ins -$del${turns:+ · $turns turns · ${tokens}k tokens}"
+    echo "${date#*-}  ·  $tier  ·  x$attempts  ·  ${files}f +$ins -$del${turns:+  ·  $turns turns  ·  ${tokens}k tokens}"
 }
 
 # Files mode, for changes outside highlighter/ (settings, docs): commit only the named files, no @version bump or build.

@@ -6,6 +6,15 @@
 # Don't bump @version or commit the built file yourself; this does it.
 set -euo pipefail
 
+# Prints a metrics.tsv line (tab-separated) as a labelled list; the log itself stays tab-separated.
+show_metrics() {
+    local date ver tier theme attempts cycle stat short
+    IFS=$'\t' read -r date ver tier theme attempts cycle stat <<< "$1"
+    short=$(sed -E 's/^([0-9]+) files? changed/\1f/; s/, ([0-9]+) insertions?\(\+\)/ +\1/; s/, ([0-9]+) deletions?\(-\)/ -\1/' <<< "$stat")
+    printf 'METRICS\n  Date      %s\n  Version   %s\n  Tier      %s\n  Theme     %s\n  Attempts  %s\n  Cycle     %s\n  Diffstat  %s\n' \
+        "$date" "$ver" "$tier" "$theme" "${attempts#push-attempts=}" "${cycle#cycle=}" "$short"
+}
+
 # Files mode, for changes outside highlighter/ (settings, docs): commit only the named files, no @version bump or build.
 # Usage: release.sh --files "path1 path2" "Theme" "What's in it" "Commit message"   (paths without spaces)
 if [ "${1:-}" = --files ]; then
@@ -26,7 +35,7 @@ if [ "${1:-}" = --files ]; then
             echo "PUSHED cfg ($(git rev-parse --short HEAD)) to main"
             line="$(date +%F)	cfg	${TIER:-?}	$theme	push-attempts=$attempt	cycle=${mins}m	$stat"
             mkdir -p .cache && echo "$line" >> .cache/metrics.tsv
-            echo "METRICS ${line//$'	'/  ·  }"; exit 0
+            show_metrics "$line"; exit 0
         fi
     done
     echo 'push rejected 3 times'; exit 1
@@ -63,7 +72,7 @@ for attempt in 1 2 3; do
         stat=$(git diff --shortstat "$base" HEAD | sed 's/^ *//')
         line="$(date +%F)	$ver	${TIER:-?}	$theme	push-attempts=$attempt	cycle=${mins}m	$stat"
         mkdir -p .cache && echo "$line" >> .cache/metrics.tsv
-        echo "METRICS ${line//$'	'/  ·  }"; exit 0
+        show_metrics "$line"; exit 0
     fi
     git reset -q --hard "$code"   # drop this attempt's version and build, then retry
 done

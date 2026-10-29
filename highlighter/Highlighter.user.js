@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.18
+// @version      9.19
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3539,10 +3539,10 @@
         return svg;
     }
 
-    const SANS_FONT = '"Anthropic Sans", Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
-    const SERIF_FONT = '"Anthropic Serif", Georgia, Cambria, "Times New Roman", ui-serif, serif';
+    const SANS_FONT = 'Poppins, Arial, ui-sans-serif, system-ui, sans-serif';
+    const SERIF_FONT = 'Lora, Georgia, ui-serif, serif';
 
-    // Colors from the Anthropic style reference: slate #141413, ivory #faf9f5 / #f0eee6, oat #e3dacc,
+    // Colors from the Anthropic style reference: slate #141413, ivory #faf9f5 / #e8e6dc, oat #e3dacc,
     // manilla #f5e3c7, stone #cccbc8, cloud #b0aea5 / #87867f, clay #d97757 / #c6613f. Tokens are named by role:
     // --ink* for text and filled controls (slate in light, ivory in dark), --surface* for backgrounds,
     // --line* for hairlines, and --accent* (clay) for the one primary action only. The annotations panel and the toast follow the page's
@@ -3554,7 +3554,7 @@
         --ink-3: #66655f;
         --ink-4: #73726c;   /* placeholders: 4.6:1 on ivory (cloud #87867f is 3.5:1) */
         --surface: #faf9f5;
-        --surface-hover: #f0eee6;
+        --surface-hover: #e8e6dc;
         --surface-pressed: #e3dacc;
         --surface-selected: #f5e3c7;
         --line: #cccbc8;

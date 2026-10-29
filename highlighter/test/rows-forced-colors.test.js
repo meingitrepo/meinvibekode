@@ -22,7 +22,7 @@ const HTML = `<!doctype html><html><body style="font: 16px/1.5 sans-serif; margi
   const pressed = await bg();
   await page.mouse.up();
   L.check('row rest is transparent', rest === 'rgba(0, 0, 0, 0)', rest);
-  L.check('row hover is SubtleBackgroundHover', hover === 'rgb(240, 238, 230)', hover);
+  L.check('row hover is SubtleBackgroundHover', hover === 'rgb(232, 230, 220)', hover);
   L.check('row pressed is SubtleBackgroundPressed', pressed === 'rgb(227, 218, 204)', pressed);
   // Ticked row: SubtleBackgroundSelected.
   await page.evaluate(() => { const c = window.__hl.panelList.querySelector('.item .check'); c.checked = true; });

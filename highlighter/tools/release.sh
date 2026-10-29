@@ -11,8 +11,8 @@ show_metrics() {
     local date ver tier theme attempts cycle stat short
     IFS=$'\t' read -r date ver tier theme attempts cycle stat <<< "$1"
     short=$(sed -E 's/^([0-9]+) files? changed/\1f/; s/, ([0-9]+) insertions?\(\+\)/ +\1/; s/, ([0-9]+) deletions?\(-\)/ -\1/' <<< "$stat")
-    printf 'METRICS\n  Date      %s\n  Version   %s\n  Tier      %s\n  Theme     %s\n  Attempts  %s\n  Cycle     %s\n  Diffstat  %s\n' \
-        "$date" "$ver" "$tier" "$theme" "${attempts#push-attempts=}" "${cycle#cycle=}" "$short"
+    printf 'METRICS\n  Date      %s\n  Tier      %s\n  Attempts  %s\n  Cycle     %s\n  Diffstat  %s\n' \
+        "$date" "$tier" "${attempts#push-attempts=}" "${cycle#cycle=}" "$short"
 }
 
 # Files mode, for changes outside highlighter/ (settings, docs): commit only the named files, no @version bump or build.

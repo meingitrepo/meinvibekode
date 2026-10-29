@@ -35,12 +35,5 @@
       "Read(./**/*.mp4)",
       "Read(./**/*.pdf)"
     ]
-  },
-  "skillOverrides": {},
-  "enabledPlugins": {
-    "superpowers@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true,
-    "agent-skills@addy-agent-skills": true,
-    "code-simplifier@anthropic-plugin-directory": true
   }
 }

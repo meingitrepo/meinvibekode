@@ -26,7 +26,7 @@ if [ "${1:-}" = --files ]; then
             echo "PUSHED cfg ($(git rev-parse --short HEAD)) to main"
             line="$(date +%F)	cfg	${TIER:-?}	$theme	push-attempts=$attempt	cycle=${mins}m	$stat"
             mkdir -p .cache && echo "$line" >> .cache/metrics.tsv
-            echo "METRICS $line"; exit 0
+            echo "METRICS ${line//$'	'/  ·  }"; exit 0
         fi
     done
     echo 'push rejected 3 times'; exit 1
@@ -63,7 +63,7 @@ for attempt in 1 2 3; do
         stat=$(git diff --shortstat "$base" HEAD | sed 's/^ *//')
         line="$(date +%F)	$ver	${TIER:-?}	$theme	push-attempts=$attempt	cycle=${mins}m	$stat"
         mkdir -p .cache && echo "$line" >> .cache/metrics.tsv
-        echo "METRICS $line"; exit 0
+        echo "METRICS ${line//$'	'/  ·  }"; exit 0
     fi
     git reset -q --hard "$code"   # drop this attempt's version and build, then retry
 done

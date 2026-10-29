@@ -32,10 +32,10 @@ function segments(lines) {
         }
       }
     }
-    const m = e.type === 'user' && Array.isArray(c) && c.some(p => p.type === 'tool_result') && l.match(/PUSHED ([0-9]+[.][0-9]+)/);
+    const m = e.type === 'user' && Array.isArray(c) && c.some(p => p.type === 'tool_result') && l.match(/PUSHED ([^ ]+) [(]([0-9a-f]{7,40})[)]/);
     if (m) {
       out.push({
-        version: m[1], turns,
+        version: m[1], sha: m[2], turns,
         testFirst: firstTest < 0 ? 'n/a' : (firstSrc < 0 || firstTest < firstSrc ? 'yes' : 'no'),
         tokens: [...usage.values()].reduce((n, u) => n + (u.input_tokens || 0) + (u.output_tokens || 0) + (u.cache_creation_input_tokens || 0), 0),
       });
@@ -44,10 +44,11 @@ function segments(lines) {
   }
   return out;
 }
-// One tab-separated log row, written by release.sh: date, version, tier, attempts, files, insertions, deletions.
+// One tab-separated log row, written by release.sh: date, version, tier, attempts, files, insertions, deletions, sha.
+// Rows from before the sha was logged have 7 fields (sha is '').
 function parseRow(line) {
-  const [date, ver, tier, attempts, files, ins, del] = line.split('\t');
-  return { date, ver, tier, attempts: +attempts, files: +files, ins: +ins, del: +del };
+  const [date, ver, tier, attempts, files, ins, del, sha = ''] = line.split('\t');
+  return { date, ver, tier, attempts: +attempts, files: +files, ins: +ins, del: +del, sha };
 }
 module.exports = { segments, parseRow };
 if (require.main !== module) return;
@@ -74,9 +75,11 @@ const bySession = sessions.map(f => segments(fs.readFileSync(f, 'utf8').split('\
 
 const rows = fs.readFileSync(logFile, 'utf8').split('\n').filter(Boolean).map(parseRow);
 const out = [['version', 'tier', 'size', 'turns', 'tokens', 'test-first', 'test-touch', 'rework']];
-for (const { date, ver, tier, files: nFiles, ins, del } of rows) {
-  const s = bySession.flat().filter(x => x.version === ver).pop();
-  const sha = git('log', '--format=%H', '-1', `--grep=^${ver.replace('.', '\\.')}: `);
+for (const { date, ver, tier, files: nFiles, ins, del, sha: short } of rows) {
+  // Match by commit sha; rows without one fall back to the version (impossible for old cfg releases).
+  const byVersion = ver !== 'cfg';
+  const s = bySession.flat().filter(x => short ? x.sha === short : byVersion && x.version === ver).pop();
+  const sha = short ? git('rev-parse', short) : byVersion ? git('log', '--format=%H', '-1', `--grep=^${ver.replace('.', '\\.')}: `) : '';
   let touch = '?', rework = '?';
   if (sha) {
     const files = git('show', '--name-only', '--format=', sha).split('\n').filter(Boolean);

@@ -6,18 +6,18 @@
 # Don't bump @version or commit the built file yourself; this does it.
 set -euo pipefail
 
-# Log row (tab-separated, plain values): date, version, tier, attempts, files, insertions, deletions.
-# Usage: log_row <version> <attempt> <from> <to>
+# Log row (tab-separated, plain values): date, version, tier, attempts, files, insertions, deletions, sha.
+# The sha is the pushed commit, the same one the PUSHED line prints. Usage: log_row <version> <attempt> <from> <to>
 log_row() {
-    printf '%s	%s	%s	%s	%s
-' "$(date +%F)" "$1" "${TIER:-?}" "$2" \
-        "$(git diff --numstat "$3" "$4" | awk '{f++; if ($1 != "-") {i += $1; d += $2}} END {printf "%d	%d	%d", f, i, d}')"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$(date +%F)" "$1" "${TIER:-?}" "$2" \
+        "$(git diff --numstat "$3" "$4" | awk '{f++; if ($1 != "-") {i += $1; d += $2}} END {printf "%d\t%d\t%d", f, i, d}')" \
+        "$(git rev-parse --short HEAD)"
 }
 
 # Prints a log row as one readable line.
 show_metrics() {
-    local date ver tier attempts files ins del
-    IFS=$'	' read -r date ver tier attempts files ins del <<< "$1"
+    local date ver tier attempts files ins del sha
+    IFS=$'\t' read -r date ver tier attempts files ins del sha <<< "$1"
     echo "METRICS $date · $tier · attempts $attempts · ${files}f +$ins -$del"
 }
 

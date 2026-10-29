@@ -46,7 +46,12 @@ function segments(lines) {
   }
   return out;
 }
-module.exports = { segments };
+// One tab-separated log row, written by release.sh: date, version, tier, attempts, files, insertions, deletions.
+function parseRow(line) {
+  const [date, ver, tier, attempts, files, ins, del] = line.split('\t');
+  return { date, ver, tier, attempts: +attempts, files: +files, ins: +ins, del: +del };
+}
+module.exports = { segments, parseRow };
 if (require.main !== module) return;
 
 const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
@@ -69,9 +74,9 @@ if (fs.existsSync(projDir)) {
 
 const bySession = sessions.map(f => segments(fs.readFileSync(f, 'utf8').split('\n').filter(Boolean)));
 
-const rows = fs.readFileSync(logFile, 'utf8').split('\n').filter(Boolean).map(l => l.split('\t'));
+const rows = fs.readFileSync(logFile, 'utf8').split('\n').filter(Boolean).map(parseRow);
 const out = [['version', 'tier', 'elapsed', 'size', 'turns', 'test-first', 'test-touch', 'rework']];
-for (const [date, ver, tier, , attempts, , ...stat] of rows) {
+for (const { date, ver, tier, files: nFiles, ins, del } of rows) {
   const s = bySession.flat().filter(x => x.version === ver).pop();
   const sha = git('log', '--format=%H', '-1', `--grep=^${ver.replace('.', '\\.')}: `);
   let touch = '?', rework = '?';
@@ -84,8 +89,7 @@ for (const [date, ver, tier, , attempts, , ...stat] of rows) {
       .split('\n').filter(l => /fix|revert|regress/i.test(l)) : [];
     rework = later.length ? `${later.length} (${later[later.length - 1].split(' ')[0]}...)` : 'no';
   }
-  const st = stat.join(' '), n = re => (st.match(re) || [, 0])[1];
-  out.push([ver, tier, s && s.cycleMin !== null ? `${s.cycleMin}m` : '?', `${n(/(\d+) file/)}f +${n(/(\d+) insertion/)} -${n(/(\d+) deletion/)}`,
+  out.push([ver, tier, s && s.cycleMin !== null ? `${s.cycleMin}m` : '?', `${nFiles}f +${ins} -${del}`,
     s ? s.turns : '?', s ? s.testFirst : '?', touch, rework]);
 }
 const w = out[0].map((_, i) => Math.max(...out.map(r => String(r[i]).length)));

@@ -1,5 +1,5 @@
 // metrics-report.js must score each release on its own slice of a session, not the whole session.
-const { segments } = require('../tools/metrics-report.js');
+const { segments, parseRow } = require('../tools/metrics-report.js');
 let fails = 0;
 const check = (name, ok, got) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' ' + JSON.stringify(got)}`); if (!ok) fails++; };
 
@@ -20,4 +20,8 @@ check('second release ignores the first release src edit', s[1].testFirst === 'y
 check('release with no test edit is n/a', s[2].testFirst === 'n/a', s[2]);
 check('turns count only the segment', [s[0].turns, s[1].turns, s[2].turns].join() === '1,2,1', s.map(x => x.turns));
 check('cycle runs from the segment first prompt to PUSHED', [s[0].cycleMin, s[1].cycleMin, s[2].cycleMin].join() === '10,10,5', s.map(x => x.cycleMin));
+
+const r = parseRow('2026-10-29	9.21	T1	2	4	30	3');
+check('log row is plain values: date, version, tier, attempts, files, insertions, deletions',
+  JSON.stringify(r) === JSON.stringify({ date: '2026-10-29', ver: '9.21', tier: 'T1', attempts: 2, files: 4, ins: 30, del: 3 }), r);
 process.exit(fails ? 1 : 0);

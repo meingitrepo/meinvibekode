@@ -6,13 +6,25 @@
 # Don't bump @version or commit the built file yourself; this does it.
 set -euo pipefail
 
-# Prints a metrics.tsv line (tab-separated) as a labelled list; the log itself stays tab-separated.
+# Log row (tab-separated, plain values): date, version, tier, attempts, files, insertions, deletions.
+# Usage: log_row <version> <attempt> <from> <to>
+log_row() {
+    printf '%s	%s	%s	%s	%s
+' "$(date +%F)" "$1" "${TIER:-?}" "$2" \
+        "$(git diff --numstat "$3" "$4" | awk '{f++; if ($1 != "-") {i += $1; d += $2}} END {printf "%d	%d	%d", f, i, d}')"
+}
+
+# Prints a log row as a labelled list.
 show_metrics() {
-    local date ver tier theme attempts cycle stat short
-    IFS=$'\t' read -r date ver tier theme attempts cycle stat <<< "$1"
-    short=$(sed -E 's/^([0-9]+) files? changed/\1f/; s/, ([0-9]+) insertions?\(\+\)/ +\1/; s/, ([0-9]+) deletions?\(-\)/ -\1/' <<< "$stat")
-    printf 'METRICS\n  Date      %s\n  Tier      %s\n  Attempts  %s\n  Cycle     %s\n  Diffstat  %s\n' \
-        "$date" "$tier" "${attempts#push-attempts=}" "${cycle#cycle=}" "$short"
+    local date ver tier attempts files ins del
+    IFS=$'	' read -r date ver tier attempts files ins del <<< "$1"
+    printf 'METRICS
+  Date      %s
+  Tier      %s
+  Attempts  %s
+  Diffstat  %sf +%s -%s
+' \
+        "$date" "$tier" "$attempts" "$files" "$ins" "$del"
 }
 
 # Files mode, for changes outside highlighter/ (settings, docs): commit only the named files, no @version bump or build.
@@ -30,10 +42,8 @@ if [ "${1:-}" = --files ]; then
         git fetch -q origin main
         git rebase -q origin/main || { echo 'REBASE CONFLICT: resolve keeping BOTH changes, git rebase --continue, rerun'; exit 1; }
         if git push -q origin HEAD:main; then
-            first=$(git log -1 --format=%ct)
-            mins=$(( ($(date +%s) - first) / 60 )); stat=$(git diff --shortstat HEAD~1 HEAD | sed 's/^ *//')
             echo "PUSHED cfg ($(git rev-parse --short HEAD)) to main"
-            line="$(date +%F)	cfg	${TIER:-?}	$theme	push-attempts=$attempt	cycle=${mins}m	$stat"
+            line=$(log_row cfg "$attempt" HEAD~1 HEAD)
             mkdir -p .cache && echo "$line" >> .cache/metrics.tsv
             show_metrics "$line"; exit 0
         fi
@@ -58,7 +68,6 @@ for attempt in 1 2 3; do
     [ -n "$(git log --oneline origin/main..HEAD)" ] || { echo 'nothing to release'; exit 1; }
     code=$(git rev-parse HEAD)
     base=$(git rev-parse origin/main)
-    first=$(git log --format=%ct "$base..HEAD" | tail -1)
     cur=$(git show origin/main:$H/src/header.js | sed -n 's/^\/\/ @version *//p' | head -1)
     ver="${cur%%.*}.$(( ${cur#*.} + 1 ))"
     sed -i "s/^\(\/\/ @version *\).*/\1$ver/" $H/src/header.js
@@ -68,9 +77,7 @@ for attempt in 1 2 3; do
     if git push -q origin HEAD:main; then
         echo "PUSHED $ver ($(git rev-parse --short HEAD)) to main"
         # Metrics: tier is passed in (TIER=T0..T3); the rest is measured here. Log is git-ignored (.cache/).
-        mins=$(( ($(date +%s) - first) / 60 ))
-        stat=$(git diff --shortstat "$base" HEAD | sed 's/^ *//')
-        line="$(date +%F)	$ver	${TIER:-?}	$theme	push-attempts=$attempt	cycle=${mins}m	$stat"
+        line=$(log_row "$ver" "$attempt" "$base" HEAD)
         mkdir -p .cache && echo "$line" >> .cache/metrics.tsv
         show_metrics "$line"; exit 0
     fi

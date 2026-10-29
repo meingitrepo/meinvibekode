@@ -1,6 +1,7 @@
 // Joins .cache/metrics.tsv (written by release.sh) with git history and Claude Code transcripts.
 // Usage: node highlighter/tools/metrics-report.js [days-for-rework=7]
 //   turns       user prompts in that same slice of the session
+//   tokens      model input + output + cache writes in that slice (cache reads left out), in thousands
 //   test-first  yes if the first Edit/Write to test/ came before the first one to src/ in that slice
 //   test-touch  release commit changes files under highlighter/test
 //   rework      a later commit within N days touches the same src files and says fix/revert/regress
@@ -13,12 +14,14 @@ const { execFileSync } = require('child_process');
 // "PUSHED <ver>" and starts after the previous one, so each release is scored on its own work.
 function segments(lines) {
   const out = [];
-  let turns = 0, firstTest = -1, firstSrc = -1, i = 0;
+  let turns = 0, firstTest = -1, firstSrc = -1, i = 0, usage = new Map();
   for (const l of lines) {
     i++;
     let e; try { e = JSON.parse(l); } catch { continue; }
     const c = e.message && e.message.content;
     if (e.type === 'user' && !e.isSidechain && c && (typeof c === 'string' || c.some(p => p.type === 'text'))) turns++;
+    // A message is logged once per content block with the same usage: keep one entry per message id.
+    if (e.type === 'assistant' && e.message.usage && e.message.id) usage.set(e.message.id, e.message.usage);
     if (e.type === 'assistant' && Array.isArray(c)) {
       for (const p of c) {
         if (p.type !== 'tool_use') continue;
@@ -34,8 +37,9 @@ function segments(lines) {
       out.push({
         version: m[1], turns,
         testFirst: firstTest < 0 ? 'n/a' : (firstSrc < 0 || firstTest < firstSrc ? 'yes' : 'no'),
+        tokens: [...usage.values()].reduce((n, u) => n + (u.input_tokens || 0) + (u.output_tokens || 0) + (u.cache_creation_input_tokens || 0), 0),
       });
-      turns = 0; firstTest = firstSrc = -1;
+      turns = 0; firstTest = firstSrc = -1; usage = new Map();
     }
   }
   return out;
@@ -69,7 +73,7 @@ if (fs.existsSync(projDir)) {
 const bySession = sessions.map(f => segments(fs.readFileSync(f, 'utf8').split('\n').filter(Boolean)));
 
 const rows = fs.readFileSync(logFile, 'utf8').split('\n').filter(Boolean).map(parseRow);
-const out = [['version', 'tier', 'size', 'turns', 'test-first', 'test-touch', 'rework']];
+const out = [['version', 'tier', 'size', 'turns', 'tokens', 'test-first', 'test-touch', 'rework']];
 for (const { date, ver, tier, files: nFiles, ins, del } of rows) {
   const s = bySession.flat().filter(x => x.version === ver).pop();
   const sha = git('log', '--format=%H', '-1', `--grep=^${ver.replace('.', '\\.')}: `);
@@ -84,7 +88,7 @@ for (const { date, ver, tier, files: nFiles, ins, del } of rows) {
     rework = later.length ? `${later.length} (${later[later.length - 1].split(' ')[0]}...)` : 'no';
   }
   out.push([ver, tier, `${nFiles}f +${ins} -${del}`,
-    s ? s.turns : '?', s ? s.testFirst : '?', touch, rework]);
+    s ? s.turns : '?', s ? `${Math.round(s.tokens / 1000)}k` : '?', s ? s.testFirst : '?', touch, rework]);
 }
 const w = out[0].map((_, i) => Math.max(...out.map(r => String(r[i]).length)));
 for (const r of out) console.log(r.map((c, i) => String(c).padEnd(w[i])).join('  ').trimEnd());

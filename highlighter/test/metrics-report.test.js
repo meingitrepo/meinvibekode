@@ -6,8 +6,9 @@ const check = (name, ok, got) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}$
 const prompt = (text) => ({ type: 'user', message: { content: [{ type: 'text', text }] } });
 const edit = (file) => ({ type: 'assistant', message: { content: [{ type: 'tool_use', name: 'Edit', input: { file_path: 'C:/r/highlighter/' + file } }] } });
 const pushed = (v) => ({ type: 'user', message: { content: [{ type: 'tool_result', content: `PUSHED ${v} ok` }] } });
+const said = (id, i, o, cc) => ({ type: 'assistant', message: { id, content: [{ type: 'text', text: 'x' }], usage: { input_tokens: i, output_tokens: o, cache_creation_input_tokens: cc, cache_read_input_tokens: 9999 } } });
 const session = [
-  prompt('first task'), edit('src/a.js'), edit('test/a.test.js'), pushed('9.1'),
+  prompt('first task'), edit('src/a.js'), edit('test/a.test.js'), said('m1', 100, 50, 10), said('m1', 100, 50, 10), said('m2', 200, 20, 0), pushed('9.1'),
   prompt('second task'), edit('test/b.test.js'), edit('src/b.js'), prompt('tweak'), pushed('9.2'),
   prompt('third task'), edit('src/c.js'), pushed('9.3'),
 ].map(e => JSON.stringify(e));
@@ -18,6 +19,9 @@ check('first release: src before test is test-first no', s[0].testFirst === 'no'
 check('second release ignores the first release src edit', s[1].testFirst === 'yes', s[1]);
 check('release with no test edit is n/a', s[2].testFirst === 'n/a', s[2]);
 check('turns count only the segment', [s[0].turns, s[1].turns, s[2].turns].join() === '1,2,1', s.map(x => x.turns));
+
+check('tokens: input + output + cache writes, once per message, no cache reads', s[0].tokens === 380, s[0]);
+check('tokens: a release with no model output counts 0', s[1].tokens === 0, s[1]);
 
 const r = parseRow('2026-10-29	9.21	T1	2	4	30	3');
 check('log row is plain values: date, version, tier, attempts, files, insertions, deletions',

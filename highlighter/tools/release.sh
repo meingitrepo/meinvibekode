@@ -22,6 +22,7 @@ show_metrics() {
     local turns tokens
     read -r turns tokens < <(node "$(dirname "${BASH_SOURCE[0]}")/metrics-report.js" --now 2>/dev/null || true) || true
     echo "${date#*-}  ·  $tier  ·  x$attempts  ·  ${files}f +$ins -$del${turns:+  ·  $turns turns  ·  ${tokens}k tokens}"
+    echo '```'
 }
 
 # Files mode, for changes outside highlighter/ (settings, docs): commit only the named files, no @version bump or build.
@@ -39,7 +40,7 @@ if [ "${1:-}" = --files ]; then
         git fetch -q origin main
         git rebase -q origin/main || { echo 'REBASE CONFLICT: resolve keeping BOTH changes, git rebase --continue, rerun'; exit 1; }
         if git push -q origin HEAD:main; then
-            echo "PUSHED cfg ($(git rev-parse --short HEAD)) to main"
+            echo '```'; echo "PUSHED cfg ($(git rev-parse --short HEAD)) to main"
             line=$(log_row cfg "$attempt" HEAD~1 HEAD)
             mkdir -p .cache && echo "$line" >> .cache/metrics.tsv
             show_metrics "$line"; exit 0
@@ -72,7 +73,7 @@ for attempt in 1 2 3; do
     git add $H/src/header.js $H/Highlighter.user.js
     git commit -q --amend -m "$ver: $msg"
     if git push -q origin HEAD:main; then
-        echo "PUSHED $ver ($(git rev-parse --short HEAD)) to main"
+        echo '```'; echo "PUSHED $ver ($(git rev-parse --short HEAD)) to main"
         # Metrics: tier is passed in (TIER=T0..T3); the rest is measured here. Log is git-ignored (.cache/).
         line=$(log_row "$ver" "$attempt" "$base" HEAD)
         mkdir -p .cache && echo "$line" >> .cache/metrics.tsv

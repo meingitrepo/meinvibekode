@@ -47,11 +47,12 @@ function segments(lines, withOpen = false) {
   if (withOpen) out.push(slice(null, null));
   return out;
 }
-// One tab-separated log row, written by release.sh: date, version, tier, attempts, files, insertions, deletions, sha.
-// Rows from before the sha was logged have 7 fields (sha is '').
+// One tab-separated log row, written by release.sh: date, version, tier, attempts, files, insertions, deletions, sha, turns, k tokens.
+// Rows from before the sha was logged have 7 fields (sha is ''); older rows lack turns and k tokens (null).
 function parseRow(line) {
-  const [date, ver, tier, attempts, files, ins, del, sha = ''] = line.split('\t');
-  return { date, ver, tier, attempts: +attempts, files: +files, ins: +ins, del: +del, sha };
+  const [date, ver, tier, attempts, files, ins, del, sha = '', turns = '', ktokens = ''] = line.split('\t');
+  return { date, ver, tier, attempts: +attempts, files: +files, ins: +ins, del: +del, sha,
+    turns: turns === '' ? null : +turns, ktokens: ktokens === '' ? null : +ktokens };
 }
 // The transcript of the running session: Claude Code names it <CLAUDE_CODE_SESSION_ID>.jsonl.
 // Without a matching file, the most recently modified one. files is [[mtimeMs, path], ...].
@@ -92,7 +93,7 @@ const bySession = sessions.map(f => segments(fs.readFileSync(f, 'utf8').split('\
 
 const rows = fs.readFileSync(logFile, 'utf8').split('\n').filter(Boolean).map(parseRow);
 const out = [['version', 'tier', 'size', 'turns', 'tokens', 'test-first', 'test-touch', 'rework']];
-for (const { date, ver, tier, files: nFiles, ins, del, sha: short } of rows) {
+for (const { date, ver, tier, files: nFiles, ins, del, sha: short, turns: loggedTurns, ktokens: loggedK } of rows) {
   // Match by commit sha; rows without one fall back to the version (impossible for old cfg releases).
   const byVersion = ver !== 'cfg';
   const s = bySession.flat().filter(x => short ? x.sha === short : byVersion && x.version === ver).pop();
@@ -108,7 +109,8 @@ for (const { date, ver, tier, files: nFiles, ins, del, sha: short } of rows) {
     rework = later.length ? `${later.length} (${later[later.length - 1].split(' ')[0]}...)` : 'no';
   }
   out.push([ver, tier, `${nFiles}f +${ins} -${del}`,
-    s ? s.turns : '?', s ? `${Math.round(s.tokens / 1000)}k` : '?', s ? s.testFirst : '?', touch, rework]);
+    loggedTurns ?? (s ? s.turns : '?'), loggedK != null ? `${loggedK}k` : s ? `${Math.round(s.tokens / 1000)}k` : '?',
+    s ? s.testFirst : '?', touch, rework]);
 }
 const w = out[0].map((_, i) => Math.max(...out.map(r => String(r[i]).length)));
 for (const r of out) console.log(r.map((c, i) => String(c).padEnd(w[i])).join('  ').trimEnd());

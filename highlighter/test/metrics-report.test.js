@@ -33,8 +33,12 @@ check('tokens: a release with no model output counts 0', s[1].tokens === 0, s[1]
 const r = parseRow('2026-10-29	9.21	T1	2	4	30	3	3f9c2ab');
 const old = parseRow('2026-10-29	9.12	T2	1	6	122	19');
 check('an old row without a sha parses with sha empty', old.sha === '' && old.files === 6, old);
-check('log row is plain values: date, version, tier, attempts, files, insertions, deletions, sha',
-  JSON.stringify(r) === JSON.stringify({ date: '2026-10-29', ver: '9.21', tier: 'T1', attempts: 2, files: 4, ins: 30, del: 3, sha: '3f9c2ab' }), r);
+check('log row is plain values: date, version, tier, attempts, files, insertions, deletions, sha (turns and tokens null when absent)',
+  JSON.stringify(r) === JSON.stringify({ date: '2026-10-29', ver: '9.21', tier: 'T1', attempts: 2, files: 4, ins: 30, del: 3, sha: '3f9c2ab', turns: null, ktokens: null }), r);
+const withUsage = parseRow('2026-10-29	9.22	T1	1	2	10	1	4d1e0aa	7	212');
+const noUsage = parseRow('2026-10-29	9.23	T1	1	2	10	1	4d1e0aa		');
+check('log row carries turns and k tokens', withUsage.turns === 7 && withUsage.ktokens === 212, withUsage);
+check('empty turns and tokens fields parse as null, not 0', noUsage.turns === null && noUsage.ktokens === null, noUsage);
 
 const files = [[300, '/p/new.jsonl'], [100, '/p/mine.jsonl'], [200, '/p/other.jsonl']];
 check('pickSession uses the session id even when another file is newer', pickSession(files, 'mine') === '/p/mine.jsonl', pickSession(files, 'mine'));

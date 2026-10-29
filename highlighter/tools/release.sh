@@ -6,21 +6,22 @@
 # Don't bump @version or commit the built file yourself; this does it.
 set -euo pipefail
 
-# Log row (tab-separated, plain values): date, version, tier, attempts, files, insertions, deletions, sha.
-# The sha is the pushed commit, the same one the PUSHED line prints. Usage: log_row <version> <attempt> <from> <to>
+# Log row (tab-separated, plain values): date, version, tier, attempts, files, insertions, deletions, sha, turns, k tokens.
+# The sha is the pushed commit, the same one the PUSHED line prints. Turns and k tokens are those since the last PUSHED
+# in this session (empty when the transcript is not found; the report fills them in for older rows).
+# Usage: log_row <version> <attempt> <from> <to>
 log_row() {
-    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$(date +%F)" "$1" "${TIER:-?}" "$2" \
+    local turns tokens
+    read -r turns tokens < <(node "$(dirname "${BASH_SOURCE[0]}")/metrics-report.js" --now 2>/dev/null || true) || true
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$(date +%F)" "$1" "${TIER:-?}" "$2" \
         "$(git diff --numstat "$3" "$4" | awk '{f++; if ($1 != "-") {i += $1; d += $2}} END {printf "%d\t%d\t%d", f, i, d}')" \
-        "$(git rev-parse --short HEAD)"
+        "$(git rev-parse --short HEAD)" "${turns:-}" "${tokens:-}"
 }
 
 # Prints a log row as one readable line.
 show_metrics() {
-    local date ver tier attempts files ins del sha
-    IFS=$'\t' read -r date ver tier attempts files ins del sha <<< "$1"
-    # Turns and tokens since the last PUSHED in this session (the report fills them in for older rows).
-    local turns tokens
-    read -r turns tokens < <(node "$(dirname "${BASH_SOURCE[0]}")/metrics-report.js" --now 2>/dev/null || true) || true
+    local date ver tier attempts files ins del sha turns tokens
+    IFS=$'\t' read -r date ver tier attempts files ins del sha turns tokens <<< "$1"
     # One dot with one plain space each side: extra padding does not survive markdown (collapsed or stripped).
     local s=' · '
     echo "${files}f +$ins -$del${turns:+$s$turns turns$s${tokens}k tokens}"

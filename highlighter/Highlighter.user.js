@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.44
+// @version      9.45
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -717,6 +717,7 @@
         if (!hide) { showAnnotations(); return; }
         setAnnotationsHidden(hide);
         if (penKey) setPen(null);   // the pen can't draw on what is hidden
+        closePanel();               // nor can the panel list what is hidden
         showToast('Annotations hidden', { icon: 'eye-slash' });
     }
 
@@ -6110,6 +6111,7 @@
             panelSignature = '';
             showAnnotationsFor('panel');
         }
+        renderSiteMenu();   // the menu's button shows pressed while the panel is open
         renderPanel();
         updateFontNote();
         // Typing filters the list, unless the user has page text selected (to attach, say).
@@ -6129,6 +6131,7 @@
         panelItems = [];
         panelChecked.clear();
         restoreAnnotationsFor('panel');
+        renderSiteMenu();
         const back = panelReturnFocus;
         panelReturnFocus = null;
         if (hadFocus && back && back.isConnected && typeof back.focus === 'function') back.focus({ preventScroll: true });
@@ -6483,6 +6486,7 @@
         }
         everythingPages = savedPages();
         everythingEl.hidden = false;
+        renderSiteMenu();   // the menu's button shows pressed while the search is open
         renderEverything();
         everythingFilter.focus({ preventScroll: true });
     }
@@ -6496,6 +6500,7 @@
         everythingPages = [];
         everythingChecked = new Set();
         everythingShown = [];
+        renderSiteMenu();
         const back = everythingReturnFocus;
         everythingReturnFocus = null;
         if (back && back.isConnected && typeof back.focus === 'function') back.focus({ preventScroll: true });
@@ -6777,6 +6782,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.45", "Hiding closes the panel; menu panel/search show pressed; toolbar button disabled with pen"],
         ["9.44", "Annotations hidden by default; panel and pen show them while open"],
         ["9.43", "Alt+Shift+H shortcut guide, Alt+Shift+W release changelog, opens once after each update"],
         ['9.42', 'List-checks icon for Alt+O'],
@@ -6973,10 +6979,12 @@
         menuExpand.setAttribute('aria-label', label);
         menuEl.toggleAttribute('data-open', menuOpen);
         menuTools.toggleAttribute('inert', !menuOpen);
-        const pressed = { pen: !!penKey, toolbar: !toolbarSwitchedOff(), keys: !keysSwitchedOff() };
+        // The pen's own bar stands in for the selection toolbar, which is off while the pen is on.
+        const pressed = { pen: !!penKey, toolbar: !toolbarSwitchedOff() && !penKey, keys: !keysSwitchedOff(), panel: !panelEl.hidden, search: !everythingEl.hidden };
         menuButtons.forEach((b, id) => {
             if (id in pressed) b.setAttribute('aria-pressed', String(pressed[id]));
         });
+        menuButtons.get('toolbar').disabled = !!penKey;
         menuButtons.get('undo').disabled = !undoStack.length;
         menuButtons.get('redo').disabled = !redoStack.length;
         menuButtons.get('pen').replaceChildren(phosphorIcon(penKey ? 'pencil-simple' : 'pencil-simple-slash'));

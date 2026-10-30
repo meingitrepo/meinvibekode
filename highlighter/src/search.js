@@ -59,6 +59,7 @@
         }
         everythingPages = savedPages();
         everythingEl.hidden = false;
+        renderSiteMenu();   // the menu's button shows pressed while the search is open
         renderEverything();
         everythingFilter.focus({ preventScroll: true });
     }
@@ -72,6 +73,7 @@
         everythingPages = [];
         everythingChecked = new Set();
         everythingShown = [];
+        renderSiteMenu();
         const back = everythingReturnFocus;
         everythingReturnFocus = null;
         if (back && back.isConnected && typeof back.focus === 'function') back.focus({ preventScroll: true });

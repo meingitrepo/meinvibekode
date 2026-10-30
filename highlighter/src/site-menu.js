@@ -92,10 +92,12 @@
         menuExpand.setAttribute('aria-label', label);
         menuEl.toggleAttribute('data-open', menuOpen);
         menuTools.toggleAttribute('inert', !menuOpen);
-        const pressed = { pen: !!penKey, toolbar: !toolbarSwitchedOff(), keys: !keysSwitchedOff() };
+        // The pen's own bar stands in for the selection toolbar, which is off while the pen is on.
+        const pressed = { pen: !!penKey, toolbar: !toolbarSwitchedOff() && !penKey, keys: !keysSwitchedOff(), panel: !panelEl.hidden, search: !everythingEl.hidden };
         menuButtons.forEach((b, id) => {
             if (id in pressed) b.setAttribute('aria-pressed', String(pressed[id]));
         });
+        menuButtons.get('toolbar').disabled = !!penKey;
         menuButtons.get('undo').disabled = !undoStack.length;
         menuButtons.get('redo').disabled = !redoStack.length;
         menuButtons.get('pen').replaceChildren(phosphorIcon(penKey ? 'pencil-simple' : 'pencil-simple-slash'));

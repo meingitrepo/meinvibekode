@@ -99,6 +99,7 @@
             panelSignature = '';
             showAnnotationsFor('panel');
         }
+        renderSiteMenu();   // the menu's button shows pressed while the panel is open
         renderPanel();
         updateFontNote();
         // Typing filters the list, unless the user has page text selected (to attach, say).
@@ -118,6 +119,7 @@
         panelItems = [];
         panelChecked.clear();
         restoreAnnotationsFor('panel');
+        renderSiteMenu();
         const back = panelReturnFocus;
         panelReturnFocus = null;
         if (hadFocus && back && back.isConnected && typeof back.focus === 'function') back.focus({ preventScroll: true });

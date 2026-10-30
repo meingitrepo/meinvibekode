@@ -45,4 +45,13 @@ check('pickSession uses the session id even when another file is newer', pickSes
 check('pickSession falls back to the newest file without an id', pickSession(files, undefined) === '/p/new.jsonl', pickSession(files));
 check('pickSession falls back to the newest file when the id has no file', pickSession(files, 'gone') === '/p/new.jsonl', pickSession(files, 'gone'));
 check('pickSession returns undefined with no files', pickSession([], 'mine') === undefined);
+// --now feeds release.sh's `read turns tokens`: with no log yet (first release from a fresh worktree) it must print nothing,
+// not the report's "no .cache/metrics.tsv yet" sentence, or that sentence lands in the turns and tokens columns.
+const { execFileSync } = require('child_process');
+const fs = require('fs'), os = require('os'), path = require('path');
+const bare = fs.mkdtempSync(path.join(os.tmpdir(), 'mr-now-'));
+execFileSync('git', ['init', '-q'], { cwd: bare });
+const nowOut = execFileSync('node', [path.join(__dirname, '../tools/metrics-report.js'), '--now'], { cwd: bare, encoding: 'utf8' });
+check('--now prints nothing when the log does not exist yet', nowOut === '', nowOut);
+fs.rmSync(bare, { recursive: true, force: true });
 process.exit(fails ? 1 : 0);

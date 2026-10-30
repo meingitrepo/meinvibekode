@@ -67,7 +67,7 @@ const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: '
 const git = (...a) => execFileSync('git', a, { cwd: root, encoding: 'utf8' }).trim();
 const days = +(process.argv[2] || 7);
 const logFile = path.join(root, '.cache', 'metrics.tsv');
-if (!fs.existsSync(logFile)) { console.log('no .cache/metrics.tsv yet (written by release.sh)'); process.exit(0); }
+if (process.argv[2] !== '--now' && !fs.existsSync(logFile)) { console.log('no .cache/metrics.tsv yet (written by release.sh)'); process.exit(0); }
 
 // Transcripts: ~/.claude/projects/<repo path with non-alphanumerics as "-">[-worktree suffix]/*.jsonl
 const slug = root.replace(/[^A-Za-z0-9]/g, '-');

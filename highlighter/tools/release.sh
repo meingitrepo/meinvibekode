@@ -6,31 +6,10 @@
 # Don't bump @version or commit the built file yourself; this does it.
 set -euo pipefail
 
-# Log row (tab-separated, plain values): date, version, tier, attempts, files, insertions, deletions, sha, turns, k tokens.
-# The sha is the pushed commit, the same one the PUSHED line prints. Turns and k tokens are those since the last PUSHED
-# in this session (empty when the transcript is not found; the report fills them in for older rows).
-# Usage: log_row <version> <attempt> <from> <to>
-log_row() {
-    local turns tokens
-    read -r turns tokens < <(node "$(dirname "${BASH_SOURCE[0]}")/metrics-report.js" --now 2>/dev/null || true) || true
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$(date +%F)" "$1" "${TIER:-?}" "$2" \
-        "$(git diff --numstat "$3" "$4" | awk '{f++; if ($1 != "-") {i += $1; d += $2}} END {printf "%d\t%d\t%d", f, i, d}')" \
-        "$(git rev-parse --short HEAD)" "${turns:-}" "${tokens:-}"
-}
-
-# Appends a row to the log of the MAIN checkout: worktrees share one log (a row left in a worktree is invisible to the report).
-append_log() {
-    local main; main="$(cd "$(git rev-parse --git-common-dir)/.." && pwd)"
-    mkdir -p "$main/.cache" && echo "$1" >> "$main/.cache/metrics.tsv"
-}
-
-# Prints a log row as one readable line.
-show_metrics() {
-    local date ver tier attempts files ins del sha turns tokens
-    IFS=$'\t' read -r date ver tier attempts files ins del sha turns tokens <<< "$1"
-    # One dot with one plain space each side: extra padding does not survive markdown (collapsed or stripped).
-    local s=' · '
-    echo "${files}f +$ins -$del${turns:+$s$turns turns$s${tokens}k tokens}"
+# Prints the diffstat of a release as one line: files, insertions, deletions.
+# Usage: show_diffstat <from> <to>
+show_diffstat() {
+    git diff --numstat "$1" "$2" | awk '{f++; if ($1 != "-") {i += $1; d += $2}} END {printf "%df +%d -%d\n", f, i, d}'
 }
 
 # Files mode, for changes outside highlighter/ (settings, docs): commit only the named files, no @version bump or build.
@@ -44,14 +23,12 @@ if [ "${1:-}" = --files ]; then
     git add -- "${files[@]}"
     git diff --cached --quiet && { echo 'nothing to release'; exit 1; }
     git commit -q -m "$msg"
-    for attempt in 1 2 3; do
+    for _ in 1 2 3; do
         git fetch -q origin main
         git rebase -q origin/main || { echo 'REBASE CONFLICT: resolve keeping BOTH changes, git rebase --continue, rerun'; exit 1; }
         if git push -q origin HEAD:main; then
             echo "PUSHED cfg ($(git rev-parse --short HEAD)) to main"
-            line=$(log_row cfg "$attempt" HEAD~1 HEAD)
-            append_log "$line"
-            show_metrics "$line"; exit 0
+            show_diffstat HEAD~1 HEAD; exit 0
         fi
     done
     echo 'push rejected 3 times'; exit 1
@@ -69,7 +46,7 @@ if [ -n "$(git status --porcelain -- $H)" ]; then
     git diff --cached --quiet || git commit -q -m "$msg"
 fi
 
-for attempt in 1 2 3; do
+for _ in 1 2 3; do
     "$tools/sync.sh" || exit 1
     [ -n "$(git log --oneline origin/main..HEAD)" ] || { echo 'nothing to release'; exit 1; }
     code=$(git rev-parse HEAD)
@@ -83,10 +60,7 @@ for attempt in 1 2 3; do
     git commit -q --amend -m "$ver: $msg"
     if git push -q origin HEAD:main; then
         echo "PUSHED $ver ($(git rev-parse --short HEAD)) to main"
-        # Metrics: tier is passed in (TIER=T0..T3); the rest is measured here. Log is git-ignored (.cache/).
-        line=$(log_row "$ver" "$attempt" "$base" HEAD)
-        append_log "$line"
-        show_metrics "$line"; exit 0
+        show_diffstat "$base" HEAD; exit 0
     fi
     git reset -q --hard "$code"   # drop this attempt's version and build, then retry
 done

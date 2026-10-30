@@ -43,7 +43,6 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Run only suites related to the change; no full run before PUSH (exception: tasks about the tests themselves).
 - A suite that reports 0 checks crashed. Report it even if untouched.
 - Before asking PUSH on a behaviour change, grep `highlighter/test` for the changed feature/keys/colors; update tests expecting old behaviour; remove checks for retired behaviour rather than skipping.
-- CI runs only a quick gate per push (`node build.js --check` + `node --check` on the built file). The full Playwright suite is local-only.
 
 ## UI / Anthropic style
 - Screenshots: send them only when the User asks. Never add before/after or showcase shots by default. `shot.sh` crops to the visible highlighter UI by itself (override: `SHOT_CLIP`); use the same crop for before/after and light/dark.

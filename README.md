@@ -78,4 +78,4 @@ renaming or removing a style hides its annotations until it comes back.
 Edit the files in `highlighter/src/`, then run `node build.js` in `highlighter/` to rebuild
 `Highlighter.user.js` (`node build.js --check` says whether it is up to date). Tests are in
 `highlighter/test/`; `node highlighter/test/run.js <word>` runs the suites whose names contain the word
-(they need Playwright with Chromium). CI only checks that the build is up to date and valid.
+(they need Playwright with Chromium).

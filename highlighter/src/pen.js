@@ -7,6 +7,7 @@
     // Turns the pen on with style `key`, or off (null). A toolbar at the top of the view shows it.
     function setPen(key) {
         penKey = key === PEN_ERASER || (key && STYLES[key]) ? key : null;
+        renderSiteMenu();   // the menu's pen button shows the pencil or the slashed pencil
         if (!penKey) {
             if (!penEl.hidden) hideLabelTip();
             releaseFocus(penEl);
@@ -54,10 +55,10 @@
     }
 
     function togglePen() {
-        if (penKey) { setPen(null); scheduleToolbar(); showToast('Pen mode disabled', { icon: 'pencil-simple-line' }); return; }
+        if (penKey) { setPen(null); scheduleToolbar(); showToast('Pen mode disabled', { icon: 'pencil-simple-slash' }); return; }
         hideToolbar();
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
-        showToast('Pen mode enabled', { icon: 'pencil-simple-line' });
+        showToast('Pen mode enabled', { icon: 'pencil-simple' });
     }
 
     // After a mouse selection with the pen on: the selected text gets the pen's style (or, with the

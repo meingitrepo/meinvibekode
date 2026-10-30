@@ -33,16 +33,34 @@ async function toolbar(browser) {
   await ctx.close();
 }
 
+// A new note has nothing to save or erase, so Save and Erase are disabled and skipped: two stops, Discard and the note.
 async function editor(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML });
   await L.selStr(p, '#p1', 'Plain words'); await L.altKey(p, 'n'); await p.waitForTimeout(200);
   const seq = [await focused(p)];
   for (let i = 0; i < 4; i++) { await p.keyboard.press('Tab'); seq.push(await focused(p)); }
-  check('Tab goes round the editor and never leaves it', seq[0] === 'input' && !seq.includes('after') && !seq.includes(null) && seq[3] === 'input', seq);   // Save is disabled with nothing to save, so it is skipped
+  check('Tab goes round the editor and never leaves it', seq[0] === 'input' && !seq.includes('after') && !seq.includes(null) && seq[2] === 'input' && seq[1] === seq[3] && seq[1] !== 'input', seq);
+  await p.keyboard.press('Tab');
+  const onButton = await focused(p);
   await p.keyboard.press('Shift+Tab');
   const back = await focused(p);
-  check('Shift+Tab from the first button goes back round to the note', seq[4] !== 'input' && back === 'input', { at: seq[4], back });
+  check('Shift+Tab from the first button goes back round to the note', onButton !== 'input' && back === 'input', { at: onButton, back });
   check('the editor is still open', await p.evaluate(() => !!window.__hl.editor), null);
+  await ctx.close();
+}
+
+// A saved note can be erased, and an edited draft can be saved: Save, Discard, Erase and the note are all stops.
+async function editorSaved(browser) {
+  const { ctx, page: p } = await L.open(browser, { html: HTML });
+  await L.selStr(p, '#p1', 'Plain words'); await L.altKey(p, 'n'); await p.waitForTimeout(200);
+  await p.keyboard.type('first'); await p.keyboard.press('Enter'); await p.waitForTimeout(300);
+  await L.selStr(p, '#p1', 'Plain words'); await L.altKey(p, 'n'); await p.waitForTimeout(300);
+  const open = await p.evaluate(() => !!window.__hl.editor && !!window.__hl.editor.original);
+  await p.keyboard.type(' more');
+  const seq = [await focused(p)];
+  for (let i = 0; i < 4; i++) { await p.keyboard.press('Tab'); seq.push(await focused(p)); }
+  const buttons = seq.slice(1, 4);
+  check('Tab goes round the editor of a saved note through every button', open && seq[0] === 'input' && seq[4] === 'input' && new Set(buttons).size === 3 && !buttons.includes('input') && !seq.includes('after'), { open, seq });
   await ctx.close();
 }
 
@@ -66,6 +84,6 @@ async function shifted(browser) {
 
 (async () => {
   const browser = await L.launch();
-  await Promise.all([toolbar, editor, shifted].map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
+  await Promise.all([toolbar, editor, editorSaved, shifted].map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
   await L.done(browser);
 })();

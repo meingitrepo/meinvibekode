@@ -268,8 +268,10 @@
 
     function loadStoredRecords() {
         const records = readRecords(currentKey) || [];
-        // Annotations saved under this page's plain URL (by older versions, or before the site
-        // declared a canonical URL) move to the current key.
+        // Annotations saved under this page's plain URL move to the current key. That still happens
+        // with current versions, not only old ones: the plain URL is the key whenever no trusted
+        // canonical link is known (see canonicalKey: a hash route, a stale link after an in-page
+        // navigation, a link the site adds late), and a later visit may know it.
         const legacyKeys = Array.from(new Set([urlKey(location.href), location.href])).filter(k => k !== currentKey);
         const moved = [];
         legacyKeys.forEach(k => {

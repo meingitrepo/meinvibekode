@@ -41,6 +41,10 @@
     // placed (or wait for their text, like any saved annotation). The one whose note is being
     // written here stays as it is. An annotation of this tab that the other tab never saw (both
     // saved at once) stays too, and is saved again.
+    // Known limit: Violentmonkey gives `oldRaw` as this tab's own cached value, which already holds
+    // its own just-saved annotation. Two tabs saving within the few milliseconds a change takes to
+    // arrive therefore each read the other's new annotation as a delete, and one of them is lost
+    // at the next save. Closing that needs a revision or tombstone per annotation (a stored-data change).
     function onStoredKeyChanged(name, oldRaw, newRaw, remote) {
         if (!remote || !running || nav || name !== currentKey) return;
         const before = new Set((parseRecords(oldRaw) || []).map(recordOwner));

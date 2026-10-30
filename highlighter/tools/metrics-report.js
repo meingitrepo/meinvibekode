@@ -66,7 +66,8 @@ if (require.main !== module) return;
 const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
 const git = (...a) => execFileSync('git', a, { cwd: root, encoding: 'utf8' }).trim();
 const days = +(process.argv[2] || 7);
-const logFile = path.join(root, '.cache', 'metrics.tsv');
+const mainRoot = path.resolve(root, execFileSync('git', ['rev-parse', '--git-common-dir'], { cwd: root, encoding: 'utf8' }).trim(), '..'); // worktrees share the main checkout log
+const logFile = path.join(mainRoot, '.cache', 'metrics.tsv');
 if (process.argv[2] !== '--now' && !fs.existsSync(logFile)) { console.log('no .cache/metrics.tsv yet (written by release.sh)'); process.exit(0); }
 
 // Transcripts: ~/.claude/projects/<repo path with non-alphanumerics as "-">[-worktree suffix]/*.jsonl

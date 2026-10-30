@@ -54,4 +54,23 @@ execFileSync('git', ['init', '-q'], { cwd: bare });
 const nowOut = execFileSync('node', [path.join(__dirname, '../tools/metrics-report.js'), '--now'], { cwd: bare, encoding: 'utf8' });
 check('--now prints nothing when the log does not exist yet', nowOut === '', nowOut);
 fs.rmSync(bare, { recursive: true, force: true });
+
+// Worktrees share one log: release.sh run from a worktree must append to the MAIN checkout's .cache/metrics.tsv and the report
+// must read it from there (a row written in a worktree used to stay invisible, e.g. 9.45).
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mr-wt-'));
+const run = (cwd, cmd, args) => execFileSync(cmd, args, { cwd, encoding: 'utf8', env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t', TIER: 'T0' } });
+const origin = path.join(tmp, 'origin.git'), main = path.join(tmp, 'main'), wt = path.join(tmp, 'wt');
+run(tmp, 'git', ['init', '-q', '--bare', '-b', 'main', origin]);
+run(tmp, 'git', ['clone', '-q', origin, main]);
+run(main, 'git', ['checkout', '-q', '-B', 'main']);
+fs.writeFileSync(path.join(main, 'x.txt'), '0\n');
+run(main, 'git', ['add', '.']); run(main, 'git', ['commit', '-q', '-m', 'init']); run(main, 'git', ['push', '-q', 'origin', 'main']);
+run(main, 'git', ['worktree', 'add', '-q', wt, '-b', 'feat']);
+fs.writeFileSync(path.join(wt, 'x.txt'), '1\n');
+run(wt, 'bash', [path.join(__dirname, '../tools/release.sh'), '--files', 'x.txt', 'T', 'W', 'm']);
+const inMain = fs.existsSync(path.join(main, '.cache', 'metrics.tsv')), inWt = fs.existsSync(path.join(wt, '.cache', 'metrics.tsv'));
+check('release.sh in a worktree logs to the main checkout, not the worktree', inMain && !inWt, { inMain, inWt });
+const seen = run(wt, 'node', [path.join(__dirname, '../tools/metrics-report.js')]);
+check('the report run in a worktree reads the main checkout log', !seen.includes('no .cache/metrics.tsv yet') && /cfg/.test(seen), seen);
+fs.rmSync(tmp, { recursive: true, force: true });
 process.exit(fails ? 1 : 0);

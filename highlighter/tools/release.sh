@@ -18,6 +18,12 @@ log_row() {
         "$(git rev-parse --short HEAD)" "${turns:-}" "${tokens:-}"
 }
 
+# Appends a row to the log of the MAIN checkout: worktrees share one log (a row left in a worktree is invisible to the report).
+append_log() {
+    local main; main="$(cd "$(git rev-parse --git-common-dir)/.." && pwd)"
+    mkdir -p "$main/.cache" && echo "$1" >> "$main/.cache/metrics.tsv"
+}
+
 # Prints a log row as one readable line.
 show_metrics() {
     local date ver tier attempts files ins del sha turns tokens
@@ -44,7 +50,7 @@ if [ "${1:-}" = --files ]; then
         if git push -q origin HEAD:main; then
             echo "PUSHED cfg ($(git rev-parse --short HEAD)) to main"
             line=$(log_row cfg "$attempt" HEAD~1 HEAD)
-            mkdir -p .cache && echo "$line" >> .cache/metrics.tsv
+            append_log "$line"
             show_metrics "$line"; exit 0
         fi
     done
@@ -79,7 +85,7 @@ for attempt in 1 2 3; do
         echo "PUSHED $ver ($(git rev-parse --short HEAD)) to main"
         # Metrics: tier is passed in (TIER=T0..T3); the rest is measured here. Log is git-ignored (.cache/).
         line=$(log_row "$ver" "$attempt" "$base" HEAD)
-        mkdir -p .cache && echo "$line" >> .cache/metrics.tsv
+        append_log "$line"
         show_metrics "$line"; exit 0
     fi
     git reset -q --hard "$code"   # drop this attempt's version and build, then retry

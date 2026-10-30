@@ -98,8 +98,9 @@ const state = page => page.evaluate(() => ({
   ({ ctx, page } = await L.open(browser, { html: HTML, menu: true, store, url: 'https://example.test/next' }));
   s = await state(page);
   L.check('next visit: collapsed again, place kept', s.expanded === 'false' && !s.open && s.rect.left > 150, s);
-  await page.evaluate(() => window.__hl.menuClose.click()); await page.waitForTimeout(300);
-  L.check('close hides the menu on this site', !(await state(page)).shown);
+  L.check('no "Hide the menu" button in the menu', await page.evaluate(() => !window.__hl.menuClose && ![...window.__hl.menuEl.querySelectorAll('button')].some(b => /Hide the menu/.test(b.getAttribute('aria-label') || ''))));
+  await L.altKey(page, 'm', true); await page.waitForTimeout(300);
+  L.check('Alt+Shift+M hides the menu on this site', !(await state(page)).shown);
   await L.altKey(page, 'm', true); await page.waitForTimeout(300);
   L.check('Alt+Shift+M brings it back', (await state(page)).shown);
   const theme = () => page.evaluate(() => window.__hl.menuEl.getRootNode().host.getAttribute('data-theme'));

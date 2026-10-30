@@ -66,7 +66,7 @@ async function basic(browser) {
   check('stored with the new style, same group, note and date', a && a.key === 'h2' && a.note === 'my note' && st.length === 2, st);
   check('key was taken (preventDefault)', (await lastPrevented(p)) === true, null);
   check('no toast for a restyle', (await L.toast(p)) === null, await L.toast(p));
-  check('drawn with the green color', s.find(w => w.g === 'gA').stroke === '#8CE6F2', s);
+  check('drawn with the green color', s.find(w => w.g === 'gA').stroke === '#A8C8E1', s);
   check('the other annotation is untouched', keysOf(s, 'gB').join() === 'u', s);
   await L.altKey(p, 'z');
   s = await state(p);
@@ -233,7 +233,7 @@ async function dark(browser) {
   await hover(p, 'gD');
   await L.altKey(p, '1');
   const s = await state(p);
-  check('on a dark box the new style uses its dark color', s[0].k === 'h2' && s[0].dark && s[0].stroke === '#006D7A', s);
+  check('on a dark box the new style uses its dark color', s[0].k === 'h2' && s[0].dark && s[0].stroke === '#3D6A8C', s);
   await ctx.close();
 }
 

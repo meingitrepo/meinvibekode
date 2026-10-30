@@ -18,7 +18,6 @@
     const menuHandle = makeEl('div', { class: 'sitemenu-handle', 'aria-hidden': 'true' });
     const menuExpand = makeButton({ icon: phosphorIcon('caret-down') });
     let menuOpen = false;   // not kept: every page starts with the menu collapsed
-    const menuClose = makeButton({ icon: phosphorIcon('x') });
     const menuTip = makeEl('div', { class: 'surface tip', role: 'tooltip', hidden: '' });
     let menuTipTimer = null;
 
@@ -67,7 +66,6 @@
         ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye-slash'), () => toggleAnnotationsHidden())]
     ]);
     addMenuTip(menuExpand, 'Expand');
-    addMenuTip(menuClose, 'Hide the menu', 'Alt+Shift+M');
 
     function addMenuTip(b, label, shortcut) {
         b.setAttribute('aria-label', shortcut ? `${label} (${shortcut})` : label);
@@ -79,7 +77,7 @@
     }
 
     const menuTools = makeEl('div', { class: 'sitemenu-tools' }, [
-        makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons.values(), menuClose])
+        makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons.values()])
     ]);
     const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'horizontal', 'aria-label': 'Highlighter', hidden: '' }, [menuHandle, makeEl('div', { class: 'sitemenu-expand' }, [menuExpand]), menuTools]);
     menuRoot.append(makeEl('style', { text: UI_CSS }), menuEl, menuTip);
@@ -120,7 +118,6 @@
     }
 
     menuExpand.addEventListener('click', () => { menuOpen = !menuOpen; hideMenuTip(); renderSiteMenu(); });
-    menuClose.addEventListener('click', () => { setMenuHidden(true); renderSiteMenu(); refreshMenu(); });
 
     // Dragging the menu by its handle or edge moves it; the place is kept for every site.
     menuEl.addEventListener('pointerdown', e => {

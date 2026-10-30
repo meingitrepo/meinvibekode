@@ -54,12 +54,12 @@ const tbRect = page => L.toolbar(page).then(t => t && t.rect);
     const badge = t => badges.find(x => x.t === t);
     L.check('badge 10px at 16px, zero net width', badge('words').w === '10px' && badge('words').ml === '-10px', badges);
     L.check('badge grows on a heading', parseFloat(badge('heading').w) > 18, badges);
-    L.check('badge in its highlight color with a white rim on light', badge('words').bg === 'rgb(255, 239, 110)' && /rgb\(255, 255, 255\)/.test(badge('words').ring), badges);
-    L.check('badge in the dark highlight color with a dark rim on dark', badge('darkCode').bg === 'rgb(122, 98, 0)' && /rgb\(27, 27, 27\)/.test(badge('darkCode').ring), badges);
+    L.check('badge in its highlight color with a white rim on light', badge('words').bg === 'rgb(239, 217, 138)' && /rgb\(255, 255, 255\)/.test(badge('words').ring), badges);
+    L.check('badge in the dark highlight color with a dark rim on dark', badge('darkCode').bg === 'rgb(111, 86, 20)' && /rgb\(27, 27, 27\)/.test(badge('darkCode').ring), badges);
     await L.selStr(page, '#p1', 'words'); await L.altKey(page, 'n'); await page.waitForTimeout(150);
     await page.evaluate(() => getSelection().removeAllRanges()); await page.waitForTimeout(300);
     const editing = await page.evaluate(() => Array.from(document.querySelectorAll('span[data-highlighter-note-mark]')).map(w => [w.textContent, getComputedStyle(w, '::after').backgroundColor]));
-    L.check('badge in the outline color while its note is edited (8.42)', editing.find(x => x[0] === 'words')[1] === 'rgb(0, 0, 0)' && editing.find(x => x[0] === 'heading')[1] === 'rgb(255, 239, 110)', editing);
+    L.check('badge in the outline color while its note is edited (8.42)', editing.find(x => x[0] === 'words')[1] === 'rgb(0, 0, 0)' && editing.find(x => x[0] === 'heading')[1] === 'rgb(239, 217, 138)', editing);
     const outlined = await page.evaluate(() => ({ boxes: window.__hl.selectBoxesEl.querySelectorAll('.select-box:not([hidden])').length, tb: !window.__hl.toolbarEl.hidden }));
     L.check('editing draws the dashed outline, no toolbar', outlined.boxes === 1 && !outlined.tb, outlined);
     await page.keyboard.press('Escape'); await page.waitForTimeout(100);
@@ -79,9 +79,9 @@ const tbRect = page => L.toolbar(page).then(t => t && t.rect);
     L.check('toolbar on a dark block is dark, the toast stays light', a.toast === 'light' && b.toast === 'light' && b.host === 'dark' && b.tb, { a, b });
     const toastBg = await page.evaluate(() => getComputedStyle(window.__hl.toastEl).backgroundColor);
     L.check('toast background light', toastBg === 'rgb(250, 249, 245)', toastBg);
-    // Toast: Foreground2 icon, focusable container
-    const tf = await page.evaluate(() => { const t = window.__hl.toastEl; return { icon: getComputedStyle(t.querySelector(':scope > .icon')).color, tab: t.getAttribute('tabindex') }; });
-    L.check('toast icon uses Foreground2, container is focusable', tf.icon === 'rgb(61, 61, 58)' && tf.tab === '-1', tf);
+    // Toast: a tooltip-like text line (no leading icon), focusable container
+    const tf = await page.evaluate(() => { const t = window.__hl.toastEl; return { icon: getComputedStyle(t.querySelector(':scope > .icon')).display, tab: t.getAttribute('tabindex') }; });
+    L.check('toast shows no leading icon, container is focusable', tf.icon === 'none' && tf.tab === '-1', tf);
     await page.evaluate(() => getSelection().removeAllRanges());
     // gradient hero: dark colors
     await page.evaluate(() => document.querySelector('#hero').scrollIntoView());

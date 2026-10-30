@@ -12,10 +12,15 @@ const HTML = `<!doctype html><html><body style="font: 16px/1.5 sans-serif; margi
 
   await page.evaluate(() => window.__hl.showToast('A toast title that is long enough to wrap onto a second line when the toast is narrow, to test the width')); await page.waitForTimeout(300);
   // 13: toast
-  const toast = await css('window.__hl.toastEl', ['borderTopLeftRadius', 'right', 'bottom']);
-  L.check('13: toast radius 16px', toast.borderTopLeftRadius === '16px', toast);
-  L.check('13: toast width 292px', toast.w === 292, toast);
-  L.check('13: toast offset 16px from the corner', toast.right === '16px' && toast.bottom === '16px', toast);
+  // 9.24: a toast is a tooltip at the bottom centre: same padding, radius and type size.
+  await page.evaluate(() => { const t = window.__hl.labelTipEl; t.textContent = 'Tip'; t.hidden = false; });
+  const toast = await css('window.__hl.toastEl', ['borderTopLeftRadius', 'bottom', 'padding', 'fontSize']);
+  const tip = await css('window.__hl.labelTipEl', ['borderTopLeftRadius', 'padding', 'fontSize']);
+  const geo = await page.evaluate(() => { const r = window.__hl.toastEl.getBoundingClientRect(); return { mid: Math.round(r.left + r.width / 2), vw: innerWidth, left: Math.round(r.left), right: Math.round(r.right) }; });
+  L.check('13: toast has the tooltip\'s radius, padding and type size', toast.borderTopLeftRadius === tip.borderTopLeftRadius && toast.padding === tip.padding && toast.fontSize === tip.fontSize, { toast, tip });
+  L.check('13: toast is centred at the bottom, 16px up', toast.bottom === '16px' && Math.abs(geo.mid - geo.vw / 2) <= 1, { toast, geo });
+  L.check('13: a long toast wraps inside the view', geo.left >= 16 && geo.right <= geo.vw - 16, geo);
+  L.check('13: tooltip padding is even, 6px 10px', tip.padding === '6px 10px', tip);
   // 18: note card, note editor, annotations panel
   for (const [name, get] of [['card', 'window.__hl.noteCardEl'], ['editor', 'window.__hl.editorEl'], ['panel', 'window.__hl.panelEl']]) {
     const s = await css(get, ['borderTopLeftRadius', 'boxShadow']);

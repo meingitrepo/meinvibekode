@@ -189,7 +189,7 @@
         }
         /* In the page, not the window: they scroll with their text (see uiHost). */
         .surface.toolbar, .surface.tip, .surface.card, .surface.editor { position: absolute; }
-        .surface.card, .surface.editor, .surface.panel, .surface.everything-box, .surface.toast { border-radius: var(--radius-card); }
+        .surface.card, .surface.editor, .surface.panel, .surface.everything-box { border-radius: var(--radius-card); }
         @keyframes highlighter-pin { from { border-color: var(--line-pressed); } }
         @keyframes highlighter-enter { from { opacity: 0; } }
 
@@ -252,7 +252,7 @@
         /* Tooltip */
         /* One line, kept inside the view: nowrap measures the tip at its full width wherever it last
            stood, so placePanel() can move it in from the edge instead of the edge squeezing it. */
-        .tip { white-space: nowrap; max-width: calc(100vw - 8px); overflow: hidden; text-overflow: ellipsis; padding: 4px 11px 6px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); pointer-events: none; }
+        .tip { white-space: nowrap; max-width: calc(100vw - 8px); overflow: hidden; text-overflow: ellipsis; padding: 6px 10px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); pointer-events: none; }
         .tip .kbd { margin-left: 8px; color: var(--ink-3); }
 
         /* Panels (note preview, note editor, toast) all have 12px padding. Their 32px icon buttons
@@ -302,24 +302,17 @@
            panel, which would leave the box's border wider than the textarea and its scrollbar. */
         .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         /* Toast */
-        .toast { top: auto; left: auto; right: 16px; bottom: 16px; display: flex; align-items: flex-start; gap: 8px; width: min(292px, calc(100vw - 32px)); padding: 12px; }
-        .toast .icon { color: var(--ink-2); }
-        .toast[data-intent="success"] > .icon { color: var(--success); }
-        .toast[data-intent="warning"] > .icon { color: var(--warning); }
-        .toast[data-intent="error"] > .icon { color: var(--danger); }
-        .toast > .icon { width: 16px; height: 16px; margin-top: 2px; }
+        /* A tooltip's size and style, centred at the bottom of the view: the same padding, 12px type and
+           radius as .tip, text only (no leading icon, no dismiss button; it fades on its own). */
+        .toast { top: auto; left: 50%; right: auto; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 32px); padding: 6px 10px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
+        .toast > .icon, .toast > .btn[aria-label="Dismiss"] { display: none; }
         .toast-content { flex: 1; min-width: 0; }
-        .toast-text { font-weight: 600; }
-        .toast .btn-icon { margin: -6px 0; }
-        .toast .btn-icon:last-child { margin-right: -6px; }
+        .toast-text { font-weight: 400; }
+        /* Action buttons shrink to the tooltip's line: the pill stays one line high. */
+        .toast .btn-icon { width: 24px; height: 24px; margin: -4px -4px -4px 0; }
         /* A toast's text buttons (the font hint's): small and subtle. Undo, Restore and Show are icon buttons. */
         .btn-small { min-width: 0; height: 24px; padding: 0 8px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
-        .toast .btn-small { flex: none; margin: -2px 0; }
-        /* Two text buttons don't fit beside the message: they wrap to a row under it, in line with its text. */
-        .toast.two-actions { flex-wrap: wrap; }
-        .toast.two-actions .toast-content { flex: 1 1 140px; }
-        .toast.two-actions > .btn-small { order: 2; }
-        .toast.two-actions > .btn-small:first-of-type { margin-left: 24px; }
+        .toast .btn-small { flex: none; margin: -4px 0; }
         .toast .btn-small[hidden] { display: none; }
         .toast:focus-visible { outline: 2px solid var(--focus); }
         /* The pen's bar, centred at the top of the view. */

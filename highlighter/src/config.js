@@ -89,19 +89,19 @@
     // overrides that, for example { color: '#444', textColor: '#fff' }.
     const HIGHLIGHT = { type: 'highlight', textColor: '' };
     const STYLES = {
-        h2: { ...HIGHLIGHT, label: 'Cyan highlight', shortcut: 'Digit1', color: '#8CE6F2' },     // was green before 8.6
-        h4: { ...HIGHLIGHT, label: 'Magenta highlight', shortcut: 'Digit2', color: '#F2A0E8' }, // was pink before 8.6
-        h:  { ...HIGHLIGHT, label: 'Yellow highlight', shortcut: ['KeyH', 'Digit3'], color: '#FFEF6E' },
+        h2: { ...HIGHLIGHT, label: 'Cyan highlight', shortcut: 'Digit1', color: '#A8C8E1' },     // Anthropic blue tint (9.24)
+        h4: { ...HIGHLIGHT, label: 'Magenta highlight', shortcut: 'Digit2', color: '#E0B5C9' }, // Anthropic fig tint (9.24)
+        h:  { ...HIGHLIGHT, label: 'Yellow highlight', shortcut: ['KeyH', 'Digit3'], color: '#EFD98A' },   // warm gold (9.24)
         h3: { ...HIGHLIGHT, label: 'Blue highlight', retired: true, color: '#90CAF9' },
         h5: { ...HIGHLIGHT, label: 'Orange highlight', retired: true, color: '#FFCC80' },
         u:  { label: 'Underline', shortcut: 'KeyU', type: 'underline', color: '#D32F2F', textColor: '', strokeWidth: 1 },   // clear red at 1px, 5:1 on white
         s:  { label: 'Strikethrough', shortcut: 'KeyS', type: 'strike-through', color: '#D32F2F', textColor: '', strokeWidth: 1 }
     };
     const DARK_OVERRIDES = {
-        h:  { color: '#7A6200' },   // dark gold
-        h2: { color: '#006D7A' },   // deep cyan
+        h:  { color: '#6F5614' },   // dark gold
+        h2: { color: '#3D6A8C' },   // deep blue
         h3: { color: '#1565C0' },
-        h4: { color: '#9C1F8C' },   // deep magenta
+        h4: { color: '#8A4A68' },   // deep fig
         h5: { color: '#B23C00' },   // deep orange
         u:  { color: '#FF5F57' },   // warm light red: reads red, not pink, on dark (6:1)
         s:  { color: '#FF5F57' }

@@ -40,7 +40,7 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"></head><body styl
   let s = await shown(p);
   L.check('both missing: names both, two buttons', s.text === 'Poppins and Lora not installed; using Arial and Georgia.' && s.a === 'Poppins' && s.b === 'Lora', s);
   const lay = await p.evaluate(() => { const r = window.__hl; const tb = r.toastText.getBoundingClientRect(), a = r.toastAction.getBoundingClientRect(); return { textW: Math.round(tb.width), buttonsBelowText: a.top >= tb.bottom - 1, toastH: Math.round(r.toastEl.getBoundingClientRect().height) }; });
-  L.check('both missing: the message keeps a readable width, the buttons sit under it', lay.textW > 150 && lay.buttonsBelowText, lay);
+  L.check('both missing: the message keeps a readable width, the buttons sit beside it in a tooltip-sized toast', lay.textW > 150 && !lay.buttonsBelowText && lay.toastH <= 48, lay);
   L.check('both missing: the version is recorded when shown', (await saved(p)) === '9.99', await saved(p));
   await p.evaluate(() => window.__hl.toastAction2.click());
   L.check('the Lora button opens Lora in a new tab, noopener', JSON.stringify(await p.evaluate(() => window.__opened)) === JSON.stringify([[LORA, 'noopener']]), await p.evaluate(() => window.__opened));

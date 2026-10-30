@@ -1,6 +1,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.45", "Hiding closes the panel; menu panel/search show pressed; toolbar button disabled with pen"],
         ["9.44", "Annotations hidden by default; panel and pen show them while open"],
         ["9.43", "Alt+Shift+H shortcut guide, Alt+Shift+W release changelog, opens once after each update"],
         ['9.42', 'List-checks icon for Alt+O'],

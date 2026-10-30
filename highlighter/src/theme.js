@@ -348,6 +348,7 @@
         if (!hide) { showAnnotations(); return; }
         setAnnotationsHidden(hide);
         if (penKey) setPen(null);   // the pen can't draw on what is hidden
+        closePanel();               // nor can the panel list what is hidden
         showToast('Annotations hidden', { icon: 'eye-slash' });
     }
 

@@ -28,7 +28,7 @@ if [ "${1:-}" = --files ]; then
         git rebase -q origin/main || { echo 'REBASE CONFLICT: resolve keeping BOTH changes, git rebase --continue, rerun'; exit 1; }
         if git push -q origin HEAD:main; then
             echo "PUSHED cfg ($(git rev-parse --short HEAD)) to main"
-            show_diffstat HEAD~1 HEAD; exit 0
+            exit 0
         fi
     done
     echo 'push rejected 3 times'; exit 1
@@ -60,7 +60,7 @@ for _ in 1 2 3; do
     git commit -q --amend -m "$ver: $msg"
     if git push -q origin HEAD:main; then
         echo "PUSHED $ver ($(git rev-parse --short HEAD)) to main"
-        show_diffstat "$base" HEAD; exit 0
+        exit 0
     fi
     git reset -q --hard "$code"   # drop this attempt's version and build, then retry
 done

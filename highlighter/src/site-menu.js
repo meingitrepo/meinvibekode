@@ -56,14 +56,14 @@
 
     // id, label, shortcut, icon, click, in groups: the modes (shown pressed while on), history, then the views.
     const menuButtons = new Map([
-        ['pen', menuButton('Pen', 'Alt+P', phosphorIcon('pencil-simple'), () => togglePen())],
+        ['pen', menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple'), () => togglePen())],
         ['toolbar', menuButton('Selection toolbar', 'Alt+T', phosphorIcon('highlighter'), () => toggleToolbarSwitch())],
-        ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon('keyboard'), () => toggleKeysSwitch())],
+        ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon('command'), () => toggleKeysSwitch())],
         ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
         ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())],
         ['panel', menuButton('Annotations', 'Alt+O', phosphorIcon('sort-ascending'), () => togglePanel())],
-        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('list-magnifying-glass'), () => toggleEverything())],
-        ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye-slash'), () => toggleAnnotationsHidden())]
+        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('binoculars'), () => toggleEverything())],
+        ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())]
     ]);
     addMenuTip(menuExpand, 'Expand');
 
@@ -100,7 +100,7 @@
         menuButtons.get('redo').disabled = !redoStack.length;
         const hideBtn = menuButtons.get('hide');
         hideBtn.dataset.label = annotationsHidden ? 'Show annotations' : 'Hide annotations';
-        hideBtn.replaceChildren(phosphorIcon(annotationsHidden ? 'eye' : 'eye-slash'));
+        hideBtn.replaceChildren(phosphorIcon(annotationsHidden ? 'eye-slash' : 'eye'));
         hideBtn.setAttribute('aria-label', `${hideBtn.dataset.label} (Alt+V)`);
         hideBtn.setAttribute('aria-pressed', String(!!annotationsHidden));
         const dark = computeDarkMode();

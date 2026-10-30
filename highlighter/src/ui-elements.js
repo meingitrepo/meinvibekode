@@ -84,7 +84,7 @@
     ]);
 
     // The pen (Alt+P, see setPen): a pill at the top of the view while it is on.
-    const penEl = makeEl('div', { class: 'surface pen', role: 'toolbar', 'aria-label': 'Pen', hidden: '' });
+    const penEl = makeEl('div', { class: 'surface pen', role: 'toolbar', 'aria-label': 'Pen mode', hidden: '' });
 
     // Everything saved (Alt+Shift+O, see openEverything): a dialog over the dimmed page.
     const everythingCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });   // the whole title, see setPanelTitle

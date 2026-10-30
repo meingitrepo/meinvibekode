@@ -445,12 +445,12 @@
                 setGroupNote(group, text);
                 saveHighlights();
                 scheduleRedraw();
-                showToast('Note saved');
+                showToast('Note saved', { icon: 'note-pencil' });
                 return;
             }
         }
         if (text !== original && runUndoable(() => setGroupNote(group, text))) {
-            if (text) showToast('Note saved');
+            if (text) showToast('Note saved', { icon: 'note-pencil' });
             else offerUndo('Note deleted');
         }
     }

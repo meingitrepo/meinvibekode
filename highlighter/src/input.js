@@ -135,7 +135,7 @@
         setKeysSwitchedOff(off);
         if (off) releaseAccessKeys();
         refreshMenu();
-        showToast(off ? 'Shortcuts disabled' : 'Shortcuts enabled');
+        showToast(off ? 'Shortcuts disabled' : 'Shortcuts enabled', { icon: 'command' });
     }
 
     function onKeyDown(e) {

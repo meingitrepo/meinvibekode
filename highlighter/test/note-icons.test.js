@@ -26,10 +26,10 @@ const START = { add: 'M90,96a6,6,0,0', edit: 'M228.24,59.76l', pencil: 'M225.9,7
   L.check('site menu: pen keeps the pencil', await page.evaluate(s => { const p = window.__hl.menuButtons.get('pen').querySelector('svg path.ic'); return p.getAttribute('d').startsWith(s); }, START.pencil), null);
   await L.altKey(page, 'KeyP');
   const hide = () => page.evaluate(() => { const p = window.__hl.menuButtons.get('hide').querySelector('svg path.ic'); return p.getAttribute('d').slice(0, 14); });
-  L.check('hide button shows eye-off while visible', (await hide()) === START.eyeOff, await hide());
+  L.check('hide button shows the eye while annotations are visible', (await hide()) === START.eye, await hide());
   await L.altKey(page, 'KeyV'); await page.waitForTimeout(300);
-  L.check('hide button shows eye while hidden', (await hide()) === START.eye, await hide());
+  L.check('hide button shows eye-off while they are hidden', (await hide()) === START.eyeOff, await hide());
   await L.altKey(page, 'KeyV'); await page.waitForTimeout(300);
-  L.check('hide button back to eye-off', (await hide()) === START.eyeOff, await hide());
+  L.check('hide button back to the eye', (await hide()) === START.eye, await hide());
   await b.close();
 })();

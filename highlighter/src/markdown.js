@@ -171,7 +171,7 @@
         syncLocation();
         const list = (items || pageAnnotations()).filter(a => a.wrappers.some(w => w.isConnected));
         if (!list.length) {
-            showToast('Nothing to copy');
+            showToast('Nothing to copy', { icon: 'copy' });
             return;
         }
         let markdown;
@@ -183,7 +183,7 @@
             return;
         }
         writeClipboard(markdown).then(
-            () => showToast(doneText('copied', list.length)),
+            () => showToast(doneText('copied', list.length), { icon: 'copy' }),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'warning-circle' }); });
     }
 

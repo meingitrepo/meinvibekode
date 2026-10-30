@@ -216,7 +216,7 @@
         const selected = everythingShown.filter(s => everythingChecked.has(s.id));
         if (!selected.length) return;
         writeClipboard(savedMarkdown(selected)).then(
-            () => showToast(doneText('copied', selected.length)),
+            () => showToast(doneText('copied', selected.length), { icon: 'copy' }),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'warning-circle' }); });
     });
     everythingForget.addEventListener('click', () => {

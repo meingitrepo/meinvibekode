@@ -34,7 +34,7 @@
         const selected = toolbarSelection();
         let range = selected && cleanRange(selected);
         if (!range) {
-            showToast('Select the text first');
+            showToast('Select the text first', { icon: 'highlighter' });
             return;
         }
         if (editor) {

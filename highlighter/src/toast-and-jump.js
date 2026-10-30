@@ -67,7 +67,7 @@
 
     // A message with an Undo link, for a change just made (Alt+Z does the same).
     function offerUndo(message) {
-        showToast(message, { icon: 'check', intent: 'success', action: { label: 'Undo', text: 'Undo', tip: 'Undo', shortcut: 'Alt+Z', run: undoLastAction } });
+        showToast(message, { icon: 'eraser', intent: 'success', action: { label: 'Undo', text: 'Undo', tip: 'Undo', shortcut: 'Alt+Z', run: undoLastAction } });
     }
 
     // The toast stays while the pointer rests on it or its button has focus.
@@ -218,7 +218,7 @@
         if (wrapped) target = dir > 0 ? 0 : groups.length - 1;
         jumpToGroup(groups[target], { showNote: true });
         // After the jump, which takes down an "Annotations hidden" message that would hold this one back.
-        if (wrapped && groups.length > 1) showToast(dir > 0 ? 'Back to the first annotation' : 'Back to the last annotation');
+        if (wrapped && groups.length > 1) showToast(dir > 0 ? 'Back to the first annotation' : 'Back to the last annotation', { icon: 'arrow-counter-clockwise' });
         return true;
     }
 

@@ -54,10 +54,10 @@
     }
 
     function togglePen() {
-        if (penKey) { setPen(null); scheduleToolbar(); showToast('Pen disabled'); return; }
+        if (penKey) { setPen(null); scheduleToolbar(); showToast('Pen mode disabled', { icon: 'pencil-simple' }); return; }
         hideToolbar();
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
-        showToast('Pen enabled');
+        showToast('Pen mode enabled', { icon: 'pencil-simple' });
     }
 
     // After a mouse selection with the pen on: the selected text gets the pen's style (or, with the

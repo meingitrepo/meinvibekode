@@ -55,7 +55,7 @@ async function run(browser) {
   await alt(p, 'o');
 
   await alt(p, 'k', true);
-  check('Alt+Shift+K turns our keys off', !JSON.parse(await p.evaluate(() => window.__gm['rnh:settings'])).keysOnSites.includes('example.test') && (await L.toast(p)) === null, await L.toast(p));
+  check('Alt+Shift+K turns our keys off', !JSON.parse(await p.evaluate(() => window.__gm['rnh:settings'])).keysOnSites.includes('example.test') && (await L.toast(p)) === 'Shortcuts disabled', await L.toast(p));
   await alt(p, 'z');
   await alt(p, 'u');
   check('keys off: the site\'s access keys and Alt handlers run', JSON.stringify(await site(p)) === '["main","js U"]', null);
@@ -63,7 +63,7 @@ async function run(browser) {
   await alt(p, 'h');
   check('and ours do nothing', (await L.wr(p)).length === 0 && JSON.stringify(await site(p)) === '["history"]', null);
   await alt(p, 'k', true);
-  check('Alt+Shift+K turns them on again', JSON.parse(await p.evaluate(() => window.__gm['rnh:settings'])).keysOnSites.includes('example.test') && (await L.toast(p)) === null, await L.toast(p));
+  check('Alt+Shift+K turns them on again', JSON.parse(await p.evaluate(() => window.__gm['rnh:settings'])).keysOnSites.includes('example.test') && (await L.toast(p)) === 'Shortcuts enabled', await L.toast(p));
   await site(p);
   await alt(p, 'h');
   check('and Alt+H highlights again', (await L.wr(p)).length === 1 && (await site(p)).length === 0, null);

@@ -37,8 +37,8 @@
     // such as Show; `tip` and `shortcut` are for its tooltip, `text` makes it a text button, `anywhere` lets it run
     // after the tab has left the page. `action2` adds a second, the same.
     function showToast(message, { icon = 'info', intent = 'info', action = null, action2 = null } = {}) {
-        // A plain message doesn't take the place of one still offering an action.
-        if (!action && !toastEl.hidden && toastRun) return;
+        // A plain message doesn't take the place of an offer that leaves the note being written open (Show), only of an Undo or Redo.
+        if (!action && !toastEl.hidden && toastRun && toastKeepsEditor) return;
         // The toast has the page's theme, set on it alone: a panel open next to a box of the
         // other theme keeps its own, and opening one later doesn't switch the toast's.
         const dark = computeDarkMode();
@@ -63,6 +63,11 @@
         void toastEl.offsetWidth;   // restart the entrance animation
         toastEl.hidden = false;
         startToastTimer(action ? TOAST_ACTION_MS : TOAST_MS);
+    }
+
+    // A message with an Undo link, for a change just made (Alt+Z does the same).
+    function offerUndo(message) {
+        showToast(message, { icon: 'check', intent: 'success', action: { label: 'Undo', text: 'Undo', tip: 'Undo', shortcut: 'Alt+Z', run: undoLastAction } });
     }
 
     // The toast stays while the pointer rests on it or its button has focus.

@@ -33,7 +33,9 @@
     function removeInSelection({ sel, range: selected }) {
         const range = cleanRange(selected);
         const overlaps = range ? findOverlaps(range) : [];
-        if (overlaps.length) runUndoable(() => eraseOverlaps(overlaps));
+        if (overlaps.length && runUndoable(() => eraseOverlaps(overlaps))) {
+            offerUndo(doneText('erased', new Set(overlaps.map(o => o.wrapper.getAttribute(GROUP_ATTR))).size));
+        }
         sel.removeAllRanges();
     }
 
@@ -133,6 +135,7 @@
         setKeysSwitchedOff(off);
         if (off) releaseAccessKeys();
         refreshMenu();
+        showToast(off ? 'Shortcuts disabled' : 'Shortcuts enabled');
     }
 
     function onKeyDown(e) {

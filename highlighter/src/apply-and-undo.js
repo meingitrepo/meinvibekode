@@ -254,12 +254,17 @@
         applyState(state);
     }
 
+    // Each says what it did and offers the opposite, as a link.
     function undoLastAction() {
+        if (!undoStack.length) return;
         stepHistory(undoStack, redoStack);
+        showToast('Undone', { icon: 'arrow-u-up-left', action: { label: 'Redo', text: 'Redo', tip: 'Redo', shortcut: 'Alt+Y', run: redoLastAction } });
     }
 
     function redoLastAction() {
+        if (!redoStack.length) return;
         stepHistory(redoStack, undoStack);
+        showToast('Redone', { icon: 'arrow-u-up-right', action: { label: 'Undo', text: 'Undo', tip: 'Undo', shortcut: 'Alt+Z', run: undoLastAction } });
     }
 
     // The menu's commands. A note being written closes first, as Esc would (a highlight made for a
@@ -270,12 +275,14 @@
         syncLocation();
         cancelEditor();
         resetUi();
-        runUndoable(() => {
+        const erased = countAnnotations(getCurrentRecords());
+        const step = runUndoable(() => {
             stopLateWatcher();
             pendingRecords = pendingRecords.filter(isOtherPage);   // they belong to other pages
             unwrapAll();
         });
         startLateWatcher();
+        if (step) offerUndo(doneText('erased', erased));
     }
 
     // Annotations of a style that no longer exists aren't missing, only hidden, and those made on

@@ -10,7 +10,7 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"></head><body styl
   L.check('toolbar shows when the site has it on', !!(await L.toolbar(page)));
   await L.altKey(page, 't'); await page.waitForTimeout(200);
   L.check('Alt+T hides it', !(await L.toolbar(page)));
-  L.check('no toast for the switch', (await L.toast(page)) === null, await L.toast(page));
+  L.check('the switch says enabled or disabled', /^Selection toolbar (en|dis)abled$/.test(await L.toast(page)), await L.toast(page));
   const settings = await page.evaluate(() => JSON.parse(window.__gm['rnh:settings']));
   L.check('stored in settings', !settings.toolbarOnSites.includes('example.test'), settings);
   L.check('menu says turn on', await page.evaluate(() => Object.keys(window.__menu).some(l => l.startsWith('Turn toolbar on'))));

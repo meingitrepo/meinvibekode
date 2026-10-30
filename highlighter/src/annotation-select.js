@@ -324,10 +324,10 @@
         cancelEditor();
         const live = groups.filter(g => groupWrappers(g).length);
         if (!live.length) return;
-        runUndoable(() => {
+        if (runUndoable(() => {
             live.forEach(g => unwrapMany(groupWrappers(g)));
             pendingRecords = pendingRecords.filter(r => !live.includes(recordOwner(r)));
-        });
+        })) offerUndo(doneText('erased', live.length));
     }
 
     // The keys for the selected annotations, with or without Alt (see onKeyDown). True if used.

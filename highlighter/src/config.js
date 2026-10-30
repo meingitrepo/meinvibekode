@@ -60,8 +60,10 @@
     const NOTE_MAX_LENGTH = 2000;
     const NOTE_MIN_LINES = 2;                   // the note box starts this tall,
     const NOTE_MAX_LINES = 12;                  // grows with the text up to this (the note card's 240px), then scrolls
-    const NOTE_BADGE_SIZE = 10;                 // px, at least; the speech-bubble badge on annotations with a note,
-    const NOTE_BADGE_EM = 0.6;                  // which grows with the font (0.6em: 10px at 16px, 19px on a 32px heading)
+    const NOTE_BADGE_SIZE = 14;                 // px, at least; the Phosphor chat badge on annotations with a note,
+    const NOTE_BADGE_EM = 0.85;                 // which grows with the font (0.85em: 14px at 16px, 27px on a 32px heading)
+    // Phosphor chat-teardrop-dots, Fill weight (@phosphor-icons/core, MIT, copyright (c) 2020-present Phosphor Icons), 256 grid.
+    const NOTE_BADGE_PATH = 'M132,24A100.11,100.11,0,0,0,32,124v84a16,16,0,0,0,16,16h84a100,100,0,0,0,0-200ZM88,140a12,12,0,1,1,12-12A12,12,0,0,1,88,140Zm44,0a12,12,0,1,1,12-12A12,12,0,0,1,132,140Zm44,0a12,12,0,1,1,12-12A12,12,0,0,1,176,140Z';
     const NOTE_BADGE_COLOR = '#d97757';         // clay, the Anthropic accent: the badge while its note is pinned,
     const NOTE_BADGE_DARK_COLOR = '#d97757';    // and on dark backgrounds (clay reads on both)
     const FLASH_MS = 900;                       // an annotation jumped to blinks twice in this time

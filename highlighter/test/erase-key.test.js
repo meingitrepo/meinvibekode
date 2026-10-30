@@ -18,7 +18,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   L.check('Alt+Backspace no longer erases', (await get('bravo')) && (await get('bravo')).n === 'note bravo', await get('bravo'));
   await L.altKey(page, 'd');
   L.check('first Alt+D deletes the note, keeps the annotation', (await get('bravo')) && !(await get('bravo')).n, await get('bravo'));
-  L.check('no toast for the note', (await L.toast(page)) === null, await L.toast(page));
+  L.check('the note removal says so and offers Undo', (await L.toast(page)) === 'Note deleted · Undo', await L.toast(page));
   await L.altKey(page, 'd');
   L.check('second Alt+D erases it', !(await get('bravo')), await L.wr(page));
   // Alt+Delete is no longer a shortcut; Alt+D twice erases echo (note first).
@@ -46,6 +46,6 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   await page.mouse.move(900, 650);
   await L.altKey(page, 'd', true);
   L.check('Alt+Shift+D clears the page', (await L.wr(page)).length === 0, await L.wr(page));
-  L.check('no toast for the clear', (await L.toast(page)) === null, await L.toast(page));
+  L.check('the clear says so and offers Undo', (await L.toast(page)) === '1 annotation erased · Undo', await L.toast(page));
   await L.done(b);
 })();

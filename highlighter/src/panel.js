@@ -12,10 +12,10 @@
         syncLocation();
         closeNoteForPanel();
         if (!groupWrappers(group).length) return;
-        runUndoable(() => {
+        if (runUndoable(() => {
             unwrapMany(groupWrappers(group));
             pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group);
-        });
+        })) offerUndo(doneText('erased', 1));
     }
 
     function forgetAnnotation(group) {
@@ -289,7 +289,7 @@
     panelCopy.addEventListener('click', () => {
         renderPanel();
         const ticked = panelItems.filter(a => panelChecked.has(a.group));
-        if (ticked.length) copyAnnotations(ticked, panelCopy);
+        if (ticked.length) copyAnnotations(ticked);
     });
     panelClose.addEventListener('click', closePanel);
     addLabelTip(panelErase, 'Erase selected annotations', '', () => true);

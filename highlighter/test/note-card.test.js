@@ -59,11 +59,11 @@ async function delay(browser) {
 // 8.34: the card's pin button keeps its note open, the badge blue (8.42); the pinned copy's pin button or Esc (8.35) lets it go.
 // 8.38: clicks elsewhere keep it; it drags by its footer; the editor does not move, and opening it unpins its note.
 // 8.39: several can be pinned; a pinned note scrolls away with its badge; clicking outside the editor keeps it.
-const DARKER = 'rgb(217, 119, 87)';   // 9.2: pinned badges are clay, the Anthropic accent
+const DARKER = '#d97757';   // 9.2: pinned badges are clay, the Anthropic accent
 async function pin(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store });
   await p.evaluate(() => { document.body.style.paddingBottom = '2000px'; });
-  const fill = g => p.evaluate(g => { const m = Array.from(document.querySelectorAll('[data-highlighter-note-pin]')).find(m => m.getAttribute('data-highlighter-group') === g); return m && getComputedStyle(m, '::after').backgroundColor; }, g);
+  const fill = g => p.evaluate(g => { const m = Array.from(document.querySelectorAll('[data-highlighter-note-pin]')).find(m => m.getAttribute('data-highlighter-group') === g); return m && getComputedStyle(m, '::after').getPropertyValue('--highlighter-badge-fill').trim(); }, g);
   const pins = () => p.evaluate(() => Array.from(window.__hl.uiRoot.querySelectorAll('.card[data-pinned]')).map(c => { const b = c.getBoundingClientRect(); return { text: c.querySelector('.card-text').textContent, x: b.left, y: b.top }; }));
   const rect = sel => p.evaluate(s => { const b = window.__hl.uiRoot.querySelector(s).getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; }, sel);
   const drag = async (sel, dx, dy) => { const h = await rect(sel); await p.mouse.move(h.x + 4, h.y + h.h / 2); await p.mouse.down(); await p.mouse.move(h.x + 4 + dx, h.y + h.h / 2 + dy, { steps: 5 }); await p.mouse.up(); };
@@ -154,7 +154,7 @@ async function del(browser) {
   await L.altKey(p, 'd'); await p.waitForTimeout(150);
   let w = (await L.wr(p)).filter(x => x.g === 'gA');
   check('Delete removes the note and keeps the annotation', w.length === 1 && !w[0].n && (await card(p)) === null, w);
-  check('no toast', (await L.toast(p)) === null, await L.toast(p));
+  check('deleting the note offers Undo', (await L.toast(p)) === 'Note deleted · Undo', await L.toast(p));
   const s = (await L.stored(p)).find(r => r.group === 'gA');
   check('and it is saved', s && !s.note, s);
   await L.altKey(p, 'z');

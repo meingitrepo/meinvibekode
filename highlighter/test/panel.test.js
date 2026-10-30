@@ -82,7 +82,7 @@ ${filler(40)}
   L.check('markdown quote+link', md.includes('> quick brown fox [↗](https://example.test/a#:~:text=quick%20brown%20fox)\n\nFox note #animals'), md);
   L.check('markdown escapes', md.includes('> \\*star\\* and \\_under\\_'), md);
   L.check('markdown context for repeated', /text=Here%2E?|text=[^)]*Repeated%20words[^)]*/.test(md) && md.includes('-,Repeated%20words') === false, md);
-  L.check('copy shows no toast', (await L.toast(page)) === null, await L.toast(page));
+  L.check('copy says how many were copied', /^\d+ annotations? copied$/.test(await L.toast(page)), await L.toast(page));
   await page.evaluate(() => window.__hl.panelSelectAll.click());
   const hid = await page.evaluate(() => { const c = window.__hl.panelList.querySelector('.item .check'); return getComputedStyle(c).opacity; });
   L.check('tick box hidden until the row is hovered', hid === '0', hid);
@@ -96,11 +96,11 @@ ${filler(40)}
   const copyIcon = await page.evaluate(() => window.__hl.panelCopy.querySelector('svg path').getAttribute('d'));
   await page.evaluate(() => window.__hl.panelCopy.click()); await page.waitForTimeout(100);
   const cp = { clip: await page.evaluate(() => window.__clip), toast: await L.toast(page), icon: await page.evaluate(() => window.__hl.panelCopy.querySelector('svg path').getAttribute('d')) };
-  L.check('copy respects the selection', cp.clip.includes('three four') && cp.toast === null && cp.icon !== copyIcon, { clip: cp.clip.slice(0, 80), toast: cp.toast, changed: cp.icon !== copyIcon });
+  L.check('copy respects the selection', cp.clip.includes('three four') && cp.toast === '1 annotation copied' && cp.icon === copyIcon, { clip: cp.clip.slice(0, 80), toast: cp.toast, same: cp.icon === copyIcon });
   await page.evaluate(() => window.__hl.panelErase.click());
   await L.until(page, () => !Array.from(window.__hl.panelList.querySelectorAll('.item-text')).some(e => e.textContent === 'three four'));
   it = await L.items(page);
-  L.check('delete', !it.some(i => i.text === 'three four') && (await L.toast(page)) === null, [it.length, await L.toast(page)]);
+  L.check('delete', !it.some(i => i.text === 'three four') && (await L.toast(page)) === '1 annotation erased · Undo', [it.length, await L.toast(page)]);
   st = await L.stored(page);
   L.check('delete stored', !st.some(r => r.text === 'three four'), st.length);
   await page.evaluate(() => window.__hl.uiRoot.activeElement && window.__hl.uiRoot.activeElement.blur()); await L.altKey(page, 'z');
@@ -118,7 +118,7 @@ ${filler(40)}
   L.check('select all ticks every row', all.n > 1 && all.ticked === all.n && all.all, all);
   await page.evaluate(() => window.__hl.panelErase.click());
   await L.until(page, () => !window.__hl.panelList.querySelector('.item:not(.missing)'));
-  L.check('erase all selected shows no toast', (await L.toast(page)) === null, await L.toast(page));
+  L.check('erase all selected offers Undo', /^\d+ annotations erased · Undo$/.test(await L.toast(page)), await L.toast(page));
   await page.evaluate(() => window.__hl.uiRoot.activeElement && window.__hl.uiRoot.activeElement.blur()); await L.altKey(page, 'z');
   await L.until(page, () => window.__hl.panelList.querySelectorAll('.item:not(.missing)').length > 1);
   const restored = await page.evaluate(() => ({ off: window.__hl.panelErase.disabled, ticked: window.__hl.panelList.querySelectorAll('.item .check:checked').length }));

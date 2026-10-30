@@ -268,7 +268,7 @@
     function deleteGroupNote(group) {
         syncLocation();
         if (editor) cancelEditor();
-        runUndoable(() => setGroupNote(group, ''));
+        if (runUndoable(() => setGroupNote(group, ''))) offerUndo('Note deleted');
     }
 
     // --- Note editor ---
@@ -416,7 +416,7 @@
     // Returns the state it dropped (with the annotation), or null if it couldn't.
     function discardStep(step) {
         if (undoStack[undoStack.length - 1] !== step) return null;
-        undoLastAction();
+        stepHistory(undoStack, redoStack);
         return redoStack.pop() || null;
     }
 
@@ -445,10 +445,14 @@
                 setGroupNote(group, text);
                 saveHighlights();
                 scheduleRedraw();
+                showToast('Note saved');
                 return;
             }
         }
-        if (text !== original) runUndoable(() => setGroupNote(group, text));
+        if (text !== original && runUndoable(() => setGroupNote(group, text))) {
+            if (text) showToast('Note saved');
+            else offerUndo('Note deleted');
+        }
     }
 
     // The site redrew the annotation's text while its note was open: the note goes on the

@@ -49,13 +49,13 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
   await L.altKey(page, 'd');
   w = await L.wr(page).then(a => a.filter(x => x.k === 'h4'));
   L.check('eraser keeps the rest with its note, minus the spaces at the cut', w.map(x => x.t).join('|') === 'two three|five' && w.every(x => x.n === 'Numbers note') && new Set(w.map(x => x.g)).size === 1, w);
-  L.check('no toast for a part', (await L.toast(page)) === null, await L.toast(page));
+  L.check('a part erased offers Undo', (await L.toast(page)) === '1 annotation erased · Undo', await L.toast(page));
   let st = await L.stored(page);
   L.check('stored pieces keep note', st.filter(r => r.key === 'h4').length === 2 && st.filter(r => r.key === 'h4').every(r => r.note === 'Numbers note'), st.filter(r => r.key === 'h4'));
   await L.selStr(page, '#p3', 'two', { endStr: 'five' }); await L.altKey(page, 'd');
   w = await L.wr(page).then(a => a.filter(x => x.k === 'h4'));
   L.check('eraser over all of it removes it', w.length === 0, w);
-  L.check('no toast for the whole', (await L.toast(page)) === null, await L.toast(page));
+  L.check('the whole erased offers Undo', (await L.toast(page)) === '1 annotation erased · Undo', await L.toast(page));
   // --- trimmed, snapped selections ---
   await L.selStr(page, '#p6', ' beta gamma '); await L.altKey(page, 'h');
   w = await L.wr(page).then(a => a.filter(x => x.t.includes('beta')));

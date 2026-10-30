@@ -18,40 +18,30 @@
            outlined in it (see markSelected). */
         svg[${SVG_ATTR}] g[${SELECTED_ATTR}] path { stroke: HighlightText !important; }
         svg[${SELECTED_ATTR}] rect { stroke: HighlightText !important; stroke-width: 1px !important; }
-        /* Note badge: a small speech bubble (round, with one sharp corner at the bottom left)
-           holding three dots, sitting on the top-right corner of an annotation that has a note.
+        /* Note badge: the Phosphor chat-teardrop-dots icon (a round bubble with one sharp corner
+           at the bottom left, three dots), sitting on the top-right corner of an annotation that has a note.
            Zero net width (its width is cancelled by an equal negative margin), so it never moves
            text; a transform lifts it half out of the line, so it covers little of the text. Its
            rim is in the background's color (light or dark, per DARK_ATTR), which keeps
-           it apart from highlights and lines of any color, stacked or not. Drawn with gradients,
-           not an image, so pages that limit images (CSP) still show it. Generated content isn't
+           it apart from highlights and lines of any color, stacked or not. Drawn as an inline SVG
+           data image (badgeState), so a page whose CSP bars data images shows no badge. Generated content isn't
            part of textContent or the selection, so saved offsets are unaffected. It grows with
            the font. */
         span[${NOTE_MARK_ATTR}]::after {
             --highlighter-badge: max(${NOTE_BADGE_SIZE}px, ${NOTE_BADGE_EM}em);
-            --highlighter-badge-fill: ${NOTE_BADGE_COLOR};
-            --highlighter-badge-rim: #ffffff;
-            --highlighter-badge-dots: ${INK.dark};
+            ${badgeState(NOTE_BADGE_COLOR, INK.dark, '#ffffff')}
             content: "" !important;
             display: inline-block !important;
             box-sizing: border-box !important;
-            width: var(--highlighter-badge) !important; height: calc(var(--highlighter-badge) * 0.85) !important;
+            width: var(--highlighter-badge) !important; height: var(--highlighter-badge) !important;
             margin: 0 0 0 calc(-1 * var(--highlighter-badge)) !important; padding: 0 !important; border: 0 !important;
-            border-radius: 50% 50% 50% 8% !important;
-            background:
-                radial-gradient(circle, var(--highlighter-badge-dots) 0 45%, transparent 55%) 18% 50% / 22% 26% no-repeat,
-                radial-gradient(circle, var(--highlighter-badge-dots) 0 45%, transparent 55%) 50% 50% / 22% 26% no-repeat,
-                radial-gradient(circle, var(--highlighter-badge-dots) 0 45%, transparent 55%) 82% 50% / 22% 26% no-repeat,
-                var(--highlighter-badge-fill) !important;
-            box-shadow: 0 0 0 max(1.5px, 0.08em) var(--highlighter-badge-rim) !important;
+            background: var(--highlighter-badge-img) center / contain no-repeat !important;
             vertical-align: text-top !important;
-            transform: translate(45%, -55%) !important;
+            transform: translate(30%, -50%) !important;
             pointer-events: none !important;
         }
         span[${NOTE_MARK_ATTR}][${DARK_ATTR}]::after {
-            --highlighter-badge-fill: ${NOTE_BADGE_DARK_COLOR};
-            --highlighter-badge-rim: #1b1b1b;
-            --highlighter-badge-dots: ${INK.light};
+            ${badgeState(NOTE_BADGE_DARK_COLOR, INK.light, '#1b1b1b')}
         }
         /* The badge takes its annotation's color. Dots are dark on light pages and light on dark
            ones, so each color comes from the style's light or dark set, whichever is further from
@@ -59,13 +49,12 @@
            open, blue; while its annotation is selected or its note edited, the selection outline's
            color (see .select-box), which wins over pinned. These have dots in the rim's color. */
         ${Object.keys(STYLES).map(k => `
-        span[${NOTE_MARK_ATTR}][${STYLE_ATTR}="${k}"]::after { --highlighter-badge-color: ${badgeColor(k, INK.dark)}; }
-        span[${NOTE_MARK_ATTR}][${STYLE_ATTR}="${k}"][${DARK_ATTR}]::after { --highlighter-badge-color: ${badgeColor(k, INK.light)}; }`).join('')}
-        span[${NOTE_MARK_ATTR}][${STYLE_ATTR}]::after { --highlighter-badge-fill: var(--highlighter-badge-color); }
-        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_COLOR}; --highlighter-badge-dots: var(--highlighter-badge-rim); }
-        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_DARK_COLOR}; }
-        span[${NOTE_MARK_ATTR}][${NOTE_SELECT_ATTR}]::after, span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}]::after { --highlighter-badge-fill: #000000; --highlighter-badge-dots: var(--highlighter-badge-rim); }
-        span[${NOTE_MARK_ATTR}][${NOTE_SELECT_ATTR}][${DARK_ATTR}]::after, span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: #ffffff; }
+        span[${NOTE_MARK_ATTR}][${STYLE_ATTR}="${k}"]::after { ${badgeState(badgeColor(k, INK.dark), INK.dark, '#ffffff')} }
+        span[${NOTE_MARK_ATTR}][${STYLE_ATTR}="${k}"][${DARK_ATTR}]::after { ${badgeState(badgeColor(k, INK.light), INK.light, '#1b1b1b')} }`).join('')}
+        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}]::after { ${badgeState(NOTE_BADGE_COLOR, '#ffffff', '#ffffff')} }
+        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}][${DARK_ATTR}]::after { ${badgeState(NOTE_BADGE_DARK_COLOR, '#1b1b1b', '#1b1b1b')} }
+        span[${NOTE_MARK_ATTR}][${NOTE_SELECT_ATTR}]::after, span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}]::after { ${badgeState('#000000', '#ffffff', '#ffffff')} }
+        span[${NOTE_MARK_ATTR}][${NOTE_SELECT_ATTR}][${DARK_ATTR}]::after, span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}][${DARK_ATTR}]::after { ${badgeState('#ffffff', '#1b1b1b', '#1b1b1b')} }
         /* An annotation jumped to (Alt+J / Alt+K, or from the panel) blinks twice. */
         svg[${FLASH_ATTR}] {
             animation: highlighter-flash ${FLASH_MS / 2}ms ease-in-out 2 !important;
@@ -77,6 +66,16 @@
             svg[${FLASH_ATTR}] { animation: highlighter-flash ${FLASH_MS}ms ease-in-out 1 !important; }
         }
     `;
+
+    // The custom properties of one badge state: its colors (also read by the tests) and the Phosphor
+    // icon as an SVG image in them: a rim (the icon's outline, widened), the icon, and its dots.
+    function badgeState(fill, dots, rim) {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='-24 -24 304 304'>` +
+            `<path d='${NOTE_BADGE_PATH}' fill='${rim}' stroke='${rim}' stroke-width='40' stroke-linejoin='round'/>` +
+            `<path d='${NOTE_BADGE_PATH}' fill='${fill}'/>` +
+            [88, 132, 176].map(cx => `<circle cx='${cx}' cy='128' r='12' fill='${dots}'/>`).join('') + `</svg>`;
+        return `--highlighter-badge-fill: ${fill}; --highlighter-badge-dots: ${dots}; --highlighter-badge-rim: ${rim}; --highlighter-badge-img: url("data:image/svg+xml,${encodeURIComponent(svg)}");`;
+    }
 
     // Of style `key`'s light and dark colors, the one with more contrast against the badge's `dots`.
     // shortcut: compares 6-digit hex only (STYLES' colors); otherwise the light page takes the light set.

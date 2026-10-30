@@ -165,22 +165,8 @@
         return Promise.reject(new Error('no clipboard access'));
     }
 
-    const copyFlashes = new WeakMap();   // button -> { icon: its own icon, timer }
-
-    // Copying shows no toast: the button's icon turns into a check for a moment.
-    function flashCopied(button) {
-        if (!button) return;
-        const flash = copyFlashes.get(button) || { icon: button.firstElementChild, timer: 0 };
-        clearTimeout(flash.timer);
-        const check = phosphorIcon('check');
-        button.firstElementChild.replaceWith(check);
-        flash.timer = setTimeout(() => { check.replaceWith(flash.icon); }, 1500);
-        copyFlashes.set(button, flash);
-    }
-
     // `items`: the annotations to copy (the panel passes what its filter shows); all by default.
-    // `button`: the button that asked, which shows the check once it is copied.
-    function copyAnnotations(items = null, button = null) {
+    function copyAnnotations(items = null) {
         if (!running) return;
         syncLocation();
         const list = (items || pageAnnotations()).filter(a => a.wrappers.some(w => w.isConnected));
@@ -197,7 +183,7 @@
             return;
         }
         writeClipboard(markdown).then(
-            () => flashCopied(button),
+            () => showToast(doneText('copied', list.length)),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'warning-circle' }); });
     }
 

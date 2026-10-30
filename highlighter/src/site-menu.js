@@ -61,8 +61,8 @@
         ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon('keyboard'), () => toggleKeysSwitch())],
         ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
         ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())],
-        ['panel', menuButton('Annotations', 'Alt+O', phosphorIcon('list-bullets'), () => togglePanel())],
-        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('magnifying-glass'), () => toggleEverything())],
+        ['panel', menuButton('Annotations', 'Alt+O', phosphorIcon('sort-ascending'), () => togglePanel())],
+        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('list-magnifying-glass'), () => toggleEverything())],
         ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye-slash'), () => toggleAnnotationsHidden())]
     ]);
     addMenuTip(menuExpand, 'Expand');

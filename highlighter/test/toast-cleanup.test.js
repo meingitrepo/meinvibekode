@@ -8,11 +8,11 @@ const info = page => page.evaluate(() => { const r = window.__hl; const t = r.to
   const browser = await L.launch();
   const { page } = await L.open(browser, { html: HTML });
   await L.altKey(page, 'p'); await page.waitForTimeout(300);
-  L.check('pen on: no toast, the bar says it', (await L.toast(page)) === null && await page.evaluate(() => !window.__hl.penEl.hidden), await L.toast(page));
+  L.check('pen on: says enabled, and the bar shows it', (await L.toast(page)) === 'Pen enabled' && await page.evaluate(() => !window.__hl.penEl.hidden), await L.toast(page));
   await L.altKey(page, 'p'); await page.waitForTimeout(300);
-  L.check('pen off: no toast', (await L.toast(page)) === null, await L.toast(page));
+  L.check('pen off: says disabled', (await L.toast(page)) === 'Pen disabled', await L.toast(page));
   await L.altKey(page, 't'); await L.altKey(page, 't'); await L.altKey(page, 'k', true); await L.altKey(page, 'k', true);
-  L.check('toolbar and key switches: no toast', (await L.toast(page)) === null, await L.toast(page));
+  L.check('toolbar and key switches say enabled or disabled', /^(Selection toolbar|Shortcuts) (en|dis)abled$/.test(await L.toast(page)), await L.toast(page));
   await L.selStr(page, '#p1', 'words to select'); await page.waitForTimeout(300);
   await L.altKey(page, 'h'); await page.waitForTimeout(300);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);

@@ -37,7 +37,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   await L.altKey(page, 'd'); await page.waitForTimeout(300);
   w = await L.wr(page);
   L.check('Alt+D removes both', !w.some(x => x.t === 'echo' || x.t === 'kilo') && w.length === 3, w);
-  L.check('no toast for the erase', (await L.toast(page)) === null, await L.toast(page));
+  L.check('the erase says so and offers Undo', (await L.toast(page)) === '2 annotations erased · Undo', await L.toast(page));
   await L.altKey(page, 'KeyZ');
   L.check('one undo brings both back', (await L.wr(page)).length === 5, await L.wr(page));
   // Alt+D on mixed styles

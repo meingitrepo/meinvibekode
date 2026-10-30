@@ -30,7 +30,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   await page.keyboard.press('Escape'); await page.waitForTimeout(400);
   await click(pt.x, pt.y);
   await press('Erase annotation');
-  L.check('eraser removes, no toast', (await L.wr(page)).length === 0 && (await L.toast(page)) === null, await L.toast(page));
+  L.check('eraser removes and offers Undo', (await L.wr(page)).length === 0 && (await L.toast(page)) === '1 annotation erased · Undo', await L.toast(page));
   L.check('toolbar hidden after remove', !(await L.toolbar(page)), null);
   await L.altKey(page, 'KeyZ'); await page.waitForTimeout(200);
   await click(pt.x, pt.y);

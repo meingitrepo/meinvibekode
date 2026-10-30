@@ -44,11 +44,11 @@ async function removalShowsAgain(browser) {
   await L.altKey(p, 'v');
   await L.selStr(p, '#p1', 'alpha one');
   await L.altKey(p, 'd');
-  check('erasing while hidden: shown again, no toast', (await hiddenNow(p)) === false && (await L.toast(p)) === null, await L.toast(p));
+  check('erasing while hidden: shown again, the erase offers Undo', (await hiddenNow(p)) === false && (await L.toast(p)) === '1 annotation erased · Undo', await L.toast(p));
   await L.altKey(p, 'v');
   check('hiding shows the hidden message', (await L.toast(p)) === 'Annotations hidden · Show', await L.toast(p));
   await L.altKey(p, 'z');
-  check('Alt+Z still undoes, shows them, and the message goes', (await hiddenNow(p)) === false && (await L.toast(p)) === null && (await L.wr(p)).length === 2, { t: await L.toast(p), w: await L.wr(p) });
+  check('Alt+Z still undoes, shows them, and says Undone', (await hiddenNow(p)) === false && (await L.toast(p)) === 'Undone · Redo' && (await L.wr(p)).length === 2, { t: await L.toast(p), w: await L.wr(p) });
   await ctx.close();
 }
 

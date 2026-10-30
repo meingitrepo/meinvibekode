@@ -67,7 +67,7 @@ const eTicks = page => page.evaluate(() => Array.from(window.__hl.everythingList
   await L.altKey(page, 'o', true); await page.waitForTimeout(100);
   // 3 + 4: toast buttons (Show is the only one left; erasing no longer offers Undo)
   await L.selStr(page, '#p0', 'alpha'); await L.altKey(page, 'd'); await page.waitForTimeout(300);
-  L.check('erase shows no toast', (await L.toast(page)) === null, await L.toast(page));
+  L.check('erase offers Undo', (await L.toast(page)) === '1 annotation erased · Undo', await L.toast(page));
   await L.altKey(page, 'z'); await page.waitForTimeout(200);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
   const s = await page.evaluate(() => { const a = window.__hl.toastAction; return { text: a.textContent, icon: !!a.querySelector('svg'), label: a.dataset.label, key: a.dataset.shortcut || '', cls: a.className }; });

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.24
+// @version      9.25
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -174,8 +174,10 @@
     const NOTE_MAX_LENGTH = 2000;
     const NOTE_MIN_LINES = 2;                   // the note box starts this tall,
     const NOTE_MAX_LINES = 12;                  // grows with the text up to this (the note card's 240px), then scrolls
-    const NOTE_BADGE_SIZE = 10;                 // px, at least; the speech-bubble badge on annotations with a note,
-    const NOTE_BADGE_EM = 0.6;                  // which grows with the font (0.6em: 10px at 16px, 19px on a 32px heading)
+    const NOTE_BADGE_SIZE = 14;                 // px, at least; the Phosphor chat badge on annotations with a note,
+    const NOTE_BADGE_EM = 0.85;                 // which grows with the font (0.85em: 14px at 16px, 27px on a 32px heading)
+    // Phosphor chat-teardrop-dots, Fill weight (@phosphor-icons/core, MIT, copyright (c) 2020-present Phosphor Icons), 256 grid.
+    const NOTE_BADGE_PATH = 'M132,24A100.11,100.11,0,0,0,32,124v84a16,16,0,0,0,16,16h84a100,100,0,0,0,0-200ZM88,140a12,12,0,1,1,12-12A12,12,0,0,1,88,140Zm44,0a12,12,0,1,1,12-12A12,12,0,0,1,132,140Zm44,0a12,12,0,1,1,12-12A12,12,0,0,1,176,140Z';
     const NOTE_BADGE_COLOR = '#d97757';         // clay, the Anthropic accent: the badge while its note is pinned,
     const NOTE_BADGE_DARK_COLOR = '#d97757';    // and on dark backgrounds (clay reads on both)
     const FLASH_MS = 900;                       // an annotation jumped to blinks twice in this time
@@ -253,40 +255,30 @@
            outlined in it (see markSelected). */
         svg[${SVG_ATTR}] g[${SELECTED_ATTR}] path { stroke: HighlightText !important; }
         svg[${SELECTED_ATTR}] rect { stroke: HighlightText !important; stroke-width: 1px !important; }
-        /* Note badge: a small speech bubble (round, with one sharp corner at the bottom left)
-           holding three dots, sitting on the top-right corner of an annotation that has a note.
+        /* Note badge: the Phosphor chat-teardrop-dots icon (a round bubble with one sharp corner
+           at the bottom left, three dots), sitting on the top-right corner of an annotation that has a note.
            Zero net width (its width is cancelled by an equal negative margin), so it never moves
            text; a transform lifts it half out of the line, so it covers little of the text. Its
            rim is in the background's color (light or dark, per DARK_ATTR), which keeps
-           it apart from highlights and lines of any color, stacked or not. Drawn with gradients,
-           not an image, so pages that limit images (CSP) still show it. Generated content isn't
+           it apart from highlights and lines of any color, stacked or not. Drawn as an inline SVG
+           data image (badgeState), so a page whose CSP bars data images shows no badge. Generated content isn't
            part of textContent or the selection, so saved offsets are unaffected. It grows with
            the font. */
         span[${NOTE_MARK_ATTR}]::after {
             --highlighter-badge: max(${NOTE_BADGE_SIZE}px, ${NOTE_BADGE_EM}em);
-            --highlighter-badge-fill: ${NOTE_BADGE_COLOR};
-            --highlighter-badge-rim: #ffffff;
-            --highlighter-badge-dots: ${INK.dark};
+            ${badgeState(NOTE_BADGE_COLOR, INK.dark, '#ffffff')}
             content: "" !important;
             display: inline-block !important;
             box-sizing: border-box !important;
-            width: var(--highlighter-badge) !important; height: calc(var(--highlighter-badge) * 0.85) !important;
+            width: var(--highlighter-badge) !important; height: var(--highlighter-badge) !important;
             margin: 0 0 0 calc(-1 * var(--highlighter-badge)) !important; padding: 0 !important; border: 0 !important;
-            border-radius: 50% 50% 50% 8% !important;
-            background:
-                radial-gradient(circle, var(--highlighter-badge-dots) 0 45%, transparent 55%) 18% 50% / 22% 26% no-repeat,
-                radial-gradient(circle, var(--highlighter-badge-dots) 0 45%, transparent 55%) 50% 50% / 22% 26% no-repeat,
-                radial-gradient(circle, var(--highlighter-badge-dots) 0 45%, transparent 55%) 82% 50% / 22% 26% no-repeat,
-                var(--highlighter-badge-fill) !important;
-            box-shadow: 0 0 0 max(1.5px, 0.08em) var(--highlighter-badge-rim) !important;
+            background: var(--highlighter-badge-img) center / contain no-repeat !important;
             vertical-align: text-top !important;
-            transform: translate(45%, -55%) !important;
+            transform: translate(30%, -50%) !important;
             pointer-events: none !important;
         }
         span[${NOTE_MARK_ATTR}][${DARK_ATTR}]::after {
-            --highlighter-badge-fill: ${NOTE_BADGE_DARK_COLOR};
-            --highlighter-badge-rim: #1b1b1b;
-            --highlighter-badge-dots: ${INK.light};
+            ${badgeState(NOTE_BADGE_DARK_COLOR, INK.light, '#1b1b1b')}
         }
         /* The badge takes its annotation's color. Dots are dark on light pages and light on dark
            ones, so each color comes from the style's light or dark set, whichever is further from
@@ -294,13 +286,12 @@
            open, blue; while its annotation is selected or its note edited, the selection outline's
            color (see .select-box), which wins over pinned. These have dots in the rim's color. */
         ${Object.keys(STYLES).map(k => `
-        span[${NOTE_MARK_ATTR}][${STYLE_ATTR}="${k}"]::after { --highlighter-badge-color: ${badgeColor(k, INK.dark)}; }
-        span[${NOTE_MARK_ATTR}][${STYLE_ATTR}="${k}"][${DARK_ATTR}]::after { --highlighter-badge-color: ${badgeColor(k, INK.light)}; }`).join('')}
-        span[${NOTE_MARK_ATTR}][${STYLE_ATTR}]::after { --highlighter-badge-fill: var(--highlighter-badge-color); }
-        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_COLOR}; --highlighter-badge-dots: var(--highlighter-badge-rim); }
-        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: ${NOTE_BADGE_DARK_COLOR}; }
-        span[${NOTE_MARK_ATTR}][${NOTE_SELECT_ATTR}]::after, span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}]::after { --highlighter-badge-fill: #000000; --highlighter-badge-dots: var(--highlighter-badge-rim); }
-        span[${NOTE_MARK_ATTR}][${NOTE_SELECT_ATTR}][${DARK_ATTR}]::after, span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}][${DARK_ATTR}]::after { --highlighter-badge-fill: #ffffff; }
+        span[${NOTE_MARK_ATTR}][${STYLE_ATTR}="${k}"]::after { ${badgeState(badgeColor(k, INK.dark), INK.dark, '#ffffff')} }
+        span[${NOTE_MARK_ATTR}][${STYLE_ATTR}="${k}"][${DARK_ATTR}]::after { ${badgeState(badgeColor(k, INK.light), INK.light, '#1b1b1b')} }`).join('')}
+        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}]::after { ${badgeState(NOTE_BADGE_COLOR, '#ffffff', '#ffffff')} }
+        span[${NOTE_MARK_ATTR}][${NOTE_PIN_ATTR}][${DARK_ATTR}]::after { ${badgeState(NOTE_BADGE_DARK_COLOR, '#1b1b1b', '#1b1b1b')} }
+        span[${NOTE_MARK_ATTR}][${NOTE_SELECT_ATTR}]::after, span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}]::after { ${badgeState('#000000', '#ffffff', '#ffffff')} }
+        span[${NOTE_MARK_ATTR}][${NOTE_SELECT_ATTR}][${DARK_ATTR}]::after, span[${NOTE_MARK_ATTR}][${NOTE_EDIT_ATTR}][${DARK_ATTR}]::after { ${badgeState('#ffffff', '#1b1b1b', '#1b1b1b')} }
         /* An annotation jumped to (Alt+J / Alt+K, or from the panel) blinks twice. */
         svg[${FLASH_ATTR}] {
             animation: highlighter-flash ${FLASH_MS / 2}ms ease-in-out 2 !important;
@@ -312,6 +303,16 @@
             svg[${FLASH_ATTR}] { animation: highlighter-flash ${FLASH_MS}ms ease-in-out 1 !important; }
         }
     `;
+
+    // The custom properties of one badge state: its colors (also read by the tests) and the Phosphor
+    // icon as an SVG image in them: a rim (the icon's outline, widened), the icon, and its dots.
+    function badgeState(fill, dots, rim) {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='-24 -24 304 304'>` +
+            `<path d='${NOTE_BADGE_PATH}' fill='${rim}' stroke='${rim}' stroke-width='40' stroke-linejoin='round'/>` +
+            `<path d='${NOTE_BADGE_PATH}' fill='${fill}'/>` +
+            [88, 132, 176].map(cx => `<circle cx='${cx}' cy='128' r='12' fill='${dots}'/>`).join('') + `</svg>`;
+        return `--highlighter-badge-fill: ${fill}; --highlighter-badge-dots: ${dots}; --highlighter-badge-rim: ${rim}; --highlighter-badge-img: url("data:image/svg+xml,${encodeURIComponent(svg)}");`;
+    }
 
     // Of style `key`'s light and dark colors, the one with more contrast against the badge's `dots`.
     // shortcut: compares 6-digit hex only (STYLES' colors); otherwise the light page takes the light set.
@@ -3152,12 +3153,17 @@
         applyState(state);
     }
 
+    // Each says what it did and offers the opposite, as a link.
     function undoLastAction() {
+        if (!undoStack.length) return;
         stepHistory(undoStack, redoStack);
+        showToast('Undone', { icon: 'arrow-u-up-left', action: { label: 'Redo', text: 'Redo', tip: 'Redo', shortcut: 'Alt+Y', run: redoLastAction } });
     }
 
     function redoLastAction() {
+        if (!redoStack.length) return;
         stepHistory(redoStack, undoStack);
+        showToast('Redone', { icon: 'arrow-u-up-right', action: { label: 'Undo', text: 'Undo', tip: 'Undo', shortcut: 'Alt+Z', run: undoLastAction } });
     }
 
     // The menu's commands. A note being written closes first, as Esc would (a highlight made for a
@@ -3168,12 +3174,14 @@
         syncLocation();
         cancelEditor();
         resetUi();
-        runUndoable(() => {
+        const erased = countAnnotations(getCurrentRecords());
+        const step = runUndoable(() => {
             stopLateWatcher();
             pendingRecords = pendingRecords.filter(isOtherPage);   // they belong to other pages
             unwrapAll();
         });
         startLateWatcher();
+        if (step) offerUndo(doneText('erased', erased));
     }
 
     // Annotations of a style that no longer exists aren't missing, only hidden, and those made on
@@ -3228,7 +3236,9 @@
     function removeInSelection({ sel, range: selected }) {
         const range = cleanRange(selected);
         const overlaps = range ? findOverlaps(range) : [];
-        if (overlaps.length) runUndoable(() => eraseOverlaps(overlaps));
+        if (overlaps.length && runUndoable(() => eraseOverlaps(overlaps))) {
+            offerUndo(doneText('erased', new Set(overlaps.map(o => o.wrapper.getAttribute(GROUP_ATTR))).size));
+        }
         sel.removeAllRanges();
     }
 
@@ -3328,6 +3338,7 @@
         setKeysSwitchedOff(off);
         if (off) releaseAccessKeys();
         refreshMenu();
+        showToast(off ? 'Shortcuts disabled' : 'Shortcuts enabled');
     }
 
     function onKeyDown(e) {
@@ -3634,7 +3645,8 @@
         'arrow-u-up-left': 'M230,144a62.07,62.07,0,0,1-62,62H80a6,6,0,0,1,0-12h88a50,50,0,0,0,0-100H46.49l37.75,37.76a6,6,0,1,1-8.48,8.48l-48-48a6,6,0,0,1,0-8.48l48-48a6,6,0,0,1,8.48,8.48L46.49,82H168A62.07,62.07,0,0,1,230,144Z',
         'arrow-u-up-right': 'M171.76,131.76,209.51,94H88a50,50,0,0,0,0,100h88a6,6,0,0,1,0,12H88A62,62,0,0,1,88,82H209.51L171.76,44.24a6,6,0,0,1,8.48-8.48l48,48a6,6,0,0,1,0,8.48l-48,48a6,6,0,0,1-8.48-8.48Z',
         'arrow-counter-clockwise': 'M222,128a94,94,0,0,1-92.74,94H128a93.43,93.43,0,0,1-64.5-25.65,6,6,0,1,1,8.24-8.72A82,82,0,1,0,70,70l-.19.19L39.44,98H72a6,6,0,0,1,0,12H24a6,6,0,0,1-6-6V56a6,6,0,0,1,12,0V90.34L61.63,61.4A94,94,0,0,1,222,128Z',
-        'list-bullets': 'M82,64a6,6,0,0,1,6-6H216a6,6,0,0,1,0,12H88A6,6,0,0,1,82,64Zm134,58H88a6,6,0,0,0,0,12H216a6,6,0,0,0,0-12Zm0,64H88a6,6,0,0,0,0,12H216a6,6,0,0,0,0-12ZM44,54A10,10,0,1,0,54,64,10,10,0,0,0,44,54Zm0,128a10,10,0,1,0,10,10A10,10,0,0,0,44,182Zm0-64a10,10,0,1,0,10,10A10,10,0,0,0,44,118Z',
+        'sort-ascending': 'M126,128a6,6,0,0,1-6,6H48a6,6,0,0,1,0-12h72A6,6,0,0,1,126,128ZM48,70H184a6,6,0,0,0,0-12H48a6,6,0,0,0,0,12Zm56,116H48a6,6,0,0,0,0,12h56a6,6,0,0,0,0-12Zm124.24-22.24a6,6,0,0,0-8.48,0L190,193.51V112a6,6,0,0,0-12,0v81.51l-29.76-29.75a6,6,0,0,0-8.48,8.48l40,40a6,6,0,0,0,8.48,0l40-40A6,6,0,0,0,228.24,163.76Z',
+        'list-magnifying-glass': 'M34,64a6,6,0,0,1,6-6H216a6,6,0,0,1,0,12H40A6,6,0,0,1,34,64Zm6,70h72a6,6,0,0,0,0-12H40a6,6,0,0,0,0,12Zm88,52H40a6,6,0,0,0,0,12h88a6,6,0,0,0,0-12Zm108.24,10.24a6,6,0,0,1-8.48,0l-21.49-21.48a38.06,38.06,0,1,1,8.49-8.49l21.48,21.49A6,6,0,0,1,236.24,196.24ZM184,170a26,26,0,1,0-26-26A26,26,0,0,0,184,170Z',
         'keyboard': 'M224,50H32A14,14,0,0,0,18,64V192a14,14,0,0,0,14,14H224a14,14,0,0,0,14-14V64A14,14,0,0,0,224,50Zm2,142a2,2,0,0,1-2,2H32a2,2,0,0,1-2-2V64a2,2,0,0,1,2-2H224a2,2,0,0,1,2,2Zm-20-64a6,6,0,0,1-6,6H56a6,6,0,0,1,0-12H200A6,6,0,0,1,206,128Zm0-32a6,6,0,0,1-6,6H56a6,6,0,0,1,0-12H200A6,6,0,0,1,206,96ZM70,160a6,6,0,0,1-6,6H56a6,6,0,0,1,0-12h8A6,6,0,0,1,70,160Zm96,0a6,6,0,0,1-6,6H96a6,6,0,0,1,0-12h64A6,6,0,0,1,166,160Zm40,0a6,6,0,0,1-6,6h-8a6,6,0,0,1,0-12h8A6,6,0,0,1,206,160Z',
         'power': 'M122,128V48a6,6,0,0,1,12,0v80a6,6,0,0,1-12,0Zm57.28-77A6,6,0,0,0,172.72,61C196.41,76.47,210,100.88,210,128a82,82,0,0,1-164,0c0-27.12,13.59-51.53,37.28-67A6,6,0,0,0,76.72,51C49.57,68.68,34,96.75,34,128a94,94,0,0,0,188,0C222,96.75,206.43,68.68,179.28,51Z'
     };
@@ -4586,6 +4598,7 @@
         if (off) hideToolbar();
         else scheduleToolbar();   // for text that is selected now
         refreshMenu();
+        showToast(off ? 'Selection toolbar disabled' : 'Selection toolbar enabled');
     }
 
     // A tap on a touch screen can clear the page selection even though the toolbar cancels
@@ -4660,9 +4673,10 @@
     }
 
     function togglePen() {
-        if (penKey) { setPen(null); scheduleToolbar(); return; }
+        if (penKey) { setPen(null); scheduleToolbar(); showToast('Pen disabled'); return; }
         hideToolbar();
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
+        showToast('Pen enabled');
     }
 
     // After a mouse selection with the pen on: the selected text gets the pen's style (or, with the
@@ -4962,7 +4976,7 @@
     function deleteGroupNote(group) {
         syncLocation();
         if (editor) cancelEditor();
-        runUndoable(() => setGroupNote(group, ''));
+        if (runUndoable(() => setGroupNote(group, ''))) offerUndo('Note deleted');
     }
 
     // --- Note editor ---
@@ -5110,7 +5124,7 @@
     // Returns the state it dropped (with the annotation), or null if it couldn't.
     function discardStep(step) {
         if (undoStack[undoStack.length - 1] !== step) return null;
-        undoLastAction();
+        stepHistory(undoStack, redoStack);
         return redoStack.pop() || null;
     }
 
@@ -5139,10 +5153,14 @@
                 setGroupNote(group, text);
                 saveHighlights();
                 scheduleRedraw();
+                showToast('Note saved');
                 return;
             }
         }
-        if (text !== original) runUndoable(() => setGroupNote(group, text));
+        if (text !== original && runUndoable(() => setGroupNote(group, text))) {
+            if (text) showToast('Note saved');
+            else offerUndo('Note deleted');
+        }
     }
 
     // The site redrew the annotation's text while its note was open: the note goes on the
@@ -5253,8 +5271,8 @@
     // such as Show; `tip` and `shortcut` are for its tooltip, `text` makes it a text button, `anywhere` lets it run
     // after the tab has left the page. `action2` adds a second, the same.
     function showToast(message, { icon = 'info', intent = 'info', action = null, action2 = null } = {}) {
-        // A plain message doesn't take the place of one still offering an action.
-        if (!action && !toastEl.hidden && toastRun) return;
+        // A plain message doesn't take the place of an offer that leaves the note being written open (Show), only of an Undo or Redo.
+        if (!action && !toastEl.hidden && toastRun && toastKeepsEditor) return;
         // The toast has the page's theme, set on it alone: a panel open next to a box of the
         // other theme keeps its own, and opening one later doesn't switch the toast's.
         const dark = computeDarkMode();
@@ -5279,6 +5297,11 @@
         void toastEl.offsetWidth;   // restart the entrance animation
         toastEl.hidden = false;
         startToastTimer(action ? TOAST_ACTION_MS : TOAST_MS);
+    }
+
+    // A message with an Undo link, for a change just made (Alt+Z does the same).
+    function offerUndo(message) {
+        showToast(message, { icon: 'check', intent: 'success', action: { label: 'Undo', text: 'Undo', tip: 'Undo', shortcut: 'Alt+Z', run: undoLastAction } });
     }
 
     // The toast stays while the pointer rests on it or its button has focus.
@@ -5801,10 +5824,10 @@
         cancelEditor();
         const live = groups.filter(g => groupWrappers(g).length);
         if (!live.length) return;
-        runUndoable(() => {
+        if (runUndoable(() => {
             live.forEach(g => unwrapMany(groupWrappers(g)));
             pendingRecords = pendingRecords.filter(r => !live.includes(recordOwner(r)));
-        });
+        })) offerUndo(doneText('erased', live.length));
     }
 
     // The keys for the selected annotations, with or without Alt (see onKeyDown). True if used.
@@ -6001,22 +6024,8 @@
         return Promise.reject(new Error('no clipboard access'));
     }
 
-    const copyFlashes = new WeakMap();   // button -> { icon: its own icon, timer }
-
-    // Copying shows no toast: the button's icon turns into a check for a moment.
-    function flashCopied(button) {
-        if (!button) return;
-        const flash = copyFlashes.get(button) || { icon: button.firstElementChild, timer: 0 };
-        clearTimeout(flash.timer);
-        const check = phosphorIcon('check');
-        button.firstElementChild.replaceWith(check);
-        flash.timer = setTimeout(() => { check.replaceWith(flash.icon); }, 1500);
-        copyFlashes.set(button, flash);
-    }
-
     // `items`: the annotations to copy (the panel passes what its filter shows); all by default.
-    // `button`: the button that asked, which shows the check once it is copied.
-    function copyAnnotations(items = null, button = null) {
+    function copyAnnotations(items = null) {
         if (!running) return;
         syncLocation();
         const list = (items || pageAnnotations()).filter(a => a.wrappers.some(w => w.isConnected));
@@ -6033,7 +6042,7 @@
             return;
         }
         writeClipboard(markdown).then(
-            () => flashCopied(button),
+            () => showToast(doneText('copied', list.length)),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'warning-circle' }); });
     }
 
@@ -6051,10 +6060,10 @@
         syncLocation();
         closeNoteForPanel();
         if (!groupWrappers(group).length) return;
-        runUndoable(() => {
+        if (runUndoable(() => {
             unwrapMany(groupWrappers(group));
             pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group);
-        });
+        })) offerUndo(doneText('erased', 1));
     }
 
     function forgetAnnotation(group) {
@@ -6328,7 +6337,7 @@
     panelCopy.addEventListener('click', () => {
         renderPanel();
         const ticked = panelItems.filter(a => panelChecked.has(a.group));
-        if (ticked.length) copyAnnotations(ticked, panelCopy);
+        if (ticked.length) copyAnnotations(ticked);
     });
     panelClose.addEventListener('click', closePanel);
     addLabelTip(panelErase, 'Erase selected annotations', '', () => true);
@@ -6663,7 +6672,7 @@
         const selected = everythingShown.filter(s => everythingChecked.has(s.id));
         if (!selected.length) return;
         writeClipboard(savedMarkdown(selected)).then(
-            () => flashCopied(everythingCopy),
+            () => showToast(doneText('copied', selected.length)),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'warning-circle' }); });
     });
     everythingForget.addEventListener('click', () => {
@@ -6860,8 +6869,8 @@
         ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon('keyboard'), () => toggleKeysSwitch())],
         ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
         ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())],
-        ['panel', menuButton('Annotations', 'Alt+O', phosphorIcon('list-bullets'), () => togglePanel())],
-        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('magnifying-glass'), () => toggleEverything())],
+        ['panel', menuButton('Annotations', 'Alt+O', phosphorIcon('sort-ascending'), () => togglePanel())],
+        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('list-magnifying-glass'), () => toggleEverything())],
         ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye-slash'), () => toggleAnnotationsHidden())]
     ]);
     addMenuTip(menuExpand, 'Expand');

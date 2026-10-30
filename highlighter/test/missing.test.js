@@ -181,7 +181,7 @@ async function scenarioPages(browser) {
   check('pages: panel lists it under Saved on other pages', panel.length === 5 && panel[1] === 'Not found on the page (1)' && !panel[2].includes(' on ') && panel[3] === 'Saved on other pages (1)' && panel[4].endsWith(' · on /t'), panel);
   await p.evaluate(() => window.__menu['Clear 2 annotations on this page']());
   await p.waitForTimeout(300);
-  check('pages: Clear shows no toast', (await L.toast(p)) === null, await L.toast(p));
+  check('pages: Clear offers Undo', (await L.toast(p)) === '1 annotation erased · Undo', await L.toast(p));
   st = await L.stored(p, CANON);
   check('pages: Clear keeps the other page\'s annotation', st.length === 1 && st[0].group === 'gP1', st);
   await ctx.close();

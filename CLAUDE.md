@@ -50,6 +50,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 ## Scripts (`highlighter/tools/`; use them instead of redoing these steps by hand)
 - `build.sh` build+check; `tests-for.sh <keyword>` find and run suites mentioning it; `stale-checks.sh <old-term>` test lines for retired behaviour
 - `sync.sh` rebase onto latest origin/main, rebuild, report conflicts/overlap; `preflight.sh` sync, diffstat, release.sh line; `release.sh` post-PUSH release (logs METRICS; `release.sh --files "paths" "Theme" "What" "Msg"` for changes outside `highlighter/`: named files only, no version bump, refuses a dirty tree); `node highlighter/tools/metrics-report.js` joins that log with git and transcripts (turns, test-first, rework); run it only when the User asks
+- `mutate.sh <src-file> <old> <new> <suite-word>` breaks one line, runs the suites, always restores and rebuilds (KILLED = a test noticed; SURVIVED = add a check); `vs-prev.sh <suite-word> [ref]` runs today's tests against the last release's build and the current one (new test must be red before, green now)
 - `film.sh <out-prefix> [light|dark] <js> [frames] [gap-ms]` captures animation frames of the playground; source `test-env.sh` to only set the Playwright env
 - `verify.sh <keyword...>` build, matching suites, diffstat in one call; `shot.sh <out.png> [light|dark|both] [js]` playground screenshot; component presets (panel, all) crop to the element at 2x, other shots: `SHOT_CLIP=<selector|__hl.name>` (+`SHOT_PAD`)
 - Git's LF/CRLF warnings on commit and release are harmless; ignore them.

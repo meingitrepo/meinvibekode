@@ -63,7 +63,7 @@
         ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
         ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())],
         ['panel', menuButton('Annotations', 'Alt+O', phosphorIcon('list-magnifying-glass'), () => togglePanel())],
-        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('magnifying-glass'), () => toggleEverything())]
+        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('list-globe'), () => toggleEverything())]
     ]);
     addMenuTip(menuExpand, 'Expand');
 

@@ -18,7 +18,7 @@ const icon = page => page.evaluate(() => window.__hl.panelCopy.querySelector('sv
   L.check('menu: Shortcuts uses the keyboard icon', (await menuIcon(page, 'keys')) === 'M224,50H32A', await menuIcon(page, 'keys'));
   L.check('menu: Annotations uses the list-magnifying-glass icon', (await menuIcon(page, 'panel')) === 'M34,64a6,6,', await menuIcon(page, 'panel'));
   L.check('menu: Selection toolbar uses the cursor-text icon', (await menuIcon(page, 'toolbar')) === 'M182,208a6,' , await menuIcon(page, 'toolbar'));
-  L.check('menu: Search all pages uses the magnifying-glass icon', (await menuIcon(page, 'search')) === 'M228.24,219', await menuIcon(page, 'search'));
+  L.check('menu: Search all pages uses the list-globe icon', (await page.evaluate(() => window.__hl.menuButtons.get('search').querySelector('svg path.ic').getAttribute('d'))).includes('A48,48,0,1,1'), await menuIcon(page, 'search'));
   await L.altKey(page, 'k', true); await says('shortcut keys off', 'Shortcuts disabled');
   L.check('Shortcuts toast carries the keyboard icon', await toastIs(page, 'keys'), null);
   await L.altKey(page, 'k', true); await says('shortcut keys on', 'Shortcuts enabled');

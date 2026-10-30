@@ -56,7 +56,7 @@
 
     // id, label, shortcut, icon, click, in groups: the switches (modes shown pressed while on, then hide), history, then the lists.
     const menuButtons = new Map([
-        ['pen', menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple'), () => togglePen())],
+        ['pen', menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple-line'), () => togglePen())],
         ['toolbar', menuButton('Selection toolbar', 'Alt+T', phosphorIcon('highlighter'), () => toggleToolbarSwitch())],
         ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon('keyboard'), () => toggleKeysSwitch())],
         ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())],

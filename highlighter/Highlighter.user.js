@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.29
+// @version      9.30
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -679,7 +679,7 @@
         hideStyle.media = hidden ? 'all' : 'not all';
         textColorStyle.media = hidden ? 'not all' : 'all';
         if (hidden) { hideNoteCard(); unpinNoteCard(); }
-        else if (toastRun === showAnnotations) hideToast();   // "Annotations hidden" is no longer true
+        else if (!toastEl.hidden && toastText.textContent === 'Annotations hidden') hideToast();   // no longer true
         renderSiteMenu();   // the menu's hide button shows the eye for what it does next
     }
 
@@ -695,7 +695,7 @@
         const hide = !annotationsHidden;
         if (!hide) { showAnnotations(); return; }
         setAnnotationsHidden(hide);
-        showToast('Annotations hidden', { icon: 'eye-slash', action: { label: 'Show', text: 'Show', tip: 'Show annotations', shortcut: 'Alt+V', run: showAnnotations, keepEditor: true } });
+        showToast('Annotations hidden', { icon: 'eye-slash' });
     }
 
     // =====================================================================
@@ -2663,7 +2663,7 @@
         if (document.hidden) { noticeDue = true; return; }
         noticedKeys.add(currentKey);
         if (!toastEl.hidden && toastRun) return;
-        showToast(doneText('not found', missing), { icon: 'warning', intent: 'warning', action: { label: 'Show', tip: 'Show what was not found', run: showMissingInPanel, keepEditor: true } });
+        showToast(doneText('not found', missing), { icon: 'warning', intent: 'warning' });
     }
 
     function restoreHighlights() {
@@ -3160,13 +3160,13 @@
     function undoLastAction() {
         if (!undoStack.length) return;
         stepHistory(undoStack, redoStack);
-        showToast('Undone', { icon: 'arrow-u-up-left', action: { label: 'Redo', text: 'Redo', tip: 'Redo', shortcut: 'Alt+Y', run: redoLastAction } });
+        showToast('Undone', { icon: 'arrow-u-up-left' });
     }
 
     function redoLastAction() {
         if (!redoStack.length) return;
         stepHistory(redoStack, undoStack);
-        showToast('Redone', { icon: 'arrow-u-up-right', action: { label: 'Undo', text: 'Undo', tip: 'Undo', shortcut: 'Alt+Z', run: undoLastAction } });
+        showToast('Redone', { icon: 'arrow-u-up-right' });
     }
 
     // The menu's commands. A note being written closes first, as Esc would (a highlight made for a
@@ -3628,9 +3628,9 @@
         'check': 'M228.24,76.24l-128,128a6,6,0,0,1-8.48,0l-56-56a6,6,0,0,1,8.48-8.48L96,191.51,219.76,67.76a6,6,0,0,1,8.48,8.48Z',
         'push-pin': 'M233.91,82.79,173.22,22.1a14,14,0,0,0-19.81,0L98.93,76.77c-9.52-3.25-34-8.34-59.71,12.41A14,14,0,0,0,38.1,110l49.71,49.71-44.05,44a6,6,0,1,0,8.48,8.48l44.05-44.05L146,217.89a14,14,0,0,0,9.9,4.11q.49,0,1,0a14,14,0,0,0,10.19-5.54c19.72-26.21,17.15-47.23,12.46-59.3l54.37-54.55A14,14,0,0,0,233.91,82.79ZM225.42,94.1h0l-57.27,57.46a6,6,0,0,0-1.11,6.92c9.94,19.88-1.71,40.32-9.54,50.72a2,2,0,0,1-3,.2L46.58,101.51a2,2,0,0,1,.18-3c12.5-10.09,24.5-12.76,33.7-12.76a42.13,42.13,0,0,1,17.25,3.41A6,6,0,0,0,104.64,88L161.9,30.59a2,2,0,0,1,2.83,0l60.69,60.68A2,2,0,0,1,225.42,94.1Z',
         'push-pin-fill': 'M235.33,104l-53.47,53.65c4.56,12.67,6.45,33.89-13.19,60A15.93,15.93,0,0,1,157,224c-.38,0-.75,0-1.13,0a16,16,0,0,1-11.32-4.69L96.29,171,53.66,213.66a8,8,0,0,1-11.32-11.32L85,159.71l-48.3-48.3A16,16,0,0,1,38,87.63c25.42-20.51,49.75-16.48,60.4-13.14L152,20.7a16,16,0,0,1,22.63,0l60.69,60.68A16,16,0,0,1,235.33,104Z',
-        'note': 'M90,96a6,6,0,0,1,6-6h64a6,6,0,0,1,0,12H96A6,6,0,0,1,90,96Zm6,38h64a6,6,0,0,0,0-12H96a6,6,0,0,0,0,12Zm32,20H96a6,6,0,0,0,0,12h32a6,6,0,0,0,0-12ZM222,48V156.69a13.94,13.94,0,0,1-4.1,9.9L166.59,217.9a13.94,13.94,0,0,1-9.9,4.1H48a14,14,0,0,1-14-14V48A14,14,0,0,1,48,34H208A14,14,0,0,1,222,48ZM48,210H154V160a6,6,0,0,1,6-6h50V48a2,2,0,0,0-2-2H48a2,2,0,0,0-2,2V208A2,2,0,0,0,48,210Zm153.52-44H166v35.52Z',
+        'note-blank': 'M208,34H48A14,14,0,0,0,34,48V208a14,14,0,0,0,14,14H156.69a13.94,13.94,0,0,0,9.9-4.1l51.31-51.31a13.94,13.94,0,0,0,4.1-9.9V48A14,14,0,0,0,208,34ZM46,208V48a2,2,0,0,1,2-2H208a2,2,0,0,1,2,2V154H160a6,6,0,0,0-6,6v50H48A2,2,0,0,1,46,208Zm120-6.49V166h35.52Z',
         'note-pencil': 'M228.24,59.76l-32-32a6,6,0,0,0-8.48,0l-96,96A6,6,0,0,0,90,128v32a6,6,0,0,0,6,6h32a6,6,0,0,0,4.24-1.76l96-96A6,6,0,0,0,228.24,59.76ZM125.51,154H102V130.49l66-66L191.51,88ZM200,79.51,176.49,56,192,40.49,215.51,64ZM222,128v80a14,14,0,0,1-14,14H48a14,14,0,0,1-14-14V48A14,14,0,0,1,48,34h80a6,6,0,0,1,0,12H48a2,2,0,0,0-2,2V208a2,2,0,0,0,2,2H208a2,2,0,0,0,2-2V128a6,6,0,0,1,12,0Z',
-        'pencil-simple': 'M225.9,74.78,181.21,30.09a14,14,0,0,0-19.8,0L38.1,153.41a13.94,13.94,0,0,0-4.1,9.9V208a14,14,0,0,0,14,14H92.69a13.94,13.94,0,0,0,9.9-4.1L225.9,94.58a14,14,0,0,0,0-19.8ZM94.1,209.41a2,2,0,0,1-1.41.59H48a2,2,0,0,1-2-2V163.31a2,2,0,0,1,.59-1.41L136,72.48,183.51,120ZM217.41,86.1,192,111.51,144.49,64,169.9,38.58a2,2,0,0,1,2.83,0l44.68,44.69a2,2,0,0,1,0,2.83Z',
+        'pencil-simple-line': 'M225.91,74.79,181.22,30.1a14,14,0,0,0-19.8,0L38.1,153.41a13.94,13.94,0,0,0-4.1,9.9V208a14,14,0,0,0,14,14H216a6,6,0,0,0,0-12H110.49L225.91,94.59A14,14,0,0,0,225.91,74.79ZM93.52,210H48a2,2,0,0,1-2-2V163.31a2,2,0,0,1,.59-1.41L136,72.49,183.52,120ZM217.42,86.1,192,111.52,144.49,64,169.9,38.59a2,2,0,0,1,2.83,0l44.69,44.68A2,2,0,0,1,217.42,86.1Z',
         'eraser': 'M223.57,81.81,182.19,40.43a22,22,0,0,0-31.12,0L32.43,159.07a22,22,0,0,0,0,31.11L62.5,220.24A6,6,0,0,0,66.74,222H216a6,6,0,0,0,0-12H126.49l97.08-97.08A22,22,0,0,0,223.57,81.81ZM109.51,210H69.22l-28.3-28.3a10,10,0,0,1,0-14.15L96,112.48,151.52,168ZM215.08,104.44,160,159.51,104.48,104l55.08-55.07a10,10,0,0,1,14.14,0l41.38,41.37A10,10,0,0,1,215.08,104.44Z',
         'trash': 'M216,50H174V40a22,22,0,0,0-22-22H104A22,22,0,0,0,82,40V50H40a6,6,0,0,0,0,12H50V208a14,14,0,0,0,14,14H192a14,14,0,0,0,14-14V62h10a6,6,0,0,0,0-12ZM94,40a10,10,0,0,1,10-10h48a10,10,0,0,1,10,10V50H94ZM194,208a2,2,0,0,1-2,2H64a2,2,0,0,1-2-2V62H194ZM110,104v64a6,6,0,0,1-12,0V104a6,6,0,0,1,12,0Zm48,0v64a6,6,0,0,1-12,0V104a6,6,0,0,1,12,0Z',
         'check-square': 'M172.24,99.76a6,6,0,0,1,0,8.48l-56,56a6,6,0,0,1-8.48,0l-24-24a6,6,0,0,1,8.48-8.48L112,151.51l51.76-51.75A6,6,0,0,1,172.24,99.76ZM222,48V208a14,14,0,0,1-14,14H48a14,14,0,0,1-14-14V48A14,14,0,0,1,48,34H208A14,14,0,0,1,222,48Zm-12,0a2,2,0,0,0-2-2H48a2,2,0,0,0-2,2V208a2,2,0,0,0,2,2H208a2,2,0,0,0,2-2Z',
@@ -4408,7 +4408,7 @@
         });
         items.push(toolbarDivider());
         const noteLabel = overlaps.length && overlaps[0].note ? 'Edit note' : 'Add note';
-        items.push(toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note-pencil' : 'note'), noteLabel, 'Alt+N', act ? act.note : () => runToolbarAction(noteSelection)));
+        items.push(toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note-pencil' : 'note-blank'), noteLabel, 'Alt+N', act ? act.note : () => runToolbarAction(noteSelection)));
         if (overlaps.length) {
             items.push(toolButton(phosphorIcon('eraser'), act ? act.removeLabel : 'Erase', act ? act.removeKey : 'Alt+D', act ? act.remove : () => runToolbarAction(removeInSelection)));
         }
@@ -4659,7 +4659,7 @@
         });
         // The note button always shows, grayed out until an annotation is selected, as in the selection toolbar.
         const noteLabel = pickedWrappers.some(w => w.getAttribute(NOTE_ATTR)) ? 'Edit note' : 'Add note';
-        const note = toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note-pencil' : 'note'), noteLabel, 'Alt+N', () => picked && openNoteEditor(picked));
+        const note = toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note-pencil' : 'note-blank'), noteLabel, 'Alt+N', () => picked && openNoteEditor(picked));
         note.disabled = !pickedKey;
         note.tabIndex = -1;
         if (pickedKey) {
@@ -4677,10 +4677,10 @@
     }
 
     function togglePen() {
-        if (penKey) { setPen(null); scheduleToolbar(); showToast('Pen mode disabled', { icon: 'pencil-simple' }); return; }
+        if (penKey) { setPen(null); scheduleToolbar(); showToast('Pen mode disabled', { icon: 'pencil-simple-line' }); return; }
         hideToolbar();
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
-        showToast('Pen mode enabled', { icon: 'pencil-simple' });
+        showToast('Pen mode enabled', { icon: 'pencil-simple-line' });
     }
 
     // After a mouse selection with the pen on: the selected text gets the pen's style (or, with the
@@ -5305,7 +5305,7 @@
 
     // A message with an Undo link, for a change just made (Alt+Z does the same).
     function offerUndo(message) {
-        showToast(message, { icon: 'eraser', intent: 'success', action: { label: 'Undo', text: 'Undo', tip: 'Undo', shortcut: 'Alt+Z', run: undoLastAction } });
+        showToast(message, { icon: 'eraser', intent: 'success' });
     }
 
     // The toast stays while the pointer rests on it or its button has focus.
@@ -5499,8 +5499,7 @@
         const settings = readSettings();
         settings.fontHintVersion = version;
         writeSettings(settings);
-        const link =f => ({ label: `Get ${f.name}`, text: f.name, tip: `Open the ${f.name} download page`, keepEditor: true, anywhere: true, run: () => window.open(f.url, '_blank', 'noopener') });
-        showToast(`${missing.map(f => f.name).join(' and ')} not installed; using ${missing.map(f => f.fallback).join(' and ')}.`, { action: link(missing[0]), action2: missing[1] ? link(missing[1]) : null });
+        showToast(`${missing.map(f => f.name).join(' and ')} not installed; using ${missing.map(f => f.fallback).join(' and ')}.`);
     }
     // --- Selecting annotations by clicking them ---
 
@@ -6866,16 +6865,16 @@
         return b;
     }
 
-    // id, label, shortcut, icon, click, in groups: the modes (shown pressed while on), history, then the views.
+    // id, label, shortcut, icon, click, in groups: the switches (modes shown pressed while on, then hide), history, then the lists.
     const menuButtons = new Map([
-        ['pen', menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple'), () => togglePen())],
+        ['pen', menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple-line'), () => togglePen())],
         ['toolbar', menuButton('Selection toolbar', 'Alt+T', phosphorIcon('highlighter'), () => toggleToolbarSwitch())],
         ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon('keyboard'), () => toggleKeysSwitch())],
+        ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())],
         ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
         ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())],
-        ['panel', menuButton('Annotations', 'Alt+O', phosphorIcon('list-magnifying-glass'), () => togglePanel())],
-        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('binoculars'), () => toggleEverything())],
-        ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())]
+        ['panel', menuButton('Annotations', 'Alt+O', phosphorIcon('binoculars'), () => togglePanel())],
+        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('list-magnifying-glass'), () => toggleEverything())]
     ]);
     addMenuTip(menuExpand, 'Expand');
 

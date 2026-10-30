@@ -116,7 +116,7 @@
         });
         items.push(toolbarDivider());
         const noteLabel = overlaps.length && overlaps[0].note ? 'Edit note' : 'Add note';
-        items.push(toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note-pencil' : 'note'), noteLabel, 'Alt+N', act ? act.note : () => runToolbarAction(noteSelection)));
+        items.push(toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note-pencil' : 'note-blank'), noteLabel, 'Alt+N', act ? act.note : () => runToolbarAction(noteSelection)));
         if (overlaps.length) {
             items.push(toolButton(phosphorIcon('eraser'), act ? act.removeLabel : 'Erase', act ? act.removeKey : 'Alt+D', act ? act.remove : () => runToolbarAction(removeInSelection)));
         }

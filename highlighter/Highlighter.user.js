@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.27
+// @version      9.28
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -683,16 +683,19 @@
         renderSiteMenu();   // the menu's hide button shows the eye for what it does next
     }
 
+    // The Show button and Alt+V say so; annotating, jumping or erasing while hidden show them quietly.
     function showAnnotations() {
         setAnnotationsHidden(false);
+        showToast('Annotations shown', { icon: 'eye' });
     }
 
     // Alt+V. Hiding says so, with a button that shows them again, so annotations that seem to have
     // gone missing can be found.
     function toggleAnnotationsHidden() {
         const hide = !annotationsHidden;
+        if (!hide) { showAnnotations(); return; }
         setAnnotationsHidden(hide);
-        if (hide) showToast('Annotations hidden', { icon: 'eye-slash', action: { label: 'Show', tip: 'Show annotations', shortcut: 'Alt+V', run: showAnnotations, keepEditor: true } });
+        showToast('Annotations hidden', { icon: 'eye-slash', action: { label: 'Show', tip: 'Show annotations', shortcut: 'Alt+V', run: showAnnotations, keepEditor: true } });
     }
 
     // =====================================================================
@@ -3338,7 +3341,7 @@
         setKeysSwitchedOff(off);
         if (off) releaseAccessKeys();
         refreshMenu();
-        showToast(off ? 'Shortcuts disabled' : 'Shortcuts enabled', { icon: 'command' });
+        showToast(off ? 'Shortcuts disabled' : 'Shortcuts enabled', { icon: 'keyboard' });
     }
 
     function onKeyDown(e) {
@@ -3645,9 +3648,9 @@
         'arrow-u-up-left': 'M230,144a62.07,62.07,0,0,1-62,62H80a6,6,0,0,1,0-12h88a50,50,0,0,0,0-100H46.49l37.75,37.76a6,6,0,1,1-8.48,8.48l-48-48a6,6,0,0,1,0-8.48l48-48a6,6,0,0,1,8.48,8.48L46.49,82H168A62.07,62.07,0,0,1,230,144Z',
         'arrow-u-up-right': 'M171.76,131.76,209.51,94H88a50,50,0,0,0,0,100h88a6,6,0,0,1,0,12H88A62,62,0,0,1,88,82H209.51L171.76,44.24a6,6,0,0,1,8.48-8.48l48,48a6,6,0,0,1,0,8.48l-48,48a6,6,0,0,1-8.48-8.48Z',
         'arrow-counter-clockwise': 'M222,128a94,94,0,0,1-92.74,94H128a93.43,93.43,0,0,1-64.5-25.65,6,6,0,1,1,8.24-8.72A82,82,0,1,0,70,70l-.19.19L39.44,98H72a6,6,0,0,1,0,12H24a6,6,0,0,1-6-6V56a6,6,0,0,1,12,0V90.34L61.63,61.4A94,94,0,0,1,222,128Z',
-        'sort-ascending': 'M126,128a6,6,0,0,1-6,6H48a6,6,0,0,1,0-12h72A6,6,0,0,1,126,128ZM48,70H184a6,6,0,0,0,0-12H48a6,6,0,0,0,0,12Zm56,116H48a6,6,0,0,0,0,12h56a6,6,0,0,0,0-12Zm124.24-22.24a6,6,0,0,0-8.48,0L190,193.51V112a6,6,0,0,0-12,0v81.51l-29.76-29.75a6,6,0,0,0-8.48,8.48l40,40a6,6,0,0,0,8.48,0l40-40A6,6,0,0,0,228.24,163.76Z',
+        'list-magnifying-glass': 'M34,64a6,6,0,0,1,6-6H216a6,6,0,0,1,0,12H40A6,6,0,0,1,34,64Zm6,70h72a6,6,0,0,0,0-12H40a6,6,0,0,0,0,12Zm88,52H40a6,6,0,0,0,0,12h88a6,6,0,0,0,0-12Zm108.24,10.24a6,6,0,0,1-8.48,0l-21.49-21.48a38.06,38.06,0,1,1,8.49-8.49l21.48,21.49A6,6,0,0,1,236.24,196.24ZM184,170a26,26,0,1,0-26-26A26,26,0,0,0,184,170Z',
         'binoculars': 'M233,147.24,191.43,52.6a6,6,0,0,0-1.25-1.83,30,30,0,0,0-42.42,0A6,6,0,0,0,146,55V82H110V55a6,6,0,0,0-1.76-4.25,30,30,0,0,0-42.42,0,6,6,0,0,0-1.25,1.83L23,147.24A46,46,0,1,0,110,168V94h36v74a46,46,0,1,0,87-20.76ZM64,202a34,34,0,1,1,34-34A34,34,0,0,1,64,202Zm0-80a45.77,45.77,0,0,0-18.55,3.92L75.06,58.54A18,18,0,0,1,98,57.71V137A45.89,45.89,0,0,0,64,122Zm94-64.28a18,18,0,0,1,22.94.83l29.61,67.37A45.9,45.9,0,0,0,158,137ZM192,202a34,34,0,1,1,34-34A34,34,0,0,1,192,202Z',
-        'command': 'M180,146H158V110h22a34,34,0,1,0-34-34V98H110V76a34,34,0,1,0-34,34H98v36H76a34,34,0,1,0,34,34V158h36v22a34,34,0,1,0,34-34ZM158,76a22,22,0,1,1,22,22H158ZM54,76a22,22,0,0,1,44,0V98H76A22,22,0,0,1,54,76ZM98,180a22,22,0,1,1-22-22H98Zm12-70h36v36H110Zm70,92a22,22,0,0,1-22-22V158h22a22,22,0,0,1,0,44Z',
+        'keyboard': 'M224,50H32A14,14,0,0,0,18,64V192a14,14,0,0,0,14,14H224a14,14,0,0,0,14-14V64A14,14,0,0,0,224,50Zm2,142a2,2,0,0,1-2,2H32a2,2,0,0,1-2-2V64a2,2,0,0,1,2-2H224a2,2,0,0,1,2,2Zm-20-64a6,6,0,0,1-6,6H56a6,6,0,0,1,0-12H200A6,6,0,0,1,206,128Zm0-32a6,6,0,0,1-6,6H56a6,6,0,0,1,0-12H200A6,6,0,0,1,206,96ZM70,160a6,6,0,0,1-6,6H56a6,6,0,0,1,0-12h8A6,6,0,0,1,70,160Zm96,0a6,6,0,0,1-6,6H96a6,6,0,0,1,0-12h64A6,6,0,0,1,166,160Zm40,0a6,6,0,0,1-6,6h-8a6,6,0,0,1,0-12h8A6,6,0,0,1,206,160Z',
         'power': 'M122,128V48a6,6,0,0,1,12,0v80a6,6,0,0,1-12,0Zm57.28-77A6,6,0,0,0,172.72,61C196.41,76.47,210,100.88,210,128a82,82,0,0,1-164,0c0-27.12,13.59-51.53,37.28-67A6,6,0,0,0,76.72,51C49.57,68.68,34,96.75,34,128a94,94,0,0,0,188,0C222,96.75,206.43,68.68,179.28,51Z'
     };
 
@@ -3889,11 +3892,10 @@
         .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         /* Toast */
         /* A tooltip's size and style, centred at the bottom of the view: the same padding, 12px type and
-           radius as .tip, an icon at the right end (an icon button replaces it), no dismiss button; it fades on its own. */
+           radius as .tip, an icon at the left end, no dismiss button; it fades on its own. */
         .toast { top: auto; left: 50%; right: auto; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 32px); padding: 6px 10px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
         .toast > .btn[aria-label="Dismiss"] { display: none; }
-        .toast > .icon { flex: none; margin: -2px -2px -2px 0; }   /* at the right end, where an icon button sits: 20px, same edge */
-        .toast > .icon[hidden] { display: none; }
+        .toast > .icon { flex: none; margin: -2px 0 -2px -2px; }   /* at the left end, 20px, as far in as an icon button's icon */
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 400; }
         /* Action buttons shrink to the tooltip's line: the pill stays one line high. */
@@ -4106,7 +4108,7 @@
     const toastAction2 = makeButton({ icon: phosphorIcon('arrow-u-up-left') });   // a second action, a text button (the font hint); hidden unless a toast gives one
     toastAction2.hidden = true;
     const toastDismiss = makeButton({ icon: phosphorIcon('x'), label: 'Dismiss' });
-    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastContent, toastAction, toastAction2, toastIcon, toastDismiss]);
+    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastAction2, toastDismiss]);
 
     // A panel's title: the counts in the quiet colour around the bold word "Annotations".
     function setPanelTitle(el, lead, tail, word = lead === '1' ? 'Annotation' : 'Annotations') {
@@ -5283,7 +5285,6 @@
         const nextIcon = phosphorIcon(icon);
         toastIcon.replaceWith(nextIcon);
         toastIcon = nextIcon;
-        toastIcon.toggleAttribute('hidden', !!(action && !action.text));   // an icon button (Show) is the toast's icon
         toastEl.setAttribute('data-intent', intent);
         toastText.textContent = message;
         toastRun = action ? action.run : null;
@@ -6869,10 +6870,10 @@
     const menuButtons = new Map([
         ['pen', menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple'), () => togglePen())],
         ['toolbar', menuButton('Selection toolbar', 'Alt+T', phosphorIcon('highlighter'), () => toggleToolbarSwitch())],
-        ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon('command'), () => toggleKeysSwitch())],
+        ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon('keyboard'), () => toggleKeysSwitch())],
         ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
         ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())],
-        ['panel', menuButton('Annotations', 'Alt+O', phosphorIcon('sort-ascending'), () => togglePanel())],
+        ['panel', menuButton('Annotations', 'Alt+O', phosphorIcon('list-magnifying-glass'), () => togglePanel())],
         ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('binoculars'), () => toggleEverything())],
         ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())]
     ]);

@@ -58,10 +58,10 @@
     const menuButtons = new Map([
         ['pen', menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple'), () => togglePen())],
         ['toolbar', menuButton('Selection toolbar', 'Alt+T', phosphorIcon('highlighter'), () => toggleToolbarSwitch())],
-        ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon('command'), () => toggleKeysSwitch())],
+        ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon('keyboard'), () => toggleKeysSwitch())],
         ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
         ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())],
-        ['panel', menuButton('Annotations', 'Alt+O', phosphorIcon('sort-ascending'), () => togglePanel())],
+        ['panel', menuButton('Annotations', 'Alt+O', phosphorIcon('list-magnifying-glass'), () => togglePanel())],
         ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('binoculars'), () => toggleEverything())],
         ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())]
     ]);

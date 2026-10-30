@@ -22,10 +22,10 @@ async function toggle(browser) {
   check('Alt+V hides and says so', (await hiddenNow(p)) === true && (await L.toast(p)) === 'Annotations hidden · Show', await L.toast(p));
   check('with the eye-off icon', (await icon(p)) === 'M52.44,36A6,6,0,0,0,', await icon(p));
   await L.altKey(p, 'v');
-  check('Alt+V again shows them and takes the message down, with no other message', (await hiddenNow(p)) === false && (await L.toast(p)) === null, await L.toast(p));
+  check('Alt+V again shows them and says so', (await hiddenNow(p)) === false && (await L.toast(p)) === 'Annotations shown', await L.toast(p));
   await L.altKey(p, 'v');
   await p.evaluate(() => window.__hl.toastAction.click()); await p.waitForTimeout(100);
-  check('Show shows them and the message goes', (await hiddenNow(p)) === false && (await L.toast(p)) === null, await L.toast(p));
+  check('Show shows them and says so', (await hiddenNow(p)) === false && (await L.toast(p)) === 'Annotations shown', await L.toast(p));
   check('no page errors', p.__errors.length === 0, p.__errors);
   await ctx.close();
 }

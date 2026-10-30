@@ -15,10 +15,11 @@ const icon = page => page.evaluate(() => window.__hl.panelCopy.querySelector('sv
     return !!svg && getComputedStyle(svg).display !== 'none' && svg.querySelector('path.ic').getAttribute('d') === want;
   }, id);
   const menuIcon = (page, id) => page.evaluate(i => window.__hl.menuButtons.get(i).querySelector('svg path.ic').getAttribute('d').slice(0, 11), id);
-  L.check('menu: Shortcuts uses the command icon', (await menuIcon(page, 'keys')) === 'M180,146H15', await menuIcon(page, 'keys'));
+  L.check('menu: Shortcuts uses the keyboard icon', (await menuIcon(page, 'keys')) === 'M224,50H32A', await menuIcon(page, 'keys'));
+  L.check('menu: Annotations uses the list-magnifying-glass icon', (await menuIcon(page, 'panel')) === 'M34,64a6,6,', await menuIcon(page, 'panel'));
   L.check('menu: Search all pages uses the binoculars icon', (await menuIcon(page, 'search')) === 'M233,147.24', await menuIcon(page, 'search'));
   await L.altKey(page, 'k', true); await says('shortcut keys off', 'Shortcuts disabled');
-  L.check('Shortcuts toast carries the command icon', await toastIs(page, 'keys'), null);
+  L.check('Shortcuts toast carries the keyboard icon', await toastIs(page, 'keys'), null);
   await L.altKey(page, 'k', true); await says('shortcut keys on', 'Shortcuts enabled');
   await L.altKey(page, 't'); await says('selection toolbar off', 'Selection toolbar disabled');
   L.check('toolbar toast carries the highlighter icon', await toastIs(page, 'toolbar'), null);

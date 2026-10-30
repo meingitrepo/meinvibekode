@@ -313,15 +313,18 @@
         renderSiteMenu();   // the menu's hide button shows the eye for what it does next
     }
 
+    // The Show button and Alt+V say so; annotating, jumping or erasing while hidden show them quietly.
     function showAnnotations() {
         setAnnotationsHidden(false);
+        showToast('Annotations shown', { icon: 'eye' });
     }
 
     // Alt+V. Hiding says so, with a button that shows them again, so annotations that seem to have
     // gone missing can be found.
     function toggleAnnotationsHidden() {
         const hide = !annotationsHidden;
+        if (!hide) { showAnnotations(); return; }
         setAnnotationsHidden(hide);
-        if (hide) showToast('Annotations hidden', { icon: 'eye-slash', action: { label: 'Show', tip: 'Show annotations', shortcut: 'Alt+V', run: showAnnotations, keepEditor: true } });
+        showToast('Annotations hidden', { icon: 'eye-slash', action: { label: 'Show', tip: 'Show annotations', shortcut: 'Alt+V', run: showAnnotations, keepEditor: true } });
     }
 

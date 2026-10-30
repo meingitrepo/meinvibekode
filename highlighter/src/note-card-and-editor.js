@@ -480,8 +480,7 @@
         const stored = readRecords(currentKey);
         if (!stored || !stored.some(r => r.group === group)) return;
         const rest = stored.filter(r => r.group !== group);
-        if (rest.length) GM_setValue(currentKey, JSON.stringify(rest));
-        else GM_deleteValue(currentKey);
+        writeRecords(currentKey, rest);
     }
 
     // Delete deletes the note, as its Delete button does, unless it has text after the caret

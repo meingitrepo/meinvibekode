@@ -8,12 +8,7 @@
     }
 
     function setMenuHidden(hidden) {
-        const settings = readSettings();
-        const sites = new Set(Array.isArray(settings.menuHiddenSites) ? settings.menuHiddenSites : []);
-        if (hidden) sites.add(siteId());
-        else sites.delete(siteId());
-        settings.menuHiddenSites = Array.from(sites);
-        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+        setSiteListed('menuHiddenSites', hidden);
     }
 
     // It lives in a host of its own: stopping the script removes the other panels, not this.
@@ -142,7 +137,7 @@
             menuEl.removeEventListener('pointermove', move);
             const settings = readSettings();
             settings.menuPos = { left: parseFloat(menuEl.style.left), top: parseFloat(menuEl.style.top) };
-            GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+            writeSettings(settings);
         }, { once: true });
     });
 

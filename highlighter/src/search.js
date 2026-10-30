@@ -111,8 +111,7 @@
             elsewhere.get(s.page.key).add(s.item.group);
         });
         elsewhere.forEach((groups, key) => {
-            const rest = (readRecords(key) || []).filter(r => !groups.has(recordOwner(r)));
-            if (rest.length) GM_setValue(key, JSON.stringify(rest)); else GM_deleteValue(key);
+            writeRecords(key, (readRecords(key) || []).filter(r => !groups.has(recordOwner(r))));
         });
         if (here.length) {
             syncLocation();

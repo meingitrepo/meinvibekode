@@ -255,7 +255,7 @@
         if (!missing.length) return;
         const settings = readSettings();
         settings.fontHintVersion = version;
-        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
-        const link = f => ({ label: `Get ${f.name}`, text: f.name, tip: `Open the ${f.name} download page`, keepEditor: true, anywhere: true, run: () => window.open(f.url, '_blank', 'noopener') });
+        writeSettings(settings);
+        const link =f => ({ label: `Get ${f.name}`, text: f.name, tip: `Open the ${f.name} download page`, keepEditor: true, anywhere: true, run: () => window.open(f.url, '_blank', 'noopener') });
         showToast(`${missing.map(f => f.name).join(' and ')} not installed; using ${missing.map(f => f.fallback).join(' and ')}.`, { action: link(missing[0]), action2: missing[1] ? link(missing[1]) : null });
     }

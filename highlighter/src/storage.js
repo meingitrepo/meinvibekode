@@ -239,6 +239,12 @@
         return parseRecords(GM_getValue(key, null));
     }
 
+    // Saves `records` under `key`; with none left the key is removed.
+    function writeRecords(key, records) {
+        if (records.length) GM_setValue(key, JSON.stringify(records));
+        else GM_deleteValue(key);
+    }
+
     // Which annotation a record belongs to: its group (shared by the annotation's pieces), or
     // for records saved before groups existed, the group it gets when placed.
     function recordOwner(r) {
@@ -318,6 +324,10 @@
         }
     }
 
+    function writeSettings(settings) {
+        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+    }
+
     // The shortcut keys (Alt+Shift+K) and the selection toolbar (Alt+T) are per site and off until
     // switched on. Read afresh each time, so a switch made in another tab counts here too.
     function siteListed(key) {
@@ -331,7 +341,7 @@
         if (on) sites.add(siteId());
         else sites.delete(siteId());
         settings[key] = Array.from(sites);
-        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+        writeSettings(settings);
     }
 
     function keysSwitchedOff() {

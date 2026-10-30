@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.43
+// @version      9.44
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -672,7 +672,12 @@
         textColorStyle.textContent = rules.join('\n');
     }
 
+    // Which feature showed the annotations on its own (so it hides them again when it ends).
+    const autoShown = { panel: false, pen: false };
+
+    // Any explicit change is the user's decision: it cancels the pending automatic re-hide.
     function setAnnotationsHidden(hidden) {
+        autoShown.panel = autoShown.pen = false;
         if (annotationsHidden === hidden) return;
         annotationsHidden = hidden;
         hideStyle.media = hidden ? 'all' : 'not all';
@@ -680,6 +685,23 @@
         if (hidden) { hideNoteCard(); unpinNoteCard(); }
         else if (!toastEl.hidden && toastText.textContent === 'Annotations hidden') hideToast();   // no longer true
         renderSiteMenu();   // the menu's hide button shows the eye for what it does next
+    }
+
+    // The panel and the pen need annotations visible: they show them quietly while they are open, and
+    // hide them again when they close, unless the user changed visibility (or annotated) meanwhile.
+    function showAnnotationsFor(owner) {
+        const was = annotationsHidden;
+        const keep = { ...autoShown };
+        setAnnotationsHidden(false);
+        Object.assign(autoShown, keep);
+        if (was) autoShown[owner] = true;
+    }
+
+    function restoreAnnotationsFor(owner) {
+        if (!autoShown[owner]) return;
+        autoShown[owner] = false;
+        if (autoShown.panel || autoShown.pen) return;   // the other still needs them
+        setAnnotationsHidden(true);
     }
 
     // The Show button and Alt+V say so; annotating, jumping or erasing while hidden show them quietly.
@@ -694,6 +716,7 @@
         const hide = !annotationsHidden;
         if (!hide) { showAnnotations(); return; }
         setAnnotationsHidden(hide);
+        if (penKey) setPen(null);   // the pen can't draw on what is hidden
         showToast('Annotations hidden', { icon: 'eye-slash' });
     }
 
@@ -4637,6 +4660,7 @@
     // Turns the pen on with style `key`, or off (null). A toolbar at the top of the view shows it.
     function setPen(key) {
         penKey = key === PEN_ERASER || (key && STYLES[key]) ? key : null;
+        if (penKey) showAnnotationsFor('pen'); else restoreAnnotationsFor('pen');
         renderSiteMenu();   // the menu's pen button shows the pencil or the slashed pencil
         if (!penKey) {
             if (!penEl.hidden) hideLabelTip();
@@ -6084,6 +6108,7 @@
             panelReturnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
             panelEl.hidden = false;
             panelSignature = '';
+            showAnnotationsFor('panel');
         }
         renderPanel();
         updateFontNote();
@@ -6103,6 +6128,7 @@
         panelSignature = '';
         panelItems = [];
         panelChecked.clear();
+        restoreAnnotationsFor('panel');
         const back = panelReturnFocus;
         panelReturnFocus = null;
         if (hadFocus && back && back.isConnected && typeof back.focus === 'function') back.focus({ preventScroll: true });
@@ -6751,6 +6777,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.44", "Annotations hidden by default; panel and pen show them while open"],
         ["9.43", "Alt+Shift+H shortcut guide, Alt+Shift+W release changelog, opens once after each update"],
         ['9.42', 'List-checks icon for Alt+O'],
         ['9.41', 'Hide button pressed while annotations are shown'],
@@ -7176,6 +7203,7 @@
         [pageStyle, hideStyle, textColorStyle].forEach(s => head.appendChild(s));
         darkMode = null;
         updateTextColorCss();
+        setAnnotationsHidden(true);   // a page opens with annotations hidden; the menu bar stays visible
 
         lastHref = location.href;
         settledCanonical = lastSeenCanonical = canonicalKey();

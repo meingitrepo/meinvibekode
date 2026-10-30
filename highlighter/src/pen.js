@@ -7,6 +7,7 @@
     // Turns the pen on with style `key`, or off (null). A toolbar at the top of the view shows it.
     function setPen(key) {
         penKey = key === PEN_ERASER || (key && STYLES[key]) ? key : null;
+        if (penKey) showAnnotationsFor('pen'); else restoreAnnotationsFor('pen');
         renderSiteMenu();   // the menu's pen button shows the pencil or the slashed pencil
         if (!penKey) {
             if (!penEl.hidden) hideLabelTip();

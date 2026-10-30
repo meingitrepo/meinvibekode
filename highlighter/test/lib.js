@@ -13,7 +13,7 @@ function instrument(src) {
     'editorEl', 'noteInput', 'uiRoot', 'uiHost', 'undoStack', 'redoStack', 'toolbarEl', 'labelTipEl', 'lateWatcher', 'currentKey', 'menuIds', 'running', 'darkMode', 'hoveredWrapper', 'annotationsHidden', 'cardWrapper', 'penEl', 'penKey', 'lastStyleKey', 'everythingEl', 'everythingFilter', 'everythingList', 'everythingCount', 'everythingSelectAll', 'everythingCopy', 'everythingForget', 'everythingClose', 'selectBoxesEl', 'selectedGroups', 'shownWrappers', 'menuEl', 'menuExpand', 'menuHandle', 'menuButtons', 'menuClose', 'helpEl'];
   const get = n => `get ${n}() { try { return ${n}; } catch (e) { return undefined; } }`;
   return src.replace(BOOT, `    window.__hl = { ${names.map(get).join(', ')}, get editor() { return editor; }, get pending() { return pendingRecords; }, get jumpGroup() { return jumpGroup; },
-      showToast, allWrappers, getSvg, openPanel, closePanel, copyAnnotations, renderPanel, pageAnnotations, groupTime, getCurrentRecords, saveEditor: () => saveEditor(),
+      showToast, setAnnotationsHidden, allWrappers, getSvg, openPanel, closePanel, copyAnnotations, renderPanel, pageAnnotations, groupTime, getCurrentRecords, saveEditor: () => saveEditor(),
       ${['pageCounts', 'missingRecords', 'isOtherPage', 'pageTag', 'looseLocate', 'noticedKeys'].map(get).join(', ')}, get panelScroll() { return panelList.scrollTop; } };\n` + BOOT);
 }
 const GM = `
@@ -72,6 +72,8 @@ async function open(browser, opts) {
   // as a userscript manager would.
   if (opts.headers) await page.evaluate(`0;${SRC}`); else await page.addScriptTag({ content: SRC });
   await page.waitForTimeout(wait);
+  // A page opens with annotations hidden: the pages under test show them, unless the test is about that (opts.hiddenDefault).
+  if (!opts.hiddenDefault) await page.evaluate(() => window.__hl && window.__hl.setAnnotationsHidden(false));
   // On a slow machine the stored annotations can take longer than `wait` to come back.
   if (/^\[\s*\{/.test(store[url])) await until(page, () => window.__hl && window.__hl.allWrappers().length, null, 3000);
   return { ctx, page };

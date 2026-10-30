@@ -97,6 +97,7 @@
             panelReturnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
             panelEl.hidden = false;
             panelSignature = '';
+            showAnnotationsFor('panel');
         }
         renderPanel();
         updateFontNote();
@@ -116,6 +117,7 @@
         panelSignature = '';
         panelItems = [];
         panelChecked.clear();
+        restoreAnnotationsFor('panel');
         const back = panelReturnFocus;
         panelReturnFocus = null;
         if (hadFocus && back && back.isConnected && typeof back.focus === 'function') back.focus({ preventScroll: true });

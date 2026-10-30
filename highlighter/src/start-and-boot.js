@@ -53,6 +53,7 @@
         [pageStyle, hideStyle, textColorStyle].forEach(s => head.appendChild(s));
         darkMode = null;
         updateTextColorCss();
+        setAnnotationsHidden(true);   // a page opens with annotations hidden; the menu bar stays visible
 
         lastHref = location.href;
         settledCanonical = lastSeenCanonical = canonicalKey();

@@ -348,19 +348,16 @@
     // at in the same frame, and the page isn't searched for wrappers.
     const shownWrappers = new Set();
     const nearWrappers = new Set();
-    const watchesVisibility = typeof IntersectionObserver === 'function';
-    const visibilityObserver = watchesVisibility
-        ? new IntersectionObserver(entries => {
-            // Also while the script is off: a wrapper the site puts back then is followed once it is on.
-            entries.forEach(e => {
-                if (!e.isIntersecting) { nearWrappers.delete(e.target); return; }
-                if (!annotationMap.has(e.target)) return;   // unwrapped since
-                nearWrappers.add(e.target);
-                shownWrappers.add(e.target);   // back on the page after the site took it off
-            });
-            if (running) reposition(entries.filter(e => e.isIntersecting && rectChanged(e.target)).map(e => e.target));
-        }, { rootMargin: '200px', threshold: 0 })
-        : { observe() {}, unobserve() {} };
+    const visibilityObserver = new IntersectionObserver(entries => {
+        // Also while the script is off: a wrapper the site puts back then is followed once it is on.
+        entries.forEach(e => {
+            if (!e.isIntersecting) { nearWrappers.delete(e.target); return; }
+            if (!annotationMap.has(e.target)) return;   // unwrapped since
+            nearWrappers.add(e.target);
+            shownWrappers.add(e.target);   // back on the page after the site took it off
+        });
+        if (running) reposition(entries.filter(e => e.isIntersecting && rectChanged(e.target)).map(e => e.target));
+    }, { rootMargin: '200px', threshold: 0 });
 
     // A wrapper already on the page kept as a restored annotation (see absorbDuplicate), for
     // instance a kept tab panel put back out of view: followed again, and seen afresh by the observer.
@@ -385,19 +382,15 @@
     function redrawMoved(scope) {
         const margin = 200;
         const inView = w => { const r = w.getBoundingClientRect(); return r.bottom >= -margin && r.top <= window.innerHeight + margin; };
-        if (watchesVisibility) {
-            let ws;
-            if (scope === 'near') {
-                ws = Array.from(nearWrappers);
-            } else {
-                pruneShown();
-                ws = Array.from(shownWrappers);
-                if (scope === 'view') ws = ws.filter(inView);
-            }
-            reposition(ws.filter(w => w.isConnected && textMoved(w)));
-            return;
+        let ws;
+        if (scope === 'near') {
+            ws = Array.from(nearWrappers);
+        } else {
+            pruneShown();
+            ws = Array.from(shownWrappers);
+            if (scope === 'view') ws = ws.filter(inView);
         }
-        reposition(allWrappers().filter(w => (scope === 'all' || inView(w)) && textMoved(w)));
+        reposition(ws.filter(w => w.isConnected && textMoved(w)));
     }
 
     // While the window is resized or zoomed, or the page grows or shifts, the annotations on or
@@ -413,7 +406,7 @@
     // changed a style or class, see watchPageStyle) only those near the screen are looked at:
     // the others are redrawn by visibilityObserver if they moved, once they come near.
     function scheduleRedraw(e, nearOnly) {
-        if (watchesVisibility && !shownWrappers.size) return;   // nothing on the page: nothing to do, however big the page
+        if (!shownWrappers.size) return;   // nothing on the page: nothing to do, however big the page
         if (e && e.type === 'resize') redrawResized = true;
         if (!redrawFrame) {
             redrawFrame = requestAnimationFrame(() => {
@@ -423,7 +416,7 @@
                 redrawMoved(scope);
             });
         }
-        if (nearOnly === true && watchesVisibility) return;
+        if (nearOnly === true) return;
         clearTimeout(redrawTimer);
         const wait = Math.max(150, lastFullRedraw + FULL_REDRAW_GAP_MS - performance.now());
         redrawTimer = setTimeout(() => { lastFullRedraw = performance.now(); redrawMoved('all'); }, wait);
@@ -434,7 +427,6 @@
     // or removed. The annotations near the screen then follow their text in the next frame.
     // Changes on our own drawings (SVG) and wrappers are left out.
     function watchPageStyle() {
-        if (typeof MutationObserver !== 'function') return () => {};
         const ours = n => n instanceof SVGElement || (n.matches && n.matches(WRAPPER_SELECTOR));
         const sheet = n => n.nodeName === 'STYLE' || n.nodeName === 'LINK';
         const mo = new MutationObserver(list => {

@@ -151,7 +151,7 @@
     // counts misses; `reclaimedOnly` starts over closely for annotations the site redrew.
     function startLateWatcher({ reclaimedOnly = false } = {}) {
         stopLateWatcher();
-        if (!pendingRecords.some(isWatched) || !document.body || typeof MutationObserver !== 'function') return;
+        if (!pendingRecords.some(isWatched) || !document.body) return;
         const state = {
             all: !reclaimedOnly, slow: false, attempts: 0, startedAt: document.hidden ? null : Date.now(),
             timer: null, deadline: null, observer: null, retryOnShow: false, texts: null, textsOf: null, textsCount: 0

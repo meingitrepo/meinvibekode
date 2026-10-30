@@ -134,7 +134,7 @@
     }
 
     function prefersReducedMotion() {
-        return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     }
 
     // Blinks the annotation's drawing (see FLASH_ATTR).

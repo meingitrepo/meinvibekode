@@ -89,11 +89,9 @@
         if (document.fonts && document.fonts.ready) {
             document.fonts.ready.then(() => { if (running) scheduleRedraw(); }).catch(() => {});
         }
-        if (typeof ResizeObserver === 'function') {
-            const ro = new ResizeObserver(scheduleRedraw);
-            ro.observe(document.documentElement);
-            teardown.push(() => ro.disconnect());
-        }
+        const ro = new ResizeObserver(scheduleRedraw);
+        ro.observe(document.documentElement);
+        teardown.push(() => ro.disconnect());
         teardown.push(watchPageStyle());
 
         listen(window, 'popstate', onUrlMaybeChanged);

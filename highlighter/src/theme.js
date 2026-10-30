@@ -42,7 +42,7 @@
     }
 
     function systemPrefersDark() {
-        return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
 
     function luma(c) {
@@ -141,8 +141,7 @@
     function computeDarkMode() {
         const x = window.innerWidth / 2;
         const y = window.innerHeight / 2;
-        const stack = typeof document.elementsFromPoint === 'function' ? document.elementsFromPoint(x, y) : [];
-        const probe = stack.find(el => el !== uiHost) || document.body || document.documentElement;
+        const probe = document.elementsFromPoint(x, y).find(el => el !== uiHost) || document.body || document.documentElement;
         return darkBehind(probe);
     }
 
@@ -203,24 +202,14 @@
     }
 
     function watchTheme() {
-        if (window.matchMedia) {
-            const mq = window.matchMedia('(prefers-color-scheme: dark)');
-            if (mq.addEventListener) {
-                listen(mq, 'change', scheduleThemeCheck);
-            } else if (mq.addListener) {
-                mq.addListener(scheduleThemeCheck);
-                teardown.push(() => mq.removeListener(scheduleThemeCheck));
-            }
-        }
-        if (typeof MutationObserver === 'function') {
-            const mo = new MutationObserver(mutations => {
-                if (mutations.some(m => THEME_ATTR_RE.test(m.attributeName || ''))) scheduleThemeCheck();
-            });
-            [document.documentElement, document.body].forEach(el => {
-                if (el) mo.observe(el, { attributes: true });
-            });
-            teardown.push(() => mo.disconnect());
-        }
+        listen(window.matchMedia('(prefers-color-scheme: dark)'), 'change', scheduleThemeCheck);
+        const mo = new MutationObserver(mutations => {
+            if (mutations.some(m => THEME_ATTR_RE.test(m.attributeName || ''))) scheduleThemeCheck();
+        });
+        [document.documentElement, document.body].forEach(el => {
+            if (el) mo.observe(el, { attributes: true });
+        });
+        teardown.push(() => mo.disconnect());
         teardown.push(clearThemeTimers);
     }
 

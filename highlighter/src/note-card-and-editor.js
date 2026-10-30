@@ -484,6 +484,14 @@
         else GM_deleteValue(currentKey);
     }
 
+    // Delete deletes the note, as its Delete button does, unless it has text after the caret
+    // (or selected) to delete.
+    function deleteKeyDeletesNote(e) {
+        return e.key === 'Delete' && !e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && !e.isComposing
+            && !(e.target === noteInput && noteInput.selectionEnd < noteInput.value.length)
+            && noteInput.selectionStart === noteInput.selectionEnd;
+    }
+
     noteSave.addEventListener('click', () => saveEditor());
     noteDiscard.addEventListener('click', () => cancelEditor());
     // An existing note is removed (its annotation stays, Alt+Z brings the note back); a new one
@@ -501,11 +509,7 @@
             // Enter saves; Shift+Enter starts a new line. On a button, Enter presses that button.
             e.preventDefault();
             saveEditor();
-        } else if (e.key === 'Delete' && !e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && !e.isComposing
-            && !(e.target === noteInput && noteInput.selectionEnd < noteInput.value.length)
-            && noteInput.selectionStart === noteInput.selectionEnd) {
-            // Delete deletes the note, as its Delete button does, unless it has text after the
-            // caret (or selected) to delete.
+        } else if (deleteKeyDeletesNote(e)) {
             e.preventDefault();
             noteDelete.click();
         } else if (e.key === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {

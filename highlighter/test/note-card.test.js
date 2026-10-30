@@ -77,6 +77,10 @@ async function pin(browser) {
   await p.mouse.move(5, 300, { steps: 4 }); await p.waitForTimeout(400);
   await p.mouse.click(5, 300); await p.waitForTimeout(50);
   check('moving away and clicking elsewhere keep it', (await pins()).length === 1 && (await fill('gA')) === DARKER, await pins());
+  const ga = (await L.rects(p, '#p1', 'alpha note'))[0];
+  await p.mouse.click(ga.left + 3, (ga.top + ga.bottom) / 2); await p.waitForTimeout(500);
+  check('clicking the annotation of a pinned note does not also show its anchored card', await p.evaluate(() => window.__hl.noteCardEl.hidden), null);
+  await p.mouse.move(5, 300, { steps: 4 }); await p.mouse.click(5, 300); await p.waitForTimeout(50);
   await hoverPin('gB');
   check('pinning a note does not fade it in again; the copy only lifts its shadow (no stacked dark flash)', await p.evaluate(() => Array.from(window.__hl.uiRoot.querySelectorAll('.card[data-pinned]')).map(c => getComputedStyle(c).animationName).join() === 'highlighter-pin,highlighter-pin'), await p.evaluate(() => Array.from(window.__hl.uiRoot.querySelectorAll('.card[data-pinned]')).map(c => getComputedStyle(c).animationName).join()));
   ps = await pins();

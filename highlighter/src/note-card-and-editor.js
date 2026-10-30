@@ -105,7 +105,7 @@
         if (selectPreview) hideNoteCard();
         const note = groups.length === 1 && !editor && !annotationsHidden &&
             groupWrappers(groups[0]).filter(w => w.hasAttribute(NOTE_ATTR) && w.getClientRects().length).pop();
-        if (!note || !note.getAttribute(NOTE_ATTR)) return;
+        if (!note || !note.getAttribute(NOTE_ATTR) || pinnedCards.has(note)) return;   // a pinned note is open already
         selectPreview = true;
         selectShowTimer = setTimeout(() => {
             if (selectPreview && note.isConnected && !editor && !annotationsHidden) showNoteCard(note);

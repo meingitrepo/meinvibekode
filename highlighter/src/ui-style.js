@@ -304,10 +304,11 @@
         .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         /* Toast */
         /* A tooltip's size and style, centred at the bottom of the view: the same padding, 12px type and
-           radius as .tip, a small leading icon, no dismiss button; it fades on its own. */
+           radius as .tip, an icon at the right end (an icon button replaces it), no dismiss button; it fades on its own. */
         .toast { top: auto; left: 50%; right: auto; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 32px); padding: 6px 10px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
         .toast > .btn[aria-label="Dismiss"] { display: none; }
-        .toast > .icon { flex: none; width: 16px; height: 16px; }
+        .toast > .icon { flex: none; margin: -2px -2px -2px 0; }   /* at the right end, where an icon button sits: 20px, same edge */
+        .toast > .icon[hidden] { display: none; }
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 400; }
         /* Action buttons shrink to the tooltip's line: the pill stays one line high. */

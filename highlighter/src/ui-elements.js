@@ -55,7 +55,7 @@
     const toastAction2 = makeButton({ icon: phosphorIcon('arrow-u-up-left') });   // a second action, a text button (the font hint); hidden unless a toast gives one
     toastAction2.hidden = true;
     const toastDismiss = makeButton({ icon: phosphorIcon('x'), label: 'Dismiss' });
-    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastAction2, toastDismiss]);
+    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastContent, toastAction, toastAction2, toastIcon, toastDismiss]);
 
     // A panel's title: the counts in the quiet colour around the bold word "Annotations".
     function setPanelTitle(el, lead, tail, word = lead === '1' ? 'Annotation' : 'Annotations') {

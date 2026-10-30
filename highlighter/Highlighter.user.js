@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.26
+// @version      9.27
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3889,10 +3889,11 @@
         .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         /* Toast */
         /* A tooltip's size and style, centred at the bottom of the view: the same padding, 12px type and
-           radius as .tip, a small leading icon, no dismiss button; it fades on its own. */
+           radius as .tip, an icon at the right end (an icon button replaces it), no dismiss button; it fades on its own. */
         .toast { top: auto; left: 50%; right: auto; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 32px); padding: 6px 10px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
         .toast > .btn[aria-label="Dismiss"] { display: none; }
-        .toast > .icon { flex: none; width: 16px; height: 16px; }
+        .toast > .icon { flex: none; margin: -2px -2px -2px 0; }   /* at the right end, where an icon button sits: 20px, same edge */
+        .toast > .icon[hidden] { display: none; }
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 400; }
         /* Action buttons shrink to the tooltip's line: the pill stays one line high. */
@@ -4105,7 +4106,7 @@
     const toastAction2 = makeButton({ icon: phosphorIcon('arrow-u-up-left') });   // a second action, a text button (the font hint); hidden unless a toast gives one
     toastAction2.hidden = true;
     const toastDismiss = makeButton({ icon: phosphorIcon('x'), label: 'Dismiss' });
-    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastAction2, toastDismiss]);
+    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastContent, toastAction, toastAction2, toastIcon, toastDismiss]);
 
     // A panel's title: the counts in the quiet colour around the bold word "Annotations".
     function setPanelTitle(el, lead, tail, word = lead === '1' ? 'Annotation' : 'Annotations') {
@@ -5282,6 +5283,7 @@
         const nextIcon = phosphorIcon(icon);
         toastIcon.replaceWith(nextIcon);
         toastIcon = nextIcon;
+        toastIcon.toggleAttribute('hidden', !!(action && !action.text));   // an icon button (Show) is the toast's icon
         toastEl.setAttribute('data-intent', intent);
         toastText.textContent = message;
         toastRun = action ? action.run : null;

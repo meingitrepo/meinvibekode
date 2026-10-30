@@ -98,9 +98,17 @@
     // the rest of the current task, so restoring many annotations walks each ancestor once
     // (except answers read from the text's color, which differ from text to text).
     let darkCache = null;
+
+    // The element of `node`, lifted out of any wrappers of ours around it.
+    function outsideWrappers(node) {
+        let el = node && elementOf(node);
+        let wrapper;
+        while (el && (wrapper = el.closest(WRAPPER_SELECTOR))) el = wrapper.parentElement;
+        return el;
+    }
+
     function darkBehind(node) {
-        let from = node && elementOf(node);
-        for (let w = from && from.closest(WRAPPER_SELECTOR); w; w = from && from.closest(WRAPPER_SELECTOR)) from = w.parentElement;
+        const from = outsideWrappers(node);
         if (!from) return false;
         if (!darkCache) {
             darkCache = new WeakMap();
@@ -109,7 +117,7 @@
         try {
             const walked = [];
             for (let el = from; el; el = el.parentElement) {
-                if (darkCache.has(el)) { walked.forEach(w => darkCache.set(w, darkCache.get(el))); return darkCache.get(el); }
+                if (darkCache.has(el)) { walked.forEach(seen => darkCache.set(seen, darkCache.get(el))); return darkCache.get(el); }
                 walked.push(el);
                 const style = getComputedStyle(el);
                 const c = toRGBA(style.backgroundColor);
@@ -123,7 +131,7 @@
                     }
                 }
                 if (dark !== null) {
-                    walked.forEach(w => darkCache.set(w, dark));
+                    walked.forEach(seen => darkCache.set(seen, dark));
                     return dark;
                 }
             }

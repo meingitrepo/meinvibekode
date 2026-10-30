@@ -32,5 +32,6 @@
       "Read(./**/*.mp4)",
       "Read(./**/*.pdf)"
     ]
-  }
+  },
+  "autoMemoryDirectory": "~/Personal/ClaudeAI/Meinvibekode/.claude/memory"
 }

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.25
+// @version      9.26
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3338,7 +3338,7 @@
         setKeysSwitchedOff(off);
         if (off) releaseAccessKeys();
         refreshMenu();
-        showToast(off ? 'Shortcuts disabled' : 'Shortcuts enabled');
+        showToast(off ? 'Shortcuts disabled' : 'Shortcuts enabled', { icon: 'command' });
     }
 
     function onKeyDown(e) {
@@ -3646,8 +3646,8 @@
         'arrow-u-up-right': 'M171.76,131.76,209.51,94H88a50,50,0,0,0,0,100h88a6,6,0,0,1,0,12H88A62,62,0,0,1,88,82H209.51L171.76,44.24a6,6,0,0,1,8.48-8.48l48,48a6,6,0,0,1,0,8.48l-48,48a6,6,0,0,1-8.48-8.48Z',
         'arrow-counter-clockwise': 'M222,128a94,94,0,0,1-92.74,94H128a93.43,93.43,0,0,1-64.5-25.65,6,6,0,1,1,8.24-8.72A82,82,0,1,0,70,70l-.19.19L39.44,98H72a6,6,0,0,1,0,12H24a6,6,0,0,1-6-6V56a6,6,0,0,1,12,0V90.34L61.63,61.4A94,94,0,0,1,222,128Z',
         'sort-ascending': 'M126,128a6,6,0,0,1-6,6H48a6,6,0,0,1,0-12h72A6,6,0,0,1,126,128ZM48,70H184a6,6,0,0,0,0-12H48a6,6,0,0,0,0,12Zm56,116H48a6,6,0,0,0,0,12h56a6,6,0,0,0,0-12Zm124.24-22.24a6,6,0,0,0-8.48,0L190,193.51V112a6,6,0,0,0-12,0v81.51l-29.76-29.75a6,6,0,0,0-8.48,8.48l40,40a6,6,0,0,0,8.48,0l40-40A6,6,0,0,0,228.24,163.76Z',
-        'list-magnifying-glass': 'M34,64a6,6,0,0,1,6-6H216a6,6,0,0,1,0,12H40A6,6,0,0,1,34,64Zm6,70h72a6,6,0,0,0,0-12H40a6,6,0,0,0,0,12Zm88,52H40a6,6,0,0,0,0,12h88a6,6,0,0,0,0-12Zm108.24,10.24a6,6,0,0,1-8.48,0l-21.49-21.48a38.06,38.06,0,1,1,8.49-8.49l21.48,21.49A6,6,0,0,1,236.24,196.24ZM184,170a26,26,0,1,0-26-26A26,26,0,0,0,184,170Z',
-        'keyboard': 'M224,50H32A14,14,0,0,0,18,64V192a14,14,0,0,0,14,14H224a14,14,0,0,0,14-14V64A14,14,0,0,0,224,50Zm2,142a2,2,0,0,1-2,2H32a2,2,0,0,1-2-2V64a2,2,0,0,1,2-2H224a2,2,0,0,1,2,2Zm-20-64a6,6,0,0,1-6,6H56a6,6,0,0,1,0-12H200A6,6,0,0,1,206,128Zm0-32a6,6,0,0,1-6,6H56a6,6,0,0,1,0-12H200A6,6,0,0,1,206,96ZM70,160a6,6,0,0,1-6,6H56a6,6,0,0,1,0-12h8A6,6,0,0,1,70,160Zm96,0a6,6,0,0,1-6,6H96a6,6,0,0,1,0-12h64A6,6,0,0,1,166,160Zm40,0a6,6,0,0,1-6,6h-8a6,6,0,0,1,0-12h8A6,6,0,0,1,206,160Z',
+        'binoculars': 'M233,147.24,191.43,52.6a6,6,0,0,0-1.25-1.83,30,30,0,0,0-42.42,0A6,6,0,0,0,146,55V82H110V55a6,6,0,0,0-1.76-4.25,30,30,0,0,0-42.42,0,6,6,0,0,0-1.25,1.83L23,147.24A46,46,0,1,0,110,168V94h36v74a46,46,0,1,0,87-20.76ZM64,202a34,34,0,1,1,34-34A34,34,0,0,1,64,202Zm0-80a45.77,45.77,0,0,0-18.55,3.92L75.06,58.54A18,18,0,0,1,98,57.71V137A45.89,45.89,0,0,0,64,122Zm94-64.28a18,18,0,0,1,22.94.83l29.61,67.37A45.9,45.9,0,0,0,158,137ZM192,202a34,34,0,1,1,34-34A34,34,0,0,1,192,202Z',
+        'command': 'M180,146H158V110h22a34,34,0,1,0-34-34V98H110V76a34,34,0,1,0-34,34H98v36H76a34,34,0,1,0,34,34V158h36v22a34,34,0,1,0,34-34ZM158,76a22,22,0,1,1,22,22H158ZM54,76a22,22,0,0,1,44,0V98H76A22,22,0,0,1,54,76ZM98,180a22,22,0,1,1-22-22H98Zm12-70h36v36H110Zm70,92a22,22,0,0,1-22-22V158h22a22,22,0,0,1,0,44Z',
         'power': 'M122,128V48a6,6,0,0,1,12,0v80a6,6,0,0,1-12,0Zm57.28-77A6,6,0,0,0,172.72,61C196.41,76.47,210,100.88,210,128a82,82,0,0,1-164,0c0-27.12,13.59-51.53,37.28-67A6,6,0,0,0,76.72,51C49.57,68.68,34,96.75,34,128a94,94,0,0,0,188,0C222,96.75,206.43,68.68,179.28,51Z'
     };
 
@@ -3889,9 +3889,10 @@
         .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         /* Toast */
         /* A tooltip's size and style, centred at the bottom of the view: the same padding, 12px type and
-           radius as .tip, text only (no leading icon, no dismiss button; it fades on its own). */
+           radius as .tip, a small leading icon, no dismiss button; it fades on its own. */
         .toast { top: auto; left: 50%; right: auto; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 32px); padding: 6px 10px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
-        .toast > .icon, .toast > .btn[aria-label="Dismiss"] { display: none; }
+        .toast > .btn[aria-label="Dismiss"] { display: none; }
+        .toast > .icon { flex: none; width: 16px; height: 16px; }
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 400; }
         /* Action buttons shrink to the tooltip's line: the pill stays one line high. */
@@ -4133,7 +4134,7 @@
     ]);
 
     // The pen (Alt+P, see setPen): a pill at the top of the view while it is on.
-    const penEl = makeEl('div', { class: 'surface pen', role: 'toolbar', 'aria-label': 'Pen', hidden: '' });
+    const penEl = makeEl('div', { class: 'surface pen', role: 'toolbar', 'aria-label': 'Pen mode', hidden: '' });
 
     // Everything saved (Alt+Shift+O, see openEverything): a dialog over the dimmed page.
     const everythingCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });   // the whole title, see setPanelTitle
@@ -4598,7 +4599,7 @@
         if (off) hideToolbar();
         else scheduleToolbar();   // for text that is selected now
         refreshMenu();
-        showToast(off ? 'Selection toolbar disabled' : 'Selection toolbar enabled');
+        showToast(off ? 'Selection toolbar disabled' : 'Selection toolbar enabled', { icon: 'highlighter' });
     }
 
     // A tap on a touch screen can clear the page selection even though the toolbar cancels
@@ -4673,10 +4674,10 @@
     }
 
     function togglePen() {
-        if (penKey) { setPen(null); scheduleToolbar(); showToast('Pen disabled'); return; }
+        if (penKey) { setPen(null); scheduleToolbar(); showToast('Pen mode disabled', { icon: 'pencil-simple' }); return; }
         hideToolbar();
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
-        showToast('Pen enabled');
+        showToast('Pen mode enabled', { icon: 'pencil-simple' });
     }
 
     // After a mouse selection with the pen on: the selected text gets the pen's style (or, with the
@@ -5153,12 +5154,12 @@
                 setGroupNote(group, text);
                 saveHighlights();
                 scheduleRedraw();
-                showToast('Note saved');
+                showToast('Note saved', { icon: 'note-pencil' });
                 return;
             }
         }
         if (text !== original && runUndoable(() => setGroupNote(group, text))) {
-            if (text) showToast('Note saved');
+            if (text) showToast('Note saved', { icon: 'note-pencil' });
             else offerUndo('Note deleted');
         }
     }
@@ -5301,7 +5302,7 @@
 
     // A message with an Undo link, for a change just made (Alt+Z does the same).
     function offerUndo(message) {
-        showToast(message, { icon: 'check', intent: 'success', action: { label: 'Undo', text: 'Undo', tip: 'Undo', shortcut: 'Alt+Z', run: undoLastAction } });
+        showToast(message, { icon: 'eraser', intent: 'success', action: { label: 'Undo', text: 'Undo', tip: 'Undo', shortcut: 'Alt+Z', run: undoLastAction } });
     }
 
     // The toast stays while the pointer rests on it or its button has focus.
@@ -5452,7 +5453,7 @@
         if (wrapped) target = dir > 0 ? 0 : groups.length - 1;
         jumpToGroup(groups[target], { showNote: true });
         // After the jump, which takes down an "Annotations hidden" message that would hold this one back.
-        if (wrapped && groups.length > 1) showToast(dir > 0 ? 'Back to the first annotation' : 'Back to the last annotation');
+        if (wrapped && groups.length > 1) showToast(dir > 0 ? 'Back to the first annotation' : 'Back to the last annotation', { icon: 'arrow-counter-clockwise' });
         return true;
     }
 
@@ -6030,7 +6031,7 @@
         syncLocation();
         const list = (items || pageAnnotations()).filter(a => a.wrappers.some(w => w.isConnected));
         if (!list.length) {
-            showToast('Nothing to copy');
+            showToast('Nothing to copy', { icon: 'copy' });
             return;
         }
         let markdown;
@@ -6042,7 +6043,7 @@
             return;
         }
         writeClipboard(markdown).then(
-            () => showToast(doneText('copied', list.length)),
+            () => showToast(doneText('copied', list.length), { icon: 'copy' }),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'warning-circle' }); });
     }
 
@@ -6082,7 +6083,7 @@
         const selected = toolbarSelection();
         let range = selected && cleanRange(selected);
         if (!range) {
-            showToast('Select the text first');
+            showToast('Select the text first', { icon: 'highlighter' });
             return;
         }
         if (editor) {
@@ -6672,7 +6673,7 @@
         const selected = everythingShown.filter(s => everythingChecked.has(s.id));
         if (!selected.length) return;
         writeClipboard(savedMarkdown(selected)).then(
-            () => showToast(doneText('copied', selected.length)),
+            () => showToast(doneText('copied', selected.length), { icon: 'copy' }),
             e => { console.warn(`${LOG} could not copy`, e); showToast('Couldn\'t copy', { intent: 'error', icon: 'warning-circle' }); });
     });
     everythingForget.addEventListener('click', () => {
@@ -6864,14 +6865,14 @@
 
     // id, label, shortcut, icon, click, in groups: the modes (shown pressed while on), history, then the views.
     const menuButtons = new Map([
-        ['pen', menuButton('Pen', 'Alt+P', phosphorIcon('pencil-simple'), () => togglePen())],
+        ['pen', menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple'), () => togglePen())],
         ['toolbar', menuButton('Selection toolbar', 'Alt+T', phosphorIcon('highlighter'), () => toggleToolbarSwitch())],
-        ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon('keyboard'), () => toggleKeysSwitch())],
+        ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon('command'), () => toggleKeysSwitch())],
         ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
         ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())],
         ['panel', menuButton('Annotations', 'Alt+O', phosphorIcon('sort-ascending'), () => togglePanel())],
-        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('list-magnifying-glass'), () => toggleEverything())],
-        ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye-slash'), () => toggleAnnotationsHidden())]
+        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('binoculars'), () => toggleEverything())],
+        ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())]
     ]);
     addMenuTip(menuExpand, 'Expand');
 
@@ -6908,7 +6909,7 @@
         menuButtons.get('redo').disabled = !redoStack.length;
         const hideBtn = menuButtons.get('hide');
         hideBtn.dataset.label = annotationsHidden ? 'Show annotations' : 'Hide annotations';
-        hideBtn.replaceChildren(phosphorIcon(annotationsHidden ? 'eye' : 'eye-slash'));
+        hideBtn.replaceChildren(phosphorIcon(annotationsHidden ? 'eye-slash' : 'eye'));
         hideBtn.setAttribute('aria-label', `${hideBtn.dataset.label} (Alt+V)`);
         hideBtn.setAttribute('aria-pressed', String(!!annotationsHidden));
         const dark = computeDarkMode();
@@ -6918,11 +6919,19 @@
         if (hidden) { if (menuHost.isConnected) menuHost.remove(); return; }
         if (!menuHost.isConnected) document.documentElement.appendChild(menuHost);
         menuHost.style.setProperty('--dpr', String(window.devicePixelRatio || 1));
-        if (!menuEl.style.left) {
-            const pos = readSettings().menuPos;
-            menuEl.style.left = pos && Number.isFinite(pos.left) ? `${Math.max(0, pos.left)}px` : '12px';
-            menuEl.style.top = pos && Number.isFinite(pos.top) ? `${Math.max(0, pos.top)}px` : '12px';
-        }
+        applyMenuPos();
+    }
+
+    // The saved place (shared by every site) goes on the menu, also when another tab moved it.
+    // Not while it is being dragged here: it stays under the pointer until the drop.
+    let menuDragging = false;
+    function applyMenuPos() {
+        if (menuDragging) return;
+        const pos = readSettings().menuPos;
+        const left = pos && Number.isFinite(pos.left) ? Math.max(0, Math.min(window.innerWidth - 40, pos.left)) : 12;
+        const top = pos && Number.isFinite(pos.top) ? Math.max(0, Math.min(window.innerHeight - 40, pos.top)) : 12;
+        if (menuEl.style.left !== `${left}px`) menuEl.style.left = `${left}px`;
+        if (menuEl.style.top !== `${top}px`) menuEl.style.top = `${top}px`;
     }
 
     menuExpand.addEventListener('click', () => { menuOpen = !menuOpen; hideMenuTip(); renderSiteMenu(); });
@@ -6937,8 +6946,10 @@
             menuEl.style.top = `${Math.max(0, Math.min(window.innerHeight - 40, m.clientY + dy))}px`;
         };
         menuEl.setPointerCapture(e.pointerId);
+        menuDragging = true;
         menuEl.addEventListener('pointermove', move);
         menuEl.addEventListener('lostpointercapture', () => {
+            menuDragging = false;
             menuEl.removeEventListener('pointermove', move);
             const settings = readSettings();
             settings.menuPos = { left: parseFloat(menuEl.style.left), top: parseFloat(menuEl.style.top) };

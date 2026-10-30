@@ -110,11 +110,19 @@
         if (hidden) { if (menuHost.isConnected) menuHost.remove(); return; }
         if (!menuHost.isConnected) document.documentElement.appendChild(menuHost);
         menuHost.style.setProperty('--dpr', String(window.devicePixelRatio || 1));
-        if (!menuEl.style.left) {
-            const pos = readSettings().menuPos;
-            menuEl.style.left = pos && Number.isFinite(pos.left) ? `${Math.max(0, pos.left)}px` : '12px';
-            menuEl.style.top = pos && Number.isFinite(pos.top) ? `${Math.max(0, pos.top)}px` : '12px';
-        }
+        applyMenuPos();
+    }
+
+    // The saved place (shared by every site) goes on the menu, also when another tab moved it.
+    // Not while it is being dragged here: it stays under the pointer until the drop.
+    let menuDragging = false;
+    function applyMenuPos() {
+        if (menuDragging) return;
+        const pos = readSettings().menuPos;
+        const left = pos && Number.isFinite(pos.left) ? Math.max(0, Math.min(window.innerWidth - 40, pos.left)) : 12;
+        const top = pos && Number.isFinite(pos.top) ? Math.max(0, Math.min(window.innerHeight - 40, pos.top)) : 12;
+        if (menuEl.style.left !== `${left}px`) menuEl.style.left = `${left}px`;
+        if (menuEl.style.top !== `${top}px`) menuEl.style.top = `${top}px`;
     }
 
     menuExpand.addEventListener('click', () => { menuOpen = !menuOpen; hideMenuTip(); renderSiteMenu(); });
@@ -129,8 +137,10 @@
             menuEl.style.top = `${Math.max(0, Math.min(window.innerHeight - 40, m.clientY + dy))}px`;
         };
         menuEl.setPointerCapture(e.pointerId);
+        menuDragging = true;
         menuEl.addEventListener('pointermove', move);
         menuEl.addEventListener('lostpointercapture', () => {
+            menuDragging = false;
             menuEl.removeEventListener('pointermove', move);
             const settings = readSettings();
             settings.menuPos = { left: parseFloat(menuEl.style.left), top: parseFloat(menuEl.style.top) };

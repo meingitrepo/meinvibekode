@@ -100,6 +100,8 @@
     }
 
     const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD', 'KeyL']);
+    // The commands with no Shift variant: with Shift held their keys stay the page's.
+    const NO_SHIFT_CODES = new Set(['KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyJ', 'KeyK', 'KeyL']);
 
     // While our keys are on (Alt+Shift+K switches them), every Alt key outside a field is ours
     // alone: the site's own Alt shortcuts never run, whether we use the key or not. Its access
@@ -189,6 +191,7 @@
         const code = e.code;
         if (!COMMAND_CODES.has(code) && (e.shiftKey || !CODE_TO_STYLE.has(code))) return;
         syncLocation();
+        if (e.shiftKey && NO_SHIFT_CODES.has(code)) return;
 
         if (code === 'KeyZ' || code === 'KeyY') {
             const redo = code === 'KeyY' || e.shiftKey;
@@ -200,21 +203,20 @@
         }
 
         if (code === 'KeyV') {
-            if (e.shiftKey || (!annotationsHidden && !document.querySelector(WRAPPER_SELECTOR))) return;
+            if (!annotationsHidden && !document.querySelector(WRAPPER_SELECTOR)) return;
             e.preventDefault();
             toggleAnnotationsHidden();
             return;
         }
 
         if (code === 'KeyP') {
-            if (e.shiftKey) return;
             e.preventDefault();
             togglePen();
             return;
         }
 
         if (code === 'KeyT') {
-            if (e.shiftKey || !ENABLE_SELECTION_TOOLBAR) return;
+            if (!ENABLE_SELECTION_TOOLBAR) return;
             e.preventDefault();
             toggleToolbarSwitch();
             return;
@@ -228,7 +230,6 @@
         const pointed = () => (annotationsHidden ? null : pointedGroup());
 
         if (code === 'KeyN') {
-            if (e.shiftKey) return;
             e.preventDefault();
             const group = selected ? null : pointedGroup();
             if (selected) noteSelection(active);
@@ -238,7 +239,6 @@
         }
 
         if (code === 'KeyL') {
-            if (e.shiftKey) return;
             e.preventDefault();
             togglePinKey(selected ? null : pointedGroup());
             return;
@@ -252,7 +252,6 @@
         }
 
         if (code === 'KeyJ' || code === 'KeyK') {
-            if (e.shiftKey) return;
             // Without annotations the keys stay the page's.
             if (jumpRelative(code === 'KeyJ' ? 1 : -1)) e.preventDefault();
             return;

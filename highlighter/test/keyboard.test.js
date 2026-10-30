@@ -46,8 +46,26 @@ async function editor(browser) {
   await ctx.close();
 }
 
+// Alt+P, N, V, J and L have no Shift variant: with Shift held they do nothing, and without it they act.
+async function shifted(browser) {
+  const { ctx, page: p } = await L.open(browser, { html: HTML });
+  await L.selStr(p, '#p1', 'Plain words'); await L.altKey(p, '1');
+  await L.selStr(p, '#p1', 'Plain words');
+  const state = () => p.evaluate(() => ({ pen: window.__hl.penKey || null, editor: !!window.__hl.editor, hidden: window.__hl.annotationsHidden, jump: window.__hl.jumpGroup || null }));
+  const before = await state();
+  for (const k of ['p', 'n', 'v', 'j', 'l']) await L.altKey(p, k, true);
+  check('Alt+Shift+P, N, V, J and L change nothing', JSON.stringify(await state()) === JSON.stringify(before), [before, await state()]);
+  check('Alt+Shift+L shows no toast', (await L.toast(p)) === null, await L.toast(p));
+  await L.altKey(p, 'p');
+  check('Alt+P turns the pen on', (await state()).pen !== null, await state());
+  await L.altKey(p, 'p');
+  await L.altKey(p, 'v');
+  check('Alt+V hides the annotations', (await state()).hidden === true, await state());
+  await ctx.close();
+}
+
 (async () => {
   const browser = await L.launch();
-  await Promise.all([toolbar, editor].map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
+  await Promise.all([toolbar, editor, shifted].map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
   await L.done(browser);
 })();

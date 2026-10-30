@@ -149,10 +149,11 @@
         visible.forEach(({ p, items }) => {
             // Pages start closed, and opened while searching; a click turns that round.
             const open = everythingToggled.has(p.key) !== terms.length > 0;
+            const tickedHere = items.filter(a => everythingChecked.has(everythingId(p, a))).length;
             const head = makeEl('button', { type: 'button', class: 'page-head', role: 'treeitem', 'aria-level': '1', 'aria-expanded': String(open), 'data-key': p.key }, [
                 phosphorIcon(open ? 'caret-down' : 'caret-right'),
                 makeEl('span', { class: 'page-name' }, [makeEl('span', { class: 'page-host', text: p.host }), makeEl('span', { class: 'page-path', text: p.path })]),
-                makeEl('span', { class: 'page-meta', text: `${(() => { const n = items.filter(a => everythingChecked.has(everythingId(p, a))).length; return n ? `${n}/${items.length}` : items.length; })()}${p.time ? ` · ${formatDate(p.time)}` : ''}` })
+                makeEl('span', { class: 'page-meta', text: `${tickedHere ? `${tickedHere}/${items.length}` : items.length}${p.time ? ` · ${formatDate(p.time)}` : ''}` })
             ]);
             const section = makeEl('div', { class: 'page', role: 'none' }, [head]);
             if (open) {
@@ -160,11 +161,9 @@
                 items.forEach(a => {
                     const ticked = everythingChecked.has(everythingId(p, a));
                     // The focusable link is the treeitem, so its level and selection are announced on focus.
-                    const link = makeEl('a', { class: 'item-main', role: 'treeitem', 'aria-level': '2', 'aria-selected': String(ticked), href: a.url, target: '_blank', rel: 'noopener', 'data-key': p.key, 'data-group': a.group },
-                        [makeEl('div', { class: 'item-text', id: `rnh-ei-${++everythingItemSeq}`, text: a.text })]);
-                    if (a.note) link.appendChild(makeEl('div', { class: 'item-note', text: a.note }));
-                    link.appendChild(makeEl('div', { class: 'item-meta', text: [styleLabel(a.key), a.time ? `added ${formatDate(a.time)}` : ''].filter(Boolean).join(' · ') }));
-                    link.style.setProperty('--swatch', resolveStyle(a.key, dark).color);
+                    const link = itemMain('a', { class: 'item-main', role: 'treeitem', 'aria-level': '2', 'aria-selected': String(ticked), href: a.url, target: '_blank', rel: 'noopener', 'data-key': p.key, 'data-group': a.group }, a, dark, {
+                        id: `rnh-ei-${++everythingItemSeq}`, text: a.text, meta: itemMeta(a)
+                    });
                     // A mouse aid only: keyboard and screen-reader users tick with Space on the treeitem.
                     const check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-hidden': 'true', tabindex: '-1' });
                     check.checked = ticked;

@@ -200,14 +200,11 @@
             children.push(makeEl('div', { class: 'empty', text: 'No annotations match the filter.' }));
         }
         shown.forEach(a => children.push(panelItem(a, dark, false)));
-        if (shownMissing.length) {
-            children.push(makeEl('div', { class: 'section-title', 'data-section': 'missing', text: `Not found on the page (${shownMissing.length})` }));
-            shownMissing.forEach(a => children.push(panelItem(a, dark, true)));
-        }
-        if (shownElsewhere.length) {
-            children.push(makeEl('div', { class: 'section-title', 'data-section': 'elsewhere', text: `Saved on other pages (${shownElsewhere.length})` }));
-            shownElsewhere.forEach(a => children.push(panelItem(a, dark, true, true)));
-        }
+        [['missing', 'Not found on the page', shownMissing, false], ['elsewhere', 'Saved on other pages', shownElsewhere, true]].forEach(([section, title, list, isElsewhere]) => {
+            if (!list.length) return;
+            children.push(makeEl('div', { class: 'section-title', 'data-section': section, text: `${title} (${list.length})` }));
+            list.forEach(a => children.push(panelItem(a, dark, true, isElsewhere)));
+        });
         panelList.replaceChildren(...children);
 
         if (keep) {
@@ -250,28 +247,38 @@
         }
     }
 
-    let panelItemSeq = 0;
-    function panelItem(a, dark, missing, elsewhere = false) {
-        const meta = [styleLabel(a.key), a.time ? `added ${formatDate(a.time)}` : '', elsewhere ? `on ${pagePath(a.page)}` : '']
-            .filter(Boolean).join(' · ');
-        const main = makeEl(missing ? 'div' : 'button', missing ? { class: 'item-main' } : { type: 'button', class: 'item-main', 'data-act': 'jump' }, [
-            makeEl('div', { class: 'item-text', id: `rnh-pi-${++panelItemSeq}`, text: a.paragraphs.join(' ') })
-        ]);
+    // The meta line of an annotation's row in the panel or everything saved: its style, when it
+    // was added, then any `extra`.
+    function itemMeta(a, extra) {
+        return [styleLabel(a.key), a.time ? `added ${formatDate(a.time)}` : '', extra].filter(Boolean).join(' · ');
+    }
+
+    // The part of a row both lists share: the quote (`id` names it for its checkbox), the note,
+    // the meta line and the color swatch, inside an element of `tag`.
+    function itemMain(tag, attrs, a, dark, { id, text, meta }) {
+        const main = makeEl(tag, attrs, [makeEl('div', { class: 'item-text', id, text })]);
         if (a.note) main.appendChild(makeEl('div', { class: 'item-note', text: a.note }));
         main.appendChild(makeEl('div', { class: 'item-meta', text: meta }));
         main.style.setProperty('--swatch', resolveStyle(a.key, dark).color);
-        const actions = makeEl('div', { class: 'item-actions' });
-        let check = null;
+        return main;
+    }
+
+    let panelItemSeq = 0;
+    function panelItem(a, dark, missing, elsewhere = false) {
+        const main = itemMain(missing ? 'div' : 'button', missing ? { class: 'item-main' } : { type: 'button', class: 'item-main', 'data-act': 'jump' }, a, dark, {
+            id: `rnh-pi-${++panelItemSeq}`, text: a.paragraphs.join(' '), meta: itemMeta(a, elsewhere && `on ${pagePath(a.page)}`)
+        });
+        let side;
         if (missing) {
             const attach = makeButton({ text: 'Attach to selection' });
             attach.dataset.act = 'attach';
             attach.title = 'Select the text this annotation belongs to on the page, then click here';
-            actions.append(attach, panelButton('trash', 'Forget annotation', 'forget'));
+            side = makeEl('div', { class: 'item-actions' }, [attach, panelButton('trash', 'Forget annotation', 'forget')]);
         } else {
-            check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-labelledby': main.firstChild.id });
-            check.checked = panelChecked.has(a.group);
+            side = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-labelledby': main.firstChild.id });
+            side.checked = panelChecked.has(a.group);
         }
-        const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, check ? [main, check] : [main, actions]);
+        const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, [main, side]);
         item.dataset.group = a.group;
         return item;
     }

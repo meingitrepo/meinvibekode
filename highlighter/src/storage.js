@@ -384,12 +384,13 @@
             if (old) { records.push(...old); moved.push(k); }
         });
         if (!moved.length) return records;
-        const seen = new Set();
+        const seen = new Map();
         const merged = records.filter(r => {
             const sig = `${recordSignature(r)}|${r.text}`;
-            if (seen.has(sig)) return false;
-            seen.add(sig);
-            return true;
+            const first = seen.get(sig);
+            if (!first) { seen.set(sig, r); return true; }
+            if (!first.note && r.note) first.note = r.note;   // the copy kept may be the one without the note
+            return false;
         });
         writeRecords(currentKey, merged);
         moved.forEach(k => GM_deleteValue(k));

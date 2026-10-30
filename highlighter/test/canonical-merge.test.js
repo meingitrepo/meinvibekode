@@ -28,5 +28,19 @@ const rec = (text, group) => {
   L.check('the plain-URL keys are gone', keys.length === 0, keys);
   L.check('no page errors', page.__errors.length === 0, page.__errors);
   await ctx.close();
+
+  // The same selection under both keys, and only the plain-key copy has a note: the note survives the merge.
+  {
+    const store2 = {
+      [CANON]: JSON.stringify([alpha]),
+      [PLAIN]: JSON.stringify([{ ...alpha, note: 'keep me' }])
+    };
+    const { ctx: ctx2, page: page2 } = await L.open(browser, { html: HTML, url: VISIT, store: store2 });
+    const notes = (await L.stored(page2, CANON)).map(r => r.text + '=' + (r.note || ''));
+    L.check('a note only on the plain-key copy is kept, in the store', notes.join('|') === 'alpha words=keep me', notes);
+    const shown2 = (await L.wr(page2)).map(w => w.t + '=' + (w.n || ''));
+    L.check('and on the page', shown2.join('|') === 'alpha words=keep me', shown2);
+    await ctx2.close();
+  }
   await L.done(browser);
 })();

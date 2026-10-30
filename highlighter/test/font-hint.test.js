@@ -1,33 +1,10 @@
-// 9.20: the toast takes a second action (text buttons), and a hint names the UI fonts (Poppins, Lora) that are not installed.
+// 9.20: a hint names the UI fonts (Poppins, Lora) that are not installed. (9.31: no toast has a button; the panel carries the download links, see panel-font-note.test.js)
 const L = require('./lib');
 const HTML = `<!doctype html><html><head><meta charset="utf-8"></head><body style="font:16px sans-serif;margin:200px 40px">
 <p id="p1">Light paragraph one with words to select and more words after them.</p></body></html>`;
 (async () => {
   const browser = await L.launch();
   const { page } = await L.open(browser, { html: HTML });
-  // Task 0: a second action slot.
-  await page.evaluate(() => {
-    window.__runs = [];
-    window.__hl.showToast('Two', { action: { label: 'Get Poppins', text: 'Poppins', run: () => window.__runs.push('a'), anywhere: true }, action2: { label: 'Get Lora', text: 'Lora', run: () => window.__runs.push('b'), anywhere: true } });
-  });
-  const two = await page.evaluate(() => ({ a: !window.__hl.toastAction.hidden, b: !window.__hl.toastAction2.hidden, ta: window.__hl.toastAction.textContent, tb: window.__hl.toastAction2.textContent }));
-  L.check('two actions are visible, each with its own text', two.a && two.b && two.ta === 'Poppins' && two.tb === 'Lora', two);
-  await page.evaluate(() => window.__hl.toastAction2.click());
-  L.check('the second action runs its own handler and closes the toast', JSON.stringify(await page.evaluate(() => window.__runs)) === '["b"]' && await page.evaluate(() => window.__hl.toastEl.hidden), await page.evaluate(() => window.__runs));
-  await page.evaluate(() => window.__hl.showToast('One', { action: { label: 'Show', run: () => window.__runs.push('c'), keepEditor: true } }));
-  const one = await page.evaluate(() => ({ hidden2: window.__hl.toastAction2.hidden, cls: window.__hl.toastAction.className }));
-  const stale = await page.evaluate(() => { const b = window.__hl.toastAction2; return { hidden: b.hidden, action: b.dataset.action, label: b.dataset.label, aria: b.getAttribute('aria-label') }; });
-  L.check('the hidden second button keeps no data from the earlier toast', stale.hidden && stale.action === undefined && stale.label === undefined && stale.aria === null, stale);
-  L.check('a single-action toast keeps the second slot hidden and its icon button', one.hidden2 && /btn-icon/.test(one.cls) && (await L.toast(page)) === 'One · Show', one);
-  await page.evaluate(() => window.__hl.toastAction.click());
-  await page.evaluate(() => window.__hl.showToast('Away', { action: { label: 'Get Lora', text: 'Lora', run: () => window.__runs.push('d'), anywhere: true } }));
-  await page.evaluate(() => history.pushState({}, '', '/other'));
-  await page.evaluate(() => window.__hl.toastAction.click());
-  L.check('an "anywhere" action still runs after the page URL changed', (await page.evaluate(() => window.__runs)).includes('d'), await page.evaluate(() => window.__runs));
-  await page.evaluate(() => window.__hl.showToast('Stay', { action: { label: 'Show', run: () => window.__runs.push('e') } }));
-  await page.evaluate(() => history.pushState({}, '', '/third'));
-  await page.evaluate(() => window.__hl.toastAction.click());
-  L.check('an ordinary action does not run for a page the tab has left', !(await page.evaluate(() => window.__runs)).includes('e'), await page.evaluate(() => window.__runs));
   // Task 1: the hint. The canvas is stubbed: a font named in window.__installed measures wider than the fallback.
   const init = (installed, extra = '') => `window.__installed = ${JSON.stringify(installed)}; window.__mtCalls = 0; window.__opened = [];
     CanvasRenderingContext2D.prototype.measureText = function () { window.__mtCalls++; return { width: window.__installed.some(n => this.font.includes(n)) ? 20 : 10 }; };
@@ -35,19 +12,19 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"></head><body styl
   const POPPINS = 'https://fonts.google.com/specimen/Poppins', LORA = 'https://fonts.google.com/specimen/Lora';
   const saved = p => p.evaluate(() => { try { return JSON.parse(window.__gm['rnh:settings']).fontHintVersion; } catch (e) { return 'unreadable'; } });
   const hintPage = async (opts, installed = [], extra = '', wait = 3600) => { const r = await L.open(browser, Object.assign({ html: HTML, fontHint: true, init: init(installed, extra) }, opts)); await r.page.waitForTimeout(wait); return r.page; };
-  const shown = p => p.evaluate(() => ({ text: window.__hl.toastEl.hidden ? null : window.__hl.toastText.textContent, a: !window.__hl.toastAction.hidden && window.__hl.toastAction.textContent, b: !window.__hl.toastAction2.hidden && window.__hl.toastAction2.textContent }));
+  const shown = p => p.evaluate(() => ({ text: window.__hl.toastEl.hidden ? null : window.__hl.toastText.textContent, buttons: window.__hl.toastEl.querySelectorAll('button').length }));
   let p = await hintPage({});
   let s = await shown(p);
-  L.check('both missing: names both, no buttons', s.text === 'Poppins and Lora not installed; using Arial and Georgia.' && s.a === false && s.b === false, s);
-  const lay = await p.evaluate(() => { const r = window.__hl; const tb = r.toastText.getBoundingClientRect(), a = r.toastAction.getBoundingClientRect(); return { textW: Math.round(tb.width), buttonsBelowText: a.top >= tb.bottom - 1, toastH: Math.round(r.toastEl.getBoundingClientRect().height) }; });
-  L.check('both missing: the message keeps a readable width, the buttons sit beside it in a tooltip-sized toast', lay.textW > 150 && !lay.buttonsBelowText && lay.toastH <= 48, lay);
+  L.check('both missing: names both, no buttons', s.text === 'Poppins and Lora not installed; using Arial and Georgia.' && s.buttons === 0, s);
+  const lay = await p.evaluate(() => ({ toastH: Math.round(window.__hl.toastEl.getBoundingClientRect().height), textW: Math.round(window.__hl.toastText.getBoundingClientRect().width) }));
+  L.check('both missing: a tooltip-sized, one-line toast with a readable width', lay.textW > 150 && lay.toastH <= 48, lay);
   L.check('both missing: the version is recorded when shown', (await saved(p)) === '9.99', await saved(p));
   await L.altKey(p, 't'); await L.altKey(p, 't');
   L.check('a settings write elsewhere keeps the recorded version', (await saved(p)) === '9.99', await saved(p));
   L.check('no page errors while the hint ran', !p.__errors.length, p.__errors);
   p = await hintPage({}, ['Poppins']);
   s = await shown(p);
-  L.check('only Lora missing: names Lora and Georgia, no button', s.text === 'Lora not installed; using Georgia.' && s.a === false && s.b === false, s);
+  L.check('only Lora missing: names Lora and Georgia, no button', s.text === 'Lora not installed; using Georgia.' && s.buttons === 0, s);
   p = await hintPage({ store: { 'rnh:settings': JSON.stringify({ fontHintVersion: '9.99' }) } });
   L.check('same version recorded: no toast, no font measuring', (await shown(p)).text === null && (await p.evaluate(() => window.__mtCalls)) === 0, [await shown(p), await p.evaluate(() => window.__mtCalls)]);
   p = await hintPage({ store: { 'rnh:settings': JSON.stringify({ fontHintVersion: '9.98' }) } });

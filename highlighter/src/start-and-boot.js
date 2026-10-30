@@ -31,14 +31,13 @@
     }
 
     // Closes every panel without saving (used when the page under them changes).
-    // `keepRestore`: a "Note not saved · Restore" message stays (undo and redo don't affect it).
-    function resetUi({ keepRestore = false } = {}) {
+    function resetUi() {
         hideToolbar();
         hideNoteCard();
         unpinNoteCard();
         clearSelectedGroups();
         closeEditor();
-        if (!(keepRestore && toastKeep)) hideToast();
+        hideToast();
         hoveredWrapper = null;
     }
 

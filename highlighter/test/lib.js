@@ -9,7 +9,7 @@ const BOOT = '    start();\n    renderSiteMenu();\n    refreshMenu();';
 function instrument(src) {
   src = src.replace(/\r\n/g, '\n');
   if (!src.includes(BOOT)) throw new Error('boot anchor missing');
-  const names = ['panelEl', 'panelList', 'panelFilter', 'panelCount', 'panelCopy', 'panelErase', 'panelSelectAll', 'toastEl', 'toastText', 'toastAction', 'toastAction2', 'noteCardEl', 'cardHint', 'cardText', 'cardPin',
+  const names = ['panelEl', 'panelList', 'panelFilter', 'panelCount', 'panelCopy', 'panelErase', 'panelSelectAll', 'toastEl', 'toastText', 'noteCardEl', 'cardHint', 'cardText', 'cardPin',
     'editorEl', 'noteInput', 'uiRoot', 'uiHost', 'undoStack', 'redoStack', 'toolbarEl', 'labelTipEl', 'lateWatcher', 'currentKey', 'menuIds', 'running', 'darkMode', 'hoveredWrapper', 'annotationsHidden', 'cardWrapper', 'penEl', 'penKey', 'lastStyleKey', 'everythingEl', 'everythingFilter', 'everythingList', 'everythingCount', 'everythingSelectAll', 'everythingCopy', 'everythingForget', 'everythingClose', 'selectBoxesEl', 'selectedGroups', 'shownWrappers', 'menuEl', 'menuExpand', 'menuHandle', 'menuButtons', 'menuClose'];
   const get = n => `get ${n}() { try { return ${n}; } catch (e) { return undefined; } }`;
   return src.replace(BOOT, `    window.__hl = { ${names.map(get).join(', ')}, get editor() { return editor; }, get pending() { return pendingRecords; }, get jumpGroup() { return jumpGroup; },
@@ -94,7 +94,7 @@ async function altKey(page, key, shift) {
   if (shift) await page.keyboard.up('Shift'); await page.keyboard.up('Alt');
   await page.waitForTimeout(150);
 }
-const toast = page => page.evaluate(() => { const r = window.__hl; return r.toastEl.hidden ? null : r.toastText.textContent + (r.toastAction.hidden ? '' : ' · ' + r.toastAction.dataset.action); });
+const toast = page => page.evaluate(() => { const r = window.__hl; return r.toastEl.hidden ? null : r.toastText.textContent; });
 const wr = page => page.evaluate(() => window.__hl.allWrappers().map(w => {
   const o = { k: w.getAttribute('data-style-key'), t: w.textContent, g: w.getAttribute('data-highlighter-group') };
   const n = w.getAttribute('data-highlighter-note'); if (n) o.n = n; return o; }));

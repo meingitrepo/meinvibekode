@@ -50,12 +50,7 @@
     let toastIcon = phosphorIcon('info');   // replaced per message
     const toastText = makeEl('div', { class: 'toast-text' });
     const toastContent = makeEl('div', { class: 'toast-content' }, [toastText]);
-    const toastAction = makeButton({ icon: phosphorIcon('arrow-u-up-left') });   // an icon button (Undo, Restore, Show); icon, label and tooltip set per toast
-    toastAction.hidden = true;
-    const toastAction2 = makeButton({ icon: phosphorIcon('arrow-u-up-left') });   // a second action, a text button (the font hint); hidden unless a toast gives one
-    toastAction2.hidden = true;
-    const toastDismiss = makeButton({ icon: phosphorIcon('x'), label: 'Dismiss' });
-    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastAction2, toastDismiss]);
+    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent]);
 
     // A panel's title: the counts in the quiet colour around the bold word "Annotations".
     function setPanelTitle(el, lead, tail, word = lead === '1' ? 'Annotation' : 'Annotations') {
@@ -74,13 +69,15 @@
     const searchIcon = phosphorIcon('magnifying-glass');
     searchIcon.classList.add('search-icon');
     const panelList = makeEl('div', { class: 'panel-list' });
+    const panelFonts = makeEl('div', { class: 'panel-fonts', hidden: '' });   // the missing-font suggestion, see updateFontNote
     const panelEl = makeEl('div', { class: 'surface panel', role: 'complementary', 'aria-label': 'Annotations', hidden: '' }, [
         makeEl('div', { class: 'panel-header' }, [
             panelCount,
             makeEl('div', { class: 'panel-actions' }, [panelSelectAll, panelCopy, panelErase, panelClose])
         ]),
         makeEl('div', { class: 'field' }, [searchIcon, panelFilter]),
-        panelList
+        panelList,
+        panelFonts
     ]);
 
     // The pen (Alt+P, see setPen): a pill at the top of the view while it is on.

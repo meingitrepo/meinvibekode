@@ -3,7 +3,7 @@
 const L = require('./lib');
 const HTML = `<!doctype html><html><head><meta charset="utf-8"></head><body style="font:16px sans-serif;margin:200px 40px">
 <p id="p1">Light paragraph one with words to select and more words after them.</p></body></html>`;
-const info = page => page.evaluate(() => { const r = window.__hl; const t = r.toastEl; return { w: Math.round(t.getBoundingClientRect().width), body: (t.querySelector('.toast-body') || {}).textContent || '', link: r.toastAction.className, icon: !!r.toastAction.querySelector('svg') }; });
+const info = page => page.evaluate(() => { const t = window.__hl.toastEl; return { w: Math.round(t.getBoundingClientRect().width), body: (t.querySelector('.toast-body') || {}).textContent || '', buttons: t.querySelectorAll('button').length }; });
 (async () => {
   const browser = await L.launch();
   const { page } = await L.open(browser, { html: HTML });
@@ -17,7 +17,7 @@ const info = page => page.evaluate(() => { const r = window.__hl; const t = r.to
   await L.altKey(page, 'h'); await page.waitForTimeout(300);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
   const u = await info(page);
-  L.check('Annotations hidden has no link', (await L.toast(page)) === 'Annotations hidden' && !u.icon, u);
+  L.check('Annotations hidden has no button', (await L.toast(page)) === 'Annotations hidden' && u.buttons === 0, u);
   // No toast has a body line.
   const body = async name => { const i = await info(page); L.check(`${name} has no body`, i.body.length === 0, i); };
   await body('Show');

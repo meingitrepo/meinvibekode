@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.30
+// @version      9.31
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -169,7 +169,6 @@
     const NOTE_BADGE_REACH = 8;                 // px around the badge that count as near it
     const TOOLBAR_IDLE_MS = 4000;               // the selection toolbar fades out after this long untouched (0 = never)
     const TOAST_MS = 4000;                      // how long a message stays up,
-    const TOAST_ACTION_MS = 6000;               // or one with a button such as Undo (pointing at it keeps it)
     const NOTE_STYLE_KEY = 'h';                 // style given to plain text that receives a note
     const NOTE_MAX_LENGTH = 2000;
     const NOTE_MIN_LINES = 2;                   // the note box starts this tall,
@@ -2662,7 +2661,6 @@
         if (!missing) return;
         if (document.hidden) { noticeDue = true; return; }
         noticedKeys.add(currentKey);
-        if (!toastEl.hidden && toastRun) return;
         showToast(doneText('not found', missing), { icon: 'warning', intent: 'warning' });
     }
 
@@ -3136,7 +3134,7 @@
     }
 
     function applyState(state) {
-        resetUi({ keepRestore: true });
+        resetUi();
         stopLateWatcher();
         unwrapAll();
         trackedRecords.clear();   // the state is the whole truth; renderRecords tracks what it places
@@ -3894,16 +3892,9 @@
         /* A tooltip's size and style, centred at the bottom of the view: the same padding, 12px type and
            radius as .tip, an icon at the left end, no dismiss button; it fades on its own. */
         .toast { top: auto; left: 50%; right: auto; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 32px); padding: 6px 10px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
-        .toast > .btn[aria-label="Dismiss"] { display: none; }
         .toast > .icon { flex: none; width: 16px; height: 16px; margin: 0 0 0 -2px; }   /* at the left end, 16px, as far in as an icon button's icon */
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 400; }
-        /* Action buttons shrink to the tooltip's line: the pill stays one line high. */
-        .toast .btn-icon { width: 24px; height: 24px; margin: -4px -4px -4px 0; }
-        /* A toast's text buttons (the font hint's): small and subtle. Undo, Restore and Show are icon buttons. */
-        .btn-small { min-width: 0; height: 24px; padding: 0 8px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
-        .toast .btn-small { flex: none; margin: -4px 0; }
-        .toast .btn-small[hidden] { display: none; }
         .toast:focus-visible { outline: 2px solid var(--focus); }
         /* The pen's bar, centred at the top of the view. */
         .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
@@ -3962,6 +3953,9 @@
         }
         .field input::placeholder { color: var(--ink-4); opacity: 1; }
         .field input::-webkit-search-cancel-button { display: none; }
+        .panel-fonts { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 8px 16px; border-top: 1px solid var(--line); font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
+        .panel-fonts[hidden] { display: none; }
+        .panel-fonts a { color: var(--ink-2); text-decoration: underline; }
         .panel-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .section-title { margin: 8px 4px 4px; font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: 600; color: var(--ink-3); }
         .empty { margin: 4px 4px 8px; color: var(--ink-3); }
@@ -4103,12 +4097,7 @@
     let toastIcon = phosphorIcon('info');   // replaced per message
     const toastText = makeEl('div', { class: 'toast-text' });
     const toastContent = makeEl('div', { class: 'toast-content' }, [toastText]);
-    const toastAction = makeButton({ icon: phosphorIcon('arrow-u-up-left') });   // an icon button (Undo, Restore, Show); icon, label and tooltip set per toast
-    toastAction.hidden = true;
-    const toastAction2 = makeButton({ icon: phosphorIcon('arrow-u-up-left') });   // a second action, a text button (the font hint); hidden unless a toast gives one
-    toastAction2.hidden = true;
-    const toastDismiss = makeButton({ icon: phosphorIcon('x'), label: 'Dismiss' });
-    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent, toastAction, toastAction2, toastDismiss]);
+    const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent]);
 
     // A panel's title: the counts in the quiet colour around the bold word "Annotations".
     function setPanelTitle(el, lead, tail, word = lead === '1' ? 'Annotation' : 'Annotations') {
@@ -4127,13 +4116,15 @@
     const searchIcon = phosphorIcon('magnifying-glass');
     searchIcon.classList.add('search-icon');
     const panelList = makeEl('div', { class: 'panel-list' });
+    const panelFonts = makeEl('div', { class: 'panel-fonts', hidden: '' });   // the missing-font suggestion, see updateFontNote
     const panelEl = makeEl('div', { class: 'surface panel', role: 'complementary', 'aria-label': 'Annotations', hidden: '' }, [
         makeEl('div', { class: 'panel-header' }, [
             panelCount,
             makeEl('div', { class: 'panel-actions' }, [panelSelectAll, panelCopy, panelErase, panelClose])
         ]),
         makeEl('div', { class: 'field' }, [searchIcon, panelFilter]),
-        panelList
+        panelList,
+        panelFonts
     ]);
 
     // The pen (Alt+P, see setPen): a pill at the top of the view while it is on.
@@ -5239,44 +5230,10 @@
     // --- Toast ---
 
     let toastTimer = null;
-    let toastRun = null;          // what the toast's action button does
-    let toastKey = null;          // the page it is about
-    let toastKeep = false;        // it survives undo and redo (see resetUi)
-    let toastKeepsEditor = false; // its action leaves a note being written open
-    let toastRun2 = null;         // what the second action button does
-    let toastAnywhere = false;    // its action runs even if the tab has left the page
-    let toastAnywhere2 = false;
-
-    // One of the toast's action buttons: an icon button, or a text button when the action has `text`.
-    function setToastAction(btn, action) {
-        btn.hidden = !action;
-        if (!action) {
-            // Nothing of the earlier toast stays on a button no one sees.
-            delete btn.dataset.action; delete btn.dataset.label; delete btn.dataset.shortcut;
-            btn.removeAttribute('aria-label'); btn.removeAttribute('aria-keyshortcuts'); btn.replaceChildren();
-            return;
-        }
-        btn.dataset.action = action.label;
-        btn.classList.toggle('btn-icon', !action.text);
-        btn.classList.toggle('btn-medium', !action.text);
-        btn.classList.toggle('btn-small', !!action.text);
-        btn.replaceChildren(action.text ? makeEl('span', { text: action.text }) : phosphorIcon(TOAST_ACTION_ICONS[action.label] || 'eye'));
-        // The tooltip: what it does, and its shortcut where it has one.
-        const tip = action.tip || action.label;
-        btn.dataset.label = tip;
-        btn.setAttribute('aria-label', action.shortcut ? `${tip} (${action.shortcut})` : tip);
-        if (action.shortcut) { btn.dataset.shortcut = action.shortcut; btn.setAttribute('aria-keyshortcuts', action.shortcut); }
-        else { delete btn.dataset.shortcut; btn.removeAttribute('aria-keyshortcuts'); }
-    }
-
     // A message in the bottom-right corner: an intent icon, a title, an
     // action and Dismiss. `icon` is a PHOSPHOR_ICONS name; `intent`
-    // is info, success or warning; `action` adds a button, { label, run, keep, keepEditor, tip, shortcut, text, anywhere },
-    // such as Show; `tip` and `shortcut` are for its tooltip, `text` makes it a text button, `anywhere` lets it run
-    // after the tab has left the page. `action2` adds a second, the same.
-    function showToast(message, { icon = 'info', intent = 'info', action = null, action2 = null } = {}) {
-        // A plain message doesn't take the place of an offer that leaves the note being written open (Show), only of an Undo or Redo.
-        if (!action && !toastEl.hidden && toastRun && toastKeepsEditor) return;
+    // is info, success or warning.
+    function showToast(message, { icon = 'info', intent = 'info' } = {}) {
         // The toast has the page's theme, set on it alone: a panel open next to a box of the
         // other theme keeps its own, and opening one later doesn't switch the toast's.
         const dark = computeDarkMode();
@@ -5287,28 +5244,18 @@
         toastIcon = nextIcon;
         toastEl.setAttribute('data-intent', intent);
         toastText.textContent = message;
-        toastRun = action ? action.run : null;
-        toastKey = currentKey;
-        toastKeep = !!(action && action.keep);
-        toastKeepsEditor = !!(action && action.keepEditor);
-        toastRun2 = action2 ? action2.run : null;
-        toastAnywhere = !!(action && action.anywhere);
-        toastAnywhere2 = !!(action2 && action2.anywhere);
-        setToastAction(toastAction, action);
-        setToastAction(toastAction2, action2);
-        toastEl.classList.toggle('two-actions', !!action2);
         toastEl.hidden = true;
         void toastEl.offsetWidth;   // restart the entrance animation
         toastEl.hidden = false;
-        startToastTimer(action ? TOAST_ACTION_MS : TOAST_MS);
+        startToastTimer(TOAST_MS);
     }
 
-    // A message with an Undo link, for a change just made (Alt+Z does the same).
+    // A message for a change just made (Alt+Z undoes it).
     function offerUndo(message) {
         showToast(message, { icon: 'eraser', intent: 'success' });
     }
 
-    // The toast stays while the pointer rests on it or its button has focus.
+    // The toast stays while the pointer rests on it or it has focus.
     function startToastTimer(ms) {
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => {
@@ -5321,44 +5268,11 @@
         clearTimeout(toastTimer);
         releaseFocus(toastEl);
         toastEl.hidden = true;
-        toastRun = null;
-        toastRun2 = null;
-        toastKeep = false;
     }
 
-    let toastReturnFocus = null;  // what had focus before the toast's button took it
-
-    toastDismiss.addEventListener('click', hideToast);
-    addLabelTip(toastDismiss, 'Dismiss', '', () => false);
-    const TOAST_ACTION_ICONS = { Show: 'eye' };
-    addLabelTip(toastAction, 'Show', '', () => false);   // its label and shortcut are set per toast, see showToast
-
-    addLabelTip(toastAction2, 'Show', '', () => false);
-
-    toastAction.addEventListener('click', () => onToastAction(toastRun, toastAnywhere));
-    toastAction2.addEventListener('click', () => onToastAction(toastRun2, toastAnywhere2));
-
-    function onToastAction(run, anywhere) {
-        const key = toastKey;
-        const keepsEditor = toastKeepsEditor;
-        const back = toastEl.contains(uiRoot.activeElement) ? toastReturnFocus : null;
-        hideToast();
-        syncLocation();
-        // Not for a page the tab has since left.
-        if (run && (anywhere || (running && currentKey === key))) {
-            if (!keepsEditor) cancelEditor();
-            run();
-        }
-        // Keyboard focus goes back to where it was, unless the action gave it a place (a note it reopened).
-        const now = document.activeElement;
-        if (back && back.isConnected && typeof back.focus === 'function' && (!now || now === document.body)) back.focus({ preventScroll: true });
-    }
-    // Pointing at the toast, or focusing its button, keeps it up; leaving gives it a moment more.
+    // Pointing at the toast, or focusing it, keeps it up; leaving gives it a moment more.
     toastEl.addEventListener('mouseenter', () => clearTimeout(toastTimer));
-    toastEl.addEventListener('focusin', e => {
-        clearTimeout(toastTimer);
-        if (!toastEl.contains(e.relatedTarget)) toastReturnFocus = e.relatedTarget instanceof Element ? e.relatedTarget : null;
-    });
+    toastEl.addEventListener('focusin', () => clearTimeout(toastTimer));
     toastEl.addEventListener('mouseleave', () => {
         if (!toastEl.hidden && !toastEl.contains(uiRoot.activeElement)) startToastTimer(2000);
     });
@@ -6150,6 +6064,7 @@
             panelSignature = '';
         }
         renderPanel();
+        updateFontNote();
         // Typing filters the list, unless the user has page text selected (to attach, say).
         if (focus && !getActiveRange()) panelFilter.focus({ preventScroll: true });
     }
@@ -6176,12 +6091,14 @@
         else closePanel();
     }
 
-    // The toast's Show: the panel, scrolled to what wasn't found.
-    function showMissingInPanel() {
-        panelFilter.value = '';
-        openPanel();
-        const title = panelList.querySelector('[data-section="missing"]');
-        if (title) panelList.scrollTop += title.getBoundingClientRect().top - panelList.getBoundingClientRect().top;
+    // A quiet line under the list while Poppins or Lora is not installed, with a link to each one's download page.
+    function updateFontNote() {
+        const missing = FONT_HINTS.filter(f => fontMissing(f.name));
+        panelFonts.hidden = !missing.length;
+        if (!missing.length) return;
+        panelFonts.replaceChildren(
+            makeEl('span', { text: `${missing.map(f => f.name).join(' and ')} not installed; using ${missing.map(f => f.fallback).join(' and ')}.` }),
+            ...missing.map(f => makeEl('a', { href: f.url, target: '_blank', rel: 'noopener noreferrer', text: `Get ${f.name}` })));
     }
 
     function schedulePanelRefresh() {
@@ -7109,14 +7026,13 @@
     }
 
     // Closes every panel without saving (used when the page under them changes).
-    // `keepRestore`: a "Note not saved · Restore" message stays (undo and redo don't affect it).
-    function resetUi({ keepRestore = false } = {}) {
+    function resetUi() {
         hideToolbar();
         hideNoteCard();
         unpinNoteCard();
         clearSelectedGroups();
         closeEditor();
-        if (!(keepRestore && toastKeep)) hideToast();
+        hideToast();
         hoveredWrapper = null;
     }
 

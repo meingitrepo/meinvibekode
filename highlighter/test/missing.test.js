@@ -86,7 +86,7 @@ async function scenarioEditor(browser) {
   await L.until(p, () => /not found/.test(window.__hl.toastText.textContent) && !window.__hl.toastEl.hidden, null, 6500);
   const seen = [await L.toast(p)];
   check('editor: notice shown while writing a note', seen.includes('1 annotation not found'), seen);
-  const st = await p.evaluate(() => { const r = window.__hl; return { editor: !!r.editor, draft: r.noteInput.value, link: !r.toastAction.hidden }; });
+  const st = await p.evaluate(() => { const r = window.__hl; return { editor: !!r.editor, draft: r.noteInput.value, link: !!r.toastEl.querySelector('button') }; });
   check('editor: the notice has no link and leaves the note being written open', st.editor && st.draft === 'a draft' && !st.link, st);
   await ctx.close();
 }

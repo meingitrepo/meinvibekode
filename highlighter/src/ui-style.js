@@ -306,16 +306,9 @@
         /* A tooltip's size and style, centred at the bottom of the view: the same padding, 12px type and
            radius as .tip, an icon at the left end, no dismiss button; it fades on its own. */
         .toast { top: auto; left: 50%; right: auto; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 32px); padding: 6px 10px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
-        .toast > .btn[aria-label="Dismiss"] { display: none; }
         .toast > .icon { flex: none; width: 16px; height: 16px; margin: 0 0 0 -2px; }   /* at the left end, 16px, as far in as an icon button's icon */
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 400; }
-        /* Action buttons shrink to the tooltip's line: the pill stays one line high. */
-        .toast .btn-icon { width: 24px; height: 24px; margin: -4px -4px -4px 0; }
-        /* A toast's text buttons (the font hint's): small and subtle. Undo, Restore and Show are icon buttons. */
-        .btn-small { min-width: 0; height: 24px; padding: 0 8px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
-        .toast .btn-small { flex: none; margin: -4px 0; }
-        .toast .btn-small[hidden] { display: none; }
         .toast:focus-visible { outline: 2px solid var(--focus); }
         /* The pen's bar, centred at the top of the view. */
         .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
@@ -374,6 +367,9 @@
         }
         .field input::placeholder { color: var(--ink-4); opacity: 1; }
         .field input::-webkit-search-cancel-button { display: none; }
+        .panel-fonts { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 8px 16px; border-top: 1px solid var(--line); font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
+        .panel-fonts[hidden] { display: none; }
+        .panel-fonts a { color: var(--ink-2); text-decoration: underline; }
         .panel-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .section-title { margin: 8px 4px 4px; font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: 600; color: var(--ink-3); }
         .empty { margin: 4px 4px 8px; color: var(--ink-3); }

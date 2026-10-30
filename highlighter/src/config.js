@@ -55,7 +55,6 @@
     const NOTE_BADGE_REACH = 8;                 // px around the badge that count as near it
     const TOOLBAR_IDLE_MS = 4000;               // the selection toolbar fades out after this long untouched (0 = never)
     const TOAST_MS = 4000;                      // how long a message stays up,
-    const TOAST_ACTION_MS = 6000;               // or one with a button such as Undo (pointing at it keeps it)
     const NOTE_STYLE_KEY = 'h';                 // style given to plain text that receives a note
     const NOTE_MAX_LENGTH = 2000;
     const NOTE_MIN_LINES = 2;                   // the note box starts this tall,

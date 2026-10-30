@@ -293,7 +293,6 @@
         if (!missing) return;
         if (document.hidden) { noticeDue = true; return; }
         noticedKeys.add(currentKey);
-        if (!toastEl.hidden && toastRun) return;
         showToast(doneText('not found', missing), { icon: 'warning', intent: 'warning' });
     }
 

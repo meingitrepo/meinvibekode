@@ -234,7 +234,7 @@
     }
 
     function applyState(state) {
-        resetUi({ keepRestore: true });
+        resetUi();
         stopLateWatcher();
         unwrapAll();
         trackedRecords.clear();   // the state is the whole truth; renderRecords tracks what it places

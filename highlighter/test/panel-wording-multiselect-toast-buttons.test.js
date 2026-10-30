@@ -70,11 +70,7 @@ const eTicks = page => page.evaluate(() => Array.from(window.__hl.everythingList
   L.check('erase says so', (await L.toast(page)) === '1 annotation erased', await L.toast(page));
   await L.altKey(page, 'z'); await page.waitForTimeout(200);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
-  const s = await page.evaluate(() => { const a = window.__hl.toastAction; return { text: a.textContent, icon: !!a.querySelector('svg'), label: a.dataset.label, key: a.dataset.shortcut || '', cls: a.className }; });
-  L.check('Annotations hidden has no button', s.text === '' && !s.icon, s);
-  await page.evaluate(() => window.__hl.toastAction.click()); await page.waitForTimeout(200);
-  await page.evaluate(() => window.__hl.showToast('Plain message'));
-  L.check('a toast without an action hides the button', await page.evaluate(() => window.__hl.toastAction.hidden), null);
+  L.check('Annotations hidden has no button', await page.evaluate(() => !window.__hl.toastEl.querySelector('button')), null);
   await browser.close();
   console.log('FAILS', L.fails);
 })().catch(e => { console.error(e); process.exit(1); });

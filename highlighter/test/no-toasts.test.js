@@ -38,7 +38,7 @@ const icon = page => page.evaluate(() => window.__hl.panelCopy.querySelector('sv
   await L.altKey(page, 'h'); await page.waitForTimeout(300);
   await L.selStr(page, '#p1', 'words to select'); await page.waitForTimeout(300);
   await L.altKey(page, 'd'); await page.waitForTimeout(300);
-  const noLinks = async name => L.check(name + ': no link on the toast', await page.evaluate(() => window.__hl.toastAction.hidden && window.__hl.toastAction2.hidden), null);
+  const noLinks = async name => L.check(name + ': no button on the toast', await page.evaluate(() => !window.__hl.toastEl.querySelector('button')), null);
   await says('erase', '1 annotation erased'); await noLinks('erase');
   await L.altKey(page, 'z'); await page.waitForTimeout(300);
   L.check('Alt+Z brings the annotation back', (await L.wr(page)).length === 1, await L.wr(page));
@@ -60,7 +60,7 @@ const icon = page => page.evaluate(() => window.__hl.panelCopy.querySelector('sv
   L.check('copy toast carries the copy icon', await toastIs(page, 'copy'), null);
   await page.evaluate(() => { document.activeElement && document.activeElement.blur(); window.__hl.closePanel && window.__hl.closePanel(); }); await page.mouse.click(5, 5);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
-  const hid = await page.evaluate(() => { const t = window.__hl.toastEl; const i = t.querySelector(':scope > svg.icon'); return { txt: t.textContent, icon: i ? getComputedStyle(i).display : 'none', act: window.__hl.toastAction.hidden && window.__hl.toastAction2.hidden, first: window.__hl.toastEl.firstElementChild === i }; });
+  const hid = await page.evaluate(() => { const t = window.__hl.toastEl; const i = t.querySelector(':scope > svg.icon'); return { txt: t.textContent, icon: i ? getComputedStyle(i).display : 'none', act: !t.querySelector('button'), first: window.__hl.toastEl.firstElementChild === i }; });
   L.check('icon-button toast (Annotations hidden): one icon, on the left, no link', hid.txt.includes('Annotations hidden') && hid.icon !== 'none' && hid.first && hid.act, hid);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
   await browser.close();

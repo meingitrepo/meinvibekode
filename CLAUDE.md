@@ -11,7 +11,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 ## src map (`highlighter/src/`, concatenated by build.js in its own order)
 - Boot/state: `header.js` (userscript header), `config.js`, `page-css-and-state.js`, `start-and-boot.js` (page-wide events), `navigation-and-selection.js` (SPA URL changes)
 - Storage: `storage.js` (page identity, `rnh:settings`), `live-sync.js` (cross-tab), `restore.js`
-- Annotations: `apply-and-undo.js`, `strokes.js` (SVG drawing), `wrappers.js` (wrapper bookkeeping), `text-anchoring.js` (XPath/offsets), `annotation-select.js`, `pen.js`
+- Annotations: `apply-and-undo.js`, `strokes.js` (SVG drawing), `wrappers.js` (wrapper bookkeeping), `redraw.js` (following moved text), `text-anchoring.js` (XPath/offsets), `annotation-select.js`, `pen.js`
 - Notes/export: `notes.js`, `note-card-and-editor.js`, `markdown.js`
 - UI: `ui-style.js` (tokens/CSS), `ui-elements.js`, `theme.js`, `toolbar.js`, `site-menu.js`, `panel.js`, `search.js` (Alt+Shift+O), `toast-and-jump.js`, `input.js`
 

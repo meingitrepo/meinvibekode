@@ -14,6 +14,7 @@ const PARTS = [
     'strokes.js',                   // straight-line drawing, strike-through metrics
     'text-anchoring.js',            // blocks, XPath, text offsets, text index, loose matching
     'wrappers.js',                  // wrapper bookkeeping, wrapping and unwrapping
+    'redraw.js',                    // measuring wrappers, redrawing what moved
     'storage.js',                   // page identity, records, storage, per-site switch
     'restore.js',                   // restoring, late content, missing annotations
     'navigation-and-selection.js',  // SPA navigation, cleaner selections, triple-click

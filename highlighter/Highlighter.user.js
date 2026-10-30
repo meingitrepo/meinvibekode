@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.20
+// @version      9.21
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -408,7 +408,7 @@
     }
 
     function systemPrefersDark() {
-        return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
 
     function luma(c) {
@@ -464,9 +464,17 @@
     // the rest of the current task, so restoring many annotations walks each ancestor once
     // (except answers read from the text's color, which differ from text to text).
     let darkCache = null;
+
+    // The element of `node`, lifted out of any wrappers of ours around it.
+    function outsideWrappers(node) {
+        let el = node && elementOf(node);
+        let wrapper;
+        while (el && (wrapper = el.closest(WRAPPER_SELECTOR))) el = wrapper.parentElement;
+        return el;
+    }
+
     function darkBehind(node) {
-        let from = node && elementOf(node);
-        for (let w = from && from.closest(WRAPPER_SELECTOR); w; w = from && from.closest(WRAPPER_SELECTOR)) from = w.parentElement;
+        const from = outsideWrappers(node);
         if (!from) return false;
         if (!darkCache) {
             darkCache = new WeakMap();
@@ -475,7 +483,7 @@
         try {
             const walked = [];
             for (let el = from; el; el = el.parentElement) {
-                if (darkCache.has(el)) { walked.forEach(w => darkCache.set(w, darkCache.get(el))); return darkCache.get(el); }
+                if (darkCache.has(el)) { walked.forEach(seen => darkCache.set(seen, darkCache.get(el))); return darkCache.get(el); }
                 walked.push(el);
                 const style = getComputedStyle(el);
                 const c = toRGBA(style.backgroundColor);
@@ -489,7 +497,7 @@
                     }
                 }
                 if (dark !== null) {
-                    walked.forEach(w => darkCache.set(w, dark));
+                    walked.forEach(seen => darkCache.set(seen, dark));
                     return dark;
                 }
             }
@@ -507,8 +515,7 @@
     function computeDarkMode() {
         const x = window.innerWidth / 2;
         const y = window.innerHeight / 2;
-        const stack = typeof document.elementsFromPoint === 'function' ? document.elementsFromPoint(x, y) : [];
-        const probe = stack.find(el => el !== uiHost) || document.body || document.documentElement;
+        const probe = document.elementsFromPoint(x, y).find(el => el !== uiHost) || document.body || document.documentElement;
         return darkBehind(probe);
     }
 
@@ -569,24 +576,14 @@
     }
 
     function watchTheme() {
-        if (window.matchMedia) {
-            const mq = window.matchMedia('(prefers-color-scheme: dark)');
-            if (mq.addEventListener) {
-                listen(mq, 'change', scheduleThemeCheck);
-            } else if (mq.addListener) {
-                mq.addListener(scheduleThemeCheck);
-                teardown.push(() => mq.removeListener(scheduleThemeCheck));
-            }
-        }
-        if (typeof MutationObserver === 'function') {
-            const mo = new MutationObserver(mutations => {
-                if (mutations.some(m => THEME_ATTR_RE.test(m.attributeName || ''))) scheduleThemeCheck();
-            });
-            [document.documentElement, document.body].forEach(el => {
-                if (el) mo.observe(el, { attributes: true });
-            });
-            teardown.push(() => mo.disconnect());
-        }
+        listen(window.matchMedia('(prefers-color-scheme: dark)'), 'change', scheduleThemeCheck);
+        const mo = new MutationObserver(mutations => {
+            if (mutations.some(m => THEME_ATTR_RE.test(m.attributeName || ''))) scheduleThemeCheck();
+        });
+        [document.documentElement, document.body].forEach(el => {
+            if (el) mo.observe(el, { attributes: true });
+        });
+        teardown.push(() => mo.disconnect());
         teardown.push(clearThemeTimers);
     }
 
@@ -1459,47 +1456,6 @@
         });
     }
 
-    function measureRects(wrapper) {
-        const list = wrapper.getClientRects();
-        if (!list.length) return null;
-        return Array.from(list).map(r => ({
-            left: r.left + window.scrollX, top: r.top + window.scrollY, width: r.width, height: r.height
-        }));
-    }
-
-    function snapshotRect(wrapper) {
-        const rects = measureRects(wrapper);
-        if (rects) rectCache.set(wrapper, rects);
-    }
-
-    function rectChanged(wrapper) {
-        return rectsDiffer(measureRects(wrapper), rectCache.get(wrapper));
-    }
-
-    // Did the text of a wrapper that is shown (has boxes) move since it was last drawn?
-    function textMoved(wrapper) {
-        const now = measureRects(wrapper);
-        return !!now && rectsDiffer(now, rectCache.get(wrapper));
-    }
-
-    function rectsDiffer(now, before) {
-        if (!now || !before || now.length !== before.length) return true;
-        const TOL = 1;
-        return now.some((r, i) =>
-            Math.abs(r.left - before[i].left) > TOL || Math.abs(r.top - before[i].top) > TOL ||
-            Math.abs(r.width - before[i].width) > TOL || Math.abs(r.height - before[i].height) > TOL);
-    }
-
-    // Redraws in place: keeps the SVG elements (the selected part is marked again after) and never animates.
-    // All are measured before any is drawn (see drawAnnotations).
-    function reposition(wrappers) {
-        const ws = wrappers.filter(w => annotationMap.has(w));
-        if (!ws.length) return;
-        drawAnnotations(ws.map(w => annotationMap.get(w)));
-        ws.forEach(snapshotRect);
-        if (selectedSVGs.size) updateSelectionVisibility();
-    }
-
     // Annotations inside or around one that was just wrapped, unwrapped or restyled: the inner
     // ones are placed by its box and share its lines, and highlights inside and around it pick
     // their bands by it (see bandOf), so they are drawn again once the change is done.
@@ -1581,114 +1537,6 @@
         snapshotRect(wrapper);
         updateSelectionVisibility();
         return ann;
-    }
-
-    // The wrappers shown on the page (see showWrappers), and those of them on or near the screen
-    // as the observer last saw them: when the page moves, only those near the screen are looked
-    // at in the same frame, and the page isn't searched for wrappers.
-    const shownWrappers = new Set();
-    const nearWrappers = new Set();
-    const watchesVisibility = typeof IntersectionObserver === 'function';
-    const visibilityObserver = watchesVisibility
-        ? new IntersectionObserver(entries => {
-            // Also while the script is off: a wrapper the site puts back then is followed once it is on.
-            entries.forEach(e => {
-                if (!e.isIntersecting) { nearWrappers.delete(e.target); return; }
-                if (!annotationMap.has(e.target)) return;   // unwrapped since
-                nearWrappers.add(e.target);
-                shownWrappers.add(e.target);   // back on the page after the site took it off
-            });
-            if (running) reposition(entries.filter(e => e.isIntersecting && rectChanged(e.target)).map(e => e.target));
-        }, { rootMargin: '200px', threshold: 0 })
-        : { observe() {}, unobserve() {} };
-
-    // A wrapper already on the page kept as a restored annotation (see absorbDuplicate), for
-    // instance a kept tab panel put back out of view: followed again, and seen afresh by the observer.
-    function trackShown(w) {
-        if (shownWrappers.has(w) || !annotationMap.has(w)) return;
-        shownWrappers.add(w);
-        snapshotRect(w);
-        visibilityObserver.unobserve(w);
-        visibilityObserver.observe(w);
-    }
-
-    // Lets go of the wrappers the site took off the page (also every second, so a page that keeps
-    // re-rendering doesn't keep the old ones alive); one it puts back is added again when the
-    // observer sees it.
-    function pruneShown() {
-        shownWrappers.forEach(w => { if (!w.isConnected) { shownWrappers.delete(w); nearWrappers.delete(w); } });
-    }
-
-    // Redraws the annotations whose text moved: of those near the screen as the observer last saw
-    // them ('near'), of those on or near it now ('view': after a resize, whose reflow can bring
-    // others into view before the observer has seen them), or of all ('all').
-    function redrawMoved(scope) {
-        const margin = 200;
-        const inView = w => { const r = w.getBoundingClientRect(); return r.bottom >= -margin && r.top <= window.innerHeight + margin; };
-        if (watchesVisibility) {
-            let ws;
-            if (scope === 'near') {
-                ws = Array.from(nearWrappers);
-            } else {
-                pruneShown();
-                ws = Array.from(shownWrappers);
-                if (scope === 'view') ws = ws.filter(inView);
-            }
-            reposition(ws.filter(w => w.isConnected && textMoved(w)));
-            return;
-        }
-        reposition(allWrappers().filter(w => (scope === 'all' || inView(w)) && textMoved(w)));
-    }
-
-    // While the window is resized or zoomed, or the page grows or shifts, the annotations on or
-    // near the screen follow their text in the same frame; the rest are looked at once it has
-    // been still for 150 ms, and at most once a second while it keeps changing (a live feed, a
-    // chat). The ones that come into view are redrawn by visibilityObserver if they moved.
-    let redrawTimer = null;
-    let redrawFrame = 0;
-    let lastFullRedraw = -Infinity;
-    let redrawResized = false;
-    const FULL_REDRAW_GAP_MS = 1000;
-    // `e` is the window's resize event when that is what calls it. With `nearOnly` (the site
-    // changed a style or class, see watchPageStyle) only those near the screen are looked at:
-    // the others are redrawn by visibilityObserver if they moved, once they come near.
-    function scheduleRedraw(e, nearOnly) {
-        if (watchesVisibility && !shownWrappers.size) return;   // nothing on the page: nothing to do, however big the page
-        if (e && e.type === 'resize') redrawResized = true;
-        if (!redrawFrame) {
-            redrawFrame = requestAnimationFrame(() => {
-                redrawFrame = 0;
-                const scope = redrawResized ? 'view' : 'near';
-                redrawResized = false;
-                redrawMoved(scope);
-            });
-        }
-        if (nearOnly === true && watchesVisibility) return;
-        clearTimeout(redrawTimer);
-        const wait = Math.max(150, lastFullRedraw + FULL_REDRAW_GAP_MS - performance.now());
-        redrawTimer = setTimeout(() => { lastFullRedraw = performance.now(); redrawMoved('all'); }, wait);
-    }
-
-    // The site's own settings (a bigger font, more padding, another theme) restyle the page
-    // without resizing it: a style or class set on any element, or a stylesheet added, changed
-    // or removed. The annotations near the screen then follow their text in the next frame.
-    // Changes on our own drawings (SVG) and wrappers are left out.
-    function watchPageStyle() {
-        if (typeof MutationObserver !== 'function') return () => {};
-        const ours = n => n instanceof SVGElement || (n.matches && n.matches(WRAPPER_SELECTOR));
-        const sheet = n => n.nodeName === 'STYLE' || n.nodeName === 'LINK';
-        const mo = new MutationObserver(list => {
-            let hit = false;
-            for (const m of list) {
-                if (m.type === 'attributes') { if (!ours(m.target)) hit = true; continue; }
-                m.addedNodes.forEach(n => { if (n.nodeName === 'LINK') n.addEventListener('load', () => scheduleRedraw(null, true), { once: true }); });
-                if (m.type === 'characterData' || sheet(m.target) || Array.from(m.addedNodes).some(sheet) || Array.from(m.removedNodes).some(sheet)) hit = true;
-            }
-            if (hit) scheduleRedraw(null, true);
-        });
-        mo.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'], subtree: true });
-        if (document.head) mo.observe(document.head, { childList: true, characterData: true, subtree: true });
-        return () => mo.disconnect();
     }
 
     // =====================================================================
@@ -1898,6 +1746,150 @@
         updateSelectionVisibility();
     }
 
+    // =====================================================================
+    // Following the text: measuring, redrawing what moved
+    // =====================================================================
+
+    function measureRects(wrapper) {
+        const list = wrapper.getClientRects();
+        if (!list.length) return null;
+        return Array.from(list).map(r => ({
+            left: r.left + window.scrollX, top: r.top + window.scrollY, width: r.width, height: r.height
+        }));
+    }
+
+    function snapshotRect(wrapper) {
+        const rects = measureRects(wrapper);
+        if (rects) rectCache.set(wrapper, rects);
+    }
+
+    function rectChanged(wrapper) {
+        return rectsDiffer(measureRects(wrapper), rectCache.get(wrapper));
+    }
+
+    // Did the text of a wrapper that is shown (has boxes) move since it was last drawn?
+    function textMoved(wrapper) {
+        const now = measureRects(wrapper);
+        return !!now && rectsDiffer(now, rectCache.get(wrapper));
+    }
+
+    function rectsDiffer(now, before) {
+        if (!now || !before || now.length !== before.length) return true;
+        const TOL = 1;
+        return now.some((r, i) =>
+            Math.abs(r.left - before[i].left) > TOL || Math.abs(r.top - before[i].top) > TOL ||
+            Math.abs(r.width - before[i].width) > TOL || Math.abs(r.height - before[i].height) > TOL);
+    }
+
+    // Redraws in place: keeps the SVG elements (the selected part is marked again after) and never animates.
+    // All are measured before any is drawn (see drawAnnotations).
+    function reposition(wrappers) {
+        const ws = wrappers.filter(w => annotationMap.has(w));
+        if (!ws.length) return;
+        drawAnnotations(ws.map(w => annotationMap.get(w)));
+        ws.forEach(snapshotRect);
+        if (selectedSVGs.size) updateSelectionVisibility();
+    }
+
+    // The wrappers shown on the page (see showWrappers), and those of them on or near the screen
+    // as the observer last saw them: when the page moves, only those near the screen are looked
+    // at in the same frame, and the page isn't searched for wrappers.
+    const shownWrappers = new Set();
+    const nearWrappers = new Set();
+    const visibilityObserver = new IntersectionObserver(entries => {
+        // Also while the script is off: a wrapper the site puts back then is followed once it is on.
+        entries.forEach(e => {
+            if (!e.isIntersecting) { nearWrappers.delete(e.target); return; }
+            if (!annotationMap.has(e.target)) return;   // unwrapped since
+            nearWrappers.add(e.target);
+            shownWrappers.add(e.target);   // back on the page after the site took it off
+        });
+        if (running) reposition(entries.filter(e => e.isIntersecting && rectChanged(e.target)).map(e => e.target));
+    }, { rootMargin: '200px', threshold: 0 });
+
+    // A wrapper already on the page kept as a restored annotation (see absorbDuplicate), for
+    // instance a kept tab panel put back out of view: followed again, and seen afresh by the observer.
+    function trackShown(w) {
+        if (shownWrappers.has(w) || !annotationMap.has(w)) return;
+        shownWrappers.add(w);
+        snapshotRect(w);
+        visibilityObserver.unobserve(w);
+        visibilityObserver.observe(w);
+    }
+
+    // Lets go of the wrappers the site took off the page (also every second, so a page that keeps
+    // re-rendering doesn't keep the old ones alive); one it puts back is added again when the
+    // observer sees it.
+    function pruneShown() {
+        shownWrappers.forEach(w => { if (!w.isConnected) { shownWrappers.delete(w); nearWrappers.delete(w); } });
+    }
+
+    // Redraws the annotations whose text moved: of those near the screen as the observer last saw
+    // them ('near'), of those on or near it now ('view': after a resize, whose reflow can bring
+    // others into view before the observer has seen them), or of all ('all').
+    function redrawMoved(scope) {
+        const margin = 200;
+        const inView = w => { const r = w.getBoundingClientRect(); return r.bottom >= -margin && r.top <= window.innerHeight + margin; };
+        let ws;
+        if (scope === 'near') {
+            ws = Array.from(nearWrappers);
+        } else {
+            pruneShown();
+            ws = Array.from(shownWrappers);
+            if (scope === 'view') ws = ws.filter(inView);
+        }
+        reposition(ws.filter(w => w.isConnected && textMoved(w)));
+    }
+
+    // While the window is resized or zoomed, or the page grows or shifts, the annotations on or
+    // near the screen follow their text in the same frame; the rest are looked at once it has
+    // been still for 150 ms, and at most once a second while it keeps changing (a live feed, a
+    // chat). The ones that come into view are redrawn by visibilityObserver if they moved.
+    let redrawTimer = null;
+    let redrawFrame = 0;
+    let lastFullRedraw = -Infinity;
+    let redrawResized = false;
+    const FULL_REDRAW_GAP_MS = 1000;
+    // `e` is the window's resize event when that is what calls it. With `nearOnly` (the site
+    // changed a style or class, see watchPageStyle) only those near the screen are looked at:
+    // the others are redrawn by visibilityObserver if they moved, once they come near.
+    function scheduleRedraw(e, nearOnly) {
+        if (!shownWrappers.size) return;   // nothing on the page: nothing to do, however big the page
+        if (e && e.type === 'resize') redrawResized = true;
+        if (!redrawFrame) {
+            redrawFrame = requestAnimationFrame(() => {
+                redrawFrame = 0;
+                const scope = redrawResized ? 'view' : 'near';
+                redrawResized = false;
+                redrawMoved(scope);
+            });
+        }
+        if (nearOnly === true) return;
+        clearTimeout(redrawTimer);
+        const wait = Math.max(150, lastFullRedraw + FULL_REDRAW_GAP_MS - performance.now());
+        redrawTimer = setTimeout(() => { lastFullRedraw = performance.now(); redrawMoved('all'); }, wait);
+    }
+
+    // The site's own settings (a bigger font, more padding, another theme) restyle the page
+    // without resizing it: a style or class set on any element, or a stylesheet added, changed
+    // or removed. The annotations near the screen then follow their text in the next frame.
+    // Changes on our own drawings (SVG) and wrappers are left out.
+    function watchPageStyle() {
+        const ours = n => n instanceof SVGElement || (n.matches && n.matches(WRAPPER_SELECTOR));
+        const sheet = n => n.nodeName === 'STYLE' || n.nodeName === 'LINK';
+        const mo = new MutationObserver(list => {
+            let hit = false;
+            for (const m of list) {
+                if (m.type === 'attributes') { if (!ours(m.target)) hit = true; continue; }
+                m.addedNodes.forEach(n => { if (n.nodeName === 'LINK') n.addEventListener('load', () => scheduleRedraw(null, true), { once: true }); });
+                if (m.type === 'characterData' || sheet(m.target) || Array.from(m.addedNodes).some(sheet) || Array.from(m.removedNodes).some(sheet)) hit = true;
+            }
+            if (hit) scheduleRedraw(null, true);
+        });
+        mo.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'], subtree: true });
+        if (document.head) mo.observe(document.head, { childList: true, characterData: true, subtree: true });
+        return () => mo.disconnect();
+    }
     // =====================================================================
     // Page identity: which stored list belongs to this page
     // =====================================================================
@@ -2139,6 +2131,12 @@
         return parseRecords(GM_getValue(key, null));
     }
 
+    // Saves `records` under `key`; with none left the key is removed.
+    function writeRecords(key, records) {
+        if (records.length) GM_setValue(key, JSON.stringify(records));
+        else GM_deleteValue(key);
+    }
+
     // Which annotation a record belongs to: its group (shared by the annotation's pieces), or
     // for records saved before groups existed, the group it gets when placed.
     function recordOwner(r) {
@@ -2218,6 +2216,10 @@
         }
     }
 
+    function writeSettings(settings) {
+        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+    }
+
     // The shortcut keys (Alt+Shift+K) and the selection toolbar (Alt+T) are per site and off until
     // switched on. Read afresh each time, so a switch made in another tab counts here too.
     function siteListed(key) {
@@ -2231,7 +2233,7 @@
         if (on) sites.add(siteId());
         else sites.delete(siteId());
         settings[key] = Array.from(sites);
-        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+        writeSettings(settings);
     }
 
     function keysSwitchedOff() {
@@ -2403,7 +2405,7 @@
     // counts misses; `reclaimedOnly` starts over closely for annotations the site redrew.
     function startLateWatcher({ reclaimedOnly = false } = {}) {
         stopLateWatcher();
-        if (!pendingRecords.some(isWatched) || !document.body || typeof MutationObserver !== 'function') return;
+        if (!pendingRecords.some(isWatched) || !document.body) return;
         const state = {
             all: !reclaimedOnly, slow: false, attempts: 0, startedAt: document.hidden ? null : Date.now(),
             timer: null, deadline: null, observer: null, retryOnShow: false, texts: null, textsOf: null, textsCount: 0
@@ -3182,6 +3184,8 @@
     }
 
     const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD', 'KeyL']);
+    // The commands with no Shift variant: with Shift held their keys stay the page's.
+    const NO_SHIFT_CODES = new Set(['KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyJ', 'KeyK', 'KeyL']);
 
     // While our keys are on (Alt+Shift+K switches them), every Alt key outside a field is ours
     // alone: the site's own Alt shortcuts never run, whether we use the key or not. Its access
@@ -3271,6 +3275,7 @@
         const code = e.code;
         if (!COMMAND_CODES.has(code) && (e.shiftKey || !CODE_TO_STYLE.has(code))) return;
         syncLocation();
+        if (e.shiftKey && NO_SHIFT_CODES.has(code)) return;
 
         if (code === 'KeyZ' || code === 'KeyY') {
             const redo = code === 'KeyY' || e.shiftKey;
@@ -3282,21 +3287,20 @@
         }
 
         if (code === 'KeyV') {
-            if (e.shiftKey || (!annotationsHidden && !document.querySelector(WRAPPER_SELECTOR))) return;
+            if (!annotationsHidden && !document.querySelector(WRAPPER_SELECTOR)) return;
             e.preventDefault();
             toggleAnnotationsHidden();
             return;
         }
 
         if (code === 'KeyP') {
-            if (e.shiftKey) return;
             e.preventDefault();
             togglePen();
             return;
         }
 
         if (code === 'KeyT') {
-            if (e.shiftKey || !ENABLE_SELECTION_TOOLBAR) return;
+            if (!ENABLE_SELECTION_TOOLBAR) return;
             e.preventDefault();
             toggleToolbarSwitch();
             return;
@@ -3310,7 +3314,6 @@
         const pointed = () => (annotationsHidden ? null : pointedGroup());
 
         if (code === 'KeyN') {
-            if (e.shiftKey) return;
             e.preventDefault();
             const group = selected ? null : pointedGroup();
             if (selected) noteSelection(active);
@@ -3320,7 +3323,6 @@
         }
 
         if (code === 'KeyL') {
-            if (e.shiftKey) return;
             e.preventDefault();
             togglePinKey(selected ? null : pointedGroup());
             return;
@@ -3334,7 +3336,6 @@
         }
 
         if (code === 'KeyJ' || code === 'KeyK') {
-            if (e.shiftKey) return;
             // Without annotations the keys stay the page's.
             if (jumpRelative(code === 'KeyJ' ? 1 : -1)) e.preventDefault();
             return;
@@ -5069,8 +5070,15 @@
         const stored = readRecords(currentKey);
         if (!stored || !stored.some(r => r.group === group)) return;
         const rest = stored.filter(r => r.group !== group);
-        if (rest.length) GM_setValue(currentKey, JSON.stringify(rest));
-        else GM_deleteValue(currentKey);
+        writeRecords(currentKey, rest);
+    }
+
+    // Delete deletes the note, as its Delete button does, unless it has text after the caret
+    // (or selected) to delete.
+    function deleteKeyDeletesNote(e) {
+        return e.key === 'Delete' && !e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && !e.isComposing
+            && !(e.target === noteInput && noteInput.selectionEnd < noteInput.value.length)
+            && noteInput.selectionStart === noteInput.selectionEnd;
     }
 
     noteSave.addEventListener('click', () => saveEditor());
@@ -5090,11 +5098,7 @@
             // Enter saves; Shift+Enter starts a new line. On a button, Enter presses that button.
             e.preventDefault();
             saveEditor();
-        } else if (e.key === 'Delete' && !e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && !e.isComposing
-            && !(e.target === noteInput && noteInput.selectionEnd < noteInput.value.length)
-            && noteInput.selectionStart === noteInput.selectionEnd) {
-            // Delete deletes the note, as its Delete button does, unless it has text after the
-            // caret (or selected) to delete.
+        } else if (deleteKeyDeletesNote(e)) {
             e.preventDefault();
             noteDelete.click();
         } else if (e.key === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {
@@ -5242,7 +5246,7 @@
     }
 
     function prefersReducedMotion() {
-        return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     }
 
     // Blinks the annotation's drawing (see FLASH_ATTR).
@@ -5363,8 +5367,8 @@
         if (!missing.length) return;
         const settings = readSettings();
         settings.fontHintVersion = version;
-        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
-        const link = f => ({ label: `Get ${f.name}`, text: f.name, tip: `Open the ${f.name} download page`, keepEditor: true, anywhere: true, run: () => window.open(f.url, '_blank', 'noopener') });
+        writeSettings(settings);
+        const link =f => ({ label: `Get ${f.name}`, text: f.name, tip: `Open the ${f.name} download page`, keepEditor: true, anywhere: true, run: () => window.open(f.url, '_blank', 'noopener') });
         showToast(`${missing.map(f => f.name).join(' and ')} not installed; using ${missing.map(f => f.fallback).join(' and ')}.`, { action: link(missing[0]), action2: missing[1] ? link(missing[1]) : null });
     }
     // --- Selecting annotations by clicking them ---
@@ -6122,7 +6126,7 @@
         syncSelectionButtons(panelSelectAll, panelCopy, panelErase, ticked, shown.length);
         const word = present.length === 1 ? 'annotation' : 'annotations';
         if (ticked) setPanelTitle(panelCount, `${ticked} of ${shown.length}`, ' selected', word);
-        else if (terms.length) setPanelTitle(panelCount, `${shown.length} of ${present.length}`, ` matched`, word);
+        else if (terms.length) setPanelTitle(panelCount, `${shown.length} of ${present.length}`, ' matched', word);
         else setPanelTitle(panelCount, String(present.length), ' found', word);
         const children = [];
         if (!present.length && !missing.length) {
@@ -6131,14 +6135,11 @@
             children.push(makeEl('div', { class: 'empty', text: 'No annotations match the filter.' }));
         }
         shown.forEach(a => children.push(panelItem(a, dark, false)));
-        if (shownMissing.length) {
-            children.push(makeEl('div', { class: 'section-title', 'data-section': 'missing', text: `Not found on the page (${shownMissing.length})` }));
-            shownMissing.forEach(a => children.push(panelItem(a, dark, true)));
-        }
-        if (shownElsewhere.length) {
-            children.push(makeEl('div', { class: 'section-title', 'data-section': 'elsewhere', text: `Saved on other pages (${shownElsewhere.length})` }));
-            shownElsewhere.forEach(a => children.push(panelItem(a, dark, true, true)));
-        }
+        [['missing', 'Not found on the page', shownMissing, false], ['elsewhere', 'Saved on other pages', shownElsewhere, true]].forEach(([section, title, list, isElsewhere]) => {
+            if (!list.length) return;
+            children.push(makeEl('div', { class: 'section-title', 'data-section': section, text: `${title} (${list.length})` }));
+            list.forEach(a => children.push(panelItem(a, dark, true, isElsewhere)));
+        });
         panelList.replaceChildren(...children);
 
         if (keep) {
@@ -6181,28 +6182,38 @@
         }
     }
 
-    let panelItemSeq = 0;
-    function panelItem(a, dark, missing, elsewhere = false) {
-        const meta = [styleLabel(a.key), a.time ? `added ${formatDate(a.time)}` : '', elsewhere ? `on ${pagePath(a.page)}` : '']
-            .filter(Boolean).join(' · ');
-        const main = makeEl(missing ? 'div' : 'button', missing ? { class: 'item-main' } : { type: 'button', class: 'item-main', 'data-act': 'jump' }, [
-            makeEl('div', { class: 'item-text', id: `rnh-pi-${++panelItemSeq}`, text: a.paragraphs.join(' ') })
-        ]);
+    // The meta line of an annotation's row in the panel or everything saved: its style, when it
+    // was added, then any `extra`.
+    function itemMeta(a, extra) {
+        return [styleLabel(a.key), a.time ? `added ${formatDate(a.time)}` : '', extra].filter(Boolean).join(' · ');
+    }
+
+    // The part of a row both lists share: the quote (`id` names it for its checkbox), the note,
+    // the meta line and the color swatch, inside an element of `tag`.
+    function itemMain(tag, attrs, a, dark, { id, text, meta }) {
+        const main = makeEl(tag, attrs, [makeEl('div', { class: 'item-text', id, text })]);
         if (a.note) main.appendChild(makeEl('div', { class: 'item-note', text: a.note }));
         main.appendChild(makeEl('div', { class: 'item-meta', text: meta }));
         main.style.setProperty('--swatch', resolveStyle(a.key, dark).color);
-        const actions = makeEl('div', { class: 'item-actions' });
-        let check = null;
+        return main;
+    }
+
+    let panelItemSeq = 0;
+    function panelItem(a, dark, missing, elsewhere = false) {
+        const main = itemMain(missing ? 'div' : 'button', missing ? { class: 'item-main' } : { type: 'button', class: 'item-main', 'data-act': 'jump' }, a, dark, {
+            id: `rnh-pi-${++panelItemSeq}`, text: a.paragraphs.join(' '), meta: itemMeta(a, elsewhere && `on ${pagePath(a.page)}`)
+        });
+        let side;
         if (missing) {
             const attach = makeButton({ text: 'Attach to selection' });
             attach.dataset.act = 'attach';
             attach.title = 'Select the text this annotation belongs to on the page, then click here';
-            actions.append(attach, panelButton('trash', 'Forget annotation', 'forget'));
+            side = makeEl('div', { class: 'item-actions' }, [attach, panelButton('trash', 'Forget annotation', 'forget')]);
         } else {
-            check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-labelledby': main.firstChild.id });
-            check.checked = panelChecked.has(a.group);
+            side = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-labelledby': main.firstChild.id });
+            side.checked = panelChecked.has(a.group);
         }
-        const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, check ? [main, check] : [main, actions]);
+        const item = makeEl('div', { class: missing ? 'item missing' : 'item', role: 'listitem' }, [main, side]);
         item.dataset.group = a.group;
         return item;
     }
@@ -6443,8 +6454,7 @@
             elsewhere.get(s.page.key).add(s.item.group);
         });
         elsewhere.forEach((groups, key) => {
-            const rest = (readRecords(key) || []).filter(r => !groups.has(recordOwner(r)));
-            if (rest.length) GM_setValue(key, JSON.stringify(rest)); else GM_deleteValue(key);
+            writeRecords(key, (readRecords(key) || []).filter(r => !groups.has(recordOwner(r))));
         });
         if (here.length) {
             syncLocation();
@@ -6482,10 +6492,11 @@
         visible.forEach(({ p, items }) => {
             // Pages start closed, and opened while searching; a click turns that round.
             const open = everythingToggled.has(p.key) !== terms.length > 0;
+            const tickedHere = items.filter(a => everythingChecked.has(everythingId(p, a))).length;
             const head = makeEl('button', { type: 'button', class: 'page-head', role: 'treeitem', 'aria-level': '1', 'aria-expanded': String(open), 'data-key': p.key }, [
                 phosphorIcon(open ? 'caret-down' : 'caret-right'),
                 makeEl('span', { class: 'page-name' }, [makeEl('span', { class: 'page-host', text: p.host }), makeEl('span', { class: 'page-path', text: p.path })]),
-                makeEl('span', { class: 'page-meta', text: `${(() => { const n = items.filter(a => everythingChecked.has(everythingId(p, a))).length; return n ? `${n}/${items.length}` : items.length; })()}${p.time ? ` · ${formatDate(p.time)}` : ''}` })
+                makeEl('span', { class: 'page-meta', text: `${tickedHere ? `${tickedHere}/${items.length}` : items.length}${p.time ? ` · ${formatDate(p.time)}` : ''}` })
             ]);
             const section = makeEl('div', { class: 'page', role: 'none' }, [head]);
             if (open) {
@@ -6493,11 +6504,9 @@
                 items.forEach(a => {
                     const ticked = everythingChecked.has(everythingId(p, a));
                     // The focusable link is the treeitem, so its level and selection are announced on focus.
-                    const link = makeEl('a', { class: 'item-main', role: 'treeitem', 'aria-level': '2', 'aria-selected': String(ticked), href: a.url, target: '_blank', rel: 'noopener', 'data-key': p.key, 'data-group': a.group },
-                        [makeEl('div', { class: 'item-text', id: `rnh-ei-${++everythingItemSeq}`, text: a.text })]);
-                    if (a.note) link.appendChild(makeEl('div', { class: 'item-note', text: a.note }));
-                    link.appendChild(makeEl('div', { class: 'item-meta', text: [styleLabel(a.key), a.time ? `added ${formatDate(a.time)}` : ''].filter(Boolean).join(' · ') }));
-                    link.style.setProperty('--swatch', resolveStyle(a.key, dark).color);
+                    const link = itemMain('a', { class: 'item-main', role: 'treeitem', 'aria-level': '2', 'aria-selected': String(ticked), href: a.url, target: '_blank', rel: 'noopener', 'data-key': p.key, 'data-group': a.group }, a, dark, {
+                        id: `rnh-ei-${++everythingItemSeq}`, text: a.text, meta: itemMeta(a)
+                    });
                     // A mouse aid only: keyboard and screen-reader users tick with Space on the treeitem.
                     const check = makeEl('input', { type: 'checkbox', class: 'check', 'data-act': 'check', 'aria-hidden': 'true', tabindex: '-1' });
                     check.checked = ticked;
@@ -6694,12 +6703,7 @@
     }
 
     function setMenuHidden(hidden) {
-        const settings = readSettings();
-        const sites = new Set(Array.isArray(settings.menuHiddenSites) ? settings.menuHiddenSites : []);
-        if (hidden) sites.add(siteId());
-        else sites.delete(siteId());
-        settings.menuHiddenSites = Array.from(sites);
-        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+        setSiteListed('menuHiddenSites', hidden);
     }
 
     // It lives in a host of its own: stopping the script removes the other panels, not this.
@@ -6828,7 +6832,7 @@
             menuEl.removeEventListener('pointermove', move);
             const settings = readSettings();
             settings.menuPos = { left: parseFloat(menuEl.style.left), top: parseFloat(menuEl.style.top) };
-            GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+            writeSettings(settings);
         }, { once: true });
     });
 
@@ -7028,11 +7032,9 @@
         if (document.fonts && document.fonts.ready) {
             document.fonts.ready.then(() => { if (running) scheduleRedraw(); }).catch(() => {});
         }
-        if (typeof ResizeObserver === 'function') {
-            const ro = new ResizeObserver(scheduleRedraw);
-            ro.observe(document.documentElement);
-            teardown.push(() => ro.disconnect());
-        }
+        const ro = new ResizeObserver(scheduleRedraw);
+        ro.observe(document.documentElement);
+        teardown.push(() => ro.disconnect());
         teardown.push(watchPageStyle());
 
         listen(window, 'popstate', onUrlMaybeChanged);

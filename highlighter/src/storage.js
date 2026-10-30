@@ -208,6 +208,8 @@
     function resetPageTracking() {
         trackedRecords.clear();
         knownOwners.clear();
+        ownerState.clear();
+        goneState.clear();
         reclaimedIds.clear();
         missedIds.clear();
         putBackAt.clear();
@@ -225,7 +227,10 @@
         return `${r.group || ''}|${r.key}|${r.text}`;
     }
 
-    function parseRecords(raw) {
+    // What a page's stored list holds: records, and tombstones ({ gone: group, at: time }) that
+    // say an annotation was deleted. A list is the same JSON array it always was, so versions that
+    // know nothing of tombstones carry them along unharmed.
+    function parseList(raw) {
         if (!raw) return null;
         try {
             const parsed = JSON.parse(raw);
@@ -235,14 +240,110 @@
         }
     }
 
+    function parseRecords(raw) {
+        const list = parseList(raw);
+        return list && list.filter(r => !('gone' in r));
+    }
+
+    // Annotation -> when it was deleted, for the tombstones in `raw` that are well formed and not too old.
+    function tombstonesIn(raw) {
+        const gone = new Map();
+        const oldest = Date.now() - TOMBSTONE_TTL_MS;
+        (parseList(raw) || []).forEach(r => {
+            if (typeof r.gone === 'string' && r.gone && Number.isFinite(r.at) && r.at > oldest) gone.set(r.gone, Math.max(gone.get(r.gone) || 0, r.at));
+        });
+        return gone;
+    }
+
     function readRecords(key) {
         return parseRecords(GM_getValue(key, null));
     }
 
-    // Saves `records` under `key`; with none left the key is removed.
-    function writeRecords(key, records) {
-        if (records.length) GM_setValue(key, JSON.stringify(records));
+    // Saves `records` under `key`, keeping the tombstones already there and adding one for each of
+    // `removed` (the annotations this deletes); with nothing left the key is removed.
+    function writeRecords(key, records, removed = []) {
+        const gone = tombstonesIn(GM_getValue(key, null));
+        removed.forEach(owner => gone.set(owner, Date.now()));
+        const list = records.concat(Array.from(gone, ([owner, at]) => ({ gone: owner, at })));
+        if (list.length) GM_setValue(key, JSON.stringify(list));
         else GM_deleteValue(key);
+    }
+
+    // The records of each annotation, by owner.
+    function byOwner(records) {
+        const map = new Map();
+        records.forEach(r => {
+            const owner = recordOwner(r);
+            if (!map.has(owner)) map.set(owner, []);
+            map.get(owner).push(r);
+        });
+        return map;
+    }
+
+    // What an annotation is, wherever it was placed: its pieces' style, text and note.
+    function ownerContent(records) {
+        return records.map(r => `${r.key}|${r.text}|${r.note || ''}`).sort().join('\n');
+    }
+
+    // When an annotation last changed, as stamped by the tab that saved it (`rev`). Null when any
+    // piece carries no stamp: it was saved by a version that stamps nothing.
+    function stampedRev(records) {
+        let rev = 0;
+        for (const r of records) {
+            if (!Number.isFinite(r.rev)) return null;
+            rev = Math.max(rev, r.rev);
+        }
+        return rev;
+    }
+
+    // The records whose annotation was not deleted after it last changed. A delete that is as new
+    // as the annotation wins; so does any delete over a record that carries no stamp.
+    function aliveRecords(records, gone) {
+        if (!gone.size) return records;
+        const revs = new Map();
+        byOwner(records).forEach((recs, owner) => revs.set(owner, stampedRev(recs)));
+        return records.filter(r => {
+            const owner = recordOwner(r);
+            const at = gone.get(owner);
+            return at === undefined || at < (revs.get(owner) || 0);
+        });
+    }
+
+    // Notes what this tab now knows the store to hold. `confirmed` marks annotations the store
+    // is known to have had: loaded from it, or seen in another tab's change. Ones this tab made
+    // itself are not, until another tab's change lists them.
+    function trackOwners(records, confirmed) {
+        byOwner(records).forEach((recs, owner) => {
+            const prev = ownerState.get(owner);
+            ownerState.set(owner, { content: ownerContent(recs), rev: stampedRev(recs) || 0, confirmed: confirmed || !!(prev && prev.confirmed) });
+        });
+    }
+
+    // Before a save: stamps each annotation whose content changed since this tab last knew it with
+    // the time (`rev`), and turns each annotation this tab knew and no longer has into a tombstone,
+    // so another tab can tell "deleted" from "not seen yet". Returns the tombstones to write: the
+    // ones remembered here and those in the stored list `raw`, minus the old and the undone.
+    function stampOwners(own, raw) {
+        const now = Date.now();
+        const owners = byOwner(own);
+        owners.forEach((recs, owner) => {
+            const content = ownerContent(recs);
+            const prev = ownerState.get(owner);
+            const rev = prev && prev.content === content ? prev.rev : Math.max(now, prev ? prev.rev + 1 : 0);
+            if (rev > 0) recs.forEach(r => { r.rev = rev; });
+            ownerState.set(owner, { content, rev, confirmed: !!(prev && prev.confirmed) });
+            if (rev > (goneState.get(owner) || 0)) goneState.delete(owner);   // back after a delete (undone)
+        });
+        ownerState.forEach((state, owner) => {
+            if (owners.has(owner)) return;
+            goneState.set(owner, now);
+            ownerState.delete(owner);
+        });
+        tombstonesIn(raw).forEach((at, owner) => {
+            if (!owners.has(owner) && !(goneState.get(owner) >= at)) goneState.set(owner, at);
+        });
+        goneState.forEach((at, owner) => { if (at <= now - TOMBSTONE_TTL_MS) goneState.delete(owner); });
+        return Array.from(goneState, ([owner, at]) => ({ gone: owner, at }));
     }
 
     // Which annotation a record belongs to: its group (shared by the annotation's pieces), or
@@ -261,8 +362,12 @@
     }
 
     function loadRecords() {
-        const records = loadStoredRecords();
-        records.forEach(r => knownOwners.add(recordOwner(r)));
+        const stored = loadStoredRecords();
+        stored.forEach(r => knownOwners.add(recordOwner(r)));
+        const gone = tombstonesIn(GM_getValue(currentKey, null));
+        gone.forEach((at, owner) => goneState.set(owner, at));
+        const records = aliveRecords(stored, gone);   // one deleted since it last changed is not put back, and the next save drops it
+        trackOwners(records, true);
         return records;
     }
 
@@ -286,7 +391,7 @@
             seen.add(sig);
             return true;
         });
-        GM_setValue(currentKey, JSON.stringify(merged));
+        writeRecords(currentKey, merged);
         moved.forEach(k => GM_deleteValue(k));
         return merged;
     }
@@ -302,7 +407,7 @@
         const raw = GM_getValue(currentKey, null);
         own.forEach(r => knownOwners.add(recordOwner(r)));
         const others = (parseRecords(raw) || []).filter(r => !knownOwners.has(recordOwner(r)));
-        const merged = own.concat(others);
+        const merged = own.concat(others, stampOwners(own, raw));   // records, then the tombstones of what was deleted
         if (merged.length === 0) {
             if (raw !== null && raw !== undefined) GM_deleteValue(currentKey);
             return;

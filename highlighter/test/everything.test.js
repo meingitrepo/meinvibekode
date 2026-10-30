@@ -99,6 +99,8 @@ async function main(browser) {
   await p.evaluate(() => window.__hl.everythingForget.click()); await p.waitForTimeout(150);
   const left = await state(p);
   check('forget removes it from storage and the list', left && left.count === '3 annotations found on 3 pages' && !left.pages[0].items.some(i => i.text === 'The quick brown fox jumps'), left);
+  const tomb = await p.evaluate(() => Object.entries(window.__gm).filter(([k]) => /other\.test\/blog\/post-one/.test(k)).map(([, v]) => v).join(''));
+  check('forget leaves a tombstone for it, so a tab open on that page drops it too', /"gone":/.test(tomb), tomb);
   await p.keyboard.press('Escape');
   // menu
   check('the menu has it', (await L.menu(p)).includes('Search all pages'), await L.menu(p));

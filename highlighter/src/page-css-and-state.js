@@ -105,6 +105,8 @@
     // About the page being shown (reset with currentKey, see resetPageTracking):
     const trackedRecords = new Map();      // wrapper -> its record when last placed or saved (see reclaimDetached)
     const knownOwners = new Set();         // annotations this tab has loaded or saved (see saveHighlights)
+    const ownerState = new Map();          // annotation -> { content, rev, confirmed } as this tab last knew it (see stampOwners)
+    const goneState = new Map();           // annotation -> when it was deleted, while that is remembered (see stampOwners)
     const reclaimedIds = new Map();        // recordId -> how many of its records wait since the site took them off the page
     const missedIds = new Set();           // records already counted as missing on this visit
     const putBackAt = new Map();           // recordId -> when a redrawn annotation was last put back

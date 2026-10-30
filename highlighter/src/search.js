@@ -111,7 +111,7 @@
             elsewhere.get(s.page.key).add(s.item.group);
         });
         elsewhere.forEach((groups, key) => {
-            writeRecords(key, (readRecords(key) || []).filter(r => !groups.has(recordOwner(r))));
+            writeRecords(key, (readRecords(key) || []).filter(r => !groups.has(recordOwner(r))), Array.from(groups));
         });
         if (here.length) {
             syncLocation();

@@ -480,7 +480,7 @@
         const stored = readRecords(currentKey);
         if (!stored || !stored.some(r => r.group === group)) return;
         const rest = stored.filter(r => r.group !== group);
-        writeRecords(currentKey, rest);
+        writeRecords(currentKey, rest, [group]);
     }
 
     // Delete deletes the note, as its Delete button does, unless it has text after the caret

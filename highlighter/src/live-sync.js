@@ -22,33 +22,18 @@
         watchedKey = null;
     }
 
-    // What an annotation is, wherever it was placed: its pieces' style, text and note.
-    function ownerContent(records) {
-        return records.map(r => `${r.key}|${r.text}|${r.note || ''}`).sort().join('\n');
-    }
-
-    function byOwner(records) {
-        const map = new Map();
-        records.forEach(r => {
-            const owner = recordOwner(r);
-            if (!map.has(owner)) map.set(owner, []);
-            map.get(owner).push(r);
-        });
-        return map;
-    }
-
-    // Another tab saved this page. Annotations it removed go, the ones it added or changed are
-    // placed (or wait for their text, like any saved annotation). The one whose note is being
-    // written here stays as it is. An annotation of this tab that the other tab never saw (both
-    // saved at once) stays too, and is saved again.
-    // Known limit: Violentmonkey gives `oldRaw` as this tab's own cached value, which already holds
-    // its own just-saved annotation. Two tabs saving within the few milliseconds a change takes to
-    // arrive therefore each read the other's new annotation as a delete, and one of them is lost
-    // at the next save. Closing that needs a revision or tombstone per annotation (a stored-data change).
+    // Another tab saved this page. Annotations it deleted go (it says so with a tombstone), the
+    // ones it added or changed are placed (or wait for their text, like any saved annotation), and
+    // for an annotation both tabs changed the later change wins in both. The one whose note is
+    // being written here stays as it is. What the other tab has not seen yet stays too and is
+    // saved again: an annotation made here, a change of ours that is newer, a delete of ours that
+    // its list lacks. (`oldRaw` is no help: Violentmonkey gives this tab's own cached value, which
+    // already holds a write of its own the other tab has not seen.)
     function onStoredKeyChanged(name, oldRaw, newRaw, remote) {
         if (!remote || !running || nav || name !== currentKey) return;
-        const before = new Set((parseRecords(oldRaw) || []).map(recordOwner));
-        const incoming = byOwner(parseRecords(newRaw) || []);
+        const wiped = !newRaw;   // the whole list was deleted
+        const gone = tombstonesIn(newRaw);
+        const incoming = byOwner(aliveRecords(parseRecords(newRaw) || [], gone));
         const here = byOwner(getCurrentRecords().concat(pendingRecords));
         const editing = editor ? editor.group : null;
         const drop = new Set();
@@ -56,19 +41,42 @@
         let resave = false;
         here.forEach((records, owner) => {
             if (owner === editing) return;
+            const state = ownerState.get(owner) || { rev: 0, confirmed: false };
             const theirs = incoming.get(owner);
             if (!theirs) {
-                if (before.has(owner)) drop.add(owner);
+                const at = gone.get(owner);
+                // Deleted elsewhere: it says so, or the list was wiped, or a version that writes no
+                // tombstones dropped what the store is known to have held. Else that tab has not seen it yet.
+                if (wiped || (at !== undefined ? at >= state.rev : state.confirmed)) drop.add(owner);
                 else resave = true;
             } else if (ownerContent(theirs) !== ownerContent(records)) {
-                drop.add(owner);
-                add.push(...theirs);
+                const rev = stampedRev(theirs);
+                const theirsWins = rev === null || rev > state.rev || (rev === state.rev && ownerContent(theirs) > ownerContent(records));
+                if (theirsWins) {
+                    drop.add(owner);
+                    add.push(...theirs);
+                } else {
+                    resave = true;
+                }
+            } else {
+                state.confirmed = true;
             }
         });
         incoming.forEach((records, owner) => {
             knownOwners.add(owner);
-            if (!here.has(owner) && owner !== editing) add.push(...records);
+            if (here.has(owner) || owner === editing) return;
+            if (goneState.get(owner) >= (stampedRev(records) || 0)) {
+                resave = true;   // deleted here since, so their copy is the older
+            } else {
+                goneState.delete(owner);   // or back after a delete (undone there)
+                add.push(...records);
+            }
         });
+        drop.forEach(owner => ownerState.delete(owner));
+        trackOwners(add, true);
+        if (wiped) goneState.clear();
+        gone.forEach((at, owner) => { if (!(goneState.get(owner) >= at) && !(here.has(owner) && !drop.has(owner))) goneState.set(owner, at); });
+        goneState.forEach((at, owner) => { if (!gone.has(owner) && !wiped) resave = true; });   // the other tab's list lost a delete of ours
         if (drop.size || add.length) {
             // Undo here would bring back what the other tab changed.
             undoStack.length = 0;

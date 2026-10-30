@@ -23,7 +23,9 @@ function GM_getValue(k, d) { return Object.prototype.hasOwnProperty.call(window.
 window.__ls = window.__ls || []; let __lsId = 0;
 function GM_addValueChangeListener(k, fn) { const id = ++__lsId; window.__ls.push({ id, k, fn }); return id; }
 function GM_removeValueChangeListener(id) { window.__ls = window.__ls.filter(l => l.id !== id); }
-window.__deliver = (k, o, v, remote) => { if (remote) { if (v === undefined) delete window.__gm[k]; else window.__gm[k] = v; } window.__ls.filter(l => l.k === k).forEach(l => l.fn(k, o, v, remote)); };
+// With window.__oldFromReceiver a remote change reports this tab's own cached value as the old one, as Violentmonkey does
+// (the cache already holds a write of its own that the other tab has not seen); by default it is the sender's old value.
+window.__deliver = (k, o, v, remote) => { const own = window.__gm[k]; if (remote) { if (v === undefined) delete window.__gm[k]; else window.__gm[k] = v; } window.__ls.filter(l => l.k === k).forEach(l => l.fn(k, remote && window.__oldFromReceiver ? own : o, v, remote)); };
 function __change(k, v) { const o = window.__gm[k]; if (v === undefined) delete window.__gm[k]; else window.__gm[k] = v; if (o === v) return; window.__deliver(k, o, v, false); if (window.__send) window.__send(k, o === undefined ? null : o, v === undefined ? null : v); }
 function GM_setValue(k, v) { __change(k, v); }
 function GM_deleteValue(k) { __change(k, undefined); }
@@ -96,7 +98,8 @@ const toast = page => page.evaluate(() => { const r = window.__hl; return r.toas
 const wr = page => page.evaluate(() => window.__hl.allWrappers().map(w => {
   const o = { k: w.getAttribute('data-style-key'), t: w.textContent, g: w.getAttribute('data-highlighter-group') };
   const n = w.getAttribute('data-highlighter-note'); if (n) o.n = n; return o; }));
-const stored = (page, key = 'https://example.test/a') => page.evaluate(k => JSON.parse(window.__gm[k] || '[]'), key);
+// The page's stored annotation records. The stored list also holds tombstones ({ gone, at }) for deleted annotations; `all` keeps them.
+const stored = (page, key = 'https://example.test/a', all = false) => page.evaluate(([k, all]) => JSON.parse(window.__gm[k] || '[]').filter(r => all || !('gone' in r)), [key, all]);
 const toolbar = page => page.evaluate(() => { const t = window.__hl.toolbarEl; if (t.hidden) return null; const r = t.getBoundingClientRect();
   return { rect: { top: r.top, left: r.left, bottom: r.bottom, right: r.right, width: r.width, height: r.height },
     buttons: Array.from(t.querySelectorAll('button')).map(b => ({ label: b.dataset.label, pressed: b.getAttribute('aria-pressed'), bg: getComputedStyle(b).backgroundColor })) }; });

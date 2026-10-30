@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.35
+// @version      9.36
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -5054,6 +5054,7 @@
     // Save is disabled while the note is the same as what is saved.
     function updateSaveState() {
         noteSave.disabled = !editor || noteDraft() === editor.original;
+        noteDelete.disabled = !editor || !editor.original;   // a new note has nothing saved to erase
     }
 
     // A drag of the resize handle starts on the textarea and changes its inline size.
@@ -5207,11 +5208,12 @@
     noteDiscard.addEventListener('click', () => cancelEditor());
     // An existing note is removed (its annotation stays, Alt+Z brings the note back); a new one
     // is dropped along with the highlight that was made for it.
-    noteDelete.addEventListener('click', () => {
+    function eraseNote() {
         if (editor && editor.step && noteDraft()) { cancelEditor(); return; }
         noteInput.value = '';
         saveEditor();
-    });
+    }
+    noteDelete.addEventListener('click', eraseNote);
     editorEl.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
             e.preventDefault();
@@ -5222,7 +5224,7 @@
             saveEditor();
         } else if (deleteKeyDeletesNote(e)) {
             e.preventDefault();
-            noteDelete.click();
+            eraseNote();
         } else if (e.key === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) {
             // Tab and Shift+Tab go round the editor's controls instead of leaving it.
             const stops = [noteSave, noteDiscard, noteDelete, noteInput].filter(el => !el.hidden && !el.disabled);

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.21
+// @version      9.22
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -146,6 +146,7 @@
     const ANIMATE_ON_RESTORE = false;          // restored annotations appear instantly
     const CONTEXT_LENGTH = 24;                 // prefix/suffix characters stored per record
     const UNDO_STACK_LIMIT = 20;
+    const TOMBSTONE_TTL_MS = 24 * 60 * 60 * 1000;   // a deleted annotation is remembered this long (see stampOwners), so a tab that is slow to hear of it can't bring it back
     const RESTORE_DELAY_MS = 400;
     const LATE_CONTENT_MAX_ATTEMPTS = 20;       // annotations not found at first are looked for as the page changes:
     const LATE_CONTENT_GIVE_UP_MS = 15000;      // closely for this long or this many tries (then they count as missed),
@@ -339,6 +340,8 @@
     // About the page being shown (reset with currentKey, see resetPageTracking):
     const trackedRecords = new Map();      // wrapper -> its record when last placed or saved (see reclaimDetached)
     const knownOwners = new Set();         // annotations this tab has loaded or saved (see saveHighlights)
+    const ownerState = new Map();          // annotation -> { content, rev, confirmed } as this tab last knew it (see stampOwners)
+    const goneState = new Map();           // annotation -> when it was deleted, while that is remembered (see stampOwners)
     const reclaimedIds = new Map();        // recordId -> how many of its records wait since the site took them off the page
     const missedIds = new Set();           // records already counted as missing on this visit
     const putBackAt = new Map();           // recordId -> when a redrawn annotation was last put back
@@ -2100,6 +2103,8 @@
     function resetPageTracking() {
         trackedRecords.clear();
         knownOwners.clear();
+        ownerState.clear();
+        goneState.clear();
         reclaimedIds.clear();
         missedIds.clear();
         putBackAt.clear();
@@ -2117,7 +2122,10 @@
         return `${r.group || ''}|${r.key}|${r.text}`;
     }
 
-    function parseRecords(raw) {
+    // What a page's stored list holds: records, and tombstones ({ gone: group, at: time }) that
+    // say an annotation was deleted. A list is the same JSON array it always was, so versions that
+    // know nothing of tombstones carry them along unharmed.
+    function parseList(raw) {
         if (!raw) return null;
         try {
             const parsed = JSON.parse(raw);
@@ -2127,14 +2135,110 @@
         }
     }
 
+    function parseRecords(raw) {
+        const list = parseList(raw);
+        return list && list.filter(r => !('gone' in r));
+    }
+
+    // Annotation -> when it was deleted, for the tombstones in `raw` that are well formed and not too old.
+    function tombstonesIn(raw) {
+        const gone = new Map();
+        const oldest = Date.now() - TOMBSTONE_TTL_MS;
+        (parseList(raw) || []).forEach(r => {
+            if (typeof r.gone === 'string' && r.gone && Number.isFinite(r.at) && r.at > oldest) gone.set(r.gone, Math.max(gone.get(r.gone) || 0, r.at));
+        });
+        return gone;
+    }
+
     function readRecords(key) {
         return parseRecords(GM_getValue(key, null));
     }
 
-    // Saves `records` under `key`; with none left the key is removed.
-    function writeRecords(key, records) {
-        if (records.length) GM_setValue(key, JSON.stringify(records));
+    // Saves `records` under `key`, keeping the tombstones already there and adding one for each of
+    // `removed` (the annotations this deletes); with nothing left the key is removed.
+    function writeRecords(key, records, removed = []) {
+        const gone = tombstonesIn(GM_getValue(key, null));
+        removed.forEach(owner => gone.set(owner, Date.now()));
+        const list = records.concat(Array.from(gone, ([owner, at]) => ({ gone: owner, at })));
+        if (list.length) GM_setValue(key, JSON.stringify(list));
         else GM_deleteValue(key);
+    }
+
+    // The records of each annotation, by owner.
+    function byOwner(records) {
+        const map = new Map();
+        records.forEach(r => {
+            const owner = recordOwner(r);
+            if (!map.has(owner)) map.set(owner, []);
+            map.get(owner).push(r);
+        });
+        return map;
+    }
+
+    // What an annotation is, wherever it was placed: its pieces' style, text and note.
+    function ownerContent(records) {
+        return records.map(r => `${r.key}|${r.text}|${r.note || ''}`).sort().join('\n');
+    }
+
+    // When an annotation last changed, as stamped by the tab that saved it (`rev`). Null when any
+    // piece carries no stamp: it was saved by a version that stamps nothing.
+    function stampedRev(records) {
+        let rev = 0;
+        for (const r of records) {
+            if (!Number.isFinite(r.rev)) return null;
+            rev = Math.max(rev, r.rev);
+        }
+        return rev;
+    }
+
+    // The records whose annotation was not deleted after it last changed. A delete that is as new
+    // as the annotation wins; so does any delete over a record that carries no stamp.
+    function aliveRecords(records, gone) {
+        if (!gone.size) return records;
+        const revs = new Map();
+        byOwner(records).forEach((recs, owner) => revs.set(owner, stampedRev(recs)));
+        return records.filter(r => {
+            const owner = recordOwner(r);
+            const at = gone.get(owner);
+            return at === undefined || at < (revs.get(owner) || 0);
+        });
+    }
+
+    // Notes what this tab now knows the store to hold. `confirmed` marks annotations the store
+    // is known to have had: loaded from it, or seen in another tab's change. Ones this tab made
+    // itself are not, until another tab's change lists them.
+    function trackOwners(records, confirmed) {
+        byOwner(records).forEach((recs, owner) => {
+            const prev = ownerState.get(owner);
+            ownerState.set(owner, { content: ownerContent(recs), rev: stampedRev(recs) || 0, confirmed: confirmed || !!(prev && prev.confirmed) });
+        });
+    }
+
+    // Before a save: stamps each annotation whose content changed since this tab last knew it with
+    // the time (`rev`), and turns each annotation this tab knew and no longer has into a tombstone,
+    // so another tab can tell "deleted" from "not seen yet". Returns the tombstones to write: the
+    // ones remembered here and those in the stored list `raw`, minus the old and the undone.
+    function stampOwners(own, raw) {
+        const now = Date.now();
+        const owners = byOwner(own);
+        owners.forEach((recs, owner) => {
+            const content = ownerContent(recs);
+            const prev = ownerState.get(owner);
+            const rev = prev && prev.content === content ? prev.rev : Math.max(now, prev ? prev.rev + 1 : 0);
+            if (rev > 0) recs.forEach(r => { r.rev = rev; });
+            ownerState.set(owner, { content, rev, confirmed: !!(prev && prev.confirmed) });
+            if (rev > (goneState.get(owner) || 0)) goneState.delete(owner);   // back after a delete (undone)
+        });
+        ownerState.forEach((state, owner) => {
+            if (owners.has(owner)) return;
+            goneState.set(owner, now);
+            ownerState.delete(owner);
+        });
+        tombstonesIn(raw).forEach((at, owner) => {
+            if (!owners.has(owner) && !(goneState.get(owner) >= at)) goneState.set(owner, at);
+        });
+        goneState.forEach((at, owner) => { if (at <= now - TOMBSTONE_TTL_MS) goneState.delete(owner); });
+        return Array.from(goneState, ([owner, at]) => ({ gone: owner, at }));
     }
 
     // Which annotation a record belongs to: its group (shared by the annotation's pieces), or
@@ -2153,15 +2257,21 @@
     }
 
     function loadRecords() {
-        const records = loadStoredRecords();
-        records.forEach(r => knownOwners.add(recordOwner(r)));
+        const stored = loadStoredRecords();
+        stored.forEach(r => knownOwners.add(recordOwner(r)));
+        const gone = tombstonesIn(GM_getValue(currentKey, null));
+        gone.forEach((at, owner) => goneState.set(owner, at));
+        const records = aliveRecords(stored, gone);   // one deleted since it last changed is not put back, and the next save drops it
+        trackOwners(records, true);
         return records;
     }
 
     function loadStoredRecords() {
         const records = readRecords(currentKey) || [];
-        // Annotations saved under this page's plain URL (by older versions, or before the site
-        // declared a canonical URL) move to the current key.
+        // Annotations saved under this page's plain URL move to the current key. That still happens
+        // with current versions, not only old ones: the plain URL is the key whenever no trusted
+        // canonical link is known (see canonicalKey: a hash route, a stale link after an in-page
+        // navigation, a link the site adds late), and a later visit may know it.
         const legacyKeys = Array.from(new Set([urlKey(location.href), location.href])).filter(k => k !== currentKey);
         const moved = [];
         legacyKeys.forEach(k => {
@@ -2176,7 +2286,7 @@
             seen.add(sig);
             return true;
         });
-        GM_setValue(currentKey, JSON.stringify(merged));
+        writeRecords(currentKey, merged);
         moved.forEach(k => GM_deleteValue(k));
         return merged;
     }
@@ -2192,7 +2302,7 @@
         const raw = GM_getValue(currentKey, null);
         own.forEach(r => knownOwners.add(recordOwner(r)));
         const others = (parseRecords(raw) || []).filter(r => !knownOwners.has(recordOwner(r)));
-        const merged = own.concat(others);
+        const merged = own.concat(others, stampOwners(own, raw));   // records, then the tombstones of what was deleted
         if (merged.length === 0) {
             if (raw !== null && raw !== undefined) GM_deleteValue(currentKey);
             return;
@@ -5070,7 +5180,7 @@
         const stored = readRecords(currentKey);
         if (!stored || !stored.some(r => r.group === group)) return;
         const rest = stored.filter(r => r.group !== group);
-        writeRecords(currentKey, rest);
+        writeRecords(currentKey, rest, [group]);
     }
 
     // Delete deletes the note, as its Delete button does, unless it has text after the caret
@@ -6454,7 +6564,7 @@
             elsewhere.get(s.page.key).add(s.item.group);
         });
         elsewhere.forEach((groups, key) => {
-            writeRecords(key, (readRecords(key) || []).filter(r => !groups.has(recordOwner(r))));
+            writeRecords(key, (readRecords(key) || []).filter(r => !groups.has(recordOwner(r))), Array.from(groups));
         });
         if (here.length) {
             syncLocation();
@@ -6873,29 +6983,18 @@
         watchedKey = null;
     }
 
-    // What an annotation is, wherever it was placed: its pieces' style, text and note.
-    function ownerContent(records) {
-        return records.map(r => `${r.key}|${r.text}|${r.note || ''}`).sort().join('\n');
-    }
-
-    function byOwner(records) {
-        const map = new Map();
-        records.forEach(r => {
-            const owner = recordOwner(r);
-            if (!map.has(owner)) map.set(owner, []);
-            map.get(owner).push(r);
-        });
-        return map;
-    }
-
-    // Another tab saved this page. Annotations it removed go, the ones it added or changed are
-    // placed (or wait for their text, like any saved annotation). The one whose note is being
-    // written here stays as it is. An annotation of this tab that the other tab never saw (both
-    // saved at once) stays too, and is saved again.
+    // Another tab saved this page. Annotations it deleted go (it says so with a tombstone), the
+    // ones it added or changed are placed (or wait for their text, like any saved annotation), and
+    // for an annotation both tabs changed the later change wins in both. The one whose note is
+    // being written here stays as it is. What the other tab has not seen yet stays too and is
+    // saved again: an annotation made here, a change of ours that is newer, a delete of ours that
+    // its list lacks. (`oldRaw` is no help: Violentmonkey gives this tab's own cached value, which
+    // already holds a write of its own the other tab has not seen.)
     function onStoredKeyChanged(name, oldRaw, newRaw, remote) {
         if (!remote || !running || nav || name !== currentKey) return;
-        const before = new Set((parseRecords(oldRaw) || []).map(recordOwner));
-        const incoming = byOwner(parseRecords(newRaw) || []);
+        const wiped = !newRaw;   // the whole list was deleted
+        const gone = tombstonesIn(newRaw);
+        const incoming = byOwner(aliveRecords(parseRecords(newRaw) || [], gone));
         const here = byOwner(getCurrentRecords().concat(pendingRecords));
         const editing = editor ? editor.group : null;
         const drop = new Set();
@@ -6903,19 +7002,42 @@
         let resave = false;
         here.forEach((records, owner) => {
             if (owner === editing) return;
+            const state = ownerState.get(owner) || { rev: 0, confirmed: false };
             const theirs = incoming.get(owner);
             if (!theirs) {
-                if (before.has(owner)) drop.add(owner);
+                const at = gone.get(owner);
+                // Deleted elsewhere: it says so, or the list was wiped, or a version that writes no
+                // tombstones dropped what the store is known to have held. Else that tab has not seen it yet.
+                if (wiped || (at !== undefined ? at >= state.rev : state.confirmed)) drop.add(owner);
                 else resave = true;
             } else if (ownerContent(theirs) !== ownerContent(records)) {
-                drop.add(owner);
-                add.push(...theirs);
+                const rev = stampedRev(theirs);
+                const theirsWins = rev === null || rev > state.rev || (rev === state.rev && ownerContent(theirs) > ownerContent(records));
+                if (theirsWins) {
+                    drop.add(owner);
+                    add.push(...theirs);
+                } else {
+                    resave = true;
+                }
+            } else {
+                state.confirmed = true;
             }
         });
         incoming.forEach((records, owner) => {
             knownOwners.add(owner);
-            if (!here.has(owner) && owner !== editing) add.push(...records);
+            if (here.has(owner) || owner === editing) return;
+            if (goneState.get(owner) >= (stampedRev(records) || 0)) {
+                resave = true;   // deleted here since, so their copy is the older
+            } else {
+                goneState.delete(owner);   // or back after a delete (undone there)
+                add.push(...records);
+            }
         });
+        drop.forEach(owner => ownerState.delete(owner));
+        trackOwners(add, true);
+        if (wiped) goneState.clear();
+        gone.forEach((at, owner) => { if (!(goneState.get(owner) >= at) && !(here.has(owner) && !drop.has(owner))) goneState.set(owner, at); });
+        goneState.forEach((at, owner) => { if (!gone.has(owner) && !wiped) resave = true; });   // the other tab's list lost a delete of ours
         if (drop.size || add.length) {
             // Undo here would bring back what the other tab changed.
             undoStack.length = 0;

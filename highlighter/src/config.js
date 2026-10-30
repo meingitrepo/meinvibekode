@@ -32,7 +32,7 @@
     const ANIMATE_ON_RESTORE = false;          // restored annotations appear instantly
     const CONTEXT_LENGTH = 24;                 // prefix/suffix characters stored per record
     const UNDO_STACK_LIMIT = 20;
-    const TOMBSTONE_TTL_MS = 7 * 24 * 60 * 60 * 1000;   // a deleted annotation is remembered this long (see stampOwners), so a tab that is slow to hear of it can't bring it back
+    const TOMBSTONE_TTL_MS = 24 * 60 * 60 * 1000;   // a deleted annotation is remembered this long (see stampOwners), so a tab that is slow to hear of it can't bring it back
     const RESTORE_DELAY_MS = 400;
     const LATE_CONTENT_MAX_ATTEMPTS = 20;       // annotations not found at first are looked for as the page changes:
     const LATE_CONTENT_GIVE_UP_MS = 15000;      // closely for this long or this many tries (then they count as missed),

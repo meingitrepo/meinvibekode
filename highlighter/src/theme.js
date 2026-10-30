@@ -309,7 +309,7 @@
         hideStyle.media = hidden ? 'all' : 'not all';
         textColorStyle.media = hidden ? 'not all' : 'all';
         if (hidden) { hideNoteCard(); unpinNoteCard(); }
-        else if (toastRun === showAnnotations) hideToast();   // "Annotations hidden" is no longer true
+        else if (!toastEl.hidden && toastText.textContent === 'Annotations hidden') hideToast();   // no longer true
         renderSiteMenu();   // the menu's hide button shows the eye for what it does next
     }
 
@@ -325,6 +325,6 @@
         const hide = !annotationsHidden;
         if (!hide) { showAnnotations(); return; }
         setAnnotationsHidden(hide);
-        showToast('Annotations hidden', { icon: 'eye-slash', action: { label: 'Show', text: 'Show', tip: 'Show annotations', shortcut: 'Alt+V', run: showAnnotations, keepEditor: true } });
+        showToast('Annotations hidden', { icon: 'eye-slash' });
     }
 

@@ -294,7 +294,7 @@
         if (document.hidden) { noticeDue = true; return; }
         noticedKeys.add(currentKey);
         if (!toastEl.hidden && toastRun) return;
-        showToast(doneText('not found', missing), { icon: 'warning', intent: 'warning', action: { label: 'Show', tip: 'Show what was not found', run: showMissingInPanel, keepEditor: true } });
+        showToast(doneText('not found', missing), { icon: 'warning', intent: 'warning' });
     }
 
     function restoreHighlights() {

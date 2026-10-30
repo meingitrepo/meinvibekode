@@ -48,17 +48,10 @@ async function scenarioNotice(browser) {
   check('menu: not registered again while nothing changes', (await p.evaluate(() => window.__menuLog)) === regs, regs);
   check('no notice during the first window', (await L.toast(p)) === null, await L.toast(p));
   const seen = await watchToast(p, 13000, /Show$/);   // until ~18.5 s after load
-  check('notice after the first window', seen.includes('1 annotation not found · Show'), seen);
+  check('notice after the first window', seen.includes('1 annotation not found'), seen);
   check('miss counted once', (await storedOf(p, KEY, 'gC'))[0].misses === 1, await storedOf(p, KEY, 'gC'));
-  // Show: the panel, at "Not found"
-  const shown = await p.evaluate(() => {
-    const r = window.__hl; r.toastAction.click();
-    const title = r.panelList.querySelector('[data-section="missing"]');
-    const lr = r.panelList.getBoundingClientRect(); const tr = title && title.getBoundingClientRect();
-    return { open: !r.panelEl.hidden, title: title && title.textContent, inView: !!tr && tr.top >= lr.top - 1 && tr.bottom <= lr.bottom + 1 };
-  });
-  check('Show opens the panel at Not found', shown.open && shown.title === 'Not found on the page (1)' && shown.inView, shown);
   // Forget from the menu; the label goes, Clear's count follows
+  await L.until(p, () => window.__hl.toastEl.hidden, null, 8000);   // the notice has no button to dismiss it: it times out
   await p.evaluate(() => window.__menu['Forget 1 annotation not found']());
   await p.waitForTimeout(200);
   check('Forget from the menu: no toast', (await L.toast(p)) === null, await L.toast(p));
@@ -79,7 +72,7 @@ async function scenarioNotice(browser) {
 async function scenarioAllMissing(browser) {
   const { ctx, page: p } = await L.open(browser, { html: base, store: { [KEY]: JSON.stringify([recGone(), recGone2()]) } });
   const seen = await watchToast(p, 18000);
-  check('all missing: wording', seen.includes('2 annotations not found · Show'), seen);
+  check('all missing: wording', seen.includes('2 annotations not found'), seen);
   const menu = await L.menu(p);
   check('all missing: menu', menu.includes('Clear 2 annotations on this page') && menu.includes('Forget 2 annotations not found'), menu);
   await ctx.close();
@@ -92,11 +85,9 @@ async function scenarioEditor(browser) {
   await p.keyboard.type('a draft');
   await L.until(p, () => /not found/.test(window.__hl.toastText.textContent) && !window.__hl.toastEl.hidden, null, 6500);
   const seen = [await L.toast(p)];
-  check('editor: notice shown while writing a note', seen.includes('1 annotation not found · Show'), seen);
-  await p.evaluate(() => window.__hl.toastAction.click());
-  await L.until(p, () => !window.__hl.panelEl.hidden);
-  const st = await p.evaluate(() => { const r = window.__hl; return { editor: !!r.editor, draft: r.noteInput.value, panel: !r.panelEl.hidden }; });
-  check('editor: Show leaves the note being written open', st.editor && st.draft === 'a draft' && st.panel, st);
+  check('editor: notice shown while writing a note', seen.includes('1 annotation not found'), seen);
+  const st = await p.evaluate(() => { const r = window.__hl; return { editor: !!r.editor, draft: r.noteInput.value, link: !r.toastAction.hidden }; });
+  check('editor: the notice has no link and leaves the note being written open', st.editor && st.draft === 'a draft' && !st.link, st);
   await ctx.close();
 }
 
@@ -135,7 +126,7 @@ async function scenarioHidden(browser) {
   await p.waitForTimeout(13000);
   check('hidden: no notice before the window ends', (await L.toast(p)) === null, await L.toast(p));
   const seen = await watchToast(p, 4500);
-  check('hidden: window runs once shown, then the notice', seen.includes('1 annotation not found · Show'), seen);
+  check('hidden: window runs once shown, then the notice', seen.includes('1 annotation not found'), seen);
   check('hidden: miss counted after the window', (await storedOf(p, KEY, 'gC'))[0].misses === 1, await storedOf(p, KEY, 'gC'));
   await ctx.close();
 }
@@ -174,14 +165,14 @@ async function scenarioPages(browser) {
   let menu = await L.menu(p);
   check('pages: menu counts this page only', menu.includes('Clear 2 annotations on this page') && menu.includes('Forget 1 annotation not found'), menu);
   const seen = await watchToast(p, 17000);
-  check('pages: notice counts this page only', seen.includes('1 annotation not found · Show'), seen);
+  check('pages: notice counts this page only', seen.includes('1 annotation not found'), seen);
   st = await L.stored(p, CANON);
   check('pages: no miss for the other page\'s record', !st.find(r => r.group === 'gP1').misses && st.find(r => r.group === 'gLeg').misses === 1, st);
   const panel = await p.evaluate(() => { const r = window.__hl; r.openPanel({ focus: false }); r.renderPanel(); return Array.from(r.panelList.querySelectorAll('.section-title, .item-meta')).map(e => e.textContent); });
   check('pages: panel lists it under Saved on other pages', panel.length === 5 && panel[1] === 'Not found on the page (1)' && !panel[2].includes(' on ') && panel[3] === 'Saved on other pages (1)' && panel[4].endsWith(' · on /t'), panel);
   await p.evaluate(() => window.__menu['Clear 2 annotations on this page']());
   await p.waitForTimeout(300);
-  check('pages: Clear offers Undo', (await L.toast(p)) === '1 annotation erased · Undo', await L.toast(p));
+  check('pages: Clear says so', (await L.toast(p)) === '1 annotation erased', await L.toast(p));
   st = await L.stored(p, CANON);
   check('pages: Clear keeps the other page\'s annotation', st.length === 1 && st[0].group === 'gP1', st);
   await ctx.close();

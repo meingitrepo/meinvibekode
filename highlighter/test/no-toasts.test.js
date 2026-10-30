@@ -16,8 +16,8 @@ const icon = page => page.evaluate(() => window.__hl.panelCopy.querySelector('sv
   }, id);
   const menuIcon = (page, id) => page.evaluate(i => window.__hl.menuButtons.get(i).querySelector('svg path.ic').getAttribute('d').slice(0, 11), id);
   L.check('menu: Shortcuts uses the keyboard icon', (await menuIcon(page, 'keys')) === 'M224,50H32A', await menuIcon(page, 'keys'));
-  L.check('menu: Annotations uses the list-magnifying-glass icon', (await menuIcon(page, 'panel')) === 'M34,64a6,6,', await menuIcon(page, 'panel'));
-  L.check('menu: Search all pages uses the binoculars icon', (await menuIcon(page, 'search')) === 'M233,147.24', await menuIcon(page, 'search'));
+  L.check('menu: Annotations uses the binoculars icon', (await menuIcon(page, 'panel')) === 'M233,147.24', await menuIcon(page, 'panel'));
+  L.check('menu: Search all pages uses the list-magnifying-glass icon', (await menuIcon(page, 'search')) === 'M34,64a6,6,', await menuIcon(page, 'search'));
   await L.altKey(page, 'k', true); await says('shortcut keys off', 'Shortcuts disabled');
   L.check('Shortcuts toast carries the keyboard icon', await toastIs(page, 'keys'), null);
   await L.altKey(page, 'k', true); await says('shortcut keys on', 'Shortcuts enabled');
@@ -38,16 +38,17 @@ const icon = page => page.evaluate(() => window.__hl.panelCopy.querySelector('sv
   await L.altKey(page, 'h'); await page.waitForTimeout(300);
   await L.selStr(page, '#p1', 'words to select'); await page.waitForTimeout(300);
   await L.altKey(page, 'd'); await page.waitForTimeout(300);
-  await says('erase', '1 annotation erased · Undo');
-  await page.evaluate(() => window.__hl.toastAction.click()); await page.waitForTimeout(300);
-  L.check('the Undo link brings the annotation back', (await L.wr(page)).length === 1, await L.wr(page));
-  await says('after the link', 'Undone · Redo');
-  await page.evaluate(() => window.__hl.toastAction.click()); await page.waitForTimeout(300);
-  L.check('the Redo link erases it again', (await L.wr(page)).length === 0, await L.wr(page));
-  await says('after Redo', 'Redone · Undo');
+  const noLinks = async name => L.check(name + ': no link on the toast', await page.evaluate(() => window.__hl.toastAction.hidden && window.__hl.toastAction2.hidden), null);
+  await says('erase', '1 annotation erased'); await noLinks('erase');
+  await L.altKey(page, 'z'); await page.waitForTimeout(300);
+  L.check('Alt+Z brings the annotation back', (await L.wr(page)).length === 1, await L.wr(page));
+  await says('Alt+Z', 'Undone'); await noLinks('undo');
+  await L.altKey(page, 'y'); await page.waitForTimeout(300);
+  L.check('Alt+Y erases it again', (await L.wr(page)).length === 0, await L.wr(page));
+  await says('Alt+Y', 'Redone'); await noLinks('redo');
   await L.altKey(page, 'z'); await page.waitForTimeout(300);
   L.check('Alt+Z undoes the erase', (await L.wr(page)).length === 1, await L.wr(page));
-  await says('Alt+Z', 'Undone · Redo');
+  await says('Alt+Z again', 'Undone');
   // Copy: the icon stays, a toast says how many were copied.
   await page.evaluate(() => window.__hl.openPanel()); await page.waitForTimeout(300);
   await page.evaluate(() => window.__hl.panelSelectAll.click()); await page.waitForTimeout(200);
@@ -59,8 +60,8 @@ const icon = page => page.evaluate(() => window.__hl.panelCopy.querySelector('sv
   L.check('copy toast carries the copy icon', await toastIs(page, 'copy'), null);
   await page.evaluate(() => { document.activeElement && document.activeElement.blur(); window.__hl.closePanel && window.__hl.closePanel(); }); await page.mouse.click(5, 5);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
-  const hid = await page.evaluate(() => { const t = window.__hl.toastEl; const i = t.querySelector(':scope > svg.icon'); return { txt: t.textContent, icon: i ? getComputedStyle(i).display : 'none', act: !window.__hl.toastAction.hidden && !window.__hl.toastAction.querySelector('svg') && window.__hl.toastAction.textContent === 'Show', first: window.__hl.toastEl.firstElementChild === i }; });
-  L.check('icon-button toast (Annotations hidden): one icon, on the left; Show is a text button', hid.txt.includes('Annotations hidden') && hid.icon !== 'none' && hid.first && hid.act, hid);
+  const hid = await page.evaluate(() => { const t = window.__hl.toastEl; const i = t.querySelector(':scope > svg.icon'); return { txt: t.textContent, icon: i ? getComputedStyle(i).display : 'none', act: window.__hl.toastAction.hidden && window.__hl.toastAction2.hidden, first: window.__hl.toastEl.firstElementChild === i }; });
+  L.check('icon-button toast (Annotations hidden): one icon, on the left, no link', hid.txt.includes('Annotations hidden') && hid.icon !== 'none' && hid.first && hid.act, hid);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
   await browser.close();
   console.log('FAILS', L.fails);

@@ -67,7 +67,7 @@
 
     // A message with an Undo link, for a change just made (Alt+Z does the same).
     function offerUndo(message) {
-        showToast(message, { icon: 'eraser', intent: 'success', action: { label: 'Undo', text: 'Undo', tip: 'Undo', shortcut: 'Alt+Z', run: undoLastAction } });
+        showToast(message, { icon: 'eraser', intent: 'success' });
     }
 
     // The toast stays while the pointer rests on it or its button has focus.
@@ -261,6 +261,5 @@
         const settings = readSettings();
         settings.fontHintVersion = version;
         writeSettings(settings);
-        const link =f => ({ label: `Get ${f.name}`, text: f.name, tip: `Open the ${f.name} download page`, keepEditor: true, anywhere: true, run: () => window.open(f.url, '_blank', 'noopener') });
-        showToast(`${missing.map(f => f.name).join(' and ')} not installed; using ${missing.map(f => f.fallback).join(' and ')}.`, { action: link(missing[0]), action2: missing[1] ? link(missing[1]) : null });
+        showToast(`${missing.map(f => f.name).join(' and ')} not installed; using ${missing.map(f => f.fallback).join(' and ')}.`);
     }

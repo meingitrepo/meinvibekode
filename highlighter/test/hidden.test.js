@@ -19,13 +19,10 @@ const check = L.check;
 async function toggle(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store });
   await L.altKey(p, 'v');
-  check('Alt+V hides and says so', (await hiddenNow(p)) === true && (await L.toast(p)) === 'Annotations hidden · Show', await L.toast(p));
+  check('Alt+V hides and says so', (await hiddenNow(p)) === true && (await L.toast(p)) === 'Annotations hidden', await L.toast(p));
   check('with the eye-off icon', (await icon(p)) === 'M52.44,36A6,6,0,0,0,', await icon(p));
   await L.altKey(p, 'v');
   check('Alt+V again shows them and says so', (await hiddenNow(p)) === false && (await L.toast(p)) === 'Annotations shown', await L.toast(p));
-  await L.altKey(p, 'v');
-  await p.evaluate(() => window.__hl.toastAction.click()); await p.waitForTimeout(100);
-  check('Show shows them and says so', (await hiddenNow(p)) === false && (await L.toast(p)) === 'Annotations shown', await L.toast(p));
   check('no page errors', p.__errors.length === 0, p.__errors);
   await ctx.close();
 }
@@ -44,11 +41,11 @@ async function removalShowsAgain(browser) {
   await L.altKey(p, 'v');
   await L.selStr(p, '#p1', 'alpha one');
   await L.altKey(p, 'd');
-  check('erasing while hidden: shown again, the erase offers Undo', (await hiddenNow(p)) === false && (await L.toast(p)) === '1 annotation erased · Undo', await L.toast(p));
+  check('erasing while hidden: shown again, the erase offers Undo', (await hiddenNow(p)) === false && (await L.toast(p)) === '1 annotation erased', await L.toast(p));
   await L.altKey(p, 'v');
-  check('hiding shows the hidden message', (await L.toast(p)) === 'Annotations hidden · Show', await L.toast(p));
+  check('hiding shows the hidden message', (await L.toast(p)) === 'Annotations hidden', await L.toast(p));
   await L.altKey(p, 'z');
-  check('Alt+Z still undoes, shows them, and says Undone', (await hiddenNow(p)) === false && (await L.toast(p)) === 'Undone · Redo' && (await L.wr(p)).length === 2, { t: await L.toast(p), w: await L.wr(p) });
+  check('Alt+Z still undoes, shows them, and says Undone', (await hiddenNow(p)) === false && (await L.toast(p)) === 'Undone' && (await L.wr(p)).length === 2, { t: await L.toast(p), w: await L.wr(p) });
   await ctx.close();
 }
 
@@ -60,7 +57,7 @@ async function otherToastSurvives(browser) {
   await L.altKey(p, 'n');   // nothing selected, nothing pointed at: a hint
   const hint = await L.toast(p);
   await L.altKey(p, 'v');
-  check('a plain hint doesn\'t replace the hidden message', hint === 'Annotations hidden · Show', hint);
+  check('a plain hint replaces the hidden message', hint === 'Nothing to add a note to', hint);
   await L.altKey(p, 'v');
   await L.selStr(p, '#p2', 'beta two');
   await L.altKey(p, 'd');   // erased: Undo offered (shows them first)

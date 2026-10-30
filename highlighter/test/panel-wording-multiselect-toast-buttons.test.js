@@ -65,13 +65,13 @@ const eTicks = page => page.evaluate(() => Array.from(window.__hl.everythingList
   await click(page, 'E .check', 4, { shiftKey: true });
   L.check('saved list: Shift+click on a tick reaches the end', (await eTicks(page)).endsWith('1'), await eTicks(page));
   await L.altKey(page, 'o', true); await page.waitForTimeout(100);
-  // 3 + 4: toast buttons (Show is the only one left; erasing no longer offers Undo)
+  // 3 + 4: no toast has a button (Undo and Show are gone; Alt+Z and Alt+V do the same)
   await L.selStr(page, '#p0', 'alpha'); await L.altKey(page, 'd'); await page.waitForTimeout(300);
-  L.check('erase offers Undo', (await L.toast(page)) === '1 annotation erased · Undo', await L.toast(page));
+  L.check('erase says so', (await L.toast(page)) === '1 annotation erased', await L.toast(page));
   await L.altKey(page, 'z'); await page.waitForTimeout(200);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
   const s = await page.evaluate(() => { const a = window.__hl.toastAction; return { text: a.textContent, icon: !!a.querySelector('svg'), label: a.dataset.label, key: a.dataset.shortcut || '', cls: a.className }; });
-  L.check('Show (annotations hidden) is a text button with a tooltip and Alt+V', s.text === 'Show' && !s.icon && /btn-small/.test(s.cls) && s.label === 'Show annotations' && s.key === 'Alt+V', s);
+  L.check('Annotations hidden has no button', s.text === '' && !s.icon, s);
   await page.evaluate(() => window.__hl.toastAction.click()); await page.waitForTimeout(200);
   await page.evaluate(() => window.__hl.showToast('Plain message'));
   L.check('a toast without an action hides the button', await page.evaluate(() => window.__hl.toastAction.hidden), null);

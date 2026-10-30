@@ -100,7 +100,7 @@ ${filler(40)}
   await page.evaluate(() => window.__hl.panelErase.click());
   await L.until(page, () => !Array.from(window.__hl.panelList.querySelectorAll('.item-text')).some(e => e.textContent === 'three four'));
   it = await L.items(page);
-  L.check('delete', !it.some(i => i.text === 'three four') && (await L.toast(page)) === '1 annotation erased · Undo', [it.length, await L.toast(page)]);
+  L.check('delete', !it.some(i => i.text === 'three four') && (await L.toast(page)) === '1 annotation erased', [it.length, await L.toast(page)]);
   st = await L.stored(page);
   L.check('delete stored', !st.some(r => r.text === 'three four'), st.length);
   await page.evaluate(() => window.__hl.uiRoot.activeElement && window.__hl.uiRoot.activeElement.blur()); await L.altKey(page, 'z');
@@ -118,7 +118,7 @@ ${filler(40)}
   L.check('select all ticks every row', all.n > 1 && all.ticked === all.n && all.all, all);
   await page.evaluate(() => window.__hl.panelErase.click());
   await L.until(page, () => !window.__hl.panelList.querySelector('.item:not(.missing)'));
-  L.check('erase all selected offers Undo', /^\d+ annotations erased · Undo$/.test(await L.toast(page)), await L.toast(page));
+  L.check('erase all selected says so', /^\d+ annotations erased$/.test(await L.toast(page)), await L.toast(page));
   await page.evaluate(() => window.__hl.uiRoot.activeElement && window.__hl.uiRoot.activeElement.blur()); await L.altKey(page, 'z');
   await L.until(page, () => window.__hl.panelList.querySelectorAll('.item:not(.missing)').length > 1);
   const restored = await page.evaluate(() => ({ off: window.__hl.panelErase.disabled, ticked: window.__hl.panelList.querySelectorAll('.item .check:checked').length }));

@@ -24,7 +24,7 @@ const state = page => page.evaluate(() => ({
   let s = await state(page);
   L.check('the script runs on a fresh site; the menu is one button', await page.evaluate(() => window.__hl.running) && s.shown && s.expanded === 'false' && !s.open, s);
   L.check('default corner is top left', s.rect.left < 20 && s.rect.top < 20, s.rect);
-  L.check('buttons are pen, toolbar, keys, undo, redo, panel, search, hide', s.ids === 'pen,toolbar,keys,undo,redo,panel,search,hide', s.ids);
+  L.check('buttons are pen, toolbar, keys, hide, undo, redo, panel, search', s.ids === 'pen,toolbar,keys,hide,undo,redo,panel,search', s.ids);
   L.check('no power button any more', await page.evaluate(() => !window.__hl.menuEl.querySelector('[aria-label^="Turn highlighter"]')));
   const hr = await rectOf(page, 'menuHandle'), er = await rectOf(page, 'menuExpand');
   L.check('the handle is on the left, then the expand icon button', s.expandIsIconButton && hr.right <= er.left + 1 && hr.left < er.left, { hr, er });

@@ -17,7 +17,7 @@ const info = page => page.evaluate(() => { const r = window.__hl; const t = r.to
   await L.altKey(page, 'h'); await page.waitForTimeout(300);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
   const u = await info(page);
-  L.check('Show is a text button, the toast has one icon (on the left)', (await L.toast(page)) === 'Annotations hidden · Show' && /btn-subtle/.test(u.link) && /btn-small/.test(u.link) && !u.icon, u);
+  L.check('Annotations hidden has no link', (await L.toast(page)) === 'Annotations hidden' && !u.icon, u);
   // No toast has a body line.
   const body = async name => { const i = await info(page); L.check(`${name} has no body`, i.body.length === 0, i); };
   await body('Show');

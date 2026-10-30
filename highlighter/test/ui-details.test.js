@@ -92,20 +92,6 @@ const tbRect = page => L.toolbar(page).then(t => t && t.rect);
     L.check('no page errors', page.__errors.length === 0, page.__errors);
     await ctx.close();
   }
-  {
-    // keyboard focus returns after the toast's button
-    const { ctx, page } = await L.open(browser, { html: HTML });
-    await L.selStr(page, '#p1', 'words to select'); await L.altKey(page, 'h');
-    await L.altKey(page, 'v');
-    await page.focus('#lnk'); await page.keyboard.press('Tab'); await page.waitForTimeout(100);
-    const inToast = await page.evaluate(() => window.__hl.toastEl.contains(window.__hl.uiRoot.activeElement));
-    await page.keyboard.press('Enter'); await page.waitForTimeout(200);
-    const after = await page.evaluate(() => document.activeElement && (document.activeElement.id || document.activeElement.tagName));
-    const w = await L.wr(page);
-    L.check('Tab reaches the toast', inToast, inToast);
-    L.check('focus back on the link after Show', after === 'lnk' && w.length === 1 && w[0].t === 'words to select', { after, w });
-    await ctx.close();
-  }
   const startNote = async p => { await L.selStr(p, '#p2', 'Shared phrase'); await L.altKey(p, 'n'); await p.keyboard.type('half-written note'); };
   const bare = s => s.filter(r => r.text === 'Shared phrase' && !r.note);
   const store = { 'https://example.test/a': JSON.stringify([{ xpath: '/html/body/p[9]', startOffset: 0, length: 9, key: 'h', text: 'Not here!', prefix: 'x', suffix: 'y', group: 'gm' }]) };
@@ -134,7 +120,7 @@ const tbRect = page => L.toolbar(page).then(t => t && t.rect);
     await startNote(page);
     await page.evaluate(() => window.__menu[Object.keys(window.__menu).find(k => /^Clear/.test(k))]()); await page.waitForTimeout(150);
     let s = await L.stored(page);
-    L.check('menu Clear with a note open: all gone, Undo offered', s.length === 0 && /erased · Undo$/.test(await L.toast(page) || ''), { s, t: await L.toast(page) });
+    L.check('menu Clear with a note open: all gone', s.length === 0 && /erased$/.test(await L.toast(page) || ''), { s, t: await L.toast(page) });
     await L.altKey(page, 'z');
     s = await L.stored(page);
     L.check('Alt+Z undoes the clear without the note\'s highlight', bare(s).length === 0 && s.some(r => r.text === 'words to select'), s);

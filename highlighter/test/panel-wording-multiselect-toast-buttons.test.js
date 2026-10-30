@@ -71,7 +71,7 @@ const eTicks = page => page.evaluate(() => Array.from(window.__hl.everythingList
   await L.altKey(page, 'z'); await page.waitForTimeout(200);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
   const s = await page.evaluate(() => { const a = window.__hl.toastAction; return { text: a.textContent, icon: !!a.querySelector('svg'), label: a.dataset.label, key: a.dataset.shortcut || '', cls: a.className }; });
-  L.check('Show (annotations hidden) is an icon button with a tooltip and Alt+V', s.text === '' && s.icon && /btn-icon/.test(s.cls) && s.label === 'Show annotations' && s.key === 'Alt+V', s);
+  L.check('Show (annotations hidden) is a text button with a tooltip and Alt+V', s.text === 'Show' && !s.icon && /btn-small/.test(s.cls) && s.label === 'Show annotations' && s.key === 'Alt+V', s);
   await page.evaluate(() => window.__hl.toastAction.click()); await page.waitForTimeout(200);
   await page.evaluate(() => window.__hl.showToast('Plain message'));
   L.check('a toast without an action hides the button', await page.evaluate(() => window.__hl.toastAction.hidden), null);

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.28
+// @version      9.29
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -695,7 +695,7 @@
         const hide = !annotationsHidden;
         if (!hide) { showAnnotations(); return; }
         setAnnotationsHidden(hide);
-        showToast('Annotations hidden', { icon: 'eye-slash', action: { label: 'Show', tip: 'Show annotations', shortcut: 'Alt+V', run: showAnnotations, keepEditor: true } });
+        showToast('Annotations hidden', { icon: 'eye-slash', action: { label: 'Show', text: 'Show', tip: 'Show annotations', shortcut: 'Alt+V', run: showAnnotations, keepEditor: true } });
     }
 
     // =====================================================================
@@ -3895,7 +3895,7 @@
            radius as .tip, an icon at the left end, no dismiss button; it fades on its own. */
         .toast { top: auto; left: 50%; right: auto; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 32px); padding: 6px 10px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
         .toast > .btn[aria-label="Dismiss"] { display: none; }
-        .toast > .icon { flex: none; margin: -2px 0 -2px -2px; }   /* at the left end, 20px, as far in as an icon button's icon */
+        .toast > .icon { flex: none; width: 16px; height: 16px; margin: 0 0 0 -2px; }   /* at the left end, 16px, as far in as an icon button's icon */
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 400; }
         /* Action buttons shrink to the tooltip's line: the pill stays one line high. */

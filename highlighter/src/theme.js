@@ -325,6 +325,6 @@
         const hide = !annotationsHidden;
         if (!hide) { showAnnotations(); return; }
         setAnnotationsHidden(hide);
-        showToast('Annotations hidden', { icon: 'eye-slash', action: { label: 'Show', tip: 'Show annotations', shortcut: 'Alt+V', run: showAnnotations, keepEditor: true } });
+        showToast('Annotations hidden', { icon: 'eye-slash', action: { label: 'Show', text: 'Show', tip: 'Show annotations', shortcut: 'Alt+V', run: showAnnotations, keepEditor: true } });
     }
 

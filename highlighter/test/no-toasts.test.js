@@ -31,7 +31,7 @@ const icon = page => page.evaluate(() => window.__hl.panelCopy.querySelector('sv
     const t = window.__hl.toastEl, i = t.querySelector(':scope > svg.icon'), r = i.getBoundingClientRect(), tr = t.getBoundingClientRect(), x = t.querySelector('.toast-text').getBoundingClientRect();
     return { w: Math.round(r.width), h: Math.round(r.height), before: x.left >= r.right, edge: Math.round(r.left - tr.left), first: t.firstElementChild === i };
   });
-  L.check('toast icon: 20px, first, 9px from the left edge, the text after it', geo.w === 20 && geo.h === 20 && geo.before && geo.edge === 9 && geo.first, geo);
+  L.check('toast icon: 16px, first, 9px from the left edge, the text after it', geo.w === 16 && geo.h === 16 && geo.before && geo.edge === 9 && geo.first, geo);
   await L.altKey(page, 'p'); await says('pen off', 'Pen mode disabled');
   L.check('menu: the pen button is called Pen mode', (await page.evaluate(() => window.__hl.menuButtons.get('pen').dataset.label)) === 'Pen mode', null);
   await L.selStr(page, '#p1', 'words to select'); await page.waitForTimeout(300);
@@ -59,8 +59,8 @@ const icon = page => page.evaluate(() => window.__hl.panelCopy.querySelector('sv
   L.check('copy toast carries the copy icon', await toastIs(page, 'copy'), null);
   await page.evaluate(() => { document.activeElement && document.activeElement.blur(); window.__hl.closePanel && window.__hl.closePanel(); }); await page.mouse.click(5, 5);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
-  const hid = await page.evaluate(() => { const t = window.__hl.toastEl; const i = t.querySelector(':scope > svg.icon'); return { txt: t.textContent, icon: i ? getComputedStyle(i).display : 'none', act: !window.__hl.toastAction.hidden, first: window.__hl.toastEl.firstElementChild === i }; });
-  L.check('icon-button toast (Annotations hidden): the icon is on the left, the Show button on the right', hid.txt.includes('Annotations hidden') && hid.icon !== 'none' && hid.first && hid.act, hid);
+  const hid = await page.evaluate(() => { const t = window.__hl.toastEl; const i = t.querySelector(':scope > svg.icon'); return { txt: t.textContent, icon: i ? getComputedStyle(i).display : 'none', act: !window.__hl.toastAction.hidden && !window.__hl.toastAction.querySelector('svg') && window.__hl.toastAction.textContent === 'Show', first: window.__hl.toastEl.firstElementChild === i }; });
+  L.check('icon-button toast (Annotations hidden): one icon, on the left; Show is a text button', hid.txt.includes('Annotations hidden') && hid.icon !== 'none' && hid.first && hid.act, hid);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
   await browser.close();
   console.log('FAILS', L.fails);

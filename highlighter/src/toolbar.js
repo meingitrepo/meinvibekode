@@ -116,7 +116,7 @@
         });
         items.push(toolbarDivider());
         const noteLabel = overlaps.length && overlaps[0].note ? 'Edit note' : 'Add note';
-        items.push(toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note-pencil' : 'note-blank'), noteLabel, 'Alt+N', act ? act.note : () => runToolbarAction(noteSelection)));
+        items.push(toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note' : 'note-blank'), noteLabel, 'Alt+N', act ? act.note : () => runToolbarAction(noteSelection)));
         if (overlaps.length) {
             items.push(toolButton(phosphorIcon('eraser'), act ? act.removeLabel : 'Erase', act ? act.removeKey : 'Alt+D', act ? act.remove : () => runToolbarAction(removeInSelection)));
         }
@@ -310,7 +310,7 @@
         if (off) hideToolbar();
         else scheduleToolbar();   // for text that is selected now
         refreshMenu();
-        showToast(off ? 'Selection toolbar disabled' : 'Selection toolbar enabled', { icon: 'highlighter' });
+        showToast(off ? 'Selection toolbar disabled' : 'Selection toolbar enabled', { icon: 'cursor-text' });
     }
 
     // A tap on a touch screen can clear the page selection even though the toolbar cancels

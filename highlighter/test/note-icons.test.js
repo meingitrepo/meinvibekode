@@ -4,7 +4,7 @@ const L = require('./lib');
 const html = `<html><body style="font:16px sans-serif;margin:40px">
 <p id="p">Alpha bravo charlie delta echo foxtrot golf hotel india juliet.</p></body></html>`;
 const d = (el) => el.evaluate(e => { const p = e.querySelector('svg path.ic'); return p && p.getAttribute('d').slice(0, 14); });
-const START = { add: 'M208,34H48A14,', edit: 'M228.24,59.76l', pencil: 'M225.91,74.79,', pinFill: 'M235.33,104l-5', pin: 'M233.91,82.79,', eye: 'M245.48,125.57', eyeOff: 'M52.44,36A6,6,' };
+const START = { add: 'M208,34H48A14,', edit: 'M90,96a6,6,0,0', pencil: 'M225.91,74.79,', pinFill: 'M235.33,104l-5', pin: 'M233.91,82.79,', eye: 'M245.48,125.57', eyeOff: 'M52.44,36A6,6,' };
 (async () => {
   const b = await L.launch();
   const { page } = await L.open(b, { html });
@@ -22,7 +22,7 @@ const START = { add: 'M208,34H48A14,', edit: 'M228.24,59.76l', pencil: 'M225.91,
   await page.evaluate(() => window.__hl.noteInput.focus()); await page.keyboard.type('hi');
   await page.keyboard.press('Enter'); await page.waitForTimeout(300);
   n = await noteBtn('penEl');
-  L.check('pen bar: Edit note uses the note-edit icon', (await d(n)) === START.edit, await d(n));
+  L.check('pen bar: Edit note uses the note icon', (await d(n)) === START.edit, await d(n));
   L.check('site menu: pen mode uses the pencil with a line', await page.evaluate(s => { const p = window.__hl.menuButtons.get('pen').querySelector('svg path.ic'); return p.getAttribute('d').startsWith(s); }, START.pencil), null);
   await L.altKey(page, 'KeyP');
   const hide = () => page.evaluate(() => { const p = window.__hl.menuButtons.get('hide').querySelector('svg path.ic'); return p.getAttribute('d').slice(0, 14); });

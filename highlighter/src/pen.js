@@ -36,7 +36,7 @@
         });
         // The note button always shows, grayed out until an annotation is selected, as in the selection toolbar.
         const noteLabel = pickedWrappers.some(w => w.getAttribute(NOTE_ATTR)) ? 'Edit note' : 'Add note';
-        const note = toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note-pencil' : 'note-blank'), noteLabel, 'Alt+N', () => picked && openNoteEditor(picked));
+        const note = toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note' : 'note-blank'), noteLabel, 'Alt+N', () => picked && openNoteEditor(picked));
         note.disabled = !pickedKey;
         note.tabIndex = -1;
         if (pickedKey) {

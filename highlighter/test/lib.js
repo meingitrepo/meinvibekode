@@ -35,7 +35,7 @@ var GM_info = window.__noGmInfo ? undefined : { script: { version: '9.99' } };
 `;
 const SRC = GM + instrument(fs.readFileSync(SCRIPT, 'utf8'));
 // onSend(page, key, old, value): called for each storage change the page makes (see live-sync.test.js).
-// headers: response headers for the page (see fixes-8.0.test.js).
+// headers: response headers for the page (see trusted-types-fixes.test.js).
 async function open(browser, opts) {
   const { html, store = {}, scheme = 'light', url = 'https://example.test/a', viewport = { width: 1100, height: 700 }, wait = 800, routes = null, hidden = null } = opts;
   const ctx = await browser.newContext({ colorScheme: scheme, viewport: realDsf ? null : viewport, deviceScaleFactor: realDsf ? undefined : +(process.env.DSF || 1) });

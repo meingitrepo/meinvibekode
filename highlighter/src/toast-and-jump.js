@@ -47,7 +47,6 @@
         const nextIcon = phosphorIcon(icon);
         toastIcon.replaceWith(nextIcon);
         toastIcon = nextIcon;
-        toastIcon.toggleAttribute('hidden', !!(action && !action.text));   // an icon button (Show) is the toast's icon
         toastEl.setAttribute('data-intent', intent);
         toastText.textContent = message;
         toastRun = action ? action.run : null;

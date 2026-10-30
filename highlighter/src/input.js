@@ -135,7 +135,8 @@
         setKeysSwitchedOff(off);
         if (off) releaseAccessKeys();
         refreshMenu();
-        showToast(off ? 'Shortcuts disabled' : 'Shortcuts enabled', { icon: 'keyboard' });
+        renderSiteMenu();
+        showToast(off ? 'Shortcuts disabled' : 'Shortcuts enabled', { icon: off ? 'keyboard-slash' : 'keyboard' });
     }
 
     function onKeyDown(e) {

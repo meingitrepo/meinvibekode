@@ -14,8 +14,7 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
 const store = { [KEY]: JSON.stringify([rec('//*[@id="p1"]', P1, 'alpha one', { group: 'gA' }), rec('//*[@id="p2"]', P2, 'beta two', { key: 'u', group: 'gB' })]) };
 const hiddenNow = p => p.evaluate(() => window.__hl.annotationsHidden);
 const icon = p => p.evaluate(() => { const d = window.__hl.toastEl.querySelector('svg path'); return d && d.getAttribute('d').slice(0, 20); });
-const results = [];
-const check = (name, ok, info) => results.push([name, ok, info]);
+const check = L.check;
 
 async function toggle(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store });
@@ -103,9 +102,5 @@ async function dark(browser) {
   const browser = await L.launch();
   await Promise.all([toggle, newAnnotation, removalShowsAgain, otherToastSurvives, jump, empty, dark]
     .map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
-  await browser.close();
-  let fails = 0;
-  results.forEach(([name, ok, info]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' :: ' + JSON.stringify(info)}`); if (!ok) fails++; });
-  console.log(`FAILS ${fails}`);
-  process.exit(fails);
+  await L.done(browser);
 })();

@@ -4,8 +4,7 @@ const P = i => `Paragraph number ${i} has several plain words that a reader migh
 const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title></head><body style="font:18px/1.6 serif;margin:40px;max-width:700px">
 <p id="p1">${P(1)}</p><p id="p2">${P(2)}</p><p id="p3">${P(3)}</p><p id="p4">${P(4)}</p><p id="p5">${P(5)}</p>
 <input id="f" value="a field with words"></body></html>`;
-const results = [];
-const check = (name, ok, info) => results.push([name, ok, info]);
+const check = L.check;
 // The pen's state is its blue (pressed) tool button; the pen bar has no label.
 const pill = p => p.evaluate(() => { const e = window.__hl.penEl; if (e.hidden) return null; const b = e.querySelector('button[aria-pressed="true"]'); return b ? 'Pen: ' + b.dataset.label.toLowerCase() : ''; });
 const selText = p => p.evaluate(() => getSelection().toString());
@@ -126,9 +125,5 @@ async function staleSelectionFromPanel(browser) {
 (async () => {
   const browser = await L.launch();
   await Promise.all([basics, startsWithLast, keyboardAndFields, restyleStillWorks, staleSelectionFromPanel, dark].map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
-  await browser.close();
-  let fails = 0;
-  results.forEach(([name, ok, info]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' :: ' + JSON.stringify(info)}`); if (!ok) fails++; });
-  console.log(`FAILS ${fails}`);
-  process.exit(fails);
+  await L.done(browser);
 })();

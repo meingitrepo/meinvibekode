@@ -35,8 +35,7 @@ async function watchToast(p, ms, stop) {
   return seen;
 }
 const storedOf = async (p, key, group) => (await L.stored(p, key)).filter(r => r.group === group);
-const results = [];
-const check = (name, ok, info) => results.push([name, ok, info]);
+const check = L.check;
 
 async function scenarioNotice(browser) {
   const { ctx, page: p } = await L.open(browser, { html: base, store: { [KEY]: JSON.stringify([recA(), recB(), recGone()]) } });
@@ -212,7 +211,5 @@ async function scenarioNoCanonical(browser) {
   const browser = await L.launch();
   await Promise.all([scenarioNotice, scenarioAllMissing, scenarioEditor, scenarioLate, scenarioHidden, scenarioPaused, scenarioPages, scenarioNoCanonical]
     .map(f => f(browser).catch(e => check(f.name + ' threw', false, String(e && e.stack || e)))));
-  results.forEach(([n, ok, info]) => L.check(n, ok, info));
-  console.log('FAILS', L.fails);
-  await browser.close();
+  await L.done(browser);
 })();

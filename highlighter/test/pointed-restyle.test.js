@@ -52,8 +52,7 @@ const watchPrevented = p => p.evaluate(() => {
   document.addEventListener('keydown', e => window.__prev.push([e.code, e.defaultPrevented]));
 });
 const lastPrevented = p => p.evaluate(() => (window.__prev[window.__prev.length - 1] || [])[1]);
-const results = [];
-const check = (name, ok, info) => results.push([name, ok, info]);
+const check = L.check;
 
 async function basic(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML, store: storeOf(recA(), recB()) });
@@ -258,9 +257,5 @@ async function editorOther(browser) {
   const browser = await L.launch();
   await Promise.all([basic, multiPiece, noTarget, hidden, panelHover, jumpFallback, noteCard, selectionWins, waitingPiece, legacyWaiting, dark, editorOther]
     .map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
-  await browser.close();
-  let fails = 0;
-  results.forEach(([name, ok, info]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' :: ' + JSON.stringify(info)}`); if (!ok) fails++; });
-  console.log(`FAILS ${fails}`);
-  process.exit(fails);
+  await L.done(browser);
 })();

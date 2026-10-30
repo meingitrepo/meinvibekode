@@ -1,8 +1,7 @@
 // Dividers must paint the same width in device pixels wherever they land (fractional zoom / DPR).
 const L = require('./lib');
 const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title></head><body style="font:18px/1.6 serif;margin:40px"><p id="p1">Some plain words to select here.</p></body></html>`;
-const results = [];
-const check = (name, ok, info) => results.push([name, ok, info]);
+const check = L.check;
 // Device-pixel columns that are painted (not the surface colour) across each divider, read back from a screenshot.
 async function widths(browser, dsf, bar) {
   const { ctx, page: p } = await L.open(browser, { html: HTML });
@@ -32,8 +31,5 @@ async function widths(browser, dsf, bar) {
     await browser.close();
     check(`${bar} dividers paint one width at DPR ${dsf}`, w.length >= 1 && new Set(w.map(s => String(s).split(':')[0])).size === 1, w);
   }
-  let fails = 0;
-  results.forEach(([n, ok, i]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${n}${ok ? '' : ' :: ' + JSON.stringify(i)}`); if (!ok) fails++; });
-  console.log(`FAILS ${fails}`);
-  process.exit(fails);
+  await L.done();
 })();

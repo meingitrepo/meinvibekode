@@ -1,7 +1,6 @@
 // 7.33 item 10: the toolbar is one Tab stop with arrow keys; Tab stays inside the note editor.
 const L = require('./lib');
-const results = [];
-const check = (name, ok, info) => results.push([name, ok, info]);
+const check = L.check;
 const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title></head><body style="font:18px/1.6 serif;margin:40px">
 <p id="p1">Plain words to mark in the first paragraph here.</p><button id="after">page button</button></body></html>`;
 const focused = p => p.evaluate(() => { const r = window.__hl; const a = r.uiRoot.activeElement; if (!a) return document.activeElement && document.activeElement.id || null;
@@ -50,9 +49,5 @@ async function editor(browser) {
 (async () => {
   const browser = await L.launch();
   await Promise.all([toolbar, editor].map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
-  await browser.close();
-  let fails = 0;
-  results.forEach(([name, ok, info]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' :: ' + JSON.stringify(info)}`); if (!ok) fails++; });
-  console.log(`FAILS ${fails}`);
-  process.exit(fails);
+  await L.done(browser);
 })();

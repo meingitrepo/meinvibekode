@@ -6,8 +6,7 @@ const NOTE = 'See https://example.org/a_(b). Also (www.test.org/x), and javascri
 const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title></head><body style="font:18px/1.6 serif;margin:40px"><p id="p1">${P1}</p></body></html>`;
 const at = P1.indexOf('alpha words');
 const store = { 'https://example.test/a': JSON.stringify([{ xpath: '//*[@id="p1"]', startOffset: at, length: 11, key: 'h', text: 'alpha words', prefix: P1.slice(0, at), suffix: P1.slice(at + 11, at + 11 + CTX), group: 'gA', note: NOTE }]) };
-const results = [];
-const check = (name, ok, info) => results.push([name, ok, info]);
+const check = L.check;
 (async () => {
   const browser = await L.launch();
   try {
@@ -21,9 +20,5 @@ const check = (name, ok, info) => results.push([name, ok, info]);
     check('no page errors', p.__errors.length === 0, p.__errors);
     await ctx.close();
   } catch (e) { check('crashed', false, e.stack); }
-  await browser.close();
-  let fails = 0;
-  results.forEach(([name, ok, info]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' :: ' + JSON.stringify(info)}`); if (!ok) fails++; });
-  console.log(`FAILS ${fails}`);
-  process.exit(fails);
+  await L.done(browser);
 })();

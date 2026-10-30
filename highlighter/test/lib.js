@@ -110,8 +110,8 @@ const setHidden = (page, h) => page.evaluate(h => { window.__hidden = h; documen
 const menu = page => page.evaluate(() => Object.keys(window.__menu || {}));
 // The panel's rows: annotations ({ g, missing, text, note, meta }) and section titles ({ label }).
 const items = page => page.evaluate(() => Array.from(window.__hl.panelList.children).map(el => el.dataset.group ? { g: el.dataset.group, missing: el.classList.contains('missing'), text: el.querySelector('.item-text').textContent, note: (el.querySelector('.item-note') || {}).textContent, meta: el.querySelector('.item-meta').textContent } : { label: el.textContent }));
-// Closes the browser and exits with the number of failed checks (see run.js).
-async function done(browser) { await browser.close(); console.log(fails ? `FAILS ${fails}` : 'ALL PASS'); process.exit(fails ? 1 : 0); }
+// Closes the browser (if given) and exits 1 when a check failed (see run.js).
+async function done(browser) { if (browser) await browser.close(); console.log(fails ? `FAILS ${fails}` : 'ALL PASS'); process.exit(fails ? 1 : 0); }
 // Waits until fn(arg) is true in the page (false after `timeout` ms), for checks on work the script does later.
 const until = (page, fn, arg, timeout = 5000) => page.waitForFunction(fn, arg, { timeout, polling: 50 }).then(() => true, () => false);
 // Waits until the page has stopped scrolling (scroll position unchanged for 250 ms), e.g. after a smooth scroll.

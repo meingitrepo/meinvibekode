@@ -4,8 +4,7 @@
 // are sent as Chrome gets them from a real keyboard (with text), not as Playwright's
 // keyboard.press sends them (no text, no access keys).
 const L = require('./lib');
-const results = [];
-const check = (name, ok, info) => results.push([name, ok, info]);
+const check = L.check;
 const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title></head><body style="font:18px/1.6 serif;margin:40px">
 <p id="p1">Plain words to mark in the first paragraph here.</p>
 <a href="#" accesskey="z">main</a> <a href="#" accesskey="h">history</a> <a href="#" accesskey="d">delete</a>
@@ -75,9 +74,5 @@ async function run(browser) {
 (async () => {
   const browser = await L.launch();
   await run(browser).catch(e => check('crashed', false, e.stack));
-  await browser.close();
-  let fails = 0;
-  results.forEach(([name, ok, info]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' :: ' + JSON.stringify(info)}`); if (!ok) fails++; });
-  console.log(`FAILS ${fails}`);
-  process.exit(fails);
+  await L.done(browser);
 })();

@@ -18,8 +18,7 @@ const store = {
   'https://www.third.test/old': JSON.stringify([{ xpath: '/p', startOffset: 0, length: 5, key: 'h', text: 'ancient words', group: 'gT', added: T(1) }]),
   'rnh:settings': JSON.stringify({ disabled: [] })
 };
-const results = [];
-const check = (name, ok, info) => results.push([name, ok, info]);
+const check = L.check;
 const state = p => p.evaluate(() => { const r = window.__hl; if (r.everythingEl.hidden) return null;
   return { count: r.everythingCount.textContent, pages: Array.from(r.everythingList.querySelectorAll('.page')).map(s => ({
     head: s.querySelector('.page-head').textContent, open: s.querySelector('.page-head').getAttribute('aria-expanded'),
@@ -128,9 +127,5 @@ async function dark(browser) {
 (async () => {
   const browser = await L.launch();
   await Promise.all([main, empty, dark].map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
-  await browser.close();
-  let fails = 0;
-  results.forEach(([name, ok, info]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' :: ' + JSON.stringify(info)}`); if (!ok) fails++; });
-  console.log(`FAILS ${fails}`);
-  process.exit(fails);
+  await L.done(browser);
 })();

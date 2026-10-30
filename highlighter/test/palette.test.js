@@ -1,7 +1,6 @@
 // 7.33 item 8: dark palette and automatic dark / light text on highlights.
 const L = require('./lib');
-const results = [];
-const check = (name, ok, info) => results.push([name, ok, info]);
+const check = L.check;
 const HTML = (bodyStyle) => `<!doctype html><html><head><meta charset="utf-8"><title>t</title></head><body style="font:18px/1.6 serif;margin:40px;${bodyStyle}">
 <p id="p1">Plain words to mark in the first paragraph here.</p>
 <div id="banner" style="background:#ffcc80;color:#fff;padding:8px"><p id="p2">White words on an amber banner to mark here.</p></div>
@@ -58,9 +57,5 @@ async function dark(browser) {
 (async () => {
   const browser = await L.launch();
   await Promise.all([light, dark].map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
-  await browser.close();
-  let fails = 0;
-  results.forEach(([name, ok, info]) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' :: ' + JSON.stringify(info)}`); if (!ok) fails++; });
-  console.log(`FAILS ${fails}`);
-  process.exit(fails);
+  await L.done(browser);
 })();

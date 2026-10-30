@@ -104,7 +104,7 @@
         hideBtn.dataset.label = annotationsHidden ? 'Show annotations' : 'Hide annotations';
         hideBtn.replaceChildren(phosphorIcon(annotationsHidden ? 'eye-slash' : 'eye'));
         hideBtn.setAttribute('aria-label', `${hideBtn.dataset.label} (Alt+V)`);
-        hideBtn.setAttribute('aria-pressed', String(!!annotationsHidden));
+        hideBtn.setAttribute('aria-pressed', String(!annotationsHidden));   // lit while annotations are shown (the default)
         const dark = computeDarkMode();
         menuHost.setAttribute('data-theme', dark ? 'dark' : 'light');
         const hidden = menuHiddenHere();

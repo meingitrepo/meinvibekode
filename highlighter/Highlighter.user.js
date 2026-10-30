@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.40
+// @version      9.41
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -6842,7 +6842,7 @@
         hideBtn.dataset.label = annotationsHidden ? 'Show annotations' : 'Hide annotations';
         hideBtn.replaceChildren(phosphorIcon(annotationsHidden ? 'eye-slash' : 'eye'));
         hideBtn.setAttribute('aria-label', `${hideBtn.dataset.label} (Alt+V)`);
-        hideBtn.setAttribute('aria-pressed', String(!!annotationsHidden));
+        hideBtn.setAttribute('aria-pressed', String(!annotationsHidden));   // lit while annotations are shown (the default)
         const dark = computeDarkMode();
         menuHost.setAttribute('data-theme', dark ? 'dark' : 'light');
         const hidden = menuHiddenHere();

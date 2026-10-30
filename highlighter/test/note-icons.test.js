@@ -27,9 +27,12 @@ const START = { add: 'M208,34H48A14,', edit: 'M90,96a6,6,0,0', pencil: 'M225.9,7
   await L.altKey(page, 'KeyP');
   L.check('site menu: pen mode off shows the slashed pencil', await page.evaluate(s => window.__hl.menuButtons.get('pen').querySelector('svg path.ic').getAttribute('d').startsWith(s), START.pencilOff), null);
   const hide = () => page.evaluate(() => { const p = window.__hl.menuButtons.get('hide').querySelector('svg path.ic'); return p.getAttribute('d').slice(0, 14); });
+  const lit = () => page.evaluate(() => window.__hl.menuButtons.get('hide').getAttribute('aria-pressed'));
   L.check('hide button shows the eye while annotations are visible', (await hide()) === START.eye, await hide());
+  L.check('hide button is lit (pressed) while annotations are visible', (await lit()) === 'true', await lit());
   await L.altKey(page, 'KeyV'); await page.waitForTimeout(300);
   L.check('hide button shows eye-off while they are hidden', (await hide()) === START.eyeOff, await hide());
+  L.check('hide button is not lit while they are hidden', (await lit()) === 'false', await lit());
   await L.altKey(page, 'KeyV'); await page.waitForTimeout(300);
   L.check('hide button back to the eye', (await hide()) === START.eye, await hide());
   await b.close();

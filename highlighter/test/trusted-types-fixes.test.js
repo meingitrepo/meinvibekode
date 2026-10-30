@@ -47,8 +47,8 @@ const L = require('./lib');
     await L.selStr(page, '#p', 'bravo'); await L.altKey(page, 'n'); await page.waitForTimeout(200);
     const focusLabel = () => page.evaluate(() => window.__hl.uiRoot.activeElement && window.__hl.uiRoot.activeElement.dataset.label);
     let focused = null;
-    for (let i = 0; i < 8 && focused !== 'Delete note'; i++) { await page.keyboard.press('Tab'); focused = await focusLabel(); }
-    L.check('setup: Delete note has focus', focused === 'Delete note', focused);
+    for (let i = 0; i < 8 && focused !== 'Erase note'; i++) { await page.keyboard.press('Tab'); focused = await focusLabel(); }
+    L.check('setup: Delete note has focus', focused === 'Erase note', focused);
     await page.keyboard.press('Enter'); await page.waitForTimeout(300);
     const w = await L.wr(page);
     L.check('Enter on Delete deletes the note, the highlight stays', w.length === 1 && !w[0].n, w);

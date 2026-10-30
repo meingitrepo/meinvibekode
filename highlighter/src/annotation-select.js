@@ -292,10 +292,13 @@
         e.preventDefault();
     }
 
+    function listHasTicks() { return panelChecked.size > 0 || everythingChecked.size > 0; }
+
     function onDocumentClick(e) {
         if (isUiEvent(e)) return;   // the note card, the toast's Undo: the selection stays
         const group = clickedGroup(e);
         if (group && editor) return;   // while a note is edited, clicking annotations selects nothing
+        if (!group && listHasTicks()) return;   // the Alt+O / Alt+Shift+O lists keep their ticked annotations selected
         if (!group || getActiveRange()) { clearSelectedGroups(); return; }
         if (e.ctrlKey) {
             setSelectedGroups(selectedGroups.includes(group) ? selectedGroups.filter(g => g !== group) : selectedGroups.concat(group));

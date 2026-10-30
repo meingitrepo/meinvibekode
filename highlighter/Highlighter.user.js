@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.32
+// @version      9.33
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -4372,7 +4372,7 @@
     // The note editor's header buttons: tips above them, flipping below near the top of the view.
     addLabelTip(noteSave, 'Save note', 'Enter', () => false);
     addLabelTip(noteDiscard, 'Discard changes', 'Esc', () => false);
-    addLabelTip(noteDelete, 'Delete note', 'Delete', () => false);
+    addLabelTip(noteDelete, 'Erase note', 'Delete', () => false);
     // The note preview sits below its text, so its tip goes below too, off the text.
     addLabelTip(cardPin, 'Pin note', 'Alt+L', () => true);
 
@@ -5710,10 +5710,13 @@
         e.preventDefault();
     }
 
+    function listHasTicks() { return panelChecked.size > 0 || everythingChecked.size > 0; }
+
     function onDocumentClick(e) {
         if (isUiEvent(e)) return;   // the note card, the toast's Undo: the selection stays
         const group = clickedGroup(e);
         if (group && editor) return;   // while a note is edited, clicking annotations selects nothing
+        if (!group && listHasTicks()) return;   // the Alt+O / Alt+Shift+O lists keep their ticked annotations selected
         if (!group || getActiveRange()) { clearSelectedGroups(); return; }
         if (e.ctrlKey) {
             setSelectedGroups(selectedGroups.includes(group) ? selectedGroups.filter(g => g !== group) : selectedGroups.concat(group));

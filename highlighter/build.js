@@ -31,6 +31,8 @@ const PARTS = [
     'markdown.js',                  // the page's annotations, Copy as Markdown
     'panel.js',                     // annotations panel (Alt+O)
     'search.js',                    // every page's annotations (Alt+Shift+O)
+    'changelog.js',                 // the release changelog (release.sh adds entries)
+    'help.js',                      // Alt+Shift+H shortcut guide, Alt+Shift+W changelog
     'site-menu.js',                 // the sticky menu: this site's switch and its tools
     'live-sync.js',                 // other tabs' changes to this page, as they happen
     'start-and-boot.js',            // page-wide UI events, start / stop, menu, boot

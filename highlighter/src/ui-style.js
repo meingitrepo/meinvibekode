@@ -337,6 +337,10 @@
         .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 12px 0 0; }
         .everything-box .panel-header { margin: -8px 8px 4px 12px; }
         .everything-box .field { flex: none; margin: 0 12px 8px; }
+        .help-body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 12px 12px; overscroll-behavior: contain; }
+        .help-row { display: flex; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); }
+        .help-key { flex: none; width: 11em; color: var(--ink-3); }
+        .help-text { font-family: ${SERIF_FONT}; overflow-wrap: anywhere; }
         .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .page-head {
             display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 6px 4px; border: 0;

@@ -71,8 +71,9 @@ for attempt in 1 2 3; do
     cur=$(git show origin/main:$H/src/header.js | sed -n 's/^\/\/ @version *//p' | head -1)
     ver="${cur%%.*}.$(( ${cur#*.} + 1 ))"
     sed -i "s/^\(\/\/ @version *\).*/\1$ver/" $H/src/header.js
+    node "$tools/changelog-add.js" "$ver" "$what"   # the Alt+Shift+W changelog
     (cd $H && node build.js >/dev/null && node build.js --check)
-    git add $H/src/header.js $H/Highlighter.user.js
+    git add $H/src/header.js $H/src/changelog.js $H/Highlighter.user.js
     git commit -q --amend -m "$ver: $msg"
     if git push -q origin HEAD:main; then
         echo "PUSHED $ver ($(git rev-parse --short HEAD)) to main"

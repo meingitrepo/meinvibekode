@@ -3379,6 +3379,9 @@
             next.focus({ preventScroll: true });
             return;
         }
+        // The shortcut guide / changelog dialog: Esc closes it, nothing else of ours acts under it.
+        if (e.key === 'Escape' && !helpEl.hidden) { e.preventDefault(); closeHelp(); return; }
+        if (!helpEl.hidden && !(e.altKey && e.shiftKey && (e.code === 'KeyH' || e.code === 'KeyW'))) return;
         // Everything saved covers the page: the page's keys wait until it closes.
         if (!everythingEl.hidden && e.code !== 'KeyO') return;
         // Esc closes a note pinned by clicking its badge.
@@ -3396,6 +3399,11 @@
         if (editor && isUiEvent(e)) return;   // focus is on the open note editor's buttons
         // Typing in the panel's filter box: only the panel and jump keys act.
         if (isUiEvent(e) && uiRoot.activeElement === panelFilter && !/^Key[OJK]$/.test(e.code)) return;
+        if (e.shiftKey && (e.code === 'KeyH' || e.code === 'KeyW') && !e.repeat) {
+            e.preventDefault();
+            toggleHelp(e.code === 'KeyH' ? 'keys' : 'changelog');
+            return;
+        }
         const code = e.code;
         if (!COMMAND_CODES.has(code) && (e.shiftKey || !CODE_TO_STYLE.has(code))) return;
         syncLocation();
@@ -3924,6 +3932,10 @@
         .everything-box { position: relative; display: flex; flex-direction: column; width: min(600px, 100%); max-height: 100%; padding: 12px 0 0; }
         .everything-box .panel-header { margin: -8px 8px 4px 12px; }
         .everything-box .field { flex: none; margin: 0 12px 8px; }
+        .help-body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 12px 12px; overscroll-behavior: contain; }
+        .help-row { display: flex; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); }
+        .help-key { flex: none; width: 11em; color: var(--ink-3); }
+        .help-text { font-family: ${SERIF_FONT}; overflow-wrap: anywhere; }
         .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .page-head {
             display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 6px 4px; border: 0;
@@ -6736,6 +6748,93 @@
             jumpToGroup(link.dataset.group, { showNote: true });
         }
     });
+    // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
+    const CHANGELOG = [
+        // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ['9.42', 'List-checks icon for Alt+O'],
+        ['9.41', 'Hide button pressed while annotations are shown'],
+        ['9.40', 'Alt+Shift+O keeps the magnifying-glass icon'],
+        ['9.38', 'Magnifying-glass icons for the search lists'],
+        ['9.37', 'Shortcuts-off icon drawn like Phosphor\'s slash icons'],
+        ['9.36', 'Erase note is disabled until the note is saved'],
+        ['9.35', 'Keyboard-slash icon when shortcuts are off'],
+        ['9.34', 'Pen mode icon shows on or off'],
+        ['9.33', 'Erase note tooltip; clicks on empty page keep list-ticked annotations selected']
+    ];
+    // --- Shortcut guide (Alt+Shift+H) and release changelog (Alt+Shift+W): one dialog, two contents ---
+    const SHORTCUT_GUIDE = [
+        ['Alt+1 / Alt+2 / Alt+H', 'Highlight in cyan / magenta / yellow'],
+        ['Alt+U / Alt+S', 'Underline / strike through'],
+        ['Alt+N', 'Add or edit a note'],
+        ['Alt+L', 'Pin the note preview'],
+        ['Alt+D', 'Delete the annotation (note first)'],
+        ['Alt+Shift+D', 'Clear every annotation on the page'],
+        ['Alt+Z / Alt+Y', 'Undo / redo'],
+        ['Alt+V', 'Hide or show annotations'],
+        ['Alt+P', 'Pen mode'],
+        ['Alt+T', 'Selection toolbar on or off'],
+        ['Alt+J / Alt+K', 'Jump to the next / previous annotation'],
+        ['Alt+O', 'Annotations of this page'],
+        ['Alt+Shift+O', 'Search every page'],
+        ['Alt+Shift+M', 'Show or hide the menu'],
+        ['Alt+Shift+K', 'Shortcuts on or off'],
+        ['Alt+Shift+H', 'This guide'],
+        ['Alt+Shift+W', 'What\'s new: the release changelog']
+    ];
+
+    const helpTitle = makeEl('div', { class: 'panel-count' });
+    const helpClose = makeButton({ icon: phosphorIcon('x') });
+    const helpBody = makeEl('div', { class: 'help-body' });
+    const helpEl = makeEl('div', { class: 'everything help', hidden: '' }, [
+        makeEl('div', { class: 'surface everything-box', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'help-title' }, [
+            makeEl('div', { class: 'panel-header' }, [helpTitle, makeEl('div', { class: 'panel-actions' }, [helpClose])]),
+            helpBody
+        ])
+    ]);
+    helpTitle.id = 'help-title';
+    uiRoot.append(helpEl);
+    let helpKind = null;
+    let helpReturnFocus = null;
+
+    function openHelp(kind) {
+        if (!running) return;
+        const dark = computeDarkMode();
+        ensureUi(dark);
+        helpEl.setAttribute('data-theme', dark ? 'dark' : 'light');
+        if (helpEl.hidden) {
+            const focused = document.activeElement;
+            helpReturnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
+            hideToolbar();
+            hideNoteCard();
+        }
+        helpKind = kind;
+        const rows = kind === 'keys' ? SHORTCUT_GUIDE : CHANGELOG;
+        helpTitle.textContent = kind === 'keys' ? 'Shortcuts' : 'What\'s new';
+        helpBody.replaceChildren(...rows.map(([a, b]) => makeEl('div', { class: 'help-row' }, [
+            makeEl('span', { class: 'help-key', text: a }),
+            makeEl('span', { class: 'help-text', text: b })
+        ])));
+        helpEl.hidden = false;
+        helpClose.focus({ preventScroll: true });
+    }
+
+    function closeHelp() {
+        if (helpEl.hidden) return;
+        releaseFocus(helpEl);
+        helpEl.hidden = true;
+        helpKind = null;
+        const back = helpReturnFocus;
+        helpReturnFocus = null;
+        if (back && back.isConnected && typeof back.focus === 'function') back.focus({ preventScroll: true });
+    }
+
+    function toggleHelp(kind) {
+        if (!helpEl.hidden && helpKind === kind) closeHelp();
+        else openHelp(kind);
+    }
+
+    helpClose.addEventListener('click', closeHelp);
+    helpEl.addEventListener('mousedown', e => { if (e.target === helpEl) closeHelp(); });
     // =====================================================================
     // The sticky menu: a handle, one expand button, then a row of tool buttons
     // =====================================================================

@@ -119,6 +119,7 @@
         stopLateWatcher();
         clearTimeout(reclaimTimer);
         clearTimeout(fontHintTimer);
+        clearTimeout(changelogTimer);
         if (nav) { clearTimeout(nav.timer); nav = null; }
         clearTimeout(restoreTimer);
         clearTimeout(redrawTimer);
@@ -232,4 +233,5 @@
     renderSiteMenu();
     refreshMenu();
     fontHintTimer = setTimeout(maybeHintMissingFonts, FONT_HINT_DELAY_MS);
+    changelogTimer = setTimeout(maybeShowChangelog, FONT_HINT_DELAY_MS + 1000);
 })();

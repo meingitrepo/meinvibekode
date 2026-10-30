@@ -30,17 +30,18 @@
     ]);
     helpTitle.id = 'help-title';
     uiRoot.append(helpEl);
+    let changelogTimer = null;
     let helpKind = null;
     let helpReturnFocus = null;
 
-    function openHelp(kind) {
+    function openHelp(kind, auto = false) {
         if (!running) return;
         const dark = computeDarkMode();
         ensureUi(dark);
         helpEl.setAttribute('data-theme', dark ? 'dark' : 'light');
         if (helpEl.hidden) {
             const focused = document.activeElement;
-            helpReturnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
+            helpReturnFocus = auto ? null : focused && focused !== document.body && focused !== uiHost ? focused : null;
             hideToolbar();
             hideNoteCard();
         }
@@ -52,7 +53,7 @@
             makeEl('span', { class: 'help-text', text: b })
         ])));
         helpEl.hidden = false;
-        helpClose.focus({ preventScroll: true });
+        if (!auto) helpClose.focus({ preventScroll: true });   // opened by itself it leaves the page's typing alone
     }
 
     function closeHelp() {
@@ -72,3 +73,18 @@
 
     helpClose.addEventListener('click', closeHelp);
     helpEl.addEventListener('mousedown', e => { if (e.target === helpEl) closeHelp(); });
+
+    // After an update the changelog opens once, a little after the font hint's moment. The version is recorded
+    // (as changelogVersion in the settings) only when it is shown: a hidden tab, a site with the tool off or
+    // another dialog up skip it and it comes back on the next load.
+    function maybeShowChangelog() {
+        if (!running) return;
+        const version = typeof GM_info !== 'undefined' && GM_info && GM_info.script && GM_info.script.version;
+        if (!version || readSettings().changelogVersion === version) return;
+        if (!siteListed('toolbarOnSites') && !siteListed('keysOnSites')) return;
+        if (document.hidden || !helpEl.hidden || !everythingEl.hidden || editor) return;
+        const settings = readSettings();
+        settings.changelogVersion = version;
+        writeSettings(settings);
+        openHelp('changelog', true);
+    }

@@ -21,6 +21,18 @@ const state = p => p.evaluate(() => { const h = window.__hl.helpEl; return h.hid
   await L.altKey(p, 'k', true);
   await L.altKey(p, 'h', true);
   check('with the shortcuts switched off Alt+Shift+H does nothing', await state(p) === null, null);
-  await ctx.close(); await browser.close();
+  await ctx.close();
+  // After an update (the version differs from the last one shown) the changelog opens by itself, once.
+  const seen = pg => pg.evaluate(() => { try { return JSON.parse(window.__gm['rnh:settings']).changelogVersion; } catch (e) { return 'unreadable'; } });
+  const auto = async settings => { const r = await L.open(browser, { html: HTML, changelog: true, store: { 'rnh:settings': JSON.stringify(settings) } }); await r.page.waitForTimeout(4800); return r; };
+  let r = await auto({ disabled: [], changelogVersion: '9.98' });
+  s = await state(r.page);
+  check('a new version opens the changelog by itself', !!s && /What's new/.test(s.title), JSON.stringify(s));
+  check('and records the version as shown', await seen(r.page) === '9.99', await seen(r.page));
+  await r.ctx.close();
+  r = await auto({ disabled: [], changelogVersion: '9.99' });
+  check('the same version stays quiet', await state(r.page) === null, null);
+  await r.ctx.close();
+  await browser.close();
   console.log('FAILS', L.fails);
 })().catch(e => { console.error(e); process.exit(1); });

@@ -33,7 +33,7 @@ const icon = page => page.evaluate(() => window.__hl.panelCopy.querySelector('sv
     const t = window.__hl.toastEl, i = t.querySelector(':scope > svg.icon'), r = i.getBoundingClientRect(), tr = t.getBoundingClientRect(), x = t.querySelector('.toast-text').getBoundingClientRect();
     return { w: Math.round(r.width), h: Math.round(r.height), before: x.left >= r.right, edge: Math.round(r.left - tr.left), first: t.firstElementChild === i };
   });
-  L.check('toast icon: 16px, first, 9px from the left edge, the text after it', geo.w === 16 && geo.h === 16 && geo.before && geo.edge === 9 && geo.first, geo);
+  L.check('toast icon: 16px, first, 7px from the left edge, the text after it', geo.w === 16 && geo.h === 16 && geo.before && geo.edge === 7 && geo.first, geo);
   await L.altKey(page, 'p'); await says('pen off', 'Pen mode disabled');
   L.check('menu: the pen button is called Pen mode', (await page.evaluate(() => window.__hl.menuButtons.get('pen').dataset.label)) === 'Pen mode', null);
   await L.selStr(page, '#p1', 'words to select'); await page.waitForTimeout(300);

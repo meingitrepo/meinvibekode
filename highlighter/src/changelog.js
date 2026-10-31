@@ -1,6 +1,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.58", "Corrected two stale test checks"],
         ["9.57", "Icon checks compare icon names instead of raw SVG path text, so redrawing an icon no longer fails tests"],
         ["9.56", "Make no-toasts the single home for toast wording"],
         ["9.55", "Selected count no longer cut off: panel is 400px wide"],

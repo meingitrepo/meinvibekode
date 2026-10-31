@@ -27,7 +27,8 @@ const eTicks = page => page.evaluate(() => Array.from(window.__hl.everythingList
   await page.waitForTimeout(100);
   await click(page, 'P[data-act="check"]', 1); await click(page, 'P[data-act="check"]', 3);
   L.check('selected title uses "of"', (await title()) === '2 of 5 annotations selected', await title());
-  L.check('title stays on one line', await page.evaluate(() => window.__hl.panelCount.getBoundingClientRect().height < 24), null);
+  const titleBox = await page.evaluate(() => { const c = window.__hl.panelCount; return { h: c.getBoundingClientRect().height, line: parseFloat(getComputedStyle(c).lineHeight), scroll: c.scrollWidth, client: c.clientWidth }; });
+  L.check('title stays on one line, not cut off', titleBox.h <= titleBox.line && titleBox.scroll <= titleBox.client, titleBox);
   // 2: Ctrl/Shift in the Alt+O list. Ticked: rows 1 and 3.
   await click(page, 'P[data-act="jump"]', 0, { ctrlKey: true });
   L.check('Ctrl+click on a row toggles it', (await ticks(page)) === '11010', await ticks(page));

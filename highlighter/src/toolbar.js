@@ -310,7 +310,8 @@
         if (off) hideToolbar();
         else scheduleToolbar();   // for text that is selected now
         refreshMenu();
-        showToast(off ? 'Selection toolbar disabled' : 'Selection toolbar enabled', { icon: 'cursor' });
+        renderSiteMenu();
+        showToast(off ? 'Selection toolbar disabled' : 'Selection toolbar enabled', { icon: off ? 'cursor-text-slash' : 'cursor-text' });
     }
 
     // A tap on a touch screen can clear the page selection even though the toolbar cancels

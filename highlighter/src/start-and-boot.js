@@ -119,7 +119,6 @@
         teardown.splice(0).forEach(fn => { try { fn(); } catch (e) { /* already gone */ } });
         stopLateWatcher();
         clearTimeout(reclaimTimer);
-        clearTimeout(changelogTimer);
         if (nav) { clearTimeout(nav.timer); nav = null; }
         clearTimeout(restoreTimer);
         clearTimeout(redrawTimer);
@@ -232,5 +231,4 @@
     start();
     renderSiteMenu();
     refreshMenu();
-    changelogTimer = setTimeout(maybeShowChangelog, CHANGELOG_DELAY_MS);
 })();

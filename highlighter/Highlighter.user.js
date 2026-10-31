@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.60
+// @version      9.61
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3403,9 +3403,9 @@
             next.focus({ preventScroll: true });
             return;
         }
-        // The shortcut guide / changelog dialog: Esc closes it, nothing else of ours acts under it.
+        // The shortcut guide dialog: Esc closes it, nothing else of ours acts under it.
         if (e.key === 'Escape' && !helpEl.hidden) { e.preventDefault(); closeHelp(); return; }
-        if (!helpEl.hidden && !(e.altKey && e.shiftKey && (e.code === 'KeyH' || e.code === 'KeyW'))) return;
+        if (!helpEl.hidden && !(e.altKey && e.shiftKey && e.code === 'KeyH')) return;
         // Everything saved covers the page: the page's keys wait until it closes.
         if (!everythingEl.hidden && e.code !== 'KeyO') return;
         // Esc closes a note pinned by clicking its badge.
@@ -3423,9 +3423,9 @@
         if (editor && isUiEvent(e)) return;   // focus is on the open note editor's buttons
         // Typing in the panel's filter box: only the panel and jump keys act.
         if (isUiEvent(e) && uiRoot.activeElement === panelFilter && !/^Key[OJK]$/.test(e.code)) return;
-        if (e.shiftKey && (e.code === 'KeyH' || e.code === 'KeyW') && !e.repeat) {
+        if (e.shiftKey && e.code === 'KeyH' && !e.repeat) {
             e.preventDefault();
-            toggleHelp(e.code === 'KeyH' ? 'keys' : 'changelog');
+            toggleHelp();
             return;
         }
         const code = e.code;
@@ -3960,11 +3960,6 @@
         .help-row { display: flex; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); }
         .help-key { flex: none; width: 11em; color: var(--ink-3); }
         .help-text { font-family: ${SERIF_FONT}; overflow-wrap: anywhere; }
-        .help-log .everything-box { width: min(400px, 100%); max-height: 70vh; }
-        .help-log .help-body { padding: 0 16px 16px; }
-        .help-log .help-row { flex-direction: column; gap: 2px; padding: 12px 0; }
-        .help-log .help-key { width: auto; font-size: var(--text-sm); font-variant-numeric: tabular-nums; color: var(--ink-3); }
-        .help-log .help-text { color: var(--ink); line-height: 1.6; }
         .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .page-head {
             display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 6px 4px; border: 0;
@@ -6726,38 +6721,7 @@
             jumpToGroup(link.dataset.group, { showNote: true });
         }
     });
-    // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
-    const CHANGELOG = [
-        // CHANGELOG-ENTRIES (release.sh inserts below this line)
-        ["9.60", "Input borders now have 3:1 contrast with the page"],
-        ["9.59", "Source Sans 3 and Source Serif 4 replace the Anthropic, Poppins and Lora font stacks"],
-        ["9.58", "Corrected two stale test checks"],
-        ["9.57", "Icon checks compare icon names instead of raw SVG path text, so redrawing an icon no longer fails tests"],
-        ["9.56", "Make no-toasts the single home for toast wording"],
-        ["9.55", "Selected count no longer cut off: panel is 400px wide"],
-        ["9.54", "Make anthropic-style the single home for design rules; remove redundant style checks from surfaces"],
-        ["9.53", "Body and control text raised to 16px on a 24px line height, per the design guideline"],
-        ["9.52", "Ink primary button, lighter hairline, 4px spacing scale, 2px focus ring, serif dialog titles"],
-        ["9.51", "The outline around a selected annotation uses warm slate and ivory instead of pure black and white"],
-        ["9.50", "The note editor's Save button has the same fully rounded 8px corners as every other button"],
-        ["9.49", "Anthropic Sans and Serif first, Poppins and Lora next, Arial and Georgia as fallbacks; font-install hint removed"],
-        ["9.48", "What's new entries stack the version above the text with roomier spacing"],
-        ["9.47", "What's new panel: narrow version column, roomier rows and padding"],
-        ["9.46", "The selection toolbar toggle now uses the cursor icon, and the note editor Tab test matches the disabled Save and Erase buttons."],
-        ["9.45", "Hiding closes the panel; menu panel/search show pressed; toolbar button disabled with pen"],
-        ["9.44", "Annotations hidden by default; panel and pen show them while open"],
-        ["9.43", "Alt+Shift+H shortcut guide, Alt+Shift+W release changelog, opens once after each update"],
-        ['9.42', 'List-checks icon for Alt+O'],
-        ['9.41', 'Hide button pressed while annotations are shown'],
-        ['9.40', 'Alt+Shift+O keeps the magnifying-glass icon'],
-        ['9.38', 'Magnifying-glass icons for the search lists'],
-        ['9.37', 'Shortcuts-off icon drawn like Phosphor\'s slash icons'],
-        ['9.36', 'Erase note is disabled until the note is saved'],
-        ['9.35', 'Keyboard-slash icon when shortcuts are off'],
-        ['9.34', 'Pen mode icon shows on or off'],
-        ['9.33', 'Erase note tooltip; clicks on empty page keep list-ticked annotations selected']
-    ];
-    // --- Shortcut guide (Alt+Shift+H) and release changelog (Alt+Shift+W): one dialog, two contents ---
+    // --- Shortcut guide (Alt+Shift+H) ---
     const SHORTCUT_GUIDE = [
         ['Alt+1 / Alt+2 / Alt+H', 'Highlight in cyan / magenta / yellow'],
         ['Alt+U / Alt+S', 'Underline / strike through'],
@@ -6774,8 +6738,7 @@
         ['Alt+Shift+O', 'Search every page'],
         ['Alt+Shift+M', 'Show or hide the menu'],
         ['Alt+Shift+K', 'Shortcuts on or off'],
-        ['Alt+Shift+H', 'This guide'],
-        ['Alt+Shift+W', 'What\'s new: the release changelog']
+        ['Alt+Shift+H', 'This guide']
     ];
 
     const helpTitle = makeEl('div', { class: 'panel-count' });
@@ -6789,66 +6752,45 @@
     ]);
     helpTitle.id = 'help-title';
     uiRoot.append(helpEl);
-    const CHANGELOG_DELAY_MS = 4000;   // after the page's own restore has settled
-    let changelogTimer = null;
-    let helpKind = null;
     let helpReturnFocus = null;
 
-    function openHelp(kind, auto = false) {
+    function openHelp() {
         if (!running) return;
         const dark = computeDarkMode();
         ensureUi(dark);
         helpEl.setAttribute('data-theme', dark ? 'dark' : 'light');
         if (helpEl.hidden) {
             const focused = document.activeElement;
-            helpReturnFocus = auto ? null : focused && focused !== document.body && focused !== uiHost ? focused : null;
+            helpReturnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
             hideToolbar();
             hideNoteCard();
         }
-        helpKind = kind;
-        const rows = kind === 'keys' ? SHORTCUT_GUIDE : CHANGELOG;
-        helpTitle.textContent = kind === 'keys' ? 'Shortcuts' : 'What\'s new';
-        helpEl.classList.toggle('help-log', kind !== 'keys');
-        helpBody.replaceChildren(...rows.map(([a, b]) => makeEl('div', { class: 'help-row' }, [
+        helpTitle.textContent = 'Shortcuts';
+        helpBody.replaceChildren(...SHORTCUT_GUIDE.map(([a, b]) => makeEl('div', { class: 'help-row' }, [
             makeEl('span', { class: 'help-key', text: a }),
             makeEl('span', { class: 'help-text', text: b })
         ])));
         helpEl.hidden = false;
-        if (!auto) helpClose.focus({ preventScroll: true });   // opened by itself it leaves the page's typing alone
+        helpClose.focus({ preventScroll: true });
     }
 
     function closeHelp() {
         if (helpEl.hidden) return;
         releaseFocus(helpEl);
         helpEl.hidden = true;
-        helpKind = null;
         const back = helpReturnFocus;
         helpReturnFocus = null;
         if (back && back.isConnected && typeof back.focus === 'function') back.focus({ preventScroll: true });
     }
 
-    function toggleHelp(kind) {
-        if (!helpEl.hidden && helpKind === kind) closeHelp();
-        else openHelp(kind);
+    function toggleHelp() {
+        if (!helpEl.hidden) closeHelp();
+        else openHelp();
     }
 
     helpClose.addEventListener('click', closeHelp);
     helpEl.addEventListener('mousedown', e => { if (e.target === helpEl) closeHelp(); });
 
-    // After an update the changelog opens once, a few seconds after load, once the page's own restore has settled. The version is recorded
-    // (as changelogVersion in the settings) only when it is shown: a hidden tab, a site with the tool off or
-    // another dialog up skip it and it comes back on the next load.
-    function maybeShowChangelog() {
-        if (!running) return;
-        const version = typeof GM_info !== 'undefined' && GM_info && GM_info.script && GM_info.script.version;
-        if (!version || readSettings().changelogVersion === version) return;
-        if (!siteListed('toolbarOnSites') && !siteListed('keysOnSites')) return;
-        if (document.hidden || !helpEl.hidden || !everythingEl.hidden || editor) return;
-        const settings = readSettings();
-        settings.changelogVersion = version;
-        writeSettings(settings);
-        openHelp('changelog', true);
-    }
     // =====================================================================
     // The sticky menu: a handle, one expand button, then a row of tool buttons
     // =====================================================================
@@ -7241,7 +7183,6 @@
         teardown.splice(0).forEach(fn => { try { fn(); } catch (e) { /* already gone */ } });
         stopLateWatcher();
         clearTimeout(reclaimTimer);
-        clearTimeout(changelogTimer);
         if (nav) { clearTimeout(nav.timer); nav = null; }
         clearTimeout(restoreTimer);
         clearTimeout(redrawTimer);
@@ -7354,5 +7295,4 @@
     start();
     renderSiteMenu();
     refreshMenu();
-    changelogTimer = setTimeout(maybeShowChangelog, CHANGELOG_DELAY_MS);
 })();

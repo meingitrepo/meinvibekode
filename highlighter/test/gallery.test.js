@@ -37,11 +37,11 @@ const toastState = STATES.find(s => s.id === 'toast');
   const deep = await render({ only: ['toast'], outDir: path.join(tmp, 'a', 'b') });
   check('a missing outDir is created', fs.existsSync(deep.file), deep.file);
 
-  const IDS = ['toast', 'toolbar', 'toolbar-tooltip', 'panel', 'panel-ticked', 'note-card', 'editor', 'menu', 'search', 'help', 'changelog'];
+  const IDS = ['toast', 'toolbar', 'toolbar-tooltip', 'panel', 'panel-ticked', 'note-card', 'editor', 'menu', 'search', 'help'];
   const all = await render({ outDir: path.join(tmp, 'all') });
   const ids = [...new Set(all.tiles.map(t => t.state))];
-  check('the default gallery has the eleven state ids in order', JSON.stringify(ids) === JSON.stringify(IDS), ids);
-  check('every default state renders in both themes', all.failed === 0 && all.tiles.length === 22, all.tiles.filter(t => !t.ok).map(t => [t.state, t.theme, t.error]));
+  check('the default gallery has the ten state ids in order', JSON.stringify(ids) === JSON.stringify(IDS), ids);
+  check('every default state renders in both themes', all.failed === 0 && all.tiles.length === 20, all.tiles.filter(t => !t.ok).map(t => [t.state, t.theme, t.error]));
   const okTiles = all.tiles.filter(t => t.ok);
   check('no tile is tiny', okTiles.every(t => pngSize(t.png).w > 40 && pngSize(t.png).h > 20), okTiles.map(t => [t.state, t.theme, pngSize(t.png)]));
   check("each state's light and dark tiles differ", IDS.every(id => { const [a, b] = all.tiles.filter(t => t.state === id); return a && b && a.ok && b.ok && !a.png.equals(b.png); }), null);

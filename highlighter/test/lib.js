@@ -56,8 +56,6 @@ async function open(browser, opts) {
   if (!opts.defaults && !('toolbarOnSites' in cfg) && !('keysOnSites' in cfg)) seeded['rnh:settings'] = JSON.stringify(Object.assign(cfg, { toolbarOnSites: [new URL(url).hostname], keysOnSites: [new URL(url).hostname] }));
   // The sticky menu sits top left over the pages' text: hidden here unless the test is about it (opts.menu).
   if (!opts.menu && !/menuHiddenSites/.test(seeded['rnh:settings'] || '')) seeded['rnh:settings'] = JSON.stringify(Object.assign(JSON.parse(seeded['rnh:settings'] || '{}'), { menuHiddenSites: [new URL(url).hostname] }));
-  // The changelog popup after an update (opts.changelog).
-  if (!opts.changelog) { try { seeded['rnh:settings'] = JSON.stringify(Object.assign(JSON.parse(seeded['rnh:settings'] || '{}'), { changelogVersion: '9.99' })); } catch (e) { /* corrupt settings stay as they are */ } }
   await page.addInitScript(s => { window.__gm = JSON.parse(s); }, JSON.stringify(seeded));
   if (opts.init) await page.addInitScript(opts.init);
   if (opts.onSend) await page.exposeFunction('__send', (k, o, v) => opts.onSend(page, k, o, v));

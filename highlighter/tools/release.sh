@@ -42,7 +42,7 @@ if [ "${1:-}" = --files ]; then
 fi
 
 [ $# -eq 3 ] || { echo 'usage: release.sh "Theme" "What'"'"'s in it" "Commit message"'; exit 2; }
-theme=$1 what=$2 msg=$3
+theme=$1 what=$2 msg=$3   # $what is kept for the call signature; the What's new panel it fed is retired
 tools=$(cd "$(dirname "$0")" && pwd)
 cd "$(git rev-parse --show-toplevel)"
 H=highlighter
@@ -61,9 +61,8 @@ for _ in 1 2 3; do
     cur=$(git show origin/main:$H/src/header.js | sed -n 's/^\/\/ @version *//p' | head -1)
     ver="${cur%%.*}.$(( ${cur#*.} + 1 ))"
     sed -i "s/^\(\/\/ @version *\).*/\1$ver/" $H/src/header.js
-    node "$tools/changelog-add.js" "$ver" "$what"   # the Alt+Shift+W changelog
     (cd $H && node build.js >/dev/null && node build.js --check)
-    git add $H/src/header.js $H/src/changelog.js $H/Highlighter.user.js
+    git add $H/src/header.js $H/Highlighter.user.js
     git commit -q --amend -m "$ver: $msg"
     if git push -q origin HEAD:main; then
         clean_shots

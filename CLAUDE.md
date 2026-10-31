@@ -13,7 +13,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Storage: `storage.js` (page identity, `rnh:settings`), `live-sync.js` (cross-tab), `restore.js`
 - Annotations: `apply-and-undo.js`, `strokes.js` (SVG drawing), `wrappers.js` (wrapper bookkeeping), `redraw.js` (following moved text), `text-anchoring.js` (XPath/offsets), `annotation-select.js`, `pen.js`
 - Notes/export: `notes.js`, `note-card-and-editor.js`, `markdown.js`
-- UI: `ui-style.js` (tokens/CSS), `ui-elements.js`, `theme.js`, `toolbar.js`, `site-menu.js`, `panel.js`, `search.js` (Alt+Shift+O), `toast-and-jump.js`, `input.js`, `help.js` (Alt+Shift+H guide, Alt+Shift+W changelog), `changelog.js` (release entries, added by release.sh)
+- UI: `ui-style.js` (tokens/CSS), `ui-elements.js`, `theme.js`, `toolbar.js`, `site-menu.js`, `panel.js`, `search.js` (Alt+Shift+O), `toast-and-jump.js`, `input.js`, `help.js` (Alt+Shift+H guide)
 
 ## Tiers (pick one before starting, state it in one line)
 - T0 no behaviour change (copy, comment, constant, a CSS value or token tweak, an icon or wording swap): do it, one verify call, no new test, no review; check the look in `gallery.sh` or `shot.sh`. If the diff changes anything else, or it fixes a bug (the bug rule below applies), it is not T0. A swap breaks the exact icon/wording pins in `no-toasts`/`hidden`: find them with `stale-checks.sh <old term>` and update them in the same commit; compare options in `gallery.sh` first.

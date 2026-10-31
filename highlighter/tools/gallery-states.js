@@ -50,6 +50,5 @@ const STATES = [
     { id: 'menu', opts: { menu: true }, setup: async () => {}, clip: ['menuEl'] },
     { id: 'search', setup: (page, L) => L.altKey(page, 'o', true), clip: ['everythingEl'] },
     { id: 'help', setup: (page, L) => L.altKey(page, 'h', true), clip: ['helpEl'] },
-    { id: 'changelog', setup: (page, L) => L.altKey(page, 'w', true), clip: ['helpEl'] },
 ];
 module.exports = { HTML, STORE, STATES };

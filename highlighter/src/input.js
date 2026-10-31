@@ -175,9 +175,9 @@
             next.focus({ preventScroll: true });
             return;
         }
-        // The shortcut guide / changelog dialog: Esc closes it, nothing else of ours acts under it.
+        // The shortcut guide dialog: Esc closes it, nothing else of ours acts under it.
         if (e.key === 'Escape' && !helpEl.hidden) { e.preventDefault(); closeHelp(); return; }
-        if (!helpEl.hidden && !(e.altKey && e.shiftKey && (e.code === 'KeyH' || e.code === 'KeyW'))) return;
+        if (!helpEl.hidden && !(e.altKey && e.shiftKey && e.code === 'KeyH')) return;
         // Everything saved covers the page: the page's keys wait until it closes.
         if (!everythingEl.hidden && e.code !== 'KeyO') return;
         // Esc closes a note pinned by clicking its badge.
@@ -195,9 +195,9 @@
         if (editor && isUiEvent(e)) return;   // focus is on the open note editor's buttons
         // Typing in the panel's filter box: only the panel and jump keys act.
         if (isUiEvent(e) && uiRoot.activeElement === panelFilter && !/^Key[OJK]$/.test(e.code)) return;
-        if (e.shiftKey && (e.code === 'KeyH' || e.code === 'KeyW') && !e.repeat) {
+        if (e.shiftKey && e.code === 'KeyH' && !e.repeat) {
             e.preventDefault();
-            toggleHelp(e.code === 'KeyH' ? 'keys' : 'changelog');
+            toggleHelp();
             return;
         }
         const code = e.code;

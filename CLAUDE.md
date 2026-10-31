@@ -45,6 +45,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Before asking PUSH on a behaviour change, grep `highlighter/test` for the changed feature/keys/colors; update tests expecting old behaviour; remove checks for retired behaviour rather than skipping.
 
 ## UI / Anthropic style
+- Design reference for any UI work: `DESIGN-GUIDELINE.md` (measured from claude.com, code.claude.com, academy.claude.com, anthropic.com; section 8 maps it to the tokens).
 - Screenshots: send them only when the User asks. Never add before/after or showcase shots by default. `shot.sh` crops to the visible highlighter UI by itself (override: `SHOT_CLIP`); use the same crop for before/after and light/dark.
 - Look (since 9.0): Anthropic style, no library. Tokens in `src/ui-style.js` are named by role (`--ink*`, `--surface*`, `--line*`, `--accent*` = clay, only for the one primary action); serif for reading text, sans for chrome; flat with hairlines, no shadows; short ease-out fades. Icons: Phosphor Light. `test/anthropic-style.test.js` guards this.
 ## Scripts (`highlighter/tools/`; use them instead of redoing these steps by hand)

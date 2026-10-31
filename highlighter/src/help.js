@@ -48,7 +48,7 @@
         helpKind = kind;
         const rows = kind === 'keys' ? SHORTCUT_GUIDE : CHANGELOG;
         helpTitle.textContent = kind === 'keys' ? 'Shortcuts' : 'What\'s new';
-        helpBody.classList.toggle('help-log', kind !== 'keys');
+        helpEl.classList.toggle('help-log', kind !== 'keys');
         helpBody.replaceChildren(...rows.map(([a, b]) => makeEl('div', { class: 'help-row' }, [
             makeEl('span', { class: 'help-key', text: a }),
             makeEl('span', { class: 'help-text', text: b })

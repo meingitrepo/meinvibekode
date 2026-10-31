@@ -3960,9 +3960,10 @@
         .help-row { display: flex; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); }
         .help-key { flex: none; width: 11em; color: var(--ink-3); }
         .help-text { font-family: ${SERIF_FONT}; overflow-wrap: anywhere; }
-        .help-log { padding: 4px 16px 16px; }
-        .help-log .help-row { gap: 16px; padding: 12px 0; }
-        .help-log .help-key { width: 3.5em; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+        .help-log .everything-box { width: min(400px, 100%); }
+        .help-log .help-body { padding: 0 12px 12px; }
+        .help-log .help-row { gap: 12px; padding: 8px 0; }
+        .help-log .help-key { width: 2.5em; font-variant-numeric: tabular-nums; color: var(--ink-2); }
         .help-log .help-text { line-height: 1.55; }
         .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .page-head {
@@ -6851,7 +6852,7 @@
         helpKind = kind;
         const rows = kind === 'keys' ? SHORTCUT_GUIDE : CHANGELOG;
         helpTitle.textContent = kind === 'keys' ? 'Shortcuts' : 'What\'s new';
-        helpBody.classList.toggle('help-log', kind !== 'keys');
+        helpEl.classList.toggle('help-log', kind !== 'keys');
         helpBody.replaceChildren(...rows.map(([a, b]) => makeEl('div', { class: 'help-row' }, [
             makeEl('span', { class: 'help-key', text: a }),
             makeEl('span', { class: 'help-text', text: b })

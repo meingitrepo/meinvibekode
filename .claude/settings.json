@@ -33,9 +33,5 @@
       "Read(./**/*.pdf)"
     ]
   },
-  "autoMemoryDirectory": "~/Personal/ClaudeAI/Meinvibekode/.claude/memory",
-  "statusLine": {
-    "type": "command",
-    "command": "npx ccusage@latest statusline"
-  }
+  "autoMemoryDirectory": "~/Personal/ClaudeAI/Meinvibekode/.claude/memory"
 }

@@ -3701,8 +3701,8 @@
         return svg;
     }
 
-    const SANS_FONT = '"Anthropic Sans", system-ui, "Segoe UI", ui-sans-serif, sans-serif';
-    const SERIF_FONT = '"Anthropic Serif", Georgia, ui-serif, serif';
+    const SANS_FONT = '"Anthropic Sans", Poppins, system-ui, "Segoe UI", ui-sans-serif, sans-serif';
+    const SERIF_FONT = '"Anthropic Serif", Lora, Georgia, ui-serif, serif';
 
     // Colors from the Anthropic style reference: slate #141413, ivory #faf9f5 / #e8e6dc, oat #e3dacc,
     // manilla #f5e3c7, stone #cccbc8, cloud #b0aea5 / #87867f, clay #d97757 / #c6613f. Tokens are named by role:

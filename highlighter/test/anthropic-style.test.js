@@ -21,14 +21,14 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', HAIRLINE = 'rgb(2
       L.check(`${scheme} ${name}: flat, no shadow`, s.boxShadow === 'none', s);
       L.check(`${scheme} ${name}: ${scheme === 'light' ? 'ivory surface, slate text' : 'slate surface, ivory text'}`,
         s.backgroundColor === (scheme === 'light' ? IVORY : SLATE) && s.color === (scheme === 'light' ? SLATE : IVORY), s);
-      L.check(`${scheme} ${name}: chrome is sans`, /^"Anthropic Sans", Poppins, Arial, sans-serif$/.test(s.fontFamily) && !/Georgia/.test(s.fontFamily), s);
+      L.check(`${scheme} ${name}: chrome is sans`, /^"Source Sans 3", Arial, sans-serif$/.test(s.fontFamily) && !/Georgia/.test(s.fontFamily), s);
     }
     const light = await css('window.__hl.panelEl', ['borderTopColor', 'borderTopWidth']);
     L.check(`${scheme} panel: 1px hairline border`, light.borderTopWidth === '1px' && (scheme === 'dark' || light.borderTopColor === HAIRLINE), light);
     const text = await css('window.__hl.panelList', ['fontFamily']);
     const note = await page.evaluate(() => { const t = document.createElement('div'); t.className = 'card-text'; window.__hl.panelList.appendChild(t); const f = getComputedStyle(t).fontFamily; t.remove(); return f; });
-    L.check(`${scheme}: note text is serif`, /^"Anthropic Serif", Lora, Georgia/.test(note), note);
-    L.check(`${scheme}: panel list inherits sans chrome`, /^"Anthropic Sans", Poppins/.test(text.fontFamily), text);
+    L.check(`${scheme}: note text is serif`, /^"Source Serif 4", Georgia/.test(note), note);
+    L.check(`${scheme}: panel list inherits sans chrome`, /^"Source Sans 3"/.test(text.fontFamily), text);
     // Save: clay and fully rounded (8px) when it can act, quiet when there is nothing to save.
     const save = await page.evaluate(() => { const b = window.__hl.editorEl.querySelector('.btn-primary'); if (!b) return { bg: 'missing', radius: 'missing', offBg: 'missing' }; const on = (b.disabled = false, getComputedStyle(b)); const r = { bg: on.backgroundColor, radius: on.borderRadius }; b.disabled = true; const off = getComputedStyle(b); r.offBg = off.backgroundColor; return r; });
     L.check(`${scheme}: enabled Save is ink-filled with 8px corners`, save.bg === (scheme === 'light' ? SLATE : IVORY) && save.radius === '8px', save);
@@ -42,7 +42,7 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', HAIRLINE = 'rgb(2
       return { btn: get('btn', window.__hl.panelList).w, title: get('panel-title', window.__hl.panelEl), count: getComputedStyle(window.__hl.panelEl.querySelector('.panel-count')).fontFamily, meta: get('item-meta', window.__hl.panelList) };
     });
     L.check(`${scheme}: button text is weight 500`, type.btn === '500', type);
-    L.check(`${scheme}: dialog title is serif, weight 500`, /^"Anthropic Serif"/.test(type.count) && type.title.w === '500', type);
+    L.check(`${scheme}: dialog title is serif, weight 500`, /^"Source Serif 4"/.test(type.count) && type.title.w === '500', type);
     L.check(`${scheme}: small UI text has +0.01em tracking`, type.meta.ls === '0.12px', type);
     // 9.2: placeholder and secondary text meet WCAG AA (4.5:1) on the surface.
     const lum = c => { const v = c.match(/\d+/g).slice(0, 3).map(n => n / 255).map(x => x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };

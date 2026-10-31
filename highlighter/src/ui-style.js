@@ -82,8 +82,8 @@
         return svg;
     }
 
-    const SANS_FONT = '"Anthropic Sans", Poppins, Arial, sans-serif';
-    const SERIF_FONT = '"Anthropic Serif", Lora, Georgia, ui-serif, serif';
+    const SANS_FONT = '"Source Sans 3", Arial, sans-serif';
+    const SERIF_FONT = '"Source Serif 4", Georgia, ui-serif, serif';
 
     // Colors from the Anthropic style reference: slate #141413, ivory #faf9f5 / #e8e6dc, oat #e3dacc,
     // manilla #f5e3c7, cloud #b0aea5 / #87867f, clay #d97757 / #c6613f. Tokens are named by role:

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.58
+// @version      9.59
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3701,8 +3701,8 @@
         return svg;
     }
 
-    const SANS_FONT = '"Anthropic Sans", Poppins, Arial, sans-serif';
-    const SERIF_FONT = '"Anthropic Serif", Lora, Georgia, ui-serif, serif';
+    const SANS_FONT = '"Source Sans 3", Arial, sans-serif';
+    const SERIF_FONT = '"Source Serif 4", Georgia, ui-serif, serif';
 
     // Colors from the Anthropic style reference: slate #141413, ivory #faf9f5 / #e8e6dc, oat #e3dacc,
     // manilla #f5e3c7, cloud #b0aea5 / #87867f, clay #d97757 / #c6613f. Tokens are named by role:
@@ -6729,6 +6729,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.59", "Source Sans 3 and Source Serif 4 replace the Anthropic, Poppins and Lora font stacks"],
         ["9.58", "Corrected two stale test checks"],
         ["9.57", "Icon checks compare icon names instead of raw SVG path text, so redrawing an icon no longer fails tests"],
         ["9.56", "Make no-toasts the single home for toast wording"],

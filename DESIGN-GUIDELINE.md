@@ -36,8 +36,8 @@ Never pure `#000` / `#fff` for text or surfaces (the sites only use `#fff`/`#000
 - Status never relies on colour alone: pair with icon or word.
 
 ## 3. Typography
-- **Serif** (Anthropic Serif; fallback Georgia): headings and reading text. Weight 400-500, tight leading (about 1.1-1.3 for headings), slight negative tracking on large sizes (-0.01em at 34px).
-- **Sans** (Anthropic Sans; fallback system-ui): body, buttons, navigation, labels. 15-16px at line-height 1.5-1.6. Small headings may use 600.
+- **Serif** (Anthropic Serif; here Lora, then Georgia): headings and reading text. Weight 400-500, tight leading (about 1.1-1.3 for headings), slight negative tracking on large sizes (-0.01em at 34px).
+- **Sans** (Anthropic Sans; here Poppins, then Arial): body, buttons, navigation, labels. 15-16px at line-height 1.5-1.6. Small headings may use 600.
 - **Mono** (Paper Mono / anthropic-mono; fallback ui-monospace): code and keys.
 - Measured scale: display 42-44/46-48 serif; section 28/36 serif; card title 20-22 serif or sans 600-700; body 16/26; UI small 12-13 sans, weight 500, letter-spacing +0.01em.
 - Measure: body lines 60ch (max 70-80ch). Weights stay at 400/500; 600+ only for small titles.
@@ -77,8 +77,9 @@ Never pure `#000` / `#fff` for text or surfaces (the sites only use `#fff`/`#000
 | ramp 700 `#3d3d3a` | `--ink-2` (light), `--line` (dark) |
 | secondary text | `--ink-3` (`#66655f` light: darker than the sites' 600 to keep 4.5:1; `#b0aea5` dark) |
 | ramp 200 / 400 / 500 | `--surface-hover` / `--ink-disabled`,`--line-hover` / `--line-strong`,`--ink-4` |
-| hairline | `--line` (`#cccbc8` light, `#3d3d3a` dark), `--divider` |
-| clay + hover | `--accent` `#d97757`, `--accent-hover` `#c6613f` |
+| hairline | `--line` (`#e8e6dc` light, `#3d3d3a` dark), `--divider` |
+| clay + hover | `--accent` `#d97757`, `--accent-hover` `#c6613f` (defined, unused: reserved for small highlights) |
+| primary button | `.btn-primary`: `--ink` fill, `--on-ink` text (paper fill on dark) |
 | error | `--danger` (`#a8321a` light, `#e5867a` dark; tuned for contrast) |
 | radius 4 / 8 / 12 / 16 | `--radius-md` / `--radius-button` / `--radius-lg` / `--radius-card` |
 | UI small / body | `--text-sm` 12 / `--text-md` 14 (+ `--leading-*`) |
@@ -87,11 +88,9 @@ Never pure `#000` / `#fff` for text or surfaces (the sites only use `#fff`/`#000
 | overlay | `--overlay` |
 
 **Deliberate differences (decide before changing):**
-1. Sites' primary button is inverted ink; here the primary action is clay-filled (`.btn-primary`, `--on-accent` ink). Kept per CLAUDE.md ("clay only for the one primary action").
-2. Page type is 15-16px; this tool is dense chrome on top of other people's pages, so body is 14px and captions 12px.
-3. Light hairline is `#cccbc8`, darker than site `#e8e6dc`, so borders stay visible over arbitrary page backgrounds.
-4. Fonts: the proprietary Anthropic Serif/Sans cannot be shipped in a userscript, so the stacks name them first (they apply only where installed), then the free look-alikes Poppins (sans) and Lora (serif), then Arial and Georgia: sans `"Anthropic Sans", Poppins, Arial`, serif `"Anthropic Serif", Lora, Georgia` (`SANS_FONT`, `SERIF_FONT`). The install hint for Poppins and Lora was retired in 9.49.
-5. Supporting hues (sky, mineral, plum...) have no tokens; add one only when a feature needs a categorical colour.
+1. Page type is 15-16px; this tool is dense chrome on top of other people's pages, so body is 14px and captions 12px.
+2. Fonts: the proprietary Anthropic Serif/Sans cannot be shipped in a userscript, so the stacks name them first (they apply only where installed), then the free look-alikes Poppins (sans) and Lora (serif), then Arial and Georgia: sans `"Anthropic Sans", Poppins, Arial`, serif `"Anthropic Serif", Lora, Georgia` (`SANS_FONT`, `SERIF_FONT`). The install hint for Poppins and Lora was retired in 9.49.
+3. Supporting hues (sky, mineral, plum...) have no tokens; add one only when a feature needs a categorical colour.
 
 ## 9. Sources
 - https://claude.com/marketplace (dark; tokens `--color-*`, `--br-*`, `--sp-*`)

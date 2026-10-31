@@ -290,8 +290,8 @@
 
     function sizeNoteInput() {
         if (noteInputManuallySized) return;
-        const min = NOTE_MIN_LINES * 20 + 10;
-        const max = NOTE_MAX_LINES * 20 + 10;
+        const min = NOTE_MIN_LINES * 20 + 12;
+        const max = NOTE_MAX_LINES * 20 + 12;
         noteInput.style.height = `${min}px`;
         noteInput.style.height = `${Math.min(max, Math.max(min, noteInput.scrollHeight))}px`;
     }

@@ -3705,9 +3705,9 @@
     const SERIF_FONT = '"Anthropic Serif", Lora, Georgia, ui-serif, serif';
 
     // Colors from the Anthropic style reference: slate #141413, ivory #faf9f5 / #e8e6dc, oat #e3dacc,
-    // manilla #f5e3c7, stone #cccbc8, cloud #b0aea5 / #87867f, clay #d97757 / #c6613f. Tokens are named by role:
+    // manilla #f5e3c7, cloud #b0aea5 / #87867f, clay #d97757 / #c6613f. Tokens are named by role:
     // --ink* for text and filled controls (slate in light, ivory in dark), --surface* for backgrounds,
-    // --line* for hairlines, and --accent* (clay) for the one primary action only. The annotations panel and the toast follow the page's
+    // --line* for hairlines, and --accent* (clay), held back for a small highlight; the primary action is filled with --ink. The annotations panel and the toast follow the page's
     // theme, which can differ from that of the other panels (see openPanel and showToast).
     const LIGHT_TOKENS = `
         --ink: #141413;
@@ -3719,8 +3719,8 @@
         --surface-hover: #e8e6dc;
         --surface-pressed: #e3dacc;
         --surface-selected: #f5e3c7;
-        --line: #cccbc8;
-        --line-hover: #b0aea5;
+        --line: #e8e6dc;
+        --line-hover: #d1cfc5;
         --line-pressed: #87867f;
         --line-strong: #87867f;
         --line-disabled: #e3dacc;
@@ -3746,7 +3746,7 @@
         --leading-sm: 16px;
         --text-md: 14px;   /* body and controls */
         --leading-md: 20px;
-        --divider: #cccbc8;
+        --divider: #e8e6dc;
         --duration-fast: 100ms;
         --duration-normal: 150ms;
         --duration-slow: 300ms;
@@ -3832,7 +3832,7 @@
                         border-color var(--duration-fast) var(--ease-out),
                         color var(--duration-fast) var(--ease-out);
         }
-        .btn:not(.btn-icon) { font-weight: 600; }
+        .btn:not(.btn-icon) { font-weight: 500; }
         .btn-icon { min-width: 0; width: 32px; padding: 0; }
         .btn-subtle { background: transparent; color: var(--ink-2); }
         /* A style the selected text already has: a subtle toggle button, checked. */
@@ -3843,13 +3843,13 @@
         .btn-subtle:hover:active, .btn-subtle:active:focus-visible { background: var(--surface-pressed); color: var(--ink); }
         .btn-subtle:hover .icon { color: var(--ink); }
         .btn-subtle:hover:active .icon, .btn-subtle:active:focus-visible .icon { color: var(--ink); }
-        /* Focus: border plus a 1px inset ring; the transparent outline shows in forced colors. */
-        .btn:focus-visible { border-color: var(--focus); outline: 2px solid var(--transparent-stroke); box-shadow: inset 0 0 0 1px var(--focus); z-index: 1; }
-        /* The one primary action, the note editor's Save: clay, fully rounded like every other button (the
-           guideline's 8px). Disabled while there is nothing to save, then as quiet as a subtle one. */
-        .btn-primary { background: var(--accent); color: var(--on-accent); border-radius: var(--radius-button); }
-        .btn-primary:hover { background: var(--accent-hover); }
-        .btn-primary:hover:active, .btn-primary:active:focus-visible { background: var(--accent-pressed); }
+        /* Focus: a 2px ring with a 2px gap (it also shows in forced colors). */
+        .btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; z-index: 1; }
+        /* The one primary action, the note editor's Save: inverted ink (paper on dark), fully rounded like every
+           other button (the guideline's 8px). Disabled while there is nothing to save, then as quiet as a subtle one. */
+        .btn-primary { background: var(--ink); color: var(--on-ink); border-radius: var(--radius-button); }
+        .btn-primary:hover { background: var(--ink-2); }
+        .btn-primary:hover:active, .btn-primary:active:focus-visible { background: var(--ink-pressed); }
         .btn-primary:disabled, .btn-primary:disabled:hover, .btn-primary:disabled:active { background: transparent; color: var(--ink-disabled); cursor: not-allowed; }
         /* The disabled subtle button: */
         .btn-subtle:disabled, .btn-subtle:disabled:hover, .btn-subtle:disabled:active { background: transparent; color: var(--ink-disabled); cursor: not-allowed; }
@@ -3875,7 +3875,7 @@
         /* Tooltip */
         /* One line, kept inside the view: nowrap measures the tip at its full width wherever it last
            stood, so placePanel() can move it in from the edge instead of the edge squeezing it. */
-        .tip { white-space: nowrap; max-width: calc(100vw - 8px); overflow: hidden; text-overflow: ellipsis; padding: 6px 10px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); pointer-events: none; }
+        .tip { white-space: nowrap; max-width: calc(100vw - 8px); overflow: hidden; text-overflow: ellipsis; padding: 6px 8px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); pointer-events: none; }
         .tip .kbd { margin-left: 8px; color: var(--ink-3); }
 
         /* Panels (note preview, note editor, toast) all have 12px padding. Their 32px icon buttons
@@ -3901,7 +3901,7 @@
         .editor-header { display: flex; align-items: center; justify-content: space-between; min-height: 32px; margin: -8px -4px 4px 0; }
         /* Save and Delete, icon only, at the top right. */
         .editor-actions { display: flex; align-items: center; gap: 2px; }
-        .editor-title { font-weight: 600; }
+        .editor-title { font-family: ${SERIF_FONT}; font-weight: 500; }
         .field {
             position: relative; box-sizing: border-box; background: var(--surface);
             /* Anthropic input: one plain hairline on all four sides that darkens to the text color on focus. */
@@ -3915,19 +3915,19 @@
         textarea {
             /* Height is set by sizeNoteInput(): NOTE_MIN_LINES to NOTE_MAX_LINES, then it scrolls.
                The corner handle resizes it (and the panel) for the current edit only. */
-            display: block; box-sizing: border-box; width: 292px; min-width: 292px; margin: 0; padding: 5px 11px;
-            min-height: 30px; max-width: min(640px, calc(100vw - 50px)); max-height: 60vh;   /* 30px: one line */
+            display: block; box-sizing: border-box; width: 292px; min-width: 292px; margin: 0; padding: 6px 12px;
+            min-height: 32px; max-width: min(640px, calc(100vw - 50px)); max-height: 60vh;   /* 32px: one line */
             border: 0; outline: 0; resize: both; overflow-y: auto; overscroll-behavior: contain; background: transparent;
             color: var(--ink); font: inherit; font-family: ${SERIF_FONT};
         }
         textarea::placeholder { color: var(--ink-4); opacity: 1; }
         /* width 0 + min-width 100%: the hint wraps to the note box's width instead of widening the
            panel, which would leave the box's border wider than the textarea and its scrollbar. */
-        .field-hint { width: 0; min-width: 100%; margin-top: 4px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
+        .field-hint { letter-spacing: .01em; width: 0; min-width: 100%; margin-top: 4px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         /* Toast */
         /* A tooltip's size and style, centred at the bottom of the view: the same padding, 12px type and
            radius as .tip, an icon at the left end, no dismiss button; it fades on its own. */
-        .toast { top: auto; left: 50%; right: auto; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 32px); padding: 6px 10px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
+        .toast { top: auto; left: 50%; right: auto; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 32px); padding: 6px 8px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); }
         .toast > .icon { flex: none; width: 16px; height: 16px; margin: 0 0 0 -2px; }   /* at the left end, 16px, as far in as an icon button's icon */
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 400; }
@@ -3939,7 +3939,7 @@
         .sitemenu .btn { cursor: pointer; }
         .sitemenu-handle { position: relative; align-self: stretch; width: 12px; cursor: grab; }
         /* A hairline bar, darker under the pointer. */
-        .sitemenu-handle::before { content: ''; position: absolute; top: 50%; left: 5px; width: 2px; height: 16px; margin-top: -8px; border-radius: 1px; background: var(--line-strong); transition: background-color var(--duration-fast) var(--ease-out); }
+        .sitemenu-handle::before { content: ''; position: absolute; top: 50%; left: 4px; width: 2px; height: 16px; margin-top: -8px; border-radius: 1px; background: var(--line-strong); transition: background-color var(--duration-fast) var(--ease-out); }
         .sitemenu-handle:hover::before, .sitemenu-handle:active::before { background: var(--ink-3); }
         @media (prefers-reduced-motion: reduce) { .sitemenu-handle::before { transition: none; } }
         .sitemenu-expand { display: flex; justify-content: center; }
@@ -3975,7 +3975,7 @@
         .page-head:hover:active { background: var(--surface-pressed); }
         .page-head:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
         .page-name { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-        .page-host { font-weight: 600; }
+        .page-host { font-weight: 500; }
         .page-path { margin-left: 6px; color: var(--ink-3); }
         .page-meta { flex: none; font-size: var(--text-sm); color: var(--ink-3); }
         .page-items { padding-left: 20px; }
@@ -3987,19 +3987,19 @@
             width: min(360px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
         }
         .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }
-        .panel-title { font-weight: 600; color: var(--ink); }
-        .panel-count { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-3); }
+        .panel-title { font-weight: 500; color: var(--ink); }
+        .panel-count { font-family: ${SERIF_FONT}; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-3); }
         .panel-actions { display: flex; align-items: center; gap: 2px; }
         .panel .field { flex: none; margin: 0 12px 8px; padding-bottom: 0; }
-        .search-icon { position: absolute; left: 9px; top: 6px; color: var(--ink-3); pointer-events: none; }
+        .search-icon { position: absolute; left: 8px; top: 6px; color: var(--ink-3); pointer-events: none; }
         .field input {
-            display: block; box-sizing: border-box; width: 100%; height: 31px; margin: 0; padding: 0 10px 0 33px;
+            display: block; box-sizing: border-box; width: 100%; height: 32px; margin: 0; padding: 0 8px 0 32px;
             border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit;
         }
         .field input::placeholder { color: var(--ink-4); opacity: 1; }
         .field input::-webkit-search-cancel-button { display: none; }
         .panel-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
-        .section-title { margin: 8px 4px 4px; font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: 600; color: var(--ink-3); }
+        .section-title { margin: 8px 4px 4px; font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: 500; letter-spacing: .01em; color: var(--ink-3); }
         .empty { margin: 4px 4px 8px; color: var(--ink-3); }
         /* Checkbox: a 16px square with 2px corners, slate and a check mark when
            on, a slate outline with a smaller rounded square when mixed. */
@@ -4031,7 +4031,7 @@
         .check:disabled, .check:disabled:hover, .check:disabled:active { cursor: default; border-color: var(--line-disabled); background: transparent; }
         .check:disabled::after { background: var(--ink-disabled); }
         .check:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
-        .item .check { margin: 10px 8px 0 4px; opacity: 0; }
+        .item .check { margin: 12px 8px 0 4px; opacity: 0; }
         .item:hover .check, .item .check:checked, .item .check:focus-visible { opacity: 1; }
         @media (hover: none) { .item .check { opacity: 1; } }
         .item { display: flex; align-items: flex-start; border-radius: var(--radius-md); }
@@ -4041,7 +4041,7 @@
         .item:hover:active { background: var(--surface-pressed); }
         /* The annotation itself: a button that scrolls to it. The bar at its left is its color. */
         .item-main {
-            position: relative; flex: 1; min-width: 0; display: block; margin: 0; padding: 6px 4px 6px 14px;
+            position: relative; flex: 1; min-width: 0; display: block; margin: 0; padding: 6px 4px 6px 12px;
             border: 0; border-radius: var(--radius-md); background: none; text-align: left;
             font: inherit; color: inherit; cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent;
         }
@@ -4050,7 +4050,7 @@
         .item-text, .item-note { font-family: ${SERIF_FONT}; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
         .item-text { -webkit-line-clamp: 3; }
         .item-note { -webkit-line-clamp: 4; white-space: pre-wrap; margin-top: 2px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-2); }
-        .item-meta { margin-top: 2px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
+        .item-meta { margin-top: 2px; letter-spacing: .01em; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         .item-actions { display: flex; align-items: center; gap: 2px; padding: 4px 4px 0 0; opacity: 0; }
         .item:hover .item-actions, .item:focus-within .item-actions { opacity: 1; }
         @media (hover: none) { .item-actions { opacity: 1; } }
@@ -5035,8 +5035,8 @@
 
     function sizeNoteInput() {
         if (noteInputManuallySized) return;
-        const min = NOTE_MIN_LINES * 20 + 10;
-        const max = NOTE_MAX_LINES * 20 + 10;
+        const min = NOTE_MIN_LINES * 20 + 12;
+        const max = NOTE_MAX_LINES * 20 + 12;
         noteInput.style.height = `${min}px`;
         noteInput.style.height = `${Math.min(max, Math.max(min, noteInput.scrollHeight))}px`;
     }

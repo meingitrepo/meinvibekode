@@ -1,12 +1,12 @@
 // Anthropic style (DESIGN.md): parchment surfaces, serif for text and sans for chrome, flat (no shadows,
-// hairline borders), buttons share one 8px radius, clay only on the one primary action.
+// hairline borders), buttons share one 8px radius, the primary action is inverted ink.
 const L = require('./lib');
 const HTML = `<!doctype html><html><body style="font: 16px/1.5 sans-serif; margin: 40px">
 <p id="p1">Alpha beta gamma delta epsilon zeta eta theta iota kappa.</p></body></html>`;
 const store = { 'https://example.test/a': JSON.stringify([
   { xpath: '//*[@id="p1"]', startOffset: 6, length: 4, key: 'h', text: 'beta', prefix: 'Alpha ', suffix: ' gamma', group: 'mg0abcde00001' }
 ]) };
-const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', STONE = 'rgb(204, 203, 200)', CLAY = 'rgb(217, 119, 87)';
+const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', HAIRLINE = 'rgb(232, 230, 220)', CLAY = 'rgb(217, 119, 87)';
 (async () => {
   const browser = await L.launch();
   for (const scheme of ['light', 'dark']) {
@@ -24,18 +24,26 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', STONE = 'rgb(204,
       L.check(`${scheme} ${name}: chrome is sans`, /^"Anthropic Sans", Poppins, Arial, sans-serif$/.test(s.fontFamily) && !/Georgia/.test(s.fontFamily), s);
     }
     const light = await css('window.__hl.panelEl', ['borderTopColor', 'borderTopWidth']);
-    L.check(`${scheme} panel: 1px hairline border`, light.borderTopWidth === '1px' && (scheme === 'dark' || light.borderTopColor === STONE), light);
+    L.check(`${scheme} panel: 1px hairline border`, light.borderTopWidth === '1px' && (scheme === 'dark' || light.borderTopColor === HAIRLINE), light);
     const text = await css('window.__hl.panelList', ['fontFamily']);
     const note = await page.evaluate(() => { const t = document.createElement('div'); t.className = 'card-text'; window.__hl.panelList.appendChild(t); const f = getComputedStyle(t).fontFamily; t.remove(); return f; });
     L.check(`${scheme}: note text is serif`, /^"Anthropic Serif", Lora, Georgia/.test(note), note);
     L.check(`${scheme}: panel list inherits sans chrome`, /^"Anthropic Sans", Poppins/.test(text.fontFamily), text);
     // Save: clay and fully rounded (8px) when it can act, quiet when there is nothing to save.
     const save = await page.evaluate(() => { const b = window.__hl.editorEl.querySelector('.btn-primary'); if (!b) return { bg: 'missing', radius: 'missing', offBg: 'missing' }; const on = (b.disabled = false, getComputedStyle(b)); const r = { bg: on.backgroundColor, radius: on.borderRadius }; b.disabled = true; const off = getComputedStyle(b); r.offBg = off.backgroundColor; return r; });
-    L.check(`${scheme}: enabled Save is clay with 8px corners`, save.bg === CLAY && save.radius === '8px', save);
-    L.check(`${scheme}: disabled Save is not clay`, save.offBg !== CLAY, save);
+    L.check(`${scheme}: enabled Save is ink-filled with 8px corners`, save.bg === (scheme === 'light' ? SLATE : IVORY) && save.radius === '8px', save);
+    L.check(`${scheme}: disabled Save is not filled`, save.offBg !== (scheme === 'light' ? SLATE : IVORY), save);
     // Clay is used nowhere else.
     const clayElsewhere = await page.evaluate(CLAY => [...window.__hl.panelEl.querySelectorAll('*'), ...window.__hl.toolbarEl.querySelectorAll('*')].filter(e => { const s = getComputedStyle(e); return s.backgroundColor === CLAY || s.borderTopColor === CLAY || s.color === CLAY; }).length, CLAY);
     L.check(`${scheme}: clay not used in panel or toolbar`, clayElsewhere === 0, clayElsewhere);
+    // Guideline: buttons weight 500, dialog titles serif 500, small UI text tracked +0.01em.
+    const type = await page.evaluate(() => {
+      const get = (cls, root) => { const t = document.createElement('div'); t.className = cls; root.appendChild(t); const c = getComputedStyle(t); const r = { w: c.fontWeight, ls: c.letterSpacing }; t.remove(); return r; };
+      return { btn: get('btn', window.__hl.panelList).w, title: get('panel-title', window.__hl.panelEl), count: getComputedStyle(window.__hl.panelEl.querySelector('.panel-count')).fontFamily, meta: get('item-meta', window.__hl.panelList) };
+    });
+    L.check(`${scheme}: button text is weight 500`, type.btn === '500', type);
+    L.check(`${scheme}: dialog title is serif, weight 500`, /^"Anthropic Serif"/.test(type.count) && type.title.w === '500', type);
+    L.check(`${scheme}: small UI text has +0.01em tracking`, type.meta.ls === '0.12px', type);
     // 9.2: placeholder and secondary text meet WCAG AA (4.5:1) on the surface.
     const lum = c => { const v = c.match(/\d+/g).slice(0, 3).map(n => n / 255).map(x => x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
     const ratio = (a, b) => { const [h, l] = [lum(a), lum(b)].sort((x, y) => y - x); return (h + 0.05) / (l + 0.05); };
@@ -54,6 +62,13 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', STONE = 'rgb(204,
   L.check('note link: slate with a persistent underline', link.color === SLATE && link.deco === 'underline', link);
   // Fonts: sans/serif stacks come from the shadow root, no network font loading.
   const built = require('fs').readFileSync(require('path').join(__dirname, '..', 'Highlighter.user.js'), 'utf8');
+  // Source rules: spacing on the 4px scale, keyboard focus on buttons is a 2px ring with a 2px gap.
+  const SCALE = new Set([0, 1, 2, 4, 6, 8, 12, 16, 20, 24, 32, 40]);
+  const css = require('fs').readFileSync(require('path').join(__dirname, '..', 'src', 'ui-style.js'), 'utf8').replace(/round\([^)]*\)|calc\([^)]*\)/g, '');
+  const off = [];
+  for (const m of css.matchAll(/(?:padding|margin|gap|top|left|right|bottom|height)[a-z-]*: ([^;{}]*)/g)) for (const px of m[1].match(/-?\d+(?:\.\d+)?px/g) || []) { const n = Math.abs(parseFloat(px)); if (n <= 40 && !SCALE.has(n)) off.push(m[0].trim()); }
+  L.check('spacing values are on the 4px scale', !off.length, off);
+  L.check('keyboard focus on buttons is a 2px ring with a 2px gap', /\.btn:focus-visible \{[^}]*outline: 2px solid var\(--focus\);[^}]*outline-offset: 2px/.test(css));
   L.check('light hover surface is brand light gray #e8e6dc', /--surface-hover: #e8e6dc;/.test(built));
   L.check('no remote font loading', !/fonts\.googleapis|@import url|@font-face/.test(built));
   // 9.2: type sizes come from the type-scale tokens (--text-sm/--leading-sm, --text-md/--leading-md), not literals.

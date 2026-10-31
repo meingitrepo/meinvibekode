@@ -20,7 +20,7 @@ const HTML = `<!doctype html><html><body style="font: 16px/1.5 sans-serif; margi
   L.check('13: toast has the tooltip\'s radius, padding and type size', toast.borderTopLeftRadius === tip.borderTopLeftRadius && toast.padding === tip.padding && toast.fontSize === tip.fontSize, { toast, tip });
   L.check('13: toast is centred at the bottom, 16px up', toast.bottom === '16px' && Math.abs(geo.mid - geo.vw / 2) <= 1, { toast, geo });
   L.check('13: a long toast wraps inside the view', geo.left >= 16 && geo.right <= geo.vw - 16, geo);
-  L.check('13: tooltip padding is even, 6px 10px', tip.padding === '6px 10px', tip);
+  L.check('13: tooltip padding is even, 6px 8px', tip.padding === '6px 8px', tip);
   // 18: note card, note editor, annotations panel
   for (const [name, get] of [['card', 'window.__hl.noteCardEl'], ['editor', 'window.__hl.editorEl'], ['panel', 'window.__hl.panelEl']]) {
     const s = await css(get, ['borderTopLeftRadius', 'boxShadow']);

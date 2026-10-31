@@ -1,6 +1,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.49", "Anthropic Sans and Serif first, Poppins and Lora next, Arial and Georgia as fallbacks; font-install hint removed"],
         ["9.48", "What's new entries stack the version above the text with roomier spacing"],
         ["9.47", "What's new panel: narrow version column, roomier rows and padding"],
         ["9.46", "The selection toolbar toggle now uses the cursor icon, and the note editor Tab test matches the disabled Save and Erase buttons."],

@@ -82,7 +82,7 @@
         return svg;
     }
 
-    const SANS_FONT = '"Anthropic Sans", Poppins, system-ui, "Segoe UI", ui-sans-serif, sans-serif';
+    const SANS_FONT = '"Anthropic Sans", Poppins, Arial, sans-serif';
     const SERIF_FONT = '"Anthropic Serif", Lora, Georgia, ui-serif, serif';
 
     // Colors from the Anthropic style reference: slate #141413, ivory #faf9f5 / #e8e6dc, oat #e3dacc,

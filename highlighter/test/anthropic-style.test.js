@@ -21,7 +21,7 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', STONE = 'rgb(204,
       L.check(`${scheme} ${name}: flat, no shadow`, s.boxShadow === 'none', s);
       L.check(`${scheme} ${name}: ${scheme === 'light' ? 'ivory surface, slate text' : 'slate surface, ivory text'}`,
         s.backgroundColor === (scheme === 'light' ? IVORY : SLATE) && s.color === (scheme === 'light' ? SLATE : IVORY), s);
-      L.check(`${scheme} ${name}: chrome is sans`, /^"Anthropic Sans", Poppins, .*system-ui/.test(s.fontFamily) && !/Georgia/.test(s.fontFamily), s);
+      L.check(`${scheme} ${name}: chrome is sans`, /^"Anthropic Sans", Poppins, Arial, sans-serif$/.test(s.fontFamily) && !/Georgia/.test(s.fontFamily), s);
     }
     const light = await css('window.__hl.panelEl', ['borderTopColor', 'borderTopWidth']);
     L.check(`${scheme} panel: 1px hairline border`, light.borderTopWidth === '1px' && (scheme === 'dark' || light.borderTopColor === STONE), light);

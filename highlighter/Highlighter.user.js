@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.48
+// @version      9.49
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3701,7 +3701,7 @@
         return svg;
     }
 
-    const SANS_FONT = '"Anthropic Sans", Poppins, system-ui, "Segoe UI", ui-sans-serif, sans-serif';
+    const SANS_FONT = '"Anthropic Sans", Poppins, Arial, sans-serif';
     const SERIF_FONT = '"Anthropic Serif", Lora, Georgia, ui-serif, serif';
 
     // Colors from the Anthropic style reference: slate #141413, ivory #faf9f5 / #e8e6dc, oat #e3dacc,
@@ -6729,6 +6729,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.49", "Anthropic Sans and Serif first, Poppins and Lora next, Arial and Georgia as fallbacks; font-install hint removed"],
         ["9.48", "What's new entries stack the version above the text with roomier spacing"],
         ["9.47", "What's new panel: narrow version column, roomier rows and padding"],
         ["9.46", "The selection toolbar toggle now uses the cursor icon, and the note editor Tab test matches the disabled Save and Erase buttons."],

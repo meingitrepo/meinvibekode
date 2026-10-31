@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.49
+// @version      9.50
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3845,9 +3845,9 @@
         .btn-subtle:hover:active .icon, .btn-subtle:active:focus-visible .icon { color: var(--ink); }
         /* Focus: border plus a 1px inset ring; the transparent outline shows in forced colors. */
         .btn:focus-visible { border-color: var(--focus); outline: 2px solid var(--transparent-stroke); box-shadow: inset 0 0 0 1px var(--focus); z-index: 1; }
-        /* The one primary action, the note editor's Save: clay, with only its bottom corners rounded (the
-           reference's filled button). Disabled while there is nothing to save, then as quiet as a subtle one. */
-        .btn-primary { background: var(--accent); color: var(--on-accent); border-radius: 0 0 var(--radius-button) var(--radius-button); }
+        /* The one primary action, the note editor's Save: clay, fully rounded like every other button (the
+           guideline's 8px). Disabled while there is nothing to save, then as quiet as a subtle one. */
+        .btn-primary { background: var(--accent); color: var(--on-accent); border-radius: var(--radius-button); }
         .btn-primary:hover { background: var(--accent-hover); }
         .btn-primary:hover:active, .btn-primary:active:focus-visible { background: var(--accent-pressed); }
         .btn-primary:disabled, .btn-primary:disabled:hover, .btn-primary:disabled:active { background: transparent; color: var(--ink-disabled); cursor: not-allowed; }
@@ -6729,6 +6729,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.50", "The note editor's Save button has the same fully rounded 8px corners as every other button"],
         ["9.49", "Anthropic Sans and Serif first, Poppins and Lora next, Arial and Georgia as fallbacks; font-install hint removed"],
         ["9.48", "What's new entries stack the version above the text with roomier spacing"],
         ["9.47", "What's new panel: narrow version column, roomier rows and padding"],

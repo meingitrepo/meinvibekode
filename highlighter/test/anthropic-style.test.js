@@ -1,5 +1,5 @@
 // Anthropic style (DESIGN.md): parchment surfaces, serif for text and sans for chrome, flat (no shadows,
-// hairline borders), filled buttons round only their bottom corners, clay only on the one primary action.
+// hairline borders), buttons share one 8px radius, clay only on the one primary action.
 const L = require('./lib');
 const HTML = `<!doctype html><html><body style="font: 16px/1.5 sans-serif; margin: 40px">
 <p id="p1">Alpha beta gamma delta epsilon zeta eta theta iota kappa.</p></body></html>`;
@@ -29,9 +29,9 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', STONE = 'rgb(204,
     const note = await page.evaluate(() => { const t = document.createElement('div'); t.className = 'card-text'; window.__hl.panelList.appendChild(t); const f = getComputedStyle(t).fontFamily; t.remove(); return f; });
     L.check(`${scheme}: note text is serif`, /^"Anthropic Serif", Lora, Georgia/.test(note), note);
     L.check(`${scheme}: panel list inherits sans chrome`, /^"Anthropic Sans", Poppins/.test(text.fontFamily), text);
-    // Save: clay and bottom-only rounded when it can act, quiet when there is nothing to save.
+    // Save: clay and fully rounded (8px) when it can act, quiet when there is nothing to save.
     const save = await page.evaluate(() => { const b = window.__hl.editorEl.querySelector('.btn-primary'); if (!b) return { bg: 'missing', radius: 'missing', offBg: 'missing' }; const on = (b.disabled = false, getComputedStyle(b)); const r = { bg: on.backgroundColor, radius: on.borderRadius }; b.disabled = true; const off = getComputedStyle(b); r.offBg = off.backgroundColor; return r; });
-    L.check(`${scheme}: enabled Save is clay with bottom-only 8px corners`, save.bg === CLAY && save.radius === '0px 0px 8px 8px', save);
+    L.check(`${scheme}: enabled Save is clay with 8px corners`, save.bg === CLAY && save.radius === '8px', save);
     L.check(`${scheme}: disabled Save is not clay`, save.offBg !== CLAY, save);
     // Clay is used nowhere else.
     const clayElsewhere = await page.evaluate(CLAY => [...window.__hl.panelEl.querySelectorAll('*'), ...window.__hl.toolbarEl.querySelectorAll('*')].filter(e => { const s = getComputedStyle(e); return s.backgroundColor === CLAY || s.borderTopColor === CLAY || s.color === CLAY; }).length, CLAY);

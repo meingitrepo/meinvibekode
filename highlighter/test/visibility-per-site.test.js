@@ -14,6 +14,7 @@ async function remembered(browser) {
   check('a site never switched: hidden', (await hid(p)) === true);
   await L.altKey(p, 'v');
   check('Alt+V shows them and remembers the site', (await hid(p)) === false && (await shownSites(p)).includes(SITE), await shownSites(p));
+  await L.selStr(p, '#t', 'bravo'); await L.altKey(p, 'h');   // Alt+V does nothing on a page with nothing to hide
   await L.altKey(p, 'v');
   check('Alt+V hides them and forgets the site', (await hid(p)) === true && !(await shownSites(p)).includes(SITE), await shownSites(p));
   await p.evaluate(() => window.__hl.openPanel());

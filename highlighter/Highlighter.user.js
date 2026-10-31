@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.67
+// @version      9.68
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -676,8 +676,10 @@
     const autoShown = { panel: false, pen: false };
 
     // Any explicit change is the user's decision: it cancels the pending automatic re-hide.
-    function setAnnotationsHidden(hidden) {
+    // It is also what this site remembers, unless `remember` is false (not the user's decision).
+    function setAnnotationsHidden(hidden, { remember = true } = {}) {
         autoShown.panel = autoShown.pen = false;
+        if (remember && annotationsShownHere() === hidden) setSiteListed('annotationsShownSites', !hidden);
         if (annotationsHidden === hidden) return;
         annotationsHidden = hidden;
         hideStyle.media = hidden ? 'all' : 'not all';
@@ -692,7 +694,7 @@
     function showAnnotationsFor(owner) {
         const was = annotationsHidden;
         const keep = { ...autoShown };
-        setAnnotationsHidden(false);
+        setAnnotationsHidden(false, { remember: false });
         Object.assign(autoShown, keep);
         if (was) autoShown[owner] = true;
     }
@@ -701,7 +703,7 @@
         if (!autoShown[owner]) return;
         autoShown[owner] = false;
         if (autoShown.panel || autoShown.pen) return;   // the other still needs them
-        setAnnotationsHidden(true);
+        setAnnotationsHidden(true, { remember: false });
     }
 
     // The Show button and Alt+V say so; annotating, jumping or erasing while hidden show them quietly.
@@ -2390,6 +2392,11 @@
         setSiteListed('toolbarOnSites', !off);
     }
 
+    // Annotations open hidden, except on the sites where they were last shown on purpose (Alt+V and the like).
+    function annotationsShownHere() {
+        return siteListed('annotationsShownSites');
+    }
+
     // =====================================================================
     // Restoring
     // =====================================================================
@@ -3182,13 +3189,13 @@
     function undoLastAction() {
         if (!undoStack.length) return;
         stepHistory(undoStack, redoStack);
-        showToast('Undone', { icon: 'arrow-u-up-left' });
+        showToast('Undo', { icon: 'arrow-u-up-left' });
     }
 
     function redoLastAction() {
         if (!redoStack.length) return;
         stepHistory(redoStack, undoStack);
-        showToast('Redone', { icon: 'arrow-u-up-right' });
+        showToast('Redo', { icon: 'arrow-u-up-right' });
     }
 
     // The menu's commands. A note being written closes first, as Esc would (a highlight made for a
@@ -3927,7 +3934,6 @@
         textarea::placeholder { color: var(--ink-4); opacity: 1; }
         /* width 0 + min-width 100%: the hint wraps to the note box's width instead of widening the
            panel, which would leave the box's border wider than the textarea and its scrollbar. */
-        .field-hint { letter-spacing: .01em; width: 0; min-width: 100%; margin-top: 4px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         /* Toast */
         /* A tooltip's size and style, centred at the bottom of the view: the same padding, 12px type and
            radius as .tip, an icon at the left end, no dismiss button; it fades on its own. */
@@ -4131,8 +4137,7 @@
     // and Delete deletes.
     const editorEl = makeEl('div', { class: 'surface editor', role: 'dialog', 'aria-labelledby': 'highlighter-note-title', hidden: '' }, [
         makeEl('div', { class: 'editor-header' }, [editorTitle, makeEl('div', { class: 'editor-actions' }, [noteSave, noteDiscard, noteDelete])]),
-        makeEl('div', { class: 'field' }, [noteInput]),
-        makeEl('div', { class: 'field-hint', text: 'Enter to save, Esc to cancel' })
+        makeEl('div', { class: 'field' }, [noteInput])
     ]);
 
     let toastIcon = phosphorIcon('info');   // replaced per message
@@ -4626,11 +4631,16 @@
     }
 
     // Alt+T, and the menu: the toolbar off or on again on this site. The keys work either way.
+    // While the pen is on the toolbar counts as off, so this turns it on and the pen off.
     function toggleToolbarSwitch() {
-        const off = !toolbarSwitchedOff();
+        const off = !penKey && !toolbarSwitchedOff();
         setToolbarSwitchedOff(off);
+        if (penKey) setPen(null);
         if (off) hideToolbar();
-        else scheduleToolbar();   // for text that is selected now
+        else {
+            setAnnotationsHidden(false);
+            scheduleToolbar();   // for text that is selected now
+        }
         refreshMenu();
         renderSiteMenu();
         showToast(off ? 'Selection toolbar disabled' : 'Selection toolbar enabled', { icon: off ? 'cursor-text-slash' : 'cursor-text' });
@@ -6895,11 +6905,10 @@
         menuButtons.forEach((b, id) => {
             if (id in pressed) b.setAttribute('aria-pressed', String(pressed[id]));
         });
-        menuButtons.get('toolbar').disabled = !!penKey;
         menuButtons.get('undo').disabled = !undoStack.length;
         menuButtons.get('redo').disabled = !redoStack.length;
         menuButtons.get('pen').replaceChildren(phosphorIcon(penKey ? 'pencil-simple' : 'pencil-simple-slash'));
-        menuButtons.get('toolbar').replaceChildren(phosphorIcon(toolbarSwitchedOff() ? 'cursor-text-slash' : 'cursor-text'));
+        menuButtons.get('toolbar').replaceChildren(phosphorIcon(toolbarSwitchedOff() || penKey ? 'cursor-text-slash' : 'cursor-text'));
         menuButtons.get('keys').replaceChildren(phosphorIcon(keysSwitchedOff() ? 'keyboard-slash' : 'keyboard'));
         const hideBtn = menuButtons.get('hide');
         hideBtn.dataset.label = annotationsHidden ? 'Show annotations' : 'Hide annotations';
@@ -7123,7 +7132,7 @@
         [pageStyle, hideStyle, textColorStyle].forEach(s => head.appendChild(s));
         darkMode = null;
         updateTextColorCss();
-        setAnnotationsHidden(true);   // a page opens with annotations hidden; the menu bar stays visible
+        setAnnotationsHidden(!annotationsShownHere(), { remember: false });   // a page opens as its site was left, else hidden; the menu bar stays visible
 
         lastHref = location.href;
         settledCanonical = lastSeenCanonical = canonicalKey();
@@ -7206,7 +7215,7 @@
         pendingRecords = [];
         undoStack.length = 0;
         redoStack.length = 0;
-        setAnnotationsHidden(false);
+        setAnnotationsHidden(false, { remember: false });
         [pageStyle, hideStyle, textColorStyle].forEach(s => s.remove());
     }
 

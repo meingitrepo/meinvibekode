@@ -88,9 +88,8 @@ Never pure `#000` / `#fff` for text or surfaces (the sites only use `#fff`/`#000
 | overlay | `--overlay` |
 
 **Deliberate differences (decide before changing):**
-1. Page type is 15-16px; this tool is dense chrome on top of other people's pages, so body is 14px and captions 12px.
-2. Fonts: the proprietary Anthropic Serif/Sans cannot be shipped in a userscript, so the stacks name them first (they apply only where installed), then the free look-alikes Poppins (sans) and Lora (serif), then Arial and Georgia: sans `"Anthropic Sans", Poppins, Arial`, serif `"Anthropic Serif", Lora, Georgia` (`SANS_FONT`, `SERIF_FONT`). The install hint for Poppins and Lora was retired in 9.49.
-3. Supporting hues (sky, mineral, plum...) have no tokens; add one only when a feature needs a categorical colour.
+1. Fonts: the proprietary Anthropic Serif/Sans cannot be shipped in a userscript, so the stacks name them first (they apply only where installed), then the free look-alikes Poppins (sans) and Lora (serif), then Arial and Georgia: sans `"Anthropic Sans", Poppins, Arial`, serif `"Anthropic Serif", Lora, Georgia` (`SANS_FONT`, `SERIF_FONT`). The install hint for Poppins and Lora was retired in 9.49.
+2. Supporting hues (sky, mineral, plum...) have no tokens; add one only when a feature needs a categorical colour.
 
 ## 9. Sources
 - https://claude.com/marketplace (dark; tokens `--color-*`, `--br-*`, `--sp-*`)

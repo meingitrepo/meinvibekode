@@ -1,6 +1,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.48", "What's new entries stack the version above the text with roomier spacing"],
         ["9.47", "What's new panel: narrow version column, roomier rows and padding"],
         ["9.46", "The selection toolbar toggle now uses the cursor icon, and the note editor Tab test matches the disabled Save and Erase buttons."],
         ["9.45", "Hiding closes the panel; menu panel/search show pressed; toolbar button disabled with pen"],

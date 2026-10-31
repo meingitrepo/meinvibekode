@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.47
+// @version      9.48
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3961,10 +3961,10 @@
         .help-key { flex: none; width: 11em; color: var(--ink-3); }
         .help-text { font-family: ${SERIF_FONT}; overflow-wrap: anywhere; }
         .help-log .everything-box { width: min(400px, 100%); max-height: 70vh; }
-        .help-log .help-body { padding: 0 12px 12px; }
-        .help-log .help-row { gap: 12px; padding: 8px 0; }
-        .help-log .help-key { width: 2.5em; font-variant-numeric: tabular-nums; color: var(--ink-2); }
-        .help-log .help-text { line-height: 1.55; }
+        .help-log .help-body { padding: 0 16px 16px; }
+        .help-log .help-row { flex-direction: column; gap: 2px; padding: 12px 0; }
+        .help-log .help-key { width: auto; font-size: var(--text-sm); font-variant-numeric: tabular-nums; color: var(--ink-3); }
+        .help-log .help-text { color: var(--ink); line-height: 1.6; }
         .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .page-head {
             display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 6px 4px; border: 0;
@@ -6787,6 +6787,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.48", "What's new entries stack the version above the text with roomier spacing"],
         ["9.47", "What's new panel: narrow version column, roomier rows and padding"],
         ["9.46", "The selection toolbar toggle now uses the cursor icon, and the note editor Tab test matches the disabled Save and Erase buttons."],
         ["9.45", "Hiding closes the panel; menu panel/search show pressed; toolbar button disabled with pen"],

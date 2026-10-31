@@ -38,8 +38,8 @@ No pure black or white in text or surfaces (`#fff`/`#000` appear on the sites on
 - Status never relies on colour alone: pair with icon or word.
 
 ## 3. Typography
-- **Serif** (Source Serif 4, then Georgia): headings and reading text. Weight 400-500, tight leading (about 1.1-1.3 for headings), slight negative tracking on large sizes (-0.01em at 34px).
-- **Sans** (Source Sans 3, then Arial): body, buttons, navigation, labels. 15-16px at line-height 1.5-1.6. Small headings may use 600.
+- **Serif** (Source Serif 4, then Georgia): reading text, and headings of content pages. Weight 400-500, tight leading (about 1.1-1.3 for headings), slight negative tracking on large sizes (-0.01em at 34px).
+- **Sans** (Source Sans 3, then Arial): body, buttons, navigation, labels. 15-16px at line-height 1.5-1.6. Small headings may use 600. Titles of tool chrome (panel, dialog, editor) are sans, not serif: only text the user reads or wrote (notes, item text, help prose) is serif.
 - **Mono** (ui-monospace): code and keys.
 - Measured scale: display 42-44/46-48 serif; section 28/36 serif; card title 20-22 serif or sans 600-700; body 16/26; UI small 12-13 sans, weight 500, letter-spacing +0.01em.
 - Measure: body lines 60ch (max 70-80ch). Weights stay at 400/500; 600+ only for small titles.
@@ -59,7 +59,7 @@ No pure black or white in text or surfaces (`#fff`/`#000` appear on the sites on
 - **Chip / tab:** `#f5f4ed` fill, 0.8px `#e8e6dc` border, `#3d3d3a` text, 13px, fully round.
 - **Card:** raised surface (`#20201f` on dark, `#f5f4ed` on light), 16px radius, 1px hairline, no shadow beyond the micro-shadow, serif title + sans description.
 - **Callout:** 16px radius, 1px hairline, tinted fill at ~10% of ink, padding 16x20, sans text 16/28.
-- **Dialog/panel:** card styling plus overlay `rgba(20,20,19,.4-.5)`; title serif, header separated by a hairline; content scrolls inside, header stays.
+- **Dialog/panel:** card styling plus overlay `rgba(20,20,19,.4-.5)`; title sans 500 (chrome), header separated by a hairline; content scrolls inside, header stays.
 - **Lists of entries (e.g. changelog):** hairline between rows, version/meta in small muted sans, description in serif, 12px vertical padding.
 - **Focus:** 2px ring in contrast colour with a 2px inner gap, always visible on keyboard focus. Skip link uses clay border.
 - **Inputs:** same radius as buttons, border at 3:1 against the page (`--line-strong`, not the hairline), placeholder at 4.5:1.
@@ -93,7 +93,7 @@ No pure black or white in text or surfaces (`#fff`/`#000` appear on the sites on
 | radius 4 / 8 / 12 / 16 | `--radius-md` / `--radius-button` / `--radius-lg` / `--radius-card` |
 | UI small / body | `--text-sm` 12 / `--text-md` 16 (+ `--leading-*`) |
 | motion | `--duration-fast/normal/slow` 100/150/300ms, `--ease-out` |
-| serif reading text | `SERIF_FONT` constant (`.help-text`, notes) |
+| serif reading text | `SERIF_FONT` constant (`.help-text`, notes, item text); panel and dialog titles use sans |
 | overlay | `--overlay` |
 
 **Deliberate differences (decide before changing):**

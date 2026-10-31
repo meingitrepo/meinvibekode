@@ -282,7 +282,7 @@
         .editor-header { display: flex; align-items: center; justify-content: space-between; min-height: 32px; margin: -8px -4px 4px 0; }
         /* Save and Delete, icon only, at the top right. */
         .editor-actions { display: flex; align-items: center; gap: 2px; }
-        .editor-title { font-family: ${SERIF_FONT}; font-weight: 500; }
+        .editor-title { font-weight: 500; }
         .field {
             position: relative; box-sizing: border-box; background: var(--surface);
             /* Anthropic input: one plain border on all four sides (3:1 on the page) that darkens to the text color on focus. */
@@ -364,7 +364,7 @@
         }
         .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }
         .panel-title { font-weight: 500; color: var(--ink); }
-        .panel-count { font-family: ${SERIF_FONT}; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-3); }
+        .panel-count { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-3); }
         .panel-actions { display: flex; align-items: center; gap: 2px; }
         .panel .field { flex: none; margin: 0 12px 8px; padding-bottom: 0; }
         .search-icon { position: absolute; left: 8px; top: 6px; color: var(--ink-3); pointer-events: none; }
@@ -424,9 +424,9 @@
         .item-main:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
         .item-main::before { content: ""; position: absolute; left: 4px; top: 8px; bottom: 8px; width: 4px; border-radius: 2px; background: var(--swatch); }
         .item-text, .item-note { font-family: ${SERIF_FONT}; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
-        .item-text { -webkit-line-clamp: 3; }
-        .item-note { -webkit-line-clamp: 4; white-space: pre-wrap; margin-top: 2px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-2); }
-        .item-meta { margin-top: 2px; letter-spacing: .01em; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
+        .item-text { -webkit-line-clamp: 3; text-wrap: pretty; }
+        .item-note { -webkit-line-clamp: 4; white-space: pre-wrap; margin-top: 4px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-2); }
+        .item-meta { margin-top: 4px; letter-spacing: .01em; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         .item-actions { display: flex; align-items: center; gap: 2px; padding: 4px 4px 0 0; opacity: 0; }
         .item:hover .item-actions, .item:focus-within .item-actions { opacity: 1; }
         @media (hover: none) { .item-actions { opacity: 1; } }

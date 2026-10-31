@@ -36,14 +36,17 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', HAIRLINE = 'rgb(2
     // Clay is used nowhere else.
     const clayElsewhere = await page.evaluate(CLAY => [...window.__hl.panelEl.querySelectorAll('*'), ...window.__hl.toolbarEl.querySelectorAll('*')].filter(e => { const s = getComputedStyle(e); return s.backgroundColor === CLAY || s.borderTopColor === CLAY || s.color === CLAY; }).length, CLAY);
     L.check(`${scheme}: clay not used in panel or toolbar`, clayElsewhere === 0, clayElsewhere);
-    // Guideline: buttons weight 500, dialog titles serif 500, small UI text tracked +0.01em.
+    // Guideline: buttons weight 500, dialog titles sans 500, small UI text tracked +0.01em.
     const type = await page.evaluate(() => {
       const get = (cls, root) => { const t = document.createElement('div'); t.className = cls; root.appendChild(t); const c = getComputedStyle(t); const r = { w: c.fontWeight, ls: c.letterSpacing }; t.remove(); return r; };
       return { btn: get('btn', window.__hl.panelList).w, title: get('panel-title', window.__hl.panelEl), count: getComputedStyle(window.__hl.panelEl.querySelector('.panel-count')).fontFamily, meta: get('item-meta', window.__hl.panelList) };
     });
     L.check(`${scheme}: button text is weight 500`, type.btn === '500', type);
-    L.check(`${scheme}: dialog title is serif, weight 500`, /^"Source Serif 4"/.test(type.count) && type.title.w === '500', type);
+    L.check(`${scheme}: dialog title is sans, weight 500`, /^"Source Sans 3"/.test(type.count) && type.title.w === '500', type);
     L.check(`${scheme}: small UI text has +0.01em tracking`, type.meta.ls === '0.12px', type);
+    // Row text: a wrapped title balances its last line (no one-word widow) and has 4px before the note.
+    const row = await page.evaluate(() => { const mk = cls => { const t = document.createElement('div'); t.className = cls; window.__hl.panelList.appendChild(t); const c = getComputedStyle(t); const r = { wrap: c.textWrap, mt: c.marginTop }; t.remove(); return r; }; return { text: mk('item-text'), note: mk('item-note') }; });
+    L.check(`${scheme}: row title wraps pretty, note sits 4px below it`, /pretty/.test(row.text.wrap) && row.note.mt === '4px', row);
     // 9.2: placeholder and secondary text meet WCAG AA (4.5:1) on the surface.
     const lum = c => { const v = c.match(/\d+/g).slice(0, 3).map(n => n / 255).map(x => x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
     const ratio = (a, b) => { const [h, l] = [lum(a), lum(b)].sort((x, y) => y - x); return (h + 0.05) / (l + 0.05); };

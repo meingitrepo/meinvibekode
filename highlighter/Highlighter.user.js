@@ -3846,7 +3846,7 @@
         /* Focus: a 2px ring with a 2px gap (it also shows in forced colors). */
         .btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; z-index: 1; }
         /* The one primary action, the note editor's Save: inverted ink (paper on dark), fully rounded like every
-           other button (the guideline's 8px). Disabled while there is nothing to save, then as quiet as a subtle one. */
+           other button (8px). Disabled while there is nothing to save, then as quiet as a subtle one. */
         .btn-primary { background: var(--ink); color: var(--on-ink); border-radius: var(--radius-button); }
         .btn-primary:hover { background: var(--ink-2); }
         .btn-primary:hover:active, .btn-primary:active:focus-visible { background: var(--ink-pressed); }

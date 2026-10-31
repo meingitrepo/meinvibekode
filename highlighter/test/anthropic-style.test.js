@@ -36,7 +36,7 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', HAIRLINE = 'rgb(2
     // Clay is used nowhere else.
     const clayElsewhere = await page.evaluate(CLAY => [...window.__hl.panelEl.querySelectorAll('*'), ...window.__hl.toolbarEl.querySelectorAll('*')].filter(e => { const s = getComputedStyle(e); return s.backgroundColor === CLAY || s.borderTopColor === CLAY || s.color === CLAY; }).length, CLAY);
     L.check(`${scheme}: clay not used in panel or toolbar`, clayElsewhere === 0, clayElsewhere);
-    // Guideline: buttons weight 500, dialog titles sans 500, small UI text tracked +0.01em.
+    // Buttons weight 500, dialog titles sans 500, small UI text tracked +0.01em.
     const type = await page.evaluate(() => {
       const get = (cls, root) => { const t = document.createElement('div'); t.className = cls; root.appendChild(t); const c = getComputedStyle(t); const r = { w: c.fontWeight, ls: c.letterSpacing }; t.remove(); return r; };
       return { btn: get('btn', window.__hl.panelList).w, title: get('panel-title', window.__hl.panelEl), count: getComputedStyle(window.__hl.panelEl.querySelector('.panel-count')).fontFamily, meta: get('item-meta', window.__hl.panelList) };

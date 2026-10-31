@@ -1,6 +1,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.53", "Body and control text raised to 16px on a 24px line height, per the design guideline"],
         ["9.52", "Ink primary button, lighter hairline, 4px spacing scale, 2px focus ring, serif dialog titles"],
         ["9.51", "The outline around a selected annotation uses warm slate and ivory instead of pure black and white"],
         ["9.50", "The note editor's Save button has the same fully rounded 8px corners as every other button"],

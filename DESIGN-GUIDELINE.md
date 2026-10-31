@@ -82,7 +82,7 @@ Never pure `#000` / `#fff` for text or surfaces (the sites only use `#fff`/`#000
 | primary button | `.btn-primary`: `--ink` fill, `--on-ink` text (paper fill on dark) |
 | error | `--danger` (`#a8321a` light, `#e5867a` dark; tuned for contrast) |
 | radius 4 / 8 / 12 / 16 | `--radius-md` / `--radius-button` / `--radius-lg` / `--radius-card` |
-| UI small / body | `--text-sm` 12 / `--text-md` 14 (+ `--leading-*`) |
+| UI small / body | `--text-sm` 12 / `--text-md` 16 (+ `--leading-*`) |
 | motion | `--duration-fast/normal/slow` 100/150/300ms, `--ease-out` |
 | serif reading text | `SERIF_FONT` constant (`.help-text`, notes) |
 | overlay | `--overlay` |

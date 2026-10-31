@@ -33,8 +33,8 @@ const HTML = `<!doctype html><html><body style="font: 16px/1.5 sans-serif; margi
   const ptitle = await css('window.__hl.panelCount', ['fontSize', 'lineHeight']);
   L.check('22: panel is 360px wide (widened so the selected count fits one line) and flat', panel.w === 360 && panel.boxShadow === 'none', panel);
   const one = await page.evaluate(() => { const c = window.__hl.panelCount; c.replaceChildren('10/10 ', Object.assign(document.createElement('span'), { className: 'panel-title', textContent: 'Annotations' }), ' selected'); return c.getBoundingClientRect().height; });
-  L.check('2: "N/N Annotations selected" stays on one line', one === 20, one);
-  L.check('22: panel title stays 14/20', ptitle.fontSize === '14px' && ptitle.lineHeight === '20px', ptitle);
+  L.check('2: "N/N Annotations selected" stays on one line', one === 24, one);
+  L.check('22: panel title stays 16/24', ptitle.fontSize === '16px' && ptitle.lineHeight === '24px', ptitle);
   await page.evaluate(() => window.__hl.closePanel());
   await page.keyboard.press('Alt+Shift+O'); await page.waitForTimeout(400);
   const box = await css('window.__hl.everythingEl.firstElementChild', ['boxShadow', 'paddingTop', 'borderTopLeftRadius']);
@@ -42,7 +42,7 @@ const HTML = `<!doctype html><html><body style="font: 16px/1.5 sans-serif; margi
   const left = await page.evaluate(() => { const r = window.__hl; const b = r.everythingEl.firstElementChild.getBoundingClientRect(); return { count: r.everythingCount.getBoundingClientRect().left - b.left, field: r.everythingFilter.parentElement.getBoundingClientRect().left - b.left }; });
   L.check('22: dialog is 600px wide, flat, with 16px corners', box.w === 600 && box.boxShadow === 'none' && box.borderTopLeftRadius === '16px', box);
   L.check('22: dialog content sits 12px (plus the 1px border) in from the edge, as in Alt+O', left.count === 13 && left.field === 13 && box.paddingTop === '12px', { box, left });
-  L.check('22: dialog title stays 14/20', etitle.fontSize === '14px' && etitle.lineHeight === '20px', etitle);
+  L.check('22: dialog title stays 16/24', etitle.fontSize === '16px' && etitle.lineHeight === '24px', etitle);
   // No shadow tokens remain: elevation is surface tone plus a hairline border
   const built = require('fs').readFileSync(require('path').join(__dirname, '..', 'Highlighter.user.js'), 'utf8');
   L.check('no shadow tokens in the built script', !/--shadow(8|16|64)s*:/.test(built));

@@ -125,8 +125,8 @@
         --radius-card: 16px;
         --text-sm: 12px;   /* type scale: captions, hints, meta */
         --leading-sm: 16px;
-        --text-md: 14px;   /* body and controls */
-        --leading-md: 20px;
+        --text-md: 16px;   /* body and controls */
+        --leading-md: 24px;
         --divider: #e8e6dc;
         --duration-fast: 100ms;
         --duration-normal: 150ms;

@@ -69,15 +69,13 @@
     const searchIcon = phosphorIcon('magnifying-glass');
     searchIcon.classList.add('search-icon');
     const panelList = makeEl('div', { class: 'panel-list' });
-    const panelFonts = makeEl('div', { class: 'panel-fonts', hidden: '' });   // the missing-font suggestion, see updateFontNote
     const panelEl = makeEl('div', { class: 'surface panel', role: 'complementary', 'aria-label': 'Annotations', hidden: '' }, [
         makeEl('div', { class: 'panel-header' }, [
             panelCount,
             makeEl('div', { class: 'panel-actions' }, [panelSelectAll, panelCopy, panelErase, panelClose])
         ]),
         makeEl('div', { class: 'field' }, [searchIcon, panelFilter]),
-        panelList,
-        panelFonts
+        panelList
     ]);
 
     // The pen (Alt+P, see setPen): a pill at the top of the view while it is on.

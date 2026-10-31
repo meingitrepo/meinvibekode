@@ -19,7 +19,7 @@ const TIMEOUT_MS = 240000;
 // 1.5 per core was the fastest of 6, 12 and 16 on 8 cores (128 s, 88 s, 92 s for all files); never fewer than 6.
 const JOBS = +process.env.HL_JOBS || Math.max(6, Math.round(os.cpus().length * 1.5));
 // Started first, longest first, so the longest file is not the last one left running (times with 12 jobs).
-const SLOW = ['gallery.test.js', 'font-hint.test.js', 'missing.test.js', 'follow-text-moves.test.js', 'divider-dpr.test.js'];
+const SLOW = ['gallery.test.js', 'missing.test.js', 'follow-text-moves.test.js', 'divider-dpr.test.js'];
 const dir = __dirname;
 const filters = process.argv.slice(2);
 const files = fs.readdirSync(dir).filter(f => f.endsWith('.test.js'))

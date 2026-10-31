@@ -3701,8 +3701,8 @@
         return svg;
     }
 
-    const SANS_FONT = 'Poppins, Arial, ui-sans-serif, system-ui, sans-serif';
-    const SERIF_FONT = 'Lora, Georgia, ui-serif, serif';
+    const SANS_FONT = 'system-ui, "Segoe UI", ui-sans-serif, sans-serif';
+    const SERIF_FONT = 'Georgia, ui-serif, serif';
 
     // Colors from the Anthropic style reference: slate #141413, ivory #faf9f5 / #e8e6dc, oat #e3dacc,
     // manilla #f5e3c7, stone #cccbc8, cloud #b0aea5 / #87867f, clay #d97757 / #c6613f. Tokens are named by role:
@@ -3998,9 +3998,6 @@
         }
         .field input::placeholder { color: var(--ink-4); opacity: 1; }
         .field input::-webkit-search-cancel-button { display: none; }
-        .panel-fonts { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 8px 16px; border-top: 1px solid var(--line); font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
-        .panel-fonts[hidden] { display: none; }
-        .panel-fonts a { color: var(--ink-2); text-decoration: underline; }
         .panel-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .section-title { margin: 8px 4px 4px; font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: 600; color: var(--ink-3); }
         .empty { margin: 4px 4px 8px; color: var(--ink-3); }
@@ -4161,15 +4158,13 @@
     const searchIcon = phosphorIcon('magnifying-glass');
     searchIcon.classList.add('search-icon');
     const panelList = makeEl('div', { class: 'panel-list' });
-    const panelFonts = makeEl('div', { class: 'panel-fonts', hidden: '' });   // the missing-font suggestion, see updateFontNote
     const panelEl = makeEl('div', { class: 'surface panel', role: 'complementary', 'aria-label': 'Annotations', hidden: '' }, [
         makeEl('div', { class: 'panel-header' }, [
             panelCount,
             makeEl('div', { class: 'panel-actions' }, [panelSelectAll, panelCopy, panelErase, panelClose])
         ]),
         makeEl('div', { class: 'field' }, [searchIcon, panelFilter]),
-        panelList,
-        panelFonts
+        panelList
     ]);
 
     // The pen (Alt+P, see setPen): a pill at the top of the view while it is on.
@@ -5422,48 +5417,6 @@
         if (wrapped && groups.length > 1) showToast(dir > 0 ? 'Back to the first annotation' : 'Back to the last annotation', { icon: 'arrow-counter-clockwise' });
         return true;
     }
-
-
-    // --- Font hint ---
-    // The UI asks for Poppins (sans) and Lora (serif). Once per version, on a site where the tool is on, say
-    // which of them is not installed and link to its download page.
-
-    const FONT_HINTS = [
-        { name: 'Poppins', fallback: 'Arial', url: 'https://fonts.google.com/specimen/Poppins' },
-        { name: 'Lora', fallback: 'Georgia', url: 'https://fonts.google.com/specimen/Lora' }
-    ];
-    const FONT_HINT_DELAY_MS = 3000;   // after the page's own restore has settled
-    let fontHintTimer = null;
-
-    // A font is missing when text in it measures the same as in the generic family it falls back to, for both
-    // monospace and serif. A failure counts as installed: no hint is better than a wrong one.
-    function fontMissing(name) {
-        try {
-            const ctx = document.createElement('canvas').getContext('2d');
-            const width = font => { ctx.font = font; return ctx.measureText('mmmmmmmmmmlli').width; };
-            return ['monospace', 'serif'].every(generic => width(`72px "${name}", ${generic}`) === width(`72px ${generic}`));
-        } catch (e) {
-            return false;
-        }
-    }
-
-    // Recorded as shown (in the settings, as fontHintVersion) only when the toast is shown; a hidden tab, a toast
-    // already up or a site with the tool off skip it and it comes back on the next load. While the first look for
-    // late content runs (it ends with the "not found" notice) the hint waits, so it can't take that notice's place.
-    function maybeHintMissingFonts(tries = 0) {
-        if (!running) return;
-        const version = typeof GM_info !== 'undefined' && GM_info && GM_info.script && GM_info.script.version;
-        if (!version || readSettings().fontHintVersion === version) return;
-        if (!siteListed('toolbarOnSites') && !siteListed('keysOnSites')) return;
-        if (lateWatcher && !lateWatcher.slow && tries < 10) { fontHintTimer = setTimeout(() => maybeHintMissingFonts(tries + 1), 2000); return; }
-        if (document.hidden || !toastEl.hidden) return;
-        const missing = FONT_HINTS.filter(f => fontMissing(f.name));
-        if (!missing.length) return;
-        const settings = readSettings();
-        settings.fontHintVersion = version;
-        writeSettings(settings);
-        showToast(`${missing.map(f => f.name).join(' and ')} not installed; using ${missing.map(f => f.fallback).join(' and ')}.`);
-    }
     // --- Selecting annotations by clicking them ---
 
     // A plain click on an annotation (not a drag, not on a link or a control inside it; the pen
@@ -6118,7 +6071,6 @@
         }
         renderSiteMenu();   // the menu's button shows pressed while the panel is open
         renderPanel();
-        updateFontNote();
         // Typing filters the list, unless the user has page text selected (to attach, say).
         if (focus && !getActiveRange()) panelFilter.focus({ preventScroll: true });
     }
@@ -6145,16 +6097,6 @@
     function togglePanel() {
         if (panelEl.hidden) openPanel();
         else closePanel();
-    }
-
-    // A quiet line under the list while Poppins or Lora is not installed, with a link to each one's download page.
-    function updateFontNote() {
-        const missing = FONT_HINTS.filter(f => fontMissing(f.name));
-        panelFonts.hidden = !missing.length;
-        if (!missing.length) return;
-        panelFonts.replaceChildren(
-            makeEl('span', { text: `${missing.map(f => f.name).join(' and ')} not installed; using ${missing.map(f => f.fallback).join(' and ')}.` }),
-            ...missing.map(f => makeEl('a', { href: f.url, target: '_blank', rel: 'noopener noreferrer', text: `Get ${f.name}` })));
     }
 
     function schedulePanelRefresh() {
@@ -6835,6 +6777,7 @@
     ]);
     helpTitle.id = 'help-title';
     uiRoot.append(helpEl);
+    const CHANGELOG_DELAY_MS = 4000;   // after the page's own restore has settled
     let changelogTimer = null;
     let helpKind = null;
     let helpReturnFocus = null;
@@ -6880,7 +6823,7 @@
     helpClose.addEventListener('click', closeHelp);
     helpEl.addEventListener('mousedown', e => { if (e.target === helpEl) closeHelp(); });
 
-    // After an update the changelog opens once, a little after the font hint's moment. The version is recorded
+    // After an update the changelog opens once, a few seconds after load, once the page's own restore has settled. The version is recorded
     // (as changelogVersion in the settings) only when it is shown: a hidden tab, a site with the tool off or
     // another dialog up skip it and it comes back on the next load.
     function maybeShowChangelog() {
@@ -7286,7 +7229,6 @@
         teardown.splice(0).forEach(fn => { try { fn(); } catch (e) { /* already gone */ } });
         stopLateWatcher();
         clearTimeout(reclaimTimer);
-        clearTimeout(fontHintTimer);
         clearTimeout(changelogTimer);
         if (nav) { clearTimeout(nav.timer); nav = null; }
         clearTimeout(restoreTimer);
@@ -7400,6 +7342,5 @@
     start();
     renderSiteMenu();
     refreshMenu();
-    fontHintTimer = setTimeout(maybeHintMissingFonts, FONT_HINT_DELAY_MS);
-    changelogTimer = setTimeout(maybeShowChangelog, FONT_HINT_DELAY_MS + 1000);
+    changelogTimer = setTimeout(maybeShowChangelog, CHANGELOG_DELAY_MS);
 })();

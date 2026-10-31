@@ -21,14 +21,14 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', STONE = 'rgb(204,
       L.check(`${scheme} ${name}: flat, no shadow`, s.boxShadow === 'none', s);
       L.check(`${scheme} ${name}: ${scheme === 'light' ? 'ivory surface, slate text' : 'slate surface, ivory text'}`,
         s.backgroundColor === (scheme === 'light' ? IVORY : SLATE) && s.color === (scheme === 'light' ? SLATE : IVORY), s);
-      L.check(`${scheme} ${name}: chrome is sans`, /Poppins/.test(s.fontFamily) && /Arial/.test(s.fontFamily) && !/Georgia/.test(s.fontFamily), s);
+      L.check(`${scheme} ${name}: chrome is sans`, /system-ui/.test(s.fontFamily) && !/Poppins|Georgia/.test(s.fontFamily), s);
     }
     const light = await css('window.__hl.panelEl', ['borderTopColor', 'borderTopWidth']);
     L.check(`${scheme} panel: 1px hairline border`, light.borderTopWidth === '1px' && (scheme === 'dark' || light.borderTopColor === STONE), light);
     const text = await css('window.__hl.panelList', ['fontFamily']);
     const note = await page.evaluate(() => { const t = document.createElement('div'); t.className = 'card-text'; window.__hl.panelList.appendChild(t); const f = getComputedStyle(t).fontFamily; t.remove(); return f; });
-    L.check(`${scheme}: note text is serif`, /Lora/.test(note) && /Georgia/.test(note), note);
-    L.check(`${scheme}: panel list inherits sans chrome`, /Poppins/.test(text.fontFamily), text);
+    L.check(`${scheme}: note text is serif`, /Georgia/.test(note) && !/Lora/.test(note), note);
+    L.check(`${scheme}: panel list inherits sans chrome`, /system-ui/.test(text.fontFamily) && !/Poppins/.test(text.fontFamily), text);
     // Save: clay and bottom-only rounded when it can act, quiet when there is nothing to save.
     const save = await page.evaluate(() => { const b = window.__hl.editorEl.querySelector('.btn-primary'); if (!b) return { bg: 'missing', radius: 'missing', offBg: 'missing' }; const on = (b.disabled = false, getComputedStyle(b)); const r = { bg: on.backgroundColor, radius: on.borderRadius }; b.disabled = true; const off = getComputedStyle(b); r.offBg = off.backgroundColor; return r; });
     L.check(`${scheme}: enabled Save is clay with bottom-only 8px corners`, save.bg === CLAY && save.radius === '0px 0px 8px 8px', save);

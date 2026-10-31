@@ -30,6 +30,7 @@
     ]);
     helpTitle.id = 'help-title';
     uiRoot.append(helpEl);
+    const CHANGELOG_DELAY_MS = 4000;   // after the page's own restore has settled
     let changelogTimer = null;
     let helpKind = null;
     let helpReturnFocus = null;
@@ -75,7 +76,7 @@
     helpClose.addEventListener('click', closeHelp);
     helpEl.addEventListener('mousedown', e => { if (e.target === helpEl) closeHelp(); });
 
-    // After an update the changelog opens once, a little after the font hint's moment. The version is recorded
+    // After an update the changelog opens once, a few seconds after load, once the page's own restore has settled. The version is recorded
     // (as changelogVersion in the settings) only when it is shown: a hidden tab, a site with the tool off or
     // another dialog up skip it and it comes back on the next load.
     function maybeShowChangelog() {

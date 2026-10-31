@@ -82,8 +82,8 @@
         return svg;
     }
 
-    const SANS_FONT = 'Poppins, Arial, ui-sans-serif, system-ui, sans-serif';
-    const SERIF_FONT = 'Lora, Georgia, ui-serif, serif';
+    const SANS_FONT = 'system-ui, "Segoe UI", ui-sans-serif, sans-serif';
+    const SERIF_FONT = 'Georgia, ui-serif, serif';
 
     // Colors from the Anthropic style reference: slate #141413, ivory #faf9f5 / #e8e6dc, oat #e3dacc,
     // manilla #f5e3c7, stone #cccbc8, cloud #b0aea5 / #87867f, clay #d97757 / #c6613f. Tokens are named by role:
@@ -379,9 +379,6 @@
         }
         .field input::placeholder { color: var(--ink-4); opacity: 1; }
         .field input::-webkit-search-cancel-button { display: none; }
-        .panel-fonts { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 8px 16px; border-top: 1px solid var(--line); font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
-        .panel-fonts[hidden] { display: none; }
-        .panel-fonts a { color: var(--ink-2); text-decoration: underline; }
         .panel-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .section-title { margin: 8px 4px 4px; font-size: var(--text-sm); line-height: var(--leading-sm); font-weight: 600; color: var(--ink-3); }
         .empty { margin: 4px 4px 8px; color: var(--ink-3); }

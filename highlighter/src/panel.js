@@ -101,7 +101,6 @@
         }
         renderSiteMenu();   // the menu's button shows pressed while the panel is open
         renderPanel();
-        updateFontNote();
         // Typing filters the list, unless the user has page text selected (to attach, say).
         if (focus && !getActiveRange()) panelFilter.focus({ preventScroll: true });
     }
@@ -128,16 +127,6 @@
     function togglePanel() {
         if (panelEl.hidden) openPanel();
         else closePanel();
-    }
-
-    // A quiet line under the list while Poppins or Lora is not installed, with a link to each one's download page.
-    function updateFontNote() {
-        const missing = FONT_HINTS.filter(f => fontMissing(f.name));
-        panelFonts.hidden = !missing.length;
-        if (!missing.length) return;
-        panelFonts.replaceChildren(
-            makeEl('span', { text: `${missing.map(f => f.name).join(' and ')} not installed; using ${missing.map(f => f.fallback).join(' and ')}.` }),
-            ...missing.map(f => makeEl('a', { href: f.url, target: '_blank', rel: 'noopener noreferrer', text: `Get ${f.name}` })));
     }
 
     function schedulePanelRefresh() {

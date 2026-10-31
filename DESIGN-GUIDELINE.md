@@ -49,6 +49,12 @@ No pure black or white in text or surfaces (`#fff`/`#000` appear on the sites on
 
 ## 4. Spacing, radius, borders, elevation
 - **Spacing** on a 4px base: 2, 4, 6, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96. Group related things tightly (4-12), separate groups generously (24-48). No off-scale values.
+  - **Off-scale exceptions:** 2 and 6 are not multiples of 4. Use them only for hairline gaps and optical nudges (a 2px gap between stacked rows, 6px vertical padding in a 28px tooltip). Anything else off the scale is a named exception with a comment saying why, and stays rare.
+  - **Margin, padding, gutter:** margin is space outside a component, padding is space inside it, a gutter is the gap between neighbours in a row or column. Don't use one to do another's job.
+  - **Outer is at least inner:** the space around a component is at least the space inside it, so unrelated things don't merge into one group (rows with 8px between them and 12px inside; a panel with 16px around its content).
+  - **No page grid:** this is floating tool UI over someone else's page. The 4px scale is the only grid; don't add columns or breakpoints. Components size from their content (a minimum and maximum width), and controls keep fixed sizes (32px icon buttons).
+  - **Spacing is fixed px:** it doesn't scale with text size. The host page's zoom scales everything together, and that is enough here. Revisit if the UI ever adopts rem-based text.
+  - **Asymmetric gaps are explained:** where left and right (or top and bottom) differ, a comment says why, for example the panel header's 12px left and 8px right margin, because the icon buttons carry their own padding.
 - **Radius:** 2 / 4 / 6 / 8 / 12 / 16 / 24 (2, 6 and 24 are unused in this repo). Buttons 8 (corporate site 10), cards and callouts 16, chips fully round. Use one radius per component family.
 - **Borders:** hairlines 0.5-1px; on dark `rgba(255,255,255,.1)`. Borders do the separating work that shadows do elsewhere.
 - **Elevation:** flat. The only shadow seen is a card micro-shadow (`0 1px 2px` at ~5-25% black). Menus and dialogs rely on a hairline plus a dimmed overlay.

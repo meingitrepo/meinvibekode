@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.70
+// @version      9.71
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3676,6 +3676,7 @@
         'square': 'M208,34H48A14,14,0,0,0,34,48V208a14,14,0,0,0,14,14H208a14,14,0,0,0,14-14V48A14,14,0,0,0,208,34Zm2,174a2,2,0,0,1-2,2H48a2,2,0,0,1-2-2V48a2,2,0,0,1,2-2H208a2,2,0,0,1,2,2Z',
         'copy': 'M216,34H88a6,6,0,0,0-6,6V82H40a6,6,0,0,0-6,6V216a6,6,0,0,0,6,6H168a6,6,0,0,0,6-6V174h42a6,6,0,0,0,6-6V40A6,6,0,0,0,216,34ZM162,210H46V94H162Zm48-48H174V88a6,6,0,0,0-6-6H94V46H210Z',
         'x': 'M204.24,195.76a6,6,0,1,1-8.48,8.48L128,136.49,60.24,204.24a6,6,0,0,1-8.48-8.48L119.51,128,51.76,60.24a6,6,0,0,1,8.48-8.48L128,119.51l67.76-67.75a6,6,0,0,1,8.48,8.48L136.49,128Z',
+        'dots-six-vertical': 'M102,60A10,10,0,1,1,92,50,10,10,0,0,1,102,60Zm72,0a10,10,0,1,1-10-10A10,10,0,0,1,174,60ZM102,128a10,10,0,1,1-10-10A10,10,0,0,1,102,128Zm72,0a10,10,0,1,1-10-10A10,10,0,0,1,174,128ZM102,196a10,10,0,1,1-10-10A10,10,0,0,1,102,196Zm72,0a10,10,0,1,1-10-10A10,10,0,0,1,174,196Z',
         'caret-down': 'M212.24,100.24l-80,80a6,6,0,0,1-8.48,0l-80-80a6,6,0,0,1,8.48-8.48L128,167.51l75.76-75.75a6,6,0,0,1,8.48,8.48Z',
         'caret-right': 'M180.24,132.24l-80,80a6,6,0,0,1-8.48-8.48L167.51,128,91.76,52.24a6,6,0,0,1,8.48-8.48l80,80A6,6,0,0,1,180.24,132.24Z',
         'magnifying-glass': 'M228.24,219.76l-51.38-51.38a86.15,86.15,0,1,0-8.48,8.48l51.38,51.38a6,6,0,0,0,8.48-8.48ZM38,112a74,74,0,1,1,74,74A74.09,74.09,0,0,1,38,112Z',
@@ -3947,11 +3948,11 @@
         /* The sticky menu: the site switch, with a row of icon buttons expanding to its left. */
         .sitemenu { display: flex; align-items: center; padding: 4px; width: max-content; cursor: grab; }
         .sitemenu .btn { cursor: pointer; }
-        .sitemenu-handle { position: relative; align-self: stretch; width: 12px; cursor: grab; }
-        /* A hairline bar, darker under the pointer. */
-        .sitemenu-handle::before { content: ''; position: absolute; top: 50%; left: 4px; width: 2px; height: 16px; margin-top: -8px; border-radius: 1px; background: var(--line-strong); transition: background-color var(--duration-fast) var(--ease-out); }
-        .sitemenu-handle:hover::before, .sitemenu-handle:active::before { background: var(--ink-3); }
-        @media (prefers-reduced-motion: reduce) { .sitemenu-handle::before { transition: none; } }
+        /* A grip icon, coloured and lit like the icon buttons but narrower: the icon's empty sides overflow. */
+        .sitemenu-handle { display: flex; align-items: center; justify-content: center; align-self: stretch; width: 14px; overflow: hidden; border-radius: var(--radius-button); color: var(--ink-2); cursor: grab; transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
+        .sitemenu-handle:hover { background: var(--surface-hover); color: var(--ink); }
+        .sitemenu-handle:active { background: var(--surface-pressed); color: var(--ink); }
+        @media (prefers-reduced-motion: reduce) { .sitemenu-handle { transition: none; } }
         .sitemenu-expand { display: flex; justify-content: center; }
         .sitemenu-expand .icon { transform: rotate(-90deg); transition: transform var(--duration-normal) var(--ease-out); }
         .sitemenu-expand [aria-expanded="true"] .icon { transform: rotate(90deg); }
@@ -4088,7 +4089,6 @@
             .item-main:focus-visible, .page-head:focus-visible, .check:focus-visible { outline-color: CanvasText; }
             .item-main::before { forced-color-adjust: none; }
             .select-box path { stroke: Highlight; }
-            .sitemenu-handle::before, .sitemenu-handle:hover::before, .sitemenu-handle:active::before { forced-color-adjust: none; background: CanvasText; }
         }
     `;
 
@@ -6823,7 +6823,7 @@
     const menuHost = makeEl('div', { [UI_ATTR]: '' });
     menuHost.style.cssText = 'all: initial !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 0 !important; z-index: 2147483647 !important;';
     const menuRoot = menuHost.attachShadow({ mode: 'closed' });
-    const menuHandle = makeEl('div', { class: 'sitemenu-handle', 'aria-hidden': 'true' });
+    const menuHandle = makeEl('div', { class: 'sitemenu-handle', 'aria-hidden': 'true' }, [phosphorIcon('dots-six-vertical')]);
     const menuExpand = makeButton({ icon: phosphorIcon('caret-down') });
     let menuOpen = false;   // not kept: every page starts with the menu collapsed
     const menuTip = makeEl('div', { class: 'surface tip', role: 'tooltip', hidden: '' });

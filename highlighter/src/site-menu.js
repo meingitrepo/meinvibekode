@@ -15,7 +15,7 @@
     const menuHost = makeEl('div', { [UI_ATTR]: '' });
     menuHost.style.cssText = 'all: initial !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 0 !important; z-index: 2147483647 !important;';
     const menuRoot = menuHost.attachShadow({ mode: 'closed' });
-    const menuHandle = makeEl('div', { class: 'sitemenu-handle', 'aria-hidden': 'true' });
+    const menuHandle = makeEl('div', { class: 'sitemenu-handle', 'aria-hidden': 'true' }, [phosphorIcon('dots-six-vertical')]);
     const menuExpand = makeButton({ icon: phosphorIcon('caret-down') });
     let menuOpen = false;   // not kept: every page starts with the menu collapsed
     const menuTip = makeEl('div', { class: 'surface tip', role: 'tooltip', hidden: '' });

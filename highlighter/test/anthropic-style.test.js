@@ -44,6 +44,12 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', HAIRLINE = 'rgb(2
     L.check(`${scheme}: button text is weight 500`, type.btn === '500', type);
     L.check(`${scheme}: dialog title is sans, weight 500`, /^"Source Sans 3"/.test(type.count) && type.title.w === '500', type);
     L.check(`${scheme}: small UI text has +0.01em tracking`, type.meta.ls === '0.12px', type);
+    // Tooltip: Source Sans sits high in its line box, so the text starts 1px lower; the box keeps its height.
+    const pc = await page.evaluate(() => { const r = [...window.__hl.panelEl.querySelectorAll('.panel-header button')].pop().getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+    await page.mouse.move(pc.x, pc.y);
+    await L.until(page, () => !window.__hl.labelTipEl.hidden);
+    const tip = await page.evaluate(() => { const t = window.__hl.labelTipEl, rg = document.createRange(); rg.selectNodeContents(t.firstChild); const tb = t.getBoundingClientRect(); return { h: tb.height, textTop: rg.getBoundingClientRect().top - tb.top }; });
+    L.check(`${scheme}: tooltip text sits 1px lower, box height unchanged`, tip.textTop === 7 && tip.h === 30, tip);
     // Row text: a wrapped title balances its last line (no one-word widow) and has 4px before the note.
     const row = await page.evaluate(() => { const mk = cls => { const t = document.createElement('div'); t.className = cls; window.__hl.panelList.appendChild(t); const c = getComputedStyle(t); const r = { wrap: c.textWrap, mt: c.marginTop }; t.remove(); return r; }; return { text: mk('item-text'), note: mk('item-note') }; });
     L.check(`${scheme}: row title wraps pretty, note sits 4px below it`, /pretty/.test(row.text.wrap) && row.note.mt === '4px', row);

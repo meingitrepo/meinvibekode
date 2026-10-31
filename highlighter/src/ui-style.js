@@ -258,6 +258,9 @@
            stood, so placePanel() can move it in from the edge instead of the edge squeezing it. */
         .tip { white-space: nowrap; max-width: calc(100vw - 8px); overflow: hidden; text-overflow: ellipsis; padding: 6px 8px; font-size: var(--text-sm); line-height: var(--leading-sm); border-radius: var(--radius-md); pointer-events: none; }
         .tip .kbd { margin-left: 8px; color: var(--ink-3); }
+        /* Source Sans sits high in its line box: 1px of space above the text, 1px less below, same height. */
+        .tip::before { content: ""; display: block; margin-top: 1px; }
+        .tip::after { content: ""; display: block; margin-top: -1px; }
 
         /* Panels (note preview, note editor, toast) all have 12px padding. Their 32px icon buttons
            are pulled out by 4px with negative margins, so every button sits 8px from the panel's

@@ -15,7 +15,7 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', HAIRLINE = 'rgb(2
     await page.evaluate(() => { window.__hl.showToast('Hello'); window.__hl.openPanel(); });
     await page.waitForTimeout(300);
     const css = (get, props) => page.evaluate(([get, props]) => { const s = getComputedStyle(eval(get)); return Object.assign({}, ...props.map(p => ({ [p]: s[p] }))); }, [get, props]);
-    const surfaces = [['toolbar', 'window.__hl.toolbarEl'], ['card', 'window.__hl.noteCardEl'], ['editor', 'window.__hl.editorEl'], ['panel', 'window.__hl.panelEl'], ['toast', 'window.__hl.toastEl']];
+    const surfaces = [['toolbar', 'window.__hl.toolbarEl'], ['card', 'window.__hl.noteCardEl'], ['editor', 'window.__hl.editorEl'], ['panel', 'window.__hl.panelEl'], ['toast', 'window.__hl.toastEl'], ['dialog', 'window.__hl.everythingEl.firstElementChild']];
     for (const [name, get] of surfaces) {
       const s = await css(get, ['backgroundColor', 'color', 'boxShadow', 'borderTopColor', 'borderTopWidth', 'fontFamily']);
       L.check(`${scheme} ${name}: flat, no shadow`, s.boxShadow === 'none', s);
@@ -60,6 +60,19 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', HAIRLINE = 'rgb(2
   const { ctx, page } = await L.open(browser, { html: HTML, store });
   const link = await page.evaluate(async () => { await window.__hl.openPanel(); const t = document.createElement('div'); t.className = 'card-text'; const a = document.createElement('a'); a.href = '#'; a.textContent = 'x'; t.appendChild(a); window.__hl.panelList.appendChild(t); const s = getComputedStyle(a); return { color: s.color, deco: s.textDecorationLine }; });
   L.check('note link: slate with a persistent underline', link.color === SLATE && link.deco === 'underline', link);
+  // Cards and dialogs: 16px corners. Dialog titles: body 16/24. A toast is a tooltip at the bottom centre: same padding, radius and type size.
+  const look = (get, props) => page.evaluate(([get, props]) => { const s = getComputedStyle(eval(get)); return Object.assign({}, ...props.map(p => ({ [p]: s[p] }))); }, [get, props]);
+  for (const [name, get] of [['card', 'window.__hl.noteCardEl'], ['editor', 'window.__hl.editorEl'], ['panel', 'window.__hl.panelEl'], ['dialog', 'window.__hl.everythingEl.firstElementChild']]) {
+    const r = await look(get, ['borderTopLeftRadius']);
+    L.check(`${name}: 16px corners`, r.borderTopLeftRadius === '16px', r);
+  }
+  for (const [name, get] of [['panel', 'window.__hl.panelCount'], ['dialog', 'window.__hl.everythingCount']]) {
+    const t = await look(get, ['fontSize', 'lineHeight']);
+    L.check(`${name} title: 16/24`, t.fontSize === '16px' && t.lineHeight === '24px', t);
+  }
+  const TIP = ['borderTopLeftRadius', 'padding', 'fontSize'];
+  const toast = await look('window.__hl.toastEl', TIP), tip = await look('window.__hl.labelTipEl', TIP);
+  L.check("toast has the tooltip's radius, padding and type size", JSON.stringify(toast) === JSON.stringify(tip), { toast, tip });
   // Fonts: sans/serif stacks come from the shadow root, no network font loading.
   const built = require('fs').readFileSync(require('path').join(__dirname, '..', 'Highlighter.user.js'), 'utf8');
   // Source rules: spacing on the 4px scale, keyboard focus on buttons is a 2px ring with a 2px gap.
@@ -70,6 +83,7 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', HAIRLINE = 'rgb(2
   L.check('spacing values are on the 4px scale', !off.length, off);
   L.check('keyboard focus on buttons is a 2px ring with a 2px gap', /\.btn:focus-visible \{[^}]*outline: 2px solid var\(--focus\);[^}]*outline-offset: 2px/.test(css));
   L.check('light hover surface is brand light gray #e8e6dc', /--surface-hover: #e8e6dc;/.test(built));
+  L.check('no shadow tokens in the built script', !/--shadow(8|16|64)s*:/.test(built));
   L.check('no remote font loading', !/fonts\.googleapis|@import url|@font-face/.test(built));
   // 9.2: type sizes come from the type-scale tokens (--text-sm/--leading-sm, --text-md/--leading-md), not literals.
   const literalType = built.match(/(font-size|line-height): \d+px/g) || [];

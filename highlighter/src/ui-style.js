@@ -285,13 +285,13 @@
         .editor-title { font-family: ${SERIF_FONT}; font-weight: 500; }
         .field {
             position: relative; box-sizing: border-box; background: var(--surface);
-            /* Anthropic input: one plain hairline on all four sides that darkens to the text color on focus. */
-            border: 1px solid var(--line); border-radius: var(--radius-md);
+            /* Anthropic input: one plain border on all four sides (3:1 on the page) that darkens to the text color on focus. */
+            border: 1px solid var(--line-strong); border-radius: var(--radius-md);
             /* Clips the textarea (and its scrollbar) to the rounded corners. */
             overflow: hidden;
             transition: border-color 100ms ease-out;
         }
-        .field:hover { border-color: var(--line-hover); }
+        .field:hover { border-color: var(--ink-3); }
         .field:focus-within { border-color: var(--ink); }
         textarea {
             /* Height is set by sizeNoteInput(): NOTE_MIN_LINES to NOTE_MAX_LINES, then it scrolls.

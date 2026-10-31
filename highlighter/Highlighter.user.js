@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.59
+// @version      9.60
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3904,13 +3904,13 @@
         .editor-title { font-family: ${SERIF_FONT}; font-weight: 500; }
         .field {
             position: relative; box-sizing: border-box; background: var(--surface);
-            /* Anthropic input: one plain hairline on all four sides that darkens to the text color on focus. */
-            border: 1px solid var(--line); border-radius: var(--radius-md);
+            /* Anthropic input: one plain border on all four sides (3:1 on the page) that darkens to the text color on focus. */
+            border: 1px solid var(--line-strong); border-radius: var(--radius-md);
             /* Clips the textarea (and its scrollbar) to the rounded corners. */
             overflow: hidden;
             transition: border-color 100ms ease-out;
         }
-        .field:hover { border-color: var(--line-hover); }
+        .field:hover { border-color: var(--ink-3); }
         .field:focus-within { border-color: var(--ink); }
         textarea {
             /* Height is set by sizeNoteInput(): NOTE_MIN_LINES to NOTE_MAX_LINES, then it scrolls.
@@ -6729,6 +6729,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.60", "Input borders now have 3:1 contrast with the page"],
         ["9.59", "Source Sans 3 and Source Serif 4 replace the Anthropic, Poppins and Lora font stacks"],
         ["9.58", "Corrected two stale test checks"],
         ["9.57", "Icon checks compare icon names instead of raw SVG path text, so redrawing an icon no longer fails tests"],

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.56
+// @version      9.57
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -6729,6 +6729,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.57", "Icon checks compare icon names instead of raw SVG path text, so redrawing an icon no longer fails tests"],
         ["9.56", "Make no-toasts the single home for toast wording"],
         ["9.55", "Selected count no longer cut off: panel is 400px wide"],
         ["9.54", "Make anthropic-style the single home for design rules; remove redundant style checks from surfaces"],

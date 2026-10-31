@@ -3,8 +3,7 @@
 const L = require('./lib');
 const html = `<html><body style="font:16px sans-serif;margin:40px">
 <p id="p">Alpha bravo charlie delta echo foxtrot golf hotel india juliet.</p></body></html>`;
-const d = (el) => el.evaluate(e => { const p = e.querySelector('svg path.ic'); return p && p.getAttribute('d').slice(0, 14); });
-const START = { add: 'M208,34H48A14,', edit: 'M90,96a6,6,0,0', pencil: 'M225.9,74.78,', pencilOff: 'M52.44,36A6,6,', pinFill: 'M235.33,104l-5', pin: 'M233.91,82.79,', eye: 'M245.48,125.57', eyeOff: 'M52.44,36A6,6,' };
+const d = (el) => el.evaluate(e => window.__hl.iconName(e));
 (async () => {
   const b = await L.launch();
   const { page } = await L.open(b, { html });
@@ -16,24 +15,25 @@ const START = { add: 'M208,34H48A14,', edit: 'M90,96a6,6,0,0', pencil: 'M225.9,7
   const pt = await page.evaluate(() => { const r = window.__hl.allWrappers()[0].getClientRects()[0]; return { x: r.left + 5, y: r.top + r.height / 2 }; });
   await page.mouse.click(pt.x, pt.y); await page.waitForTimeout(400);
   let n = await noteBtn('penEl');
-  L.check('pen bar: Add note uses the note-add icon', (await d(n)) === START.add, await d(n));
+  L.check('pen bar: Add note uses the note-add icon', (await d(n)) === 'note-blank', await d(n));
   await page.evaluate(() => [...window.__hl.penEl.querySelectorAll('button')].find(x => /note/i.test(x.dataset.label)).click());
   await page.waitForTimeout(200);
   await page.evaluate(() => window.__hl.noteInput.focus()); await page.keyboard.type('hi');
   await page.keyboard.press('Enter'); await page.waitForTimeout(300);
   n = await noteBtn('penEl');
-  L.check('pen bar: Edit note uses the note icon', (await d(n)) === START.edit, await d(n));
-  L.check('site menu: pen mode uses the pencil (slashed while off)', await page.evaluate(s => { const p = window.__hl.menuButtons.get('pen').querySelector('svg path.ic'); return p.getAttribute('d').startsWith(s); }, START.pencil), null);
+  L.check('pen bar: Edit note uses the note icon', (await d(n)) === 'note', await d(n));
+  const menuIcon = id => page.evaluate(i => window.__hl.iconName(window.__hl.menuButtons.get(i)), id);
+  L.check('site menu: pen mode uses the pencil (slashed while off)', (await menuIcon('pen')) === 'pencil-simple', await menuIcon('pen'));
   await L.altKey(page, 'KeyP');
-  L.check('site menu: pen mode off shows the slashed pencil', await page.evaluate(s => window.__hl.menuButtons.get('pen').querySelector('svg path.ic').getAttribute('d').startsWith(s), START.pencilOff), null);
-  const hide = () => page.evaluate(() => { const p = window.__hl.menuButtons.get('hide').querySelector('svg path.ic'); return p.getAttribute('d').slice(0, 14); });
+  L.check('site menu: pen mode off shows the slashed pencil', (await menuIcon('pen')) === 'pencil-simple-slash', await menuIcon('pen'));
+  const hide = () => menuIcon('hide');
   const lit = () => page.evaluate(() => window.__hl.menuButtons.get('hide').getAttribute('aria-pressed'));
-  L.check('hide button shows the eye while annotations are visible', (await hide()) === START.eye, await hide());
+  L.check('hide button shows the eye while annotations are visible', (await hide()) === 'eye', await hide());
   L.check('hide button is lit (pressed) while annotations are visible', (await lit()) === 'true', await lit());
   await L.altKey(page, 'KeyV'); await page.waitForTimeout(300);
-  L.check('hide button shows eye-off while they are hidden', (await hide()) === START.eyeOff, await hide());
+  L.check('hide button shows eye-off while they are hidden', (await hide()) === 'eye-slash', await hide());
   L.check('hide button is not lit while they are hidden', (await lit()) === 'false', await lit());
   await L.altKey(page, 'KeyV'); await page.waitForTimeout(300);
-  L.check('hide button back to the eye', (await hide()) === START.eye, await hide());
+  L.check('hide button back to the eye', (await hide()) === 'eye', await hide());
   await b.close();
 })();

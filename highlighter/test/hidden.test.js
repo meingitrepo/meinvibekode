@@ -14,7 +14,7 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
 <p id="p1">${P1}</p><p id="p2">${P2}</p><p id="p3">Some plain words to annotate later on.</p></body></html>`;
 const store = { [KEY]: JSON.stringify([rec('//*[@id="p1"]', P1, 'alpha one', { group: 'gA' }), rec('//*[@id="p2"]', P2, 'beta two', { key: 'u', group: 'gB' })]) };
 const hiddenNow = p => p.evaluate(() => window.__hl.annotationsHidden);
-const icon = p => p.evaluate(() => { const d = window.__hl.toastEl.querySelector('svg path'); return d && d.getAttribute('d').slice(0, 20); });
+const icon = p => p.evaluate(() => window.__hl.iconName(window.__hl.toastEl.querySelector(':scope > svg.icon')));
 const check = L.check;
 
 async function toggle(browser) {
@@ -22,7 +22,7 @@ async function toggle(browser) {
   await L.altKey(p, 'v');
   const hiddenMsg = await L.toast(p);
   check('Alt+V hides and says so', (await hiddenNow(p)) === true && hiddenMsg !== null, hiddenMsg);
-  check('with the eye-off icon', (await icon(p)) === 'M52.44,36A6,6,0,0,0,', await icon(p));
+  check('with the eye-off icon', (await icon(p)) === 'eye-slash', await icon(p));
   await L.altKey(p, 'v');
   check('Alt+V again shows them and says so', (await hiddenNow(p)) === false && ![null, hiddenMsg].includes(await L.toast(p)), await L.toast(p));
   check('no page errors', p.__errors.length === 0, p.__errors);

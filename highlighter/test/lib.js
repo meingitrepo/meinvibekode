@@ -13,6 +13,7 @@ function instrument(src) {
     'editorEl', 'noteInput', 'uiRoot', 'uiHost', 'undoStack', 'redoStack', 'toolbarEl', 'labelTipEl', 'lateWatcher', 'currentKey', 'menuIds', 'running', 'darkMode', 'hoveredWrapper', 'annotationsHidden', 'cardWrapper', 'penEl', 'penKey', 'lastStyleKey', 'everythingEl', 'everythingFilter', 'everythingList', 'everythingCount', 'everythingSelectAll', 'everythingCopy', 'everythingForget', 'everythingClose', 'selectBoxesEl', 'selectedGroups', 'shownWrappers', 'menuEl', 'menuExpand', 'menuHandle', 'menuButtons', 'menuClose', 'helpEl'];
   const get = n => `get ${n}() { try { return ${n}; } catch (e) { return undefined; } }`;
   return src.replace(BOOT, `    window.__hl = { ${names.map(get).join(', ')}, get editor() { return editor; }, get pending() { return pendingRecords; }, get jumpGroup() { return jumpGroup; },
+      iconName: el => { const p = el && el.querySelector('path.ic'), d = p && p.getAttribute('d'); return Object.keys(PHOSPHOR_ICONS).find(n => PHOSPHOR_ICONS[n] === d) || null; }, NOTE_BADGE_PATH,
       showToast, setAnnotationsHidden, allWrappers, getSvg, openPanel, closePanel, copyAnnotations, renderPanel, pageAnnotations, groupTime, getCurrentRecords, saveEditor: () => saveEditor(),
       ${['pageCounts', 'missingRecords', 'isOtherPage', 'pageTag', 'looseLocate', 'noticedKeys'].map(get).join(', ')}, get panelScroll() { return panelList.scrollTop; } };\n` + BOOT);
 }

@@ -1,5 +1,6 @@
 // 8.98: the toast with an action is a title and an icon-only button (Show), with no body. 9.7: Pen off, the toolbar and
-// key switches no longer toast, and erasing offers no Undo.
+// key switches no longer toast, and erasing offers no Undo. Exact wording is checked in no-toasts only: here a message is told
+// apart by comparing it with the one before.
 const L = require('./lib');
 const HTML = `<!doctype html><html><head><meta charset="utf-8"></head><body style="font:16px sans-serif;margin:200px 40px">
 <p id="p1">Light paragraph one with words to select and more words after them.</p></body></html>`;
@@ -8,16 +9,17 @@ const info = page => page.evaluate(() => { const t = window.__hl.toastEl; return
   const browser = await L.launch();
   const { page } = await L.open(browser, { html: HTML });
   await L.altKey(page, 'p'); await page.waitForTimeout(300);
-  L.check('pen on: says enabled, and the bar shows it', (await L.toast(page)) === 'Pen mode enabled' && await page.evaluate(() => !window.__hl.penEl.hidden), await L.toast(page));
+  const penOn = await L.toast(page);
+  L.check('pen on: a toast, and the bar shows it', penOn !== null && await page.evaluate(() => !window.__hl.penEl.hidden), penOn);
   await L.altKey(page, 'p'); await page.waitForTimeout(300);
-  L.check('pen off: says disabled', (await L.toast(page)) === 'Pen mode disabled', await L.toast(page));
+  L.check('pen off: a different toast, and the bar goes', ![null, penOn].includes(await L.toast(page)) && await page.evaluate(() => window.__hl.penEl.hidden), await L.toast(page));
   await L.altKey(page, 't'); await L.altKey(page, 't'); await L.altKey(page, 'k', true); await L.altKey(page, 'k', true);
-  L.check('toolbar and key switches say enabled or disabled', /^(Selection toolbar|Shortcuts) (en|dis)abled$/.test(await L.toast(page)), await L.toast(page));
+  L.check('toolbar and key switches show a toast', (await L.toast(page)) !== null, await L.toast(page));
   await L.selStr(page, '#p1', 'words to select'); await page.waitForTimeout(300);
   await L.altKey(page, 'h'); await page.waitForTimeout(300);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
   const u = await info(page);
-  L.check('Annotations hidden has no button', (await L.toast(page)) === 'Annotations hidden' && u.buttons === 0, u);
+  L.check('Annotations hidden has no button', (await L.toast(page)) !== null && await page.evaluate(() => window.__hl.annotationsHidden) && u.buttons === 0, u);
   // No toast has a body line.
   const body = async name => { const i = await info(page); L.check(`${name} has no body`, i.body.length === 0, i); };
   await body('Show');
@@ -26,8 +28,10 @@ const info = page => page.evaluate(() => { const t = window.__hl.toastEl; return
   await L.altKey(page, 'h'); await page.waitForTimeout(300);
   await L.selStr(page, '#p1', 'more words'); await page.waitForTimeout(300);
   await L.altKey(page, 'h'); await page.waitForTimeout(300);
-  for (let i = 0; i < 4; i++) { await L.altKey(page, 'j'); await page.waitForTimeout(400); }
-  L.check('wrap toast', /^Back to the first/.test(await L.toast(page) || ''), await L.toast(page)); await body('Back to the first');
+  for (let i = 0; i < 3; i++) { await L.altKey(page, 'j'); await page.waitForTimeout(400); }
+  const beforeWrap = await L.toast(page);   // three annotations, three jumps: no wrap yet
+  await L.altKey(page, 'j'); await page.waitForTimeout(400);
+  L.check('wrap toast', ![null, beforeWrap].includes(await L.toast(page)), [beforeWrap, await L.toast(page)]); await body('Back to the first');
   // 5: a blurred window does not hold the toast up
   await page.evaluate(() => { document.hasFocus = () => false; window.__hl.showToast('Blurred'); });
   await page.waitForTimeout(4800);

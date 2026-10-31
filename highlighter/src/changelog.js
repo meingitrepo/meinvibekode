@@ -1,6 +1,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.56", "Make no-toasts the single home for toast wording"],
         ["9.55", "Selected count no longer cut off: panel is 400px wide"],
         ["9.54", "Make anthropic-style the single home for design rules; remove redundant style checks from surfaces"],
         ["9.53", "Body and control text raised to 16px on a 24px line height, per the design guideline"],

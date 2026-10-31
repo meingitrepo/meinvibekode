@@ -1,5 +1,6 @@
 // 9.25: toasts say what happened (switches enabled/disabled, erase and note removal with Undo, copy count, Undone/Redone with
 // the opposite link). Copy no longer swaps its icon for a check. (File name kept from 9.7, when most of these were removed.)
+// The home for exact toast wording: hidden and toast-cleanup check the behaviour and leave the text to this file.
 const L = require('./lib');
 const HTML = `<!doctype html><html><head><meta charset="utf-8"></head><body style="font:16px sans-serif;margin:200px 40px">
 <p id="p1">Light paragraph one with words to select and more words after them.</p></body></html>`;
@@ -62,8 +63,16 @@ const icon = page => page.evaluate(() => window.__hl.panelCopy.querySelector('sv
   await page.evaluate(() => { document.activeElement && document.activeElement.blur(); window.__hl.closePanel && window.__hl.closePanel(); }); await page.mouse.click(5, 5);
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
   const hid = await page.evaluate(() => { const t = window.__hl.toastEl; const i = t.querySelector(':scope > svg.icon'); return { txt: t.textContent, icon: i ? getComputedStyle(i).display : 'none', act: !t.querySelector('button'), first: window.__hl.toastEl.firstElementChild === i }; });
-  L.check('icon-button toast (Annotations hidden): one icon, on the left, no link', hid.txt.includes('Annotations hidden') && hid.icon !== 'none' && hid.first && hid.act, hid);
+  L.check('icon-button toast (Annotations hidden): one icon, on the left, no link', hid.icon !== 'none' && hid.first && hid.act, hid);
+  await says('Alt+V', 'Annotations hidden');
   await L.altKey(page, 'v'); await page.waitForTimeout(300);
+  await says('Alt+V again', 'Annotations shown');
+  await L.altKey(page, 'n'); await page.waitForTimeout(300);
+  await says('Alt+N with nothing to attach to', 'Nothing to add a note to');
+  await L.selStr(page, '#p1', 'Light paragraph'); await page.waitForTimeout(300);
+  await L.altKey(page, 'h'); await page.waitForTimeout(300);
+  for (let i = 0; i < 3; i++) { await L.altKey(page, 'j'); await page.waitForTimeout(400); }
+  await says('jump past the last', 'Back to the first annotation');
   await browser.close();
   console.log('FAILS', L.fails);
 })().catch(e => { console.error(e); process.exit(1); });

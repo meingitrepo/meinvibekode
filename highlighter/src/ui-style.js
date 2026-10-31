@@ -365,7 +365,7 @@
         /* Annotations panel: a panel along the right edge, above the page. */
         .panel {
             top: 8px; left: auto; right: 8px; display: flex; flex-direction: column;
-            width: min(360px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
+            width: min(400px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
         }
         .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }
         .panel-title { font-weight: 500; color: var(--ink); }

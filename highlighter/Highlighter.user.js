@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.54
+// @version      9.55
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3984,7 +3984,7 @@
         /* Annotations panel: a panel along the right edge, above the page. */
         .panel {
             top: 8px; left: auto; right: 8px; display: flex; flex-direction: column;
-            width: min(360px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
+            width: min(400px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
         }
         .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }
         .panel-title { font-weight: 500; color: var(--ink); }
@@ -6729,6 +6729,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.55", "Selected count no longer cut off: panel is 400px wide"],
         ["9.54", "Make anthropic-style the single home for design rules; remove redundant style checks from surfaces"],
         ["9.53", "Body and control text raised to 16px on a 24px line height, per the design guideline"],
         ["9.52", "Ink primary button, lighter hairline, 4px spacing scale, 2px focus ring, serif dialog titles"],

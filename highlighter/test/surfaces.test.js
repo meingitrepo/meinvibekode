@@ -18,9 +18,13 @@ const HTML = `<!doctype html><html><body style="font: 16px/1.5 sans-serif; margi
   L.check('13: a long toast wraps inside the view', geo.left >= 16 && geo.right <= geo.vw - 16, geo);
   await page.evaluate(() => window.__hl.openPanel()); await page.waitForTimeout(300);
   const panelBox = await css('window.__hl.panelEl', []);
-  L.check('22: panel is 360px wide (widened so the selected count fits one line)', panelBox.w === 360, panelBox);
+  L.check('22: panel is 400px wide (widened so the selected count fits one line)', panelBox.w === 400, panelBox);
   const one = await page.evaluate(() => { const c = window.__hl.panelCount; c.replaceChildren('10/10 ', Object.assign(document.createElement('span'), { className: 'panel-title', textContent: 'Annotations' }), ' selected'); return c.getBoundingClientRect().height; });
   L.check('2: "N/N Annotations selected" stays on one line', one === 24, one);
+  const fit = await page.evaluate(() => { const c = window.__hl.panelCount; return { scroll: c.scrollWidth, client: c.clientWidth }; });
+  L.check('2: "N/N Annotations selected" is not cut off', fit.scroll <= fit.client, fit);
+  const fit3 = await page.evaluate(() => { const c = window.__hl.panelCount; c.firstChild.textContent = '100/100 '; return { scroll: c.scrollWidth, client: c.clientWidth, font: getComputedStyle(c).fontFamily }; });
+  L.check('2: a three-digit count is not cut off either', fit3.scroll <= fit3.client, fit3);
   await page.evaluate(() => window.__hl.closePanel());
   await page.keyboard.press('Alt+Shift+O'); await page.waitForTimeout(400);
   const left = await page.evaluate(() => { const r = window.__hl; const b = r.everythingEl.firstElementChild.getBoundingClientRect(); return { count: r.everythingCount.getBoundingClientRect().left - b.left, field: r.everythingFilter.parentElement.getBoundingClientRect().left - b.left }; });

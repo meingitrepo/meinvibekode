@@ -12,6 +12,12 @@ show_diffstat() {
     git diff --numstat "$1" "$2" | awk '{f++; if ($1 != "-") {i += $1; d += $2}} END {printf "%df +%d -%d\n", f, i, d}'
 }
 
+# Removes the screenshots made during the session (never playwright/ or ts/); called only after a successful push.
+clean_shots() {
+    local root; root=$(git rev-parse --show-toplevel)
+    rm -rf "$root/.cache/shots" "$root"/.cache/*.png
+}
+
 # Files mode, for changes outside highlighter/ (settings, docs): commit only the named files, no @version bump or build.
 # Usage: release.sh --files "path1 path2" "Theme" "What's in it" "Commit message"   (paths without spaces)
 if [ "${1:-}" = --files ]; then
@@ -27,6 +33,7 @@ if [ "${1:-}" = --files ]; then
         git fetch -q origin main
         git rebase -q origin/main || { echo 'REBASE CONFLICT: resolve keeping BOTH changes, git rebase --continue, rerun'; exit 1; }
         if git push -q origin HEAD:main; then
+            clean_shots
             echo "PUSHED cfg ($(git rev-parse --short HEAD)) to main"
             exit 0
         fi
@@ -59,6 +66,7 @@ for _ in 1 2 3; do
     git add $H/src/header.js $H/src/changelog.js $H/Highlighter.user.js
     git commit -q --amend -m "$ver: $msg"
     if git push -q origin HEAD:main; then
+        clean_shots
         echo "PUSHED $ver ($(git rev-parse --short HEAD)) to main"
         exit 0
     fi

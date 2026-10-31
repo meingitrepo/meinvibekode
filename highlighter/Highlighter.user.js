@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.51
+// @version      9.52
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -6729,6 +6729,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.52", "Ink primary button, lighter hairline, 4px spacing scale, 2px focus ring, serif dialog titles"],
         ["9.51", "The outline around a selected annotation uses warm slate and ivory instead of pure black and white"],
         ["9.50", "The note editor's Save button has the same fully rounded 8px corners as every other button"],
         ["9.49", "Anthropic Sans and Serif first, Poppins and Lora next, Arial and Georgia as fallbacks; font-install hint removed"],

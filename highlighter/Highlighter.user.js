@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.46
+// @version      9.47
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3960,6 +3960,10 @@
         .help-row { display: flex; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); }
         .help-key { flex: none; width: 11em; color: var(--ink-3); }
         .help-text { font-family: ${SERIF_FONT}; overflow-wrap: anywhere; }
+        .help-log { padding: 4px 16px 16px; }
+        .help-log .help-row { gap: 16px; padding: 12px 0; }
+        .help-log .help-key { width: 3.5em; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+        .help-log .help-text { line-height: 1.55; }
         .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .page-head {
             display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 6px 4px; border: 0;
@@ -6782,6 +6786,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.47", "What's new panel: narrow version column, roomier rows and padding"],
         ["9.46", "The selection toolbar toggle now uses the cursor icon, and the note editor Tab test matches the disabled Save and Erase buttons."],
         ["9.45", "Hiding closes the panel; menu panel/search show pressed; toolbar button disabled with pen"],
         ["9.44", "Annotations hidden by default; panel and pen show them while open"],
@@ -6846,6 +6851,7 @@
         helpKind = kind;
         const rows = kind === 'keys' ? SHORTCUT_GUIDE : CHANGELOG;
         helpTitle.textContent = kind === 'keys' ? 'Shortcuts' : 'What\'s new';
+        helpBody.classList.toggle('help-log', kind !== 'keys');
         helpBody.replaceChildren(...rows.map(([a, b]) => makeEl('div', { class: 'help-row' }, [
             makeEl('span', { class: 'help-key', text: a }),
             makeEl('span', { class: 'help-text', text: b })

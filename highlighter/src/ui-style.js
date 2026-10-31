@@ -341,6 +341,10 @@
         .help-row { display: flex; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); }
         .help-key { flex: none; width: 11em; color: var(--ink-3); }
         .help-text { font-family: ${SERIF_FONT}; overflow-wrap: anywhere; }
+        .help-log { padding: 4px 16px 16px; }
+        .help-log .help-row { gap: 16px; padding: 12px 0; }
+        .help-log .help-key { width: 3.5em; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+        .help-log .help-text { line-height: 1.55; }
         .everything-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 0 8px 8px; overscroll-behavior: contain; }
         .page-head {
             display: flex; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 6px 4px; border: 0;

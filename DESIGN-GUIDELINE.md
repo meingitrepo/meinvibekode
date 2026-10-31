@@ -90,7 +90,7 @@ Never pure `#000` / `#fff` for text or surfaces (the sites only use `#fff`/`#000
 1. Sites' primary button is inverted ink; here the primary action is clay-filled (`.btn-primary`, `--on-accent` ink). Kept per CLAUDE.md ("clay only for the one primary action").
 2. Page type is 15-16px; this tool is dense chrome on top of other people's pages, so body is 14px and captions 12px.
 3. Light hairline is `#cccbc8`, darker than site `#e8e6dc`, so borders stay visible over arbitrary page backgrounds.
-4. Fonts: the proprietary Anthropic Serif/Sans are not available to a userscript, so system stacks stand in: sans `system-ui, "Segoe UI"`, serif `Georgia` (`SANS_FONT`, `SERIF_FONT`). Poppins/Lora from the generic brand-guidelines skill were used until 9.49 and are retired, together with the install hint.
+4. Fonts: the proprietary Anthropic Serif/Sans are not available to a userscript, so system stacks stand in: sans `"Anthropic Sans", system-ui, "Segoe UI"`, serif `"Anthropic Serif", Georgia` (the Anthropic names win only where someone has them installed) (`SANS_FONT`, `SERIF_FONT`). Poppins/Lora from the generic brand-guidelines skill were used until 9.49 and are retired, together with the install hint.
 5. Supporting hues (sky, mineral, plum...) have no tokens; add one only when a feature needs a categorical colour.
 
 ## 9. Sources

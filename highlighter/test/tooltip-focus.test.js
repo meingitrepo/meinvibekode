@@ -18,7 +18,8 @@ const tipShown = p => p.evaluate(() => !window.__hl.labelTipEl.hidden);
   L.check('mouse-click focus shows no tooltip', !(await tipShown(p)));
   await p.mouse.move(box.x, box.y + 400); await p.mouse.up();
   await p.evaluate(() => { document.activeElement && document.activeElement.blur(); window.__hl.uiRoot.activeElement && window.__hl.uiRoot.activeElement.blur(); });
-  await p.keyboard.press('Tab'); await p.waitForTimeout(500);
+  // Erase is disabled on a new note (9.36), so Tab from Discard would reach the textarea; go back to Save.
+  await p.keyboard.press('Shift+Tab'); await p.waitForTimeout(500);
   const f = await p.evaluate(() => { const a = window.__hl.uiRoot.activeElement; return a && a.dataset.label; });
   L.check('keyboard focus shows the tooltip', f && await tipShown(p), f);
   await L.done(browser);

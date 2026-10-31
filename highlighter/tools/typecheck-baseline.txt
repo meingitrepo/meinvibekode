@@ -1,0 +1,17 @@
+annotation-select.js: TS2345: Argument of type 'any[]' is not assignable to parameter of type '[any, any]'.
+annotation-select.js: TS2345: Argument of type 'any[]' is not assignable to parameter of type '[any, any]'.
+input.js: TS2339: Property 'isContentEditable' does not exist on type 'Element'.
+input.js: TS2339: Property 'removeAttribute' does not exist on type 'string | Element'.
+navigation-and-selection.js: TS2339: Property 'caretPositionFromPoint' does not exist on type 'Document'.
+navigation-and-selection.js: TS2339: Property 'caretPositionFromPoint' does not exist on type 'Document'.
+panel.js: TS2339: Property 'forEach' does not exist on type 'string | boolean | any[]'.
+panel.js: TS2339: Property 'length' does not exist on type 'string | boolean | any[]'.
+panel.js: TS2339: Property 'length' does not exist on type 'string | boolean | any[]'.
+panel.js: TS2345: Argument of type 'string | boolean | any[]' is not assignable to parameter of type 'boolean'.
+start-and-boot.js: TS2345: Argument of type 'string | (() => void)' is not assignable to parameter of type 'string'.
+start-and-boot.js: TS2551: Property 'navigation' does not exist on type 'Window & typeof globalThis'. Did you mean 'navigator'?
+start-and-boot.js: TS2551: Property 'navigation' does not exist on type 'Window & typeof globalThis'. Did you mean 'navigator'?
+start-and-boot.js: TS2551: Property 'navigation' does not exist on type 'Window & typeof globalThis'. Did you mean 'navigator'?
+theme.js: TS2339: Property 'content' does not exist on type 'Element'.
+toolbar.js: TS2339: Property 'isContentEditable' does not exist on type 'Element'.
+ui-style.js: TS1117: An object literal cannot have multiple properties with the same name.

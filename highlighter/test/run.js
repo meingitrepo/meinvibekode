@@ -11,13 +11,15 @@
 'use strict';
 const { spawn, execFileSync } = require('child_process');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 const TIMEOUT_MS = 240000;
-// Most of a file's time is waiting on timers, not CPU, so run more files than there are cores.
-const JOBS = +process.env.HL_JOBS || 6;
-// Started first so the longest file is not the last one left running.
-const SLOW = ['missing.test.js'];
+// Most of a file's time is waiting on timers, not CPU, so run more files than there are cores:
+// 1.5 per core was the fastest of 6, 12 and 16 on 8 cores (128 s, 88 s, 92 s for all files); never fewer than 6.
+const JOBS = +process.env.HL_JOBS || Math.max(6, Math.round(os.cpus().length * 1.5));
+// Started first, longest first, so the longest file is not the last one left running (times with 12 jobs).
+const SLOW = ['gallery.test.js', 'font-hint.test.js', 'missing.test.js', 'follow-text-moves.test.js', 'divider-dpr.test.js'];
 const dir = __dirname;
 const filters = process.argv.slice(2);
 const files = fs.readdirSync(dir).filter(f => f.endsWith('.test.js'))
@@ -50,7 +52,7 @@ function runFile(file) {
 }
 
 (async () => {
-    const queue = files.filter(f => SLOW.includes(f)).concat(files.filter(f => !SLOW.includes(f)));
+    const queue = SLOW.filter(f => files.includes(f)).concat(files.filter(f => !SLOW.includes(f)));
     const results = [];
     const workers = Array.from({ length: JOBS }, async () => {
         while (queue.length) {

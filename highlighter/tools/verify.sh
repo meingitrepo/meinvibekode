@@ -6,6 +6,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 highlighter/tools/build.sh
 status=0
+echo "--- typecheck"; highlighter/tools/typecheck.sh || status=1
 for k in "$@"; do
     echo "--- suites for '$k'"
     highlighter/tools/tests-for.sh "$k" || status=1

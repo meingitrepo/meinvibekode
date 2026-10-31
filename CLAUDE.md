@@ -16,7 +16,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - UI: `ui-style.js` (tokens/CSS), `ui-elements.js`, `theme.js`, `toolbar.js`, `site-menu.js`, `panel.js`, `search.js` (Alt+Shift+O), `toast-and-jump.js`, `input.js`, `help.js` (Alt+Shift+H guide, Alt+Shift+W changelog), `changelog.js` (release entries, added by release.sh)
 
 ## Tiers (pick one before starting, state it in one line)
-- T0 no behaviour change (copy, comment, constant): do it, one verify call, no test, no review.
+- T0 no behaviour change (copy, comment, constant, an icon or wording swap): do it, one verify call, no new test, no review. A swap breaks the exact icon/wording pins in `no-toasts`/`hidden`: find them with `stale-checks.sh <old term>` and update them in the same commit; compare options in `gallery.sh` first.
 - T1 bug or tweak in one area: 2-4 line plan (cause or goal, files/functions, the proving test, risk), test first (`superpowers:test-driven-development`), then fix. No review.
 - T2 feature across files: written spec (`superpowers:brainstorming` + `agent-skills:spec-driven-development`, saved to `docs/specs/<topic>.md`, git-ignored, not committed: goal, done criteria, constraints, boundaries), `superpowers:writing-plans`, thin slices. One review only if big.
 - T3 risky (stored-data shape, injected HTML, page-wide listeners, restore-on-load, irreversible ops such as deleting stored data): T2 plus the matching gate from the agent-skills line below. The one review is a fresh-context doubt pass (`agent-skills:doubt-driven-development`) on the plan before building, plus five-axis review of the diff (`agent-skills:code-review-and-quality`).
@@ -52,7 +52,9 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - `sync.sh` rebase onto latest origin/main, rebuild, report conflicts/overlap; `preflight.sh` sync, diffstat, release.sh line; `release.sh` post-PUSH release (`release.sh --files "paths" "Theme" "What" "Msg"` for changes outside `highlighter/`: named files only, no version bump, refuses a dirty tree)
 - `mutate.sh <src-file> <old> <new> <suite-word>` breaks one line, runs the suites, always restores and rebuilds (KILLED = a test noticed; SURVIVED = add a check); `vs-prev.sh <suite-word> [ref]` runs today's tests against the last release's build and the current one (new test must be red before, green now)
 - `film.sh <out-prefix> [light|dark] <js> [frames] [gap-ms]` captures animation frames of the playground; source `test-env.sh` to only set the Playwright env
-- `verify.sh <keyword...>` build, matching suites, diffstat in one call; `shot.sh <out.png> [light|dark|both] [js]` playground screenshot; component presets (panel, all) crop to the element at 2x, other shots: `SHOT_CLIP=<selector|__hl.name>` (+`SHOT_PAD`)
+- `verify.sh <keyword...>` build, typecheck, matching suites, diffstat in one call; `shot.sh <out.png> [light|dark|both] [js]` playground screenshot; component presets (panel, all) crop to the element at 2x, other shots: `SHOT_CLIP=<selector|__hl.name>` (+`SHOT_PAD`)
+- `typecheck.sh [--update]` tsc on the built file, errors mapped to `src/` lines, fails only on errors beyond `tools/typecheck-baseline.txt` (17 at start); fix errors, never add to the baseline; `--update` only lowers it
+- `gallery.sh [--only id,id] [--variants file.json] [--watch]` renders every UI state, light and dark, into `.cache/gallery/index.html` (one offline page; a failed state is a red tile, exit 1; `--variants` adds side-by-side tiles for one state, see the header of gallery.js; `--watch` re-renders when src/ changes)
 - Git's LF/CRLF warnings on commit and release are harmless; ignore them.
 
 ## Automation candidates

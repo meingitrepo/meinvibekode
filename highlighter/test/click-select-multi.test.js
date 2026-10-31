@@ -63,7 +63,7 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   const c = await page.evaluate(async () => { return null; });
   await click('bravo');
   const col = await page.evaluate(() => getComputedStyle(window.__hl.selectBoxesEl.querySelector('.select-box')).color);
-  L.check('box is black on a light page', col === 'rgb(0, 0, 0)', col);
+  L.check('box is slate on a light page', col === 'rgb(20, 20, 19)', col);
   L.check('no page errors', page.__errors.length === 0, page.__errors);
   await b.close();
   console.log(L.fails ? `${L.fails} FAILED` : 'ALL PASS'); process.exit(L.fails ? 1 : 0);

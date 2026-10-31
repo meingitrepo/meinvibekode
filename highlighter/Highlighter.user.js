@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.50
+// @version      9.51
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3857,8 +3857,8 @@
 
         /* Annotations selected by clicking them: a solid 1px outline around their lines' shape,
            black, or white on a dark page. */
-        .select-box { position: absolute; top: 0; left: 0; pointer-events: none; color: #000000; }
-        .select-box[data-theme="dark"] { color: #ffffff; }
+        .select-box { position: absolute; top: 0; left: 0; pointer-events: none; color: #141413; }
+        .select-box[data-theme="dark"] { color: #faf9f5; }
         .select-box svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
         .select-box path { fill: none; stroke: currentColor; stroke-width: 1; stroke-linejoin: round; }
 
@@ -6729,6 +6729,7 @@
     // --- Release changelog (Alt+Shift+W): newest first. release.sh adds each release's entry at the marker below. ---
     const CHANGELOG = [
         // CHANGELOG-ENTRIES (release.sh inserts below this line)
+        ["9.51", "The outline around a selected annotation uses warm slate and ivory instead of pure black and white"],
         ["9.50", "The note editor's Save button has the same fully rounded 8px corners as every other button"],
         ["9.49", "Anthropic Sans and Serif first, Poppins and Lora next, Arial and Georgia as fallbacks; font-install hint removed"],
         ["9.48", "What's new entries stack the version above the text with roomier spacing"],

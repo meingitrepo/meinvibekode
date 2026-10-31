@@ -5,4 +5,4 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;background:#11
   const pt = await page.evaluate(() => { const r = window.__hl.allWrappers()[0].getBoundingClientRect(); return { x: r.left + 5, y: r.top + 5 }; });
   await page.mouse.click(pt.x, pt.y); await page.waitForTimeout(100);
   const c = await page.evaluate(() => getComputedStyle(window.__hl.selectBoxesEl.querySelector('.select-box')).color);
-  L.check('dark page box is white', c === 'rgb(255, 255, 255)', c); await b.close(); process.exit(L.fails ? 1 : 0); })();
+  L.check('dark page box is ivory', c === 'rgb(250, 249, 245)', c); await b.close(); process.exit(L.fails ? 1 : 0); })();

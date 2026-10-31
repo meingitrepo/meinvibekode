@@ -27,8 +27,8 @@
       "Read(./**/*.parquet)",
       "Read(./**/*.zip)",
       "Read(./**/*.tar.gz)",
-      "Read(./**/*.png)",
-      "Read(./**/*.jpg)",
+      "Read(./**/node_modules/**/*.png)",
+      "Read(./**/node_modules/**/*.jpg)",
       "Read(./**/*.mp4)",
       "Read(./**/*.pdf)"
     ]

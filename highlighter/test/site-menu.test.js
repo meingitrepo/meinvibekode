@@ -24,13 +24,13 @@ const state = page => page.evaluate(() => ({
   let s = await state(page);
   L.check('the script runs on a fresh site; the menu is one button', await page.evaluate(() => window.__hl.running) && s.shown && s.expanded === 'false' && !s.open, s);
   L.check('default corner is top left', s.rect.left < 20 && s.rect.top < 20, s.rect);
-  L.check('buttons are undo, redo, pen, toolbar, keys, hide, panel, search', s.ids === 'undo,redo,pen,toolbar,keys,hide,panel,search', s.ids);
-  const hist = await page.evaluate(() => {
-    const m = window.__hl.menuButtons, redo = m.get('redo'), d = redo.nextElementSibling;
-    const cs = d && getComputedStyle(d);
-    return { firstIsUndo: redo.parentElement.firstElementChild === m.get('undo'), role: d && d.getAttribute('role'), cls: d && d.className, next: d && d.nextElementSibling === m.get('pen'), margin: cs && [cs.marginLeft, cs.marginRight], count: redo.parentElement.querySelectorAll('[role="separator"]').length };
+  L.check('buttons are search, panel, toolbar, pen, keys, hide, undo, redo', s.ids === 'search,panel,toolbar,pen,keys,hide,undo,redo', s.ids);
+  const row = await page.evaluate(() => {
+    const m = window.__hl.menuButtons, inner = m.get('redo').parentElement, names = new Map([...m].map(([k, v]) => [v, k]));
+    const cs = getComputedStyle(inner.querySelector('[role="separator"]'));
+    return { order: [...inner.children].map(c => names.get(c) || (c.getAttribute('role') === 'separator' && c.className === 'divider' ? '|' : '?')).join(' '), margin: [cs.marginLeft, cs.marginRight] };
   });
-  L.check('undo and redo come first, one toolbar divider with its usual padding after them', hist.firstIsUndo && hist.role === 'separator' && hist.cls === 'divider' && hist.next && hist.count === 1 && hist.margin[0] === '10px' && hist.margin[1] === '10px', hist);
+  L.check('toolbar dividers with their usual padding split the groups, and end the row', row.order === 'search panel | toolbar pen keys hide | undo redo |' && row.margin[0] === '10px' && row.margin[1] === '10px', row);
   L.check('no power button any more', await page.evaluate(() => !window.__hl.menuEl.querySelector('[aria-label^="Turn highlighter"]')));
   const hr = await rectOf(page, 'menuHandle'), er = await rectOf(page, 'menuExpand');
   L.check('the handle is on the left, then the expand icon button', s.expandIsIconButton && hr.right <= er.left + 1 && hr.left < er.left, { hr, er });
@@ -63,6 +63,8 @@ const state = page => page.evaluate(() => ({
   s = await state(page);
   L.check('expand opens the row', s.expanded === 'true' && s.open, s);
   L.check('one row: same top, increasing lefts', new Set(s.tops).size === 1 && s.lefts.every((t, i) => !i || t > s.lefts[i - 1]), s);
+  const openExpand = await rectOf(page, 'menuExpand');
+  L.check('open: the collapse button is at the far end, after a divider, with the same padding as closed', openExpand.left > s.lefts[s.lefts.length - 1] + 28 + 20 && Math.abs((s.rect.right - openExpand.right) - gap.right) <= 1, { openExpand, lefts: s.lefts, rect: s.rect });
   L.check('undo and redo are disabled with nothing to undo', s.disabled.undo && s.disabled.redo, s.disabled);
   await btn(page, 'keys'); await btn(page, 'toolbar'); await page.waitForTimeout(200);
   s = await state(page);

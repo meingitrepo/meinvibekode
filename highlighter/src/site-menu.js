@@ -1,5 +1,5 @@
     // =====================================================================
-    // The sticky menu: a handle, one expand button, then a row of tool buttons
+    // The sticky menu: a handle, a row of tool buttons, then one expand button
     // =====================================================================
 
     function menuHiddenHere() {
@@ -54,16 +54,16 @@
         return b;
     }
 
-    // id, label, shortcut, icon, click, in groups: history, the switches (modes shown pressed while on, then hide), then the lists.
+    // id, label, shortcut, icon, click, in groups: the lists, the switches (modes shown pressed while on, then hide), then history.
     const menuButtons = new Map([
-        ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
-        ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())],
-        ['pen',menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple-slash'), () => togglePen())],
+        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('magnifying-glass'), () => toggleEverything())],
+        ['panel',menuButton('Annotations', 'Alt+O', phosphorIcon('list-checks'), () => togglePanel())],
         ['toolbar', menuButton('Selection toolbar', 'Alt+T', phosphorIcon(toolbarSwitchedOff() ? 'cursor-text-slash' : 'cursor-text'), () => toggleToolbarSwitch())],
+        ['pen',menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple-slash'), () => togglePen())],
         ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon(keysSwitchedOff() ? 'keyboard-slash' : 'keyboard'), () => toggleKeysSwitch())],
         ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())],
-        ['panel',menuButton('Annotations', 'Alt+O', phosphorIcon('list-checks'), () => togglePanel())],
-        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('magnifying-glass'), () => toggleEverything())]
+        ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
+        ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())]
     ]);
     addMenuTip(menuExpand, 'Expand');
 
@@ -77,9 +77,9 @@
     }
 
     const menuTools = makeEl('div', { class: 'sitemenu-tools' }, [
-        makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons.values()].flatMap(b => b === menuButtons.get('redo') ? [b, toolbarDivider()] : [b]))
+        makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons].flatMap(([id, b]) => ['panel', 'hide', 'redo'].includes(id) ? [b, toolbarDivider()] : [b]))
     ]);
-    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'horizontal', 'aria-label': 'Highlighter', hidden: '' }, [menuHandle, makeEl('div', { class: 'sitemenu-expand' }, [menuExpand]), menuTools]);
+    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'horizontal', 'aria-label': 'Highlighter', hidden: '' }, [menuHandle, menuTools, makeEl('div', { class: 'sitemenu-expand' }, [menuExpand])]);
     menuRoot.append(makeEl('style', { text: UI_CSS }), menuEl, menuTip);
     ['keydown', 'keyup', 'keypress'].forEach(type => menuHost.addEventListener(type, e => e.stopPropagation()));
     menuEl.addEventListener('mousedown', e => e.preventDefault());

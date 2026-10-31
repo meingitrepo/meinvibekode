@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.69
+// @version      9.70
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3944,7 +3944,7 @@
         .toast:focus-visible { outline: 2px solid var(--focus); }
         /* The pen's bar, centred at the top of the view. */
         .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
-        /* The sticky menu: the site switch, with a row of icon buttons expanding to its right. */
+        /* The sticky menu: the site switch, with a row of icon buttons expanding to its left. */
         .sitemenu { display: flex; align-items: center; padding: 4px; width: max-content; cursor: grab; }
         .sitemenu .btn { cursor: pointer; }
         .sitemenu-handle { position: relative; align-self: stretch; width: 12px; cursor: grab; }
@@ -6807,7 +6807,7 @@
     helpEl.addEventListener('mousedown', e => { if (e.target === helpEl) closeHelp(); });
 
     // =====================================================================
-    // The sticky menu: a handle, one expand button, then a row of tool buttons
+    // The sticky menu: a handle, a row of tool buttons, then one expand button
     // =====================================================================
 
     function menuHiddenHere() {
@@ -6862,16 +6862,16 @@
         return b;
     }
 
-    // id, label, shortcut, icon, click, in groups: history, the switches (modes shown pressed while on, then hide), then the lists.
+    // id, label, shortcut, icon, click, in groups: the lists, the switches (modes shown pressed while on, then hide), then history.
     const menuButtons = new Map([
-        ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
-        ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())],
-        ['pen',menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple-slash'), () => togglePen())],
+        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('magnifying-glass'), () => toggleEverything())],
+        ['panel',menuButton('Annotations', 'Alt+O', phosphorIcon('list-checks'), () => togglePanel())],
         ['toolbar', menuButton('Selection toolbar', 'Alt+T', phosphorIcon(toolbarSwitchedOff() ? 'cursor-text-slash' : 'cursor-text'), () => toggleToolbarSwitch())],
+        ['pen',menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple-slash'), () => togglePen())],
         ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon(keysSwitchedOff() ? 'keyboard-slash' : 'keyboard'), () => toggleKeysSwitch())],
         ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())],
-        ['panel',menuButton('Annotations', 'Alt+O', phosphorIcon('list-checks'), () => togglePanel())],
-        ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('magnifying-glass'), () => toggleEverything())]
+        ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
+        ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())]
     ]);
     addMenuTip(menuExpand, 'Expand');
 
@@ -6885,9 +6885,9 @@
     }
 
     const menuTools = makeEl('div', { class: 'sitemenu-tools' }, [
-        makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons.values()].flatMap(b => b === menuButtons.get('redo') ? [b, toolbarDivider()] : [b]))
+        makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons].flatMap(([id, b]) => ['panel', 'hide', 'redo'].includes(id) ? [b, toolbarDivider()] : [b]))
     ]);
-    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'horizontal', 'aria-label': 'Highlighter', hidden: '' }, [menuHandle, makeEl('div', { class: 'sitemenu-expand' }, [menuExpand]), menuTools]);
+    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'horizontal', 'aria-label': 'Highlighter', hidden: '' }, [menuHandle, menuTools, makeEl('div', { class: 'sitemenu-expand' }, [menuExpand])]);
     menuRoot.append(makeEl('style', { text: UI_CSS }), menuEl, menuTip);
     ['keydown', 'keyup', 'keypress'].forEach(type => menuHost.addEventListener(type, e => e.stopPropagation()));
     menuEl.addEventListener('mousedown', e => e.preventDefault());

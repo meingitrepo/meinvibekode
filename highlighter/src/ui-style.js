@@ -318,7 +318,7 @@
         .toast:focus-visible { outline: 2px solid var(--focus); }
         /* The pen's bar, centred at the top of the view. */
         .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
-        /* The sticky menu: the site switch, with a row of icon buttons expanding to its right. */
+        /* The sticky menu: the site switch, with a row of icon buttons expanding to its left. */
         .sitemenu { display: flex; align-items: center; padding: 4px; width: max-content; cursor: grab; }
         .sitemenu .btn { cursor: pointer; }
         .sitemenu-handle { position: relative; align-self: stretch; width: 12px; cursor: grab; }

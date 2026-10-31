@@ -1,4 +1,4 @@
-// 9.25: toasts say what happened (switches enabled/disabled, erase and note removal with Undo, copy count, Undone/Redone with
+// 9.25: toasts say what happened (switches enabled/disabled, erase and note removal with Undo, copy count, Undo/Redo with
 // the opposite link). Copy no longer swaps its icon for a check. (File name kept from 9.7, when most of these were removed.)
 // The home for exact toast wording: hidden and toast-cleanup check the behaviour and leave the text to this file.
 const L = require('./lib');
@@ -44,13 +44,13 @@ const icon = page => page.evaluate(() => window.__hl.panelCopy.querySelector('sv
   await says('erase', '1 annotation erased'); await noLinks('erase');
   await L.altKey(page, 'z'); await page.waitForTimeout(300);
   L.check('Alt+Z brings the annotation back', (await L.wr(page)).length === 1, await L.wr(page));
-  await says('Alt+Z', 'Undone'); await noLinks('undo');
+  await says('Alt+Z', 'Undo'); await noLinks('undo');
   await L.altKey(page, 'y'); await page.waitForTimeout(300);
   L.check('Alt+Y erases it again', (await L.wr(page)).length === 0, await L.wr(page));
-  await says('Alt+Y', 'Redone'); await noLinks('redo');
+  await says('Alt+Y', 'Redo'); await noLinks('redo');
   await L.altKey(page, 'z'); await page.waitForTimeout(300);
   L.check('Alt+Z undoes the erase', (await L.wr(page)).length === 1, await L.wr(page));
-  await says('Alt+Z again', 'Undone');
+  await says('Alt+Z again', 'Undo');
   // Copy: the icon stays, a toast says how many were copied.
   await page.evaluate(() => window.__hl.openPanel()); await page.waitForTimeout(300);
   await page.evaluate(() => window.__hl.panelSelectAll.click()); await page.waitForTimeout(200);

@@ -43,8 +43,7 @@
     // and Delete deletes.
     const editorEl = makeEl('div', { class: 'surface editor', role: 'dialog', 'aria-labelledby': 'highlighter-note-title', hidden: '' }, [
         makeEl('div', { class: 'editor-header' }, [editorTitle, makeEl('div', { class: 'editor-actions' }, [noteSave, noteDiscard, noteDelete])]),
-        makeEl('div', { class: 'field' }, [noteInput]),
-        makeEl('div', { class: 'field-hint', text: 'Enter to save, Esc to cancel' })
+        makeEl('div', { class: 'field' }, [noteInput])
     ]);
 
     let toastIcon = phosphorIcon('info');   // replaced per message

@@ -258,13 +258,13 @@
     function undoLastAction() {
         if (!undoStack.length) return;
         stepHistory(undoStack, redoStack);
-        showToast('Undone', { icon: 'arrow-u-up-left' });
+        showToast('Undo', { icon: 'arrow-u-up-left' });
     }
 
     function redoLastAction() {
         if (!redoStack.length) return;
         stepHistory(redoStack, undoStack);
-        showToast('Redone', { icon: 'arrow-u-up-right' });
+        showToast('Redo', { icon: 'arrow-u-up-right' });
     }
 
     // The menu's commands. A note being written closes first, as Esc would (a highlight made for a

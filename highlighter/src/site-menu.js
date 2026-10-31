@@ -97,11 +97,10 @@
         menuButtons.forEach((b, id) => {
             if (id in pressed) b.setAttribute('aria-pressed', String(pressed[id]));
         });
-        menuButtons.get('toolbar').disabled = !!penKey;
         menuButtons.get('undo').disabled = !undoStack.length;
         menuButtons.get('redo').disabled = !redoStack.length;
         menuButtons.get('pen').replaceChildren(phosphorIcon(penKey ? 'pencil-simple' : 'pencil-simple-slash'));
-        menuButtons.get('toolbar').replaceChildren(phosphorIcon(toolbarSwitchedOff() ? 'cursor-text-slash' : 'cursor-text'));
+        menuButtons.get('toolbar').replaceChildren(phosphorIcon(toolbarSwitchedOff() || penKey ? 'cursor-text-slash' : 'cursor-text'));
         menuButtons.get('keys').replaceChildren(phosphorIcon(keysSwitchedOff() ? 'keyboard-slash' : 'keyboard'));
         const hideBtn = menuButtons.get('hide');
         hideBtn.dataset.label = annotationsHidden ? 'Show annotations' : 'Hide annotations';

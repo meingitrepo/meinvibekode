@@ -53,7 +53,7 @@
         [pageStyle, hideStyle, textColorStyle].forEach(s => head.appendChild(s));
         darkMode = null;
         updateTextColorCss();
-        setAnnotationsHidden(true);   // a page opens with annotations hidden; the menu bar stays visible
+        setAnnotationsHidden(!annotationsShownHere(), { remember: false });   // a page opens as its site was left, else hidden; the menu bar stays visible
 
         lastHref = location.href;
         settledCanonical = lastSeenCanonical = canonicalKey();
@@ -136,7 +136,7 @@
         pendingRecords = [];
         undoStack.length = 0;
         redoStack.length = 0;
-        setAnnotationsHidden(false);
+        setAnnotationsHidden(false, { remember: false });
         [pageStyle, hideStyle, textColorStyle].forEach(s => s.remove());
     }
 

@@ -304,11 +304,16 @@
     }
 
     // Alt+T, and the menu: the toolbar off or on again on this site. The keys work either way.
+    // While the pen is on the toolbar counts as off, so this turns it on and the pen off.
     function toggleToolbarSwitch() {
-        const off = !toolbarSwitchedOff();
+        const off = !penKey && !toolbarSwitchedOff();
         setToolbarSwitchedOff(off);
+        if (penKey) setPen(null);
         if (off) hideToolbar();
-        else scheduleToolbar();   // for text that is selected now
+        else {
+            setAnnotationsHidden(false);
+            scheduleToolbar();   // for text that is selected now
+        }
         refreshMenu();
         renderSiteMenu();
         showToast(off ? 'Selection toolbar disabled' : 'Selection toolbar enabled', { icon: off ? 'cursor-text-slash' : 'cursor-text' });

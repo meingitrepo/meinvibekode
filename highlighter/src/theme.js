@@ -307,8 +307,10 @@
     const autoShown = { panel: false, pen: false };
 
     // Any explicit change is the user's decision: it cancels the pending automatic re-hide.
-    function setAnnotationsHidden(hidden) {
+    // It is also what this site remembers, unless `remember` is false (not the user's decision).
+    function setAnnotationsHidden(hidden, { remember = true } = {}) {
         autoShown.panel = autoShown.pen = false;
+        if (remember && annotationsShownHere() === hidden) setSiteListed('annotationsShownSites', !hidden);
         if (annotationsHidden === hidden) return;
         annotationsHidden = hidden;
         hideStyle.media = hidden ? 'all' : 'not all';
@@ -323,7 +325,7 @@
     function showAnnotationsFor(owner) {
         const was = annotationsHidden;
         const keep = { ...autoShown };
-        setAnnotationsHidden(false);
+        setAnnotationsHidden(false, { remember: false });
         Object.assign(autoShown, keep);
         if (was) autoShown[owner] = true;
     }
@@ -332,7 +334,7 @@
         if (!autoShown[owner]) return;
         autoShown[owner] = false;
         if (autoShown.panel || autoShown.pen) return;   // the other still needs them
-        setAnnotationsHidden(true);
+        setAnnotationsHidden(true, { remember: false });
     }
 
     // The Show button and Alt+V say so; annotating, jumping or erasing while hidden show them quietly.

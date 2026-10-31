@@ -48,7 +48,7 @@ async function removalShowsAgain(browser) {
   await L.altKey(p, 'v');
   check('hiding shows the hidden message', hiddenMsg !== null && (await L.toast(p)) === hiddenMsg, await L.toast(p));
   await L.altKey(p, 'z');
-  check('Alt+Z still undoes, shows them, and says Undone', (await hiddenNow(p)) === false && ![null, hiddenMsg].includes(await L.toast(p)) && (await L.wr(p)).length === 2, { t: await L.toast(p), w: await L.wr(p) });
+  check('Alt+Z still undoes, shows them, and says Undo', (await hiddenNow(p)) === false && ![null, hiddenMsg].includes(await L.toast(p)) && (await L.wr(p)).length === 2, { t: await L.toast(p), w: await L.wr(p) });
   await ctx.close();
 }
 

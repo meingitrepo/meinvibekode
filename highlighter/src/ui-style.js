@@ -308,7 +308,6 @@
         textarea::placeholder { color: var(--ink-4); opacity: 1; }
         /* width 0 + min-width 100%: the hint wraps to the note box's width instead of widening the
            panel, which would leave the box's border wider than the textarea and its scrollbar. */
-        .field-hint { letter-spacing: .01em; width: 0; min-width: 100%; margin-top: 4px; font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--ink-3); }
         /* Toast */
         /* A tooltip's size and style, centred at the bottom of the view: the same padding, 12px type and
            radius as .tip, an icon at the left end, no dismiss button; it fades on its own. */

@@ -38,7 +38,7 @@ const hid = p => p.evaluate(() => window.__hl.annotationsHidden);
   const mid = []; await p.evaluate(() => { window.__hl.setAnnotationsHidden(true); window.__hl.setAnnotationsHidden(false); });
   await p.evaluate(() => window.__hl.closePanel());
   check('user toggling while panel open wins over the restore', (await hid(p)) === false);
-  // menu: panel and search buttons toggle and show pressed; the toolbar button is disabled while the pen is on
+  // menu: panel and search buttons toggle and show pressed; the toolbar button shows off while the pen is on
   const btn = (id, a) => p.evaluate(([id, a]) => { const b = [...window.__hl.menuEl.querySelectorAll('button')].find(x => x.dataset.label === id); return a === 'p' ? b.getAttribute('aria-pressed') : b.disabled; }, [id, a]);
   await p.evaluate(() => window.__hl.menuEl.dispatchEvent(new Event('pointerenter')));
   await p.evaluate(() => { const m = window.__hl.menuEl; m.querySelector('.sitemenu-expand button').click(); });
@@ -56,8 +56,8 @@ const hid = p => p.evaluate(() => window.__hl.annotationsHidden);
   await click('Hide annotations');
   check('hiding annotations closes the panel', (await hid(p)) === true && (await p.evaluate(() => window.__hl.panelEl.hidden)));
   await L.altKey(p, 'p');
-  check('pen on: menu toolbar button disabled and not pressed', (await btn('Selection toolbar', 'd')) === true && (await btn('Selection toolbar', 'p')) === 'false');
+  check('pen on: menu toolbar button not pressed, still clickable', (await btn('Selection toolbar', 'd')) === false && (await btn('Selection toolbar', 'p')) === 'false');
   await L.altKey(p, 'p');
-  check('pen off: toolbar button enabled again', (await btn('Selection toolbar', 'd')) === false);
+  check('pen off: toolbar button pressed again', (await btn('Selection toolbar', 'p')) === 'true');
   await L.done(browser);
 })();

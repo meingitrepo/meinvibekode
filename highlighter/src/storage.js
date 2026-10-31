@@ -468,3 +468,8 @@
         setSiteListed('toolbarOnSites', !off);
     }
 
+    // Annotations open hidden, except on the sites where they were last shown on purpose (Alt+V and the like).
+    function annotationsShownHere() {
+        return siteListed('annotationsShownSites');
+    }
+

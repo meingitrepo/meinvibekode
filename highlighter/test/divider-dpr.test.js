@@ -25,10 +25,15 @@ async function widths(browser, dsf, bar) {
   return out;
 }
 (async () => {
-  for (const bar of ['penEl', 'toolbarEl']) for (const dsf of [1, 1.25, 1.5, 1.75]) {
+  const runs = [];
+  for (const bar of ['penEl', 'toolbarEl']) for (const dsf of [1, 1.25, 1.5, 1.75]) runs.push({ bar, dsf });
+  // The eight runs are independent, so they run at once; the checks are reported in order.
+  const widthsOf = await Promise.all(runs.map(async ({ bar, dsf }) => {
     const browser = await L.launch(dsf);   // a real device scale factor, not an emulated one
-    const w = await widths(browser, dsf, bar);
-    await browser.close();
+    try { return await widths(browser, dsf, bar); } finally { await browser.close(); }
+  }));
+  for (const [i, { bar, dsf }] of runs.entries()) {
+    const w = widthsOf[i];
     check(`${bar} dividers paint one width at DPR ${dsf}`, w.length >= 1 && new Set(w.map(s => String(s).split(':')[0])).size === 1, w);
   }
   await L.done();

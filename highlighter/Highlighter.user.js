@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.62
+// @version      9.63
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3984,7 +3984,7 @@
             top: 8px; left: auto; right: 8px; display: flex; flex-direction: column;
             width: min(400px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
         }
-        .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }
+        .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }   /* 12px left, 8px right: the icon buttons carry their own padding */
         .panel-title { font-weight: 500; color: var(--ink); }
         .panel-count { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-3); }
         .panel-actions { display: flex; align-items: center; gap: 2px; }

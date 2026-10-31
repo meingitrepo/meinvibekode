@@ -36,6 +36,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - One task per thread; new thread per follow-up/revert. Open-ended "find problems" asks: one ranking thread that fixes nothing, then one short thread per item the User picks.
 - Searches stay inside the repo: never `find`/`grep -r`/`ls -R` from `/`, `C:\`, `~` or any drive root. Look in the project, `.cache/` or a named package folder, with `timeout 20` on any `find`. A command that hits the 120s timeout and goes to the background must be stopped (TaskStop) in the same turn, never left running.
 - Economy: fewer turns is the main saving. Chain build, test and diffstat in one Bash call (`tools/verify.sh <keyword>`), batch independent commands, status updates at milestones only.
+- File work goes through Read, Grep and Edit, never `sed`, `grep`, `cat` or `awk` in Bash (exception: a command piped inside a script or a chained verify). Send several Edits in one message. `git add` once, right before the commit.
 
 ## Tests
 - `highlighter/tools/test-env.sh <word>` runs the suites (same arguments as `node highlighter/test/run.js`). Playwright 1.56.1 + Chromium come from the main checkout's git-ignored `.cache/playwright/` (shared by worktrees, installed on first use); on Linux/cloud it uses `/opt/node22`.

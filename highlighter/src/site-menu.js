@@ -54,15 +54,15 @@
         return b;
     }
 
-    // id, label, shortcut, icon, click, in groups: the switches (modes shown pressed while on, then hide), history, then the lists.
+    // id, label, shortcut, icon, click, in groups: history, the switches (modes shown pressed while on, then hide), then the lists.
     const menuButtons = new Map([
-        ['pen', menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple-slash'), () => togglePen())],
+        ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
+        ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())],
+        ['pen',menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple-slash'), () => togglePen())],
         ['toolbar', menuButton('Selection toolbar', 'Alt+T', phosphorIcon(toolbarSwitchedOff() ? 'cursor-text-slash' : 'cursor-text'), () => toggleToolbarSwitch())],
         ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon(keysSwitchedOff() ? 'keyboard-slash' : 'keyboard'), () => toggleKeysSwitch())],
         ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())],
-        ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
-        ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())],
-        ['panel', menuButton('Annotations', 'Alt+O', phosphorIcon('list-checks'), () => togglePanel())],
+        ['panel',menuButton('Annotations', 'Alt+O', phosphorIcon('list-checks'), () => togglePanel())],
         ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('magnifying-glass'), () => toggleEverything())]
     ]);
     addMenuTip(menuExpand, 'Expand');
@@ -77,7 +77,7 @@
     }
 
     const menuTools = makeEl('div', { class: 'sitemenu-tools' }, [
-        makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons.values()])
+        makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons.values()].flatMap(b => b === menuButtons.get('redo') ? [b, toolbarDivider()] : [b]))
     ]);
     const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'horizontal', 'aria-label': 'Highlighter', hidden: '' }, [menuHandle, makeEl('div', { class: 'sitemenu-expand' }, [menuExpand]), menuTools]);
     menuRoot.append(makeEl('style', { text: UI_CSS }), menuEl, menuTip);

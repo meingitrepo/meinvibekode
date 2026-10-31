@@ -24,7 +24,13 @@ const state = page => page.evaluate(() => ({
   let s = await state(page);
   L.check('the script runs on a fresh site; the menu is one button', await page.evaluate(() => window.__hl.running) && s.shown && s.expanded === 'false' && !s.open, s);
   L.check('default corner is top left', s.rect.left < 20 && s.rect.top < 20, s.rect);
-  L.check('buttons are pen, toolbar, keys, hide, undo, redo, panel, search', s.ids === 'pen,toolbar,keys,hide,undo,redo,panel,search', s.ids);
+  L.check('buttons are undo, redo, pen, toolbar, keys, hide, panel, search', s.ids === 'undo,redo,pen,toolbar,keys,hide,panel,search', s.ids);
+  const hist = await page.evaluate(() => {
+    const m = window.__hl.menuButtons, redo = m.get('redo'), d = redo.nextElementSibling;
+    const cs = d && getComputedStyle(d);
+    return { firstIsUndo: redo.parentElement.firstElementChild === m.get('undo'), role: d && d.getAttribute('role'), cls: d && d.className, next: d && d.nextElementSibling === m.get('pen'), margin: cs && [cs.marginLeft, cs.marginRight], count: redo.parentElement.querySelectorAll('[role="separator"]').length };
+  });
+  L.check('undo and redo come first, one toolbar divider with its usual padding after them', hist.firstIsUndo && hist.role === 'separator' && hist.cls === 'divider' && hist.next && hist.count === 1 && hist.margin[0] === '10px' && hist.margin[1] === '10px', hist);
   L.check('no power button any more', await page.evaluate(() => !window.__hl.menuEl.querySelector('[aria-label^="Turn highlighter"]')));
   const hr = await rectOf(page, 'menuHandle'), er = await rectOf(page, 'menuExpand');
   L.check('the handle is on the left, then the expand icon button', s.expandIsIconButton && hr.right <= er.left + 1 && hr.left < er.left, { hr, er });

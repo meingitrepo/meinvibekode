@@ -173,6 +173,7 @@
 
     function occurrences(text, part) {
         const out = [];
+        if (!part) return out;   // indexOf('', i) never reaches -1
         for (let i = text.indexOf(part); i !== -1; i = text.indexOf(part, i + 1)) out.push(i);
         return out;
     }

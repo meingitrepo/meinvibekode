@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.81
+// @version      9.82
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -1103,6 +1103,7 @@
 
     function occurrences(text, part) {
         const out = [];
+        if (!part) return out;   // indexOf('', i) never reaches -1
         for (let i = text.indexOf(part); i !== -1; i = text.indexOf(part, i + 1)) out.push(i);
         return out;
     }
@@ -6526,23 +6527,31 @@
                 const group = recordOwner(r);
                 let a = byGroup.get(group);
                 if (!a) {
-                    a = { group, key: r.key, records: [], note: '', time: groupTime(group) || r.added || null, page: r.page ? r.page : k };
+                    a = { group, key: r.key, records: [], note: '', time: groupTime(group) || r.added || null, page: webPage(r.page) ? r.page : k };
                     byGroup.set(group, a);
                 }
                 a.records.push(r);
                 if (!a.note && r.note) a.note = r.note;
             });
             const items = Array.from(byGroup.values()).map(a => {
-                const text = a.records.map(r => r.text || '').join(' ').replace(/\s+/g, ' ').trim();
+                const text = a.records.map(r => typeof r.text === 'string' ? r.text : '').join(' ').replace(/\s+/g, ' ').trim();
+                if (!text) return null;
                 const directive = textDirective({ paragraphs: [text] }, '', new Map());
                 return { group: a.group, key: a.key, note: a.note, time: a.time, text, url: `${a.page}${a.page.includes('#') ? '' : '#'}:~:${directive}` };
-            }).filter(a => a.text);
+            }).filter(Boolean);
             if (!items.length) return;
             let host = k, path = '';
             try { const u = new URL(k); host = u.hostname.replace(SITE_PREFIX_RE, ''); path = pagePath(k); } catch (e) { /* not a URL: shown as is */ }
             pages.push({ key: k, host, path, items, time: Math.max(0, ...items.map(a => a.time || 0)) });
         });
         return pages.sort((a, b) => b.time - a.time || a.key.localeCompare(b.key));
+    }
+
+    // A record's page comes from storage or from a page's own markup, and becomes a link:
+    // only an http(s) address may.
+    function webPage(page) {
+        if (typeof page !== 'string') return false;
+        try { return /^https?:$/.test(new URL(page).protocol); } catch (e) { return false; }
     }
 
     function openEverything() {

@@ -50,11 +50,13 @@ const clickWrapper = async (page, i = 0) => {
     L.check('keys behind everything saved change nothing', w.length === 1 && w[0].k === 'h', w);
     await page.keyboard.press('Escape'); await page.waitForTimeout(100);
 
-    // Delete on a new note takes the highlight made for it.
+    // Delete at the end of a new note's text keeps it; Esc then takes the highlight made for it.
     await L.selStr(page, '#p2', 'echo foxtrot'); await L.altKey(page, 'KeyN');
     await page.keyboard.type('my words'); await page.keyboard.press('Delete'); await page.waitForTimeout(300);
     w = await L.wr(page);
-    L.check('Delete on a new note: its highlight goes', w.length === 1, w);
+    L.check('Delete on a new note: nothing is lost', w.length === 2, w);
+    await page.keyboard.press('Escape'); await page.waitForTimeout(300);
+    L.check('Esc on a new note: its highlight goes', (await L.wr(page)).length === 1, await L.wr(page));
     // An empty new note's Delete just drops it, as before.
     await L.selStr(page, '#p3', 'golf'); await L.altKey(page, 'KeyN');
     await page.keyboard.press('Delete'); await page.waitForTimeout(300);

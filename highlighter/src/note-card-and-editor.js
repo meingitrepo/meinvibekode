@@ -489,10 +489,12 @@
     }
 
     // Delete deletes the note, as its Delete button does, unless it has text after the caret
-    // (or selected) to delete.
+    // (or selected) to delete. A new note being typed is never thrown away by a stray Delete in
+    // its text: that would drop what was typed with no way back.
     function deleteKeyDeletesNote(e) {
         return e.key === 'Delete' && !e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey && !e.isComposing
             && !(e.target === noteInput && noteInput.selectionEnd < noteInput.value.length)
+            && !(e.target === noteInput && editor && editor.step && noteInput.value)
             && noteInput.selectionStart === noteInput.selectionEnd;
     }
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.73
+// @version      9.74
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -2169,6 +2169,14 @@
         return list && list.filter(r => !('gone' in r));
     }
 
+    // Can this version place the record? One it can't (damaged, or written by a version that
+    // anchors differently) is never rendered or changed, and every save keeps it as it was.
+    function usableRecord(r) {
+        const text = v => typeof v === 'string' && v !== '';
+        const number = v => v === undefined || Number.isFinite(v);
+        return text(r.key) && text(r.text) && text(r.xpath) && number(r.startOffset) && number(r.length);
+    }
+
     // Annotation -> when it was deleted, for the tombstones in `raw` that are well formed and not too old.
     function tombstonesIn(raw) {
         const gone = new Map();
@@ -2186,12 +2194,29 @@
     // Saves `records` under `key`, keeping the tombstones already there and adding one for each of
     // `removed` (the annotations this deletes); with nothing left the key is removed.
     function writeRecords(key, records, removed = []) {
-        const gone = tombstonesIn(GM_getValue(key, null));
+        let gone;
+        try { gone = tombstonesIn(GM_getValue(key, null)); } catch (err) { return storageFailed(err); }
         removed.forEach(owner => gone.set(owner, Date.now()));
         const list = records.concat(Array.from(gone, ([owner, at]) => ({ gone: owner, at })));
-        if (list.length) GM_setValue(key, JSON.stringify(list));
-        else GM_deleteValue(key);
+        return list.length ? storeValue(key, JSON.stringify(list)) : dropValue(key);
     }
+
+    // Violentmonkey's storage can refuse (the extension updated under an open tab, a full quota).
+    // The user is told once, until a write goes through; callers get false, never an exception,
+    // and keep the page as it is.
+    let writeWarned = false;
+    function storageFailed(err) {
+        console.warn(`${LOG} could not use storage`, err);
+        if (!writeWarned) { writeWarned = true; showToast("Couldn't save annotations", { intent: 'warning' }); }
+        return false;
+    }
+
+    function storageWrite(write) {
+        try { write(); writeWarned = false; return true; } catch (err) { return storageFailed(err); }
+    }
+
+    const storeValue = (key, json) => storageWrite(() => GM_setValue(key, json));
+    const dropValue = key => storageWrite(() => GM_deleteValue(key));
 
     // The records of each annotation, by owner.
     function byOwner(records) {
@@ -2286,7 +2311,7 @@
     }
 
     function loadRecords() {
-        const stored = loadStoredRecords();
+        const stored = loadStoredRecords().filter(usableRecord);   // the others stay in storage (see saveHighlights)
         stored.forEach(r => knownOwners.add(recordOwner(r)));
         const gone = tombstonesIn(GM_getValue(currentKey, null));
         gone.forEach((at, owner) => goneState.set(owner, at));
@@ -2316,8 +2341,7 @@
             if (!first.note && r.note) first.note = r.note;   // the copy kept may be the one without the note
             return false;
         });
-        writeRecords(currentKey, merged);
-        moved.forEach(k => GM_deleteValue(k));
+        if (writeRecords(currentKey, merged)) moved.forEach(k => dropValue(k));   // else they stay, and move on the next visit
         return merged;
     }
 
@@ -2329,16 +2353,19 @@
         // Another tab showing this page may have saved annotations this tab never loaded: they
         // are kept. An annotation this tab did load or save is this tab's to write: as it is
         // here, or gone if it was removed here.
-        const raw = GM_getValue(currentKey, null);
+        let raw;
+        try { raw = GM_getValue(currentKey, null); } catch (err) { storageFailed(err); return; }   // unread: never overwritten
         own.forEach(r => knownOwners.add(recordOwner(r)));
-        const others = (parseRecords(raw) || []).filter(r => !knownOwners.has(recordOwner(r)));
+        const others = (parseRecords(raw) || []).filter(r => !usableRecord(r) || !knownOwners.has(recordOwner(r)));
+        // A failed write leaves what this tab knows (stamps, deletes) as it is: that is true
+        // whether or not it was stored, and the next save writes it all again from the page.
         const merged = own.concat(others, stampOwners(own, raw));   // records, then the tombstones of what was deleted
         if (merged.length === 0) {
-            if (raw !== null && raw !== undefined) GM_deleteValue(currentKey);
+            if (raw !== null && raw !== undefined) dropValue(currentKey);
             return;
         }
         const json = JSON.stringify(merged);
-        if (json !== raw) GM_setValue(currentKey, json);
+        if (json !== raw) storeValue(currentKey, json);
     }
 
     // --- Per-site settings ---
@@ -2357,7 +2384,7 @@
     }
 
     function writeSettings(settings) {
-        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+        return storeValue(SETTINGS_KEY, JSON.stringify(settings));
     }
 
     // The shortcut keys (Alt+Shift+K) and the selection toolbar (Alt+T) are per site and off until
@@ -2474,10 +2501,21 @@
         // all (wrapping splits text nodes, which would make the index stale). The ranges are
         // live: wrapping one record moves the others' boundaries along with their text.
         // A record whose style no longer exists stays saved, unplaced, until the style is back.
-        const targets = records.map(record => ({
-            record,
-            located: hasOwn(STYLES, record.key) ? locateRecord(record, getIndex, isReclaimed(record)) : null
-        }));
+        // A record that throws anywhere below is treated as one that was not found: it waits in
+        // `failed` (so it stays saved), and is not retried again this visit (see isWatched).
+        const broke = (target, err) => {
+            const id = recordId(target.record);
+            if (!stubbornIds.has(id)) { stubbornIds.add(id); console.warn(`${LOG} could not restore an annotation`, err); }
+            if (target.located) dropRange(target.located.range);
+            target.located = null;
+        };
+        const targets = records.map(record => {
+            const target = { record, located: null };
+            try {
+                if (hasOwn(STYLES, record.key)) target.located = locateRecord(record, getIndex, isReclaimed(record));
+            } catch (err) { broke(target, err); }
+            return target;
+        });
         // Backgrounds are read now, while nothing has changed, so wrapping doesn't make the
         // browser recompute styles once per wrapper (see darkBehind's cache).
         targets.forEach(({ located }) => {
@@ -2487,10 +2525,12 @@
         // of the others that overlap it. Offsets in the block's text don't move.
         targets.forEach(t => {
             if (!t.located) return;
-            const r = t.located.range;
-            const block = getBlockParent(r.startContainer);
-            if (block !== getBlockParent(r.endContainer)) return;
-            t.spot = { block, start: computeOffsetWithinBlock(block, r.startContainer, r.startOffset), end: computeOffsetWithinBlock(block, r.endContainer, r.endOffset) };
+            try {
+                const r = t.located.range;
+                const block = getBlockParent(r.startContainer);
+                if (block !== getBlockParent(r.endContainer)) return;
+                t.spot = { block, start: computeOffsetWithinBlock(block, r.startContainer, r.startOffset), end: computeOffsetWithinBlock(block, r.endContainer, r.endOffset) };
+            } catch (err) { broke(t, err); }
         });
 
         const place = (record, located, range) => {
@@ -2510,10 +2550,17 @@
             if (located.relocated) relocated = true;
             if (added !== record.added) stamped = true;
         };
-        targets.forEach(({ record, located, spot }) => {
+        targets.forEach(t => {
+            const { record, located, spot } = t;
             if (!located) { failed.push(record); return; }
-            const range = (spot && rangeFromOffsets(spot.block, spot.start, spot.end)) || located.range;
-            place(record, located, range);
+            let range = null;
+            try {
+                range = (spot && rangeFromOffsets(spot.block, spot.start, spot.end)) || located.range;
+                place(record, located, range);
+            } catch (err) {
+                broke(t, err);
+                failed.push(record);
+            }
             dropRange(range);   // the others' stay live until their turn
             dropRange(located.range);
         });
@@ -7009,7 +7056,7 @@
         if (!remote || !running || nav || name !== currentKey) return;
         const wiped = !newRaw;   // the whole list was deleted
         const gone = tombstonesIn(newRaw);
-        const incoming = byOwner(aliveRecords(parseRecords(newRaw) || [], gone));
+        const incoming = byOwner(aliveRecords((parseRecords(newRaw) || []).filter(usableRecord), gone));
         const here = byOwner(getCurrentRecords().concat(pendingRecords));
         const editing = editor ? editor.group : null;
         const drop = new Set();
@@ -7226,7 +7273,7 @@
             return;
         }
         if (!confirm('This deletes every Highlighter annotation saved for every site. Your per-site on/off choices are kept. Continue?')) return;
-        GM_listValues().forEach(k => { if (k !== SETTINGS_KEY) GM_deleteValue(k); });
+        GM_listValues().forEach(k => { if (k !== SETTINGS_KEY) dropValue(k); });
         if (running) {
             resetUi();
             closeEverything();

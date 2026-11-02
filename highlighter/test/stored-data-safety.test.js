@@ -67,6 +67,10 @@ const deliver = (p, list) => p.evaluate(([k, v]) => { try { window.__deliver(k, 
     const kept = o => st.some(r => JSON.stringify(r) === JSON.stringify(o));
     L.check('unusable records: written back unchanged by a save', kept(noText) && kept(noXpath) && kept(badGroupOnly), st);
     L.check('unusable records: the usable ones are saved too', st.some(r => r.text === 'alpha one') && st.some(r => r.text === 'words'), st);
+    await deliver(page, [...st, { ...noText, group: 'gY' }]);   // another tab's list holds one too
+    await page.waitForTimeout(300);
+    const after = await L.wr(page);
+    L.check('unusable records: not rendered when another tab sends them either', !after.some(x => x.g === 'gY' || x.t === 'Para'), after);
     L.check('unusable records: no page errors', errors(page).length === 0, errors(page));
     await page.close();
   }

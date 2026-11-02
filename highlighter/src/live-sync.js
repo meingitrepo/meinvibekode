@@ -33,7 +33,7 @@
         if (!remote || !running || nav || name !== currentKey) return;
         const wiped = !newRaw;   // the whole list was deleted
         const gone = tombstonesIn(newRaw);
-        const incoming = byOwner(aliveRecords(parseRecords(newRaw) || [], gone));
+        const incoming = byOwner(aliveRecords((parseRecords(newRaw) || []).filter(usableRecord), gone));
         const here = byOwner(getCurrentRecords().concat(pendingRecords));
         const editing = editor ? editor.group : null;
         const drop = new Set();

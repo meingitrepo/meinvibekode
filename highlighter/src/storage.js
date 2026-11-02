@@ -245,6 +245,14 @@
         return list && list.filter(r => !('gone' in r));
     }
 
+    // Can this version place the record? One it can't (damaged, or written by a version that
+    // anchors differently) is never rendered or changed, and every save keeps it as it was.
+    function usableRecord(r) {
+        const text = v => typeof v === 'string' && v !== '';
+        const number = v => v === undefined || Number.isFinite(v);
+        return text(r.key) && text(r.text) && text(r.xpath) && number(r.startOffset) && number(r.length);
+    }
+
     // Annotation -> when it was deleted, for the tombstones in `raw` that are well formed and not too old.
     function tombstonesIn(raw) {
         const gone = new Map();
@@ -285,11 +293,6 @@
 
     const storeValue = (key, json) => storageWrite(() => GM_setValue(key, json));
     const dropValue = key => storageWrite(() => GM_deleteValue(key));
-
-    function restoreMap(map, snapshot) {
-        map.clear();
-        snapshot.forEach((value, key) => map.set(key, value));
-    }
 
     // The records of each annotation, by owner.
     function byOwner(records) {
@@ -384,7 +387,7 @@
     }
 
     function loadRecords() {
-        const stored = loadStoredRecords();
+        const stored = loadStoredRecords().filter(usableRecord);   // the others stay in storage (see saveHighlights)
         stored.forEach(r => knownOwners.add(recordOwner(r)));
         const gone = tombstonesIn(GM_getValue(currentKey, null));
         gone.forEach((at, owner) => goneState.set(owner, at));
@@ -429,19 +432,16 @@
         let raw;
         try { raw = GM_getValue(currentKey, null); } catch (err) { storageFailed(err); return; }   // unread: never overwritten
         own.forEach(r => knownOwners.add(recordOwner(r)));
-        const others = (parseRecords(raw) || []).filter(r => !knownOwners.has(recordOwner(r)));
-        // What this tab knows of the store only moves on once the write went through.
-        const knownBefore = new Map(ownerState);
-        const goneBefore = new Map(goneState);
+        const others = (parseRecords(raw) || []).filter(r => !usableRecord(r) || !knownOwners.has(recordOwner(r)));
+        // A failed write leaves what this tab knows (stamps, deletes) as it is: that is true
+        // whether or not it was stored, and the next save writes it all again from the page.
         const merged = own.concat(others, stampOwners(own, raw));   // records, then the tombstones of what was deleted
-        const json = JSON.stringify(merged);
-        const written = merged.length === 0
-            ? (raw === null || raw === undefined || dropValue(currentKey))
-            : (json === raw || storeValue(currentKey, json));
-        if (!written) {
-            restoreMap(ownerState, knownBefore);
-            restoreMap(goneState, goneBefore);
+        if (merged.length === 0) {
+            if (raw !== null && raw !== undefined) dropValue(currentKey);
+            return;
         }
+        const json = JSON.stringify(merged);
+        if (json !== raw) storeValue(currentKey, json);
     }
 
     // --- Per-site settings ---

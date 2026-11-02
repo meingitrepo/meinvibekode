@@ -51,6 +51,26 @@ const deliver = (p, list) => p.evaluate(([k, v]) => { try { window.__deliver(k, 
     await page.close();
   }
 
+  // 3. records this version cannot use are not rendered, but a save writes them back as they were
+  {
+    const noText = { xpath: '//*[@id="p2"]', startOffset: 0, length: 4, key: 'h', group: 'gX', rev: 5 };
+    const noXpath = { anchor: 'future', startOffset: 10, length: 8, key: 'u', text: 'beta two', group: 'gF', extra: { nested: [1, 2] } };
+    const badGroupOnly = { ...other(), text: undefined, group: 'gA' };   // shares a group with a usable record
+    const legacy = (() => { const r = rec('//*[@id="p2"]', P2, 'other words', { key: 'h4' }); delete r.group; return r; })();
+    const list = [good(), noText, noXpath, badGroupOnly, legacy];
+    const { page } = await L.open(b, { html, store: { [KEY]: JSON.stringify(list) } });
+    await page.waitForTimeout(600);
+    const w = await L.wr(page);
+    L.check('unusable records: only the usable ones are rendered', w.length === 2 && w.some(x => x.t === 'alpha one') && w.some(x => x.t === 'other words'), w);
+    await L.selStr(page, '#p1', 'words'); await L.altKey(page, 'KeyH'); await page.waitForTimeout(300);
+    const st = await L.stored(page);
+    const kept = o => st.some(r => JSON.stringify(r) === JSON.stringify(o));
+    L.check('unusable records: written back unchanged by a save', kept(noText) && kept(noXpath) && kept(badGroupOnly), st);
+    L.check('unusable records: the usable ones are saved too', st.some(r => r.text === 'alpha one') && st.some(r => r.text === 'words'), st);
+    L.check('unusable records: no page errors', errors(page).length === 0, errors(page));
+    await page.close();
+  }
+
   // 2. storage refuses writes: the page keeps working, the user is told once, nothing is lost
   {
     const { page } = await L.open(b, { html, store: {} });

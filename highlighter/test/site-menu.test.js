@@ -30,28 +30,28 @@ const state = page => page.evaluate(() => ({
     const cs = getComputedStyle(inner.querySelector('[role="separator"]'));
     return { order: [...inner.children].map(c => names.get(c) || (c.getAttribute('role') === 'separator' && c.className === 'divider' ? '|' : '?')).join(' '), margin: [cs.marginLeft, cs.marginRight] };
   });
-  L.check('toolbar dividers with their usual padding split the groups, and end the row', row.order === 'search panel | toolbar pen keys hide | undo redo |' && row.margin[0] === '10px' && row.margin[1] === '10px', row);
+  L.check('toolbar dividers with their usual padding split the groups', row.order === 'search panel | toolbar pen keys hide | undo redo' && row.margin[0] === '10px' && row.margin[1] === '10px', row);
   L.check('no power button any more', await page.evaluate(() => !window.__hl.menuEl.querySelector('[aria-label^="Turn highlighter"]')));
   const hr = await rectOf(page, 'menuHandle'), er = await rectOf(page, 'menuExpand');
   L.check('the handle is on the left, then the expand icon button', s.expandIsIconButton && hr.right <= er.left + 1 && hr.left < er.left, { hr, er });
   const mr = s.rect, gap = { top: er.top - mr.top, left: hr.left - mr.left, right: mr.right - er.right, bottom: mr.bottom - er.bottom };
   L.check('collapsed: the same small padding on every side, and a short menu', Math.max(...Object.values(gap)) - Math.min(...Object.values(gap)) <= 1 && gap.left <= 6 && mr.height <= 44, { gap, height: mr.height });
   const handleLook = () => page.evaluate(() => {
-    const h = window.__hl.menuHandle, c = getComputedStyle(h, '::before');
+    const h = window.__hl.menuHandle, c = getComputedStyle(h), svg = h.querySelector('svg'), s = svg && getComputedStyle(svg);
     const probe = (bg) => { const d = document.createElement('div'); d.style.background = bg; h.parentNode.appendChild(d); const v = getComputedStyle(d).backgroundColor; d.remove(); return v; };
-    return { width: c.width, height: c.height, radius: c.borderRadius, bg: c.backgroundColor, opacity: c.opacity, transition: c.transition, handleBg: getComputedStyle(h).backgroundImage,
-      lineStrong: probe('var(--line-strong)'), ink3: probe('var(--ink-3)'), canvasText: probe('CanvasText') };
+    return { width: c.width, bg: c.backgroundColor, transition: c.transition, icon: !!svg && svg.getAttribute('class'), size: s && s.width, fill: s && s.fill, dots: svg ? (svg.querySelector('path').getAttribute('d').match(/Z/g) || []).length : 0, before: getComputedStyle(h, '::before').content,
+      ink: probe('var(--ink)'), ink2: probe('var(--ink-2)'), hover: probe('var(--surface-hover)'), canvasText: probe('CanvasText') };
   });
   let hl = await handleLook();
-  L.check('the handle is a thin centred hairline bar (2x16, --line-strong, no opacity tint), not dots', hl.width === '2px' && hl.height === '16px' && hl.radius === '1px' && hl.bg === hl.lineStrong && hl.opacity === '1' && hl.handleBg === 'none', hl);
-  L.check('the handle bar fades with the calm ease-out motion', /background-color/.test(hl.transition) && !/cubic-bezier\(0\.33/.test(hl.transition), hl.transition);
+  L.check('the handle is a six-dot grip icon coloured like the buttons, in a narrow slot', hl.dots === 6 && hl.size === '20px' && hl.width === '14px' && hl.fill === hl.ink2 && hl.before === 'none', hl);
+  L.check('the handle fades with the calm ease-out motion', /background-color/.test(hl.transition) && !/cubic-bezier\(0\.33/.test(hl.transition), hl.transition);
   const hdr = await rectOf(page, 'menuHandle'); await page.mouse.move(hdr.left + hdr.width / 2, hdr.top + hdr.height / 2); await page.waitForTimeout(300);
   hl = await handleLook();
-  L.check('hovering the handle darkens the bar to --ink-3', hl.bg === hl.ink3, hl);
+  L.check('hovering the handle lights it like a button', hl.bg === hl.hover && hl.fill === hl.ink, hl);
   await page.mouse.move(600, 600); await page.waitForTimeout(300);
   await page.emulateMedia({ forcedColors: 'active' }); await page.waitForTimeout(300);
   hl = await handleLook();
-  L.check('forced colors: the handle bar is drawn in CanvasText', hl.bg === hl.canvasText && hl.bg !== 'rgba(0, 0, 0, 0)', hl);
+  L.check('forced colors: the grip is drawn in CanvasText', hl.fill === hl.canvasText, hl);
   await page.emulateMedia({ forcedColors: 'none' });
   L.check('every button has a name with its shortcut', s.labels.every(l => /\(Alt\+/.test(l)), s.labels);
   L.check('fresh site: toolbar and shortcuts show off', s.pressed.toolbar === 'false' && s.pressed.keys === 'false', s.pressed);
@@ -64,7 +64,8 @@ const state = page => page.evaluate(() => ({
   L.check('expand opens the row', s.expanded === 'true' && s.open, s);
   L.check('one row: same top, increasing lefts', new Set(s.tops).size === 1 && s.lefts.every((t, i) => !i || t > s.lefts[i - 1]), s);
   const openExpand = await rectOf(page, 'menuExpand');
-  L.check('open: the collapse button is at the far end, after a divider, with the same padding as closed', openExpand.left > s.lefts[s.lefts.length - 1] + 28 + 20 && Math.abs((s.rect.right - openExpand.right) - gap.right) <= 1, { openExpand, lefts: s.lefts, rect: s.rect });
+  const openHandle = await rectOf(page, 'menuHandle');
+  L.check('open: the collapse button stays beside the handle, before the row', Math.abs(openExpand.left - openHandle.right) <= 1 && openExpand.right <= s.lefts[0], { openHandle, openExpand, lefts: s.lefts });
   L.check('undo and redo are disabled with nothing to undo', s.disabled.undo && s.disabled.redo, s.disabled);
   await btn(page, 'keys'); await btn(page, 'toolbar'); await page.waitForTimeout(200);
   s = await state(page);

@@ -154,12 +154,21 @@
         }
     }
 
-    function offsetMatchesText(block, start, length, expected) {
+    // Does the record's text sit at its saved place? A short text (the, Yes) also needs what
+    // surrounds it to be what was saved: after an edit the same word can sit at the old offset
+    // while the annotated one has moved. A long text cannot repeat there by chance.
+    function offsetMatchesText(block, start, length, record) {
+        const expected = record.text;
         if (typeof expected !== 'string') return true;
         const r = rangeFromOffsets(block, start, start + length);
         const matches = !!r && r.toString() === expected;
         dropRange(r);
-        return matches;
+        if (!matches || expected.length >= OFFSET_TRUST_LENGTH) return matches;
+        const full = block.textContent;
+        const prefix = record.prefix || '';
+        const suffix = record.suffix || '';
+        return full.slice(Math.max(0, start - prefix.length), start) === prefix &&
+            full.slice(start + length, start + length + suffix.length) === suffix;
     }
 
     function occurrences(text, part) {
@@ -241,11 +250,13 @@
         const context = prefix + record.text + suffix;
         let start = -1;
         const at = index.text.indexOf(context);
-        if (strict) {
-            const { atStart, atEnd } = contextEdges(record);
+        const { atStart, atEnd } = contextEdges(record);
+        const wholeBlock = typeof record.prefix === 'string' && typeof record.suffix === 'string' &&
+            atStart && atEnd && context.length < CONTEXT_LENGTH;   // a record saved without context is not one
+        if (strict || (wholeBlock && at !== -1)) {
             // A whole block with less text than a record's usual context ("Paris" in a table
             // cell) could be any such block: only its own place will do, which fuzzyLocate has tried.
-            if (atStart && atEnd && context.length < CONTEXT_LENGTH) return null;
+            if (strict && wholeBlock) return null;
             const hits = occurrences(index.text, context).filter(i => {
                 const p = pointAt(index, i, 'start');
                 if (!p) return false;

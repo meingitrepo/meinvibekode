@@ -31,6 +31,7 @@
     const DRAW_IN_MS = 200;                    // a new annotation draws in over this long
     const ANIMATE_ON_RESTORE = false;          // restored annotations appear instantly
     const CONTEXT_LENGTH = 24;                 // prefix/suffix characters stored per record
+    const OFFSET_TRUST_LENGTH = 40;            // annotated text this long (about the context on both sides) at its saved offset needs no context check
     const UNDO_STACK_LIMIT = 20;
     const TOMBSTONE_TTL_MS = 24 * 60 * 60 * 1000;   // a deleted annotation is remembered this long (see stampOwners), so a tab that is slow to hear of it can't bring it back
     const RESTORE_DELAY_MS = 400;

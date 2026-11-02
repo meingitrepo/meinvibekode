@@ -27,7 +27,7 @@
             let length = record.length;
             let relocated = false;
             let usable = true;
-            if (strict || !offsetMatchesText(block, start, length, record.text)) {
+            if (strict || !offsetMatchesText(block, start, length, record)) {
                 const fz = fuzzyLocate(block, record, strict);
                 if (fz) { relocated = fz.startOffset !== start || fz.length !== length; start = fz.startOffset; length = fz.length; }
                 else usable = false;

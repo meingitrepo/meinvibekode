@@ -94,10 +94,7 @@
         const out = [];
         byPage.forEach((items, p) => {
             out.push(`${out.length ? '\n' : ''}## [${markdownText(p.host + p.path)}](${markdownUrl(p.key)})`);
-            items.forEach(a => {
-                out.push('', `> ${markdownText(a.text)} [↗](${markdownUrl(a.url)})`);
-                if (a.note) out.push('', a.note);
-            });
+            items.forEach(a => out.push(...markdownQuote([a.text], a.url, a.note)));
         });
         return out.join('\n') + '\n';
     }

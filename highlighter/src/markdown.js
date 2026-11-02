@@ -65,8 +65,17 @@
     // Escapes what Markdown would read as formatting in quoted page text.
     function markdownText(s) {
         return s.replace(/[\\`*_[\]<>]/g, '\\$&')
-            .replace(/^([#+-])/, '\\$1')
+            .replace(/^([#+=-])/, '\\$1')
             .replace(/^(\d+)([.)])/, '$1\\$2');
+    }
+
+    // A quote linked to its passage, then its note: the lines to add to an export. Every line of
+    // page text and note is escaped, so neither can open a heading, rule or link of its own.
+    function markdownQuote(paragraphs, link, note) {
+        const quote = paragraphs.map(p => `> ${markdownText(p)}`).join('\n>\n');
+        const lines = ['', `${quote} [↗](${markdownUrl(link)})`];
+        if (note) lines.push('', note.split('\n').map(markdownText).join('\n'));
+        return lines;
     }
 
     // Parentheses and spaces would end a Markdown link early.
@@ -146,13 +155,10 @@
         const title = (document.title || '').replace(/\s+/g, ' ').trim() || location.hostname || url;
         const pageText = (document.body ? document.body.textContent : '').replace(/\s+/g, ' ');
         const blockText = new Map();
-        const out = [`## [${title.replace(/[\\[\]]/g, '\\$&')}](${markdownUrl(url)})`];
+        const out = [`## [${markdownText(title)}](${markdownUrl(url)})`];
         items.forEach(a => {
             if (!a.paragraphs.length) return;
-            const quote = a.paragraphs.map(p => `> ${markdownText(p)}`).join('\n>\n');
-            const link = markdownUrl(directiveBase + textDirective(a, pageText, blockText));
-            out.push('', `${quote} [↗](${link})`);
-            if (a.note) out.push('', a.note);
+            out.push(...markdownQuote(a.paragraphs, directiveBase + textDirective(a, pageText, blockText), a.note));
         });
         return out.join('\n') + '\n';
     }

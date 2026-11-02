@@ -43,12 +43,14 @@
 
         if (key === currentKey) {
             startLateWatcher();
+            applyMissedRemote();
             return false;
         }
         // The previous page was saved after every change; nothing from it may be saved under the new key.
         dropUnwrittenNote();
         resetUi();
         pendingRecords = [];
+        missedRemote = false;   // the new page is read from storage anyway
         undoStack.length = 0;
         redoStack.length = 0;
         unwrapAll();

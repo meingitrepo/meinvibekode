@@ -450,17 +450,38 @@
         return location.hostname || location.protocol;
     }
 
-    function readSettings() {
+    // The stored settings object; null if the value cannot be parsed at all. Anything that parses to
+    // something other than an object (an array, null) holds no settings of ours and reads as empty.
+    function parseSettings(raw) {
+        if (raw === null || raw === undefined || raw === '') return {};
         try {
-            const s = JSON.parse(GM_getValue(SETTINGS_KEY, '{}'));
-            return s && typeof s === 'object' ? s : {};
+            const s = JSON.parse(raw);
+            return s && typeof s === 'object' && !Array.isArray(s) ? s : {};
         } catch (e) {
-            return {};
+            return null;
         }
     }
 
+    function readSettings() {
+        try { return parseSettings(GM_getValue(SETTINGS_KEY, '{}')) || {}; } catch (e) { return {}; }
+    }
+
+    // Saves on top of what the store holds now, never over a value that cannot be parsed (it may hold
+    // other sites' switches). `change` gets the current settings and edits them. Returns whether it was stored.
+    function updateSettings(change) {
+        let current;
+        try { current = parseSettings(GM_getValue(SETTINGS_KEY, null)); } catch (err) { storageFailed(err); return false; }
+        if (current === null) return false;
+        change(current);
+        return storeValue(SETTINGS_KEY, JSON.stringify(current));
+    }
+
+    // For a settings object read earlier by the caller; the same guard against an unparseable value.
     function writeSettings(settings) {
-        return storeValue(SETTINGS_KEY, JSON.stringify(settings));
+        return updateSettings(current => {
+            Object.keys(current).forEach(k => delete current[k]);
+            Object.assign(current, settings);
+        });
     }
 
     // The shortcut keys (Alt+Shift+K) and the selection toolbar (Alt+T) are per site and off until
@@ -471,12 +492,12 @@
     }
 
     function setSiteListed(key, on) {
-        const settings = readSettings();
-        const sites = new Set(Array.isArray(settings[key]) ? settings[key] : []);
-        if (on) sites.add(siteId());
-        else sites.delete(siteId());
-        settings[key] = Array.from(sites);
-        writeSettings(settings);
+        updateSettings(settings => {
+            const sites = new Set(Array.isArray(settings[key]) ? settings[key] : []);
+            if (on) sites.add(siteId());
+            else sites.delete(siteId());
+            settings[key] = Array.from(sites);
+        });
     }
 
     function keysSwitchedOff() {

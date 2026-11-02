@@ -5,6 +5,7 @@
 
     let watchedKey = null;
     let keyListener = null;
+    let missedRemote = false;   // a change from another tab arrived while an in-page navigation was settling
 
     // Follows the storage key of the page being shown (it changes with in-page navigation).
     function watchStoredKey() {
@@ -30,7 +31,9 @@
     // its list lacks. (`oldRaw` is no help: Violentmonkey gives this tab's own cached value, which
     // already holds a write of its own the other tab has not seen.)
     function onStoredKeyChanged(name, oldRaw, newRaw, remote) {
-        if (!remote || !running || nav || name !== currentKey) return;
+        if (!remote || name !== currentKey) return;
+        if (!running || nav) { missedRemote = true; return; }   // read again once the page is settled
+        missedRemote = false;
         const wiped = !newRaw;   // the whole list was deleted
         const gone = tombstonesIn(newRaw);
         const incoming = byOwner(aliveRecords((parseRecords(newRaw) || []).filter(usableRecord), gone));
@@ -93,6 +96,15 @@
             scheduleMenuRefresh();
         }
         if (resave) saveHighlights();
+    }
+
+    // After a navigation that stayed on the same page: apply what another tab saved meanwhile.
+    function applyMissedRemote() {
+        if (!missedRemote) return;
+        missedRemote = false;
+        let raw;
+        try { raw = GM_getValue(currentKey, null); } catch (err) { storageFailed(err); return; }
+        onStoredKeyChanged(currentKey, null, raw, true);
     }
 
     // The toolbar and shortcut switches flipped in another tab apply here too.

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.79
+// @version      9.80
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -2400,17 +2400,38 @@
         return location.hostname || location.protocol;
     }
 
-    function readSettings() {
+    // The stored settings object; null if the value cannot be parsed at all. Anything that parses to
+    // something other than an object (an array, null) holds no settings of ours and reads as empty.
+    function parseSettings(raw) {
+        if (raw === null || raw === undefined || raw === '') return {};
         try {
-            const s = JSON.parse(GM_getValue(SETTINGS_KEY, '{}'));
-            return s && typeof s === 'object' ? s : {};
+            const s = JSON.parse(raw);
+            return s && typeof s === 'object' && !Array.isArray(s) ? s : {};
         } catch (e) {
-            return {};
+            return null;
         }
     }
 
+    function readSettings() {
+        try { return parseSettings(GM_getValue(SETTINGS_KEY, '{}')) || {}; } catch (e) { return {}; }
+    }
+
+    // Saves on top of what the store holds now, never over a value that cannot be parsed (it may hold
+    // other sites' switches). `change` gets the current settings and edits them. Returns whether it was stored.
+    function updateSettings(change) {
+        let current;
+        try { current = parseSettings(GM_getValue(SETTINGS_KEY, null)); } catch (err) { storageFailed(err); return false; }
+        if (current === null) return false;
+        change(current);
+        return storeValue(SETTINGS_KEY, JSON.stringify(current));
+    }
+
+    // For a settings object read earlier by the caller; the same guard against an unparseable value.
     function writeSettings(settings) {
-        return storeValue(SETTINGS_KEY, JSON.stringify(settings));
+        return updateSettings(current => {
+            Object.keys(current).forEach(k => delete current[k]);
+            Object.assign(current, settings);
+        });
     }
 
     // The shortcut keys (Alt+Shift+K) and the selection toolbar (Alt+T) are per site and off until
@@ -2421,12 +2442,12 @@
     }
 
     function setSiteListed(key, on) {
-        const settings = readSettings();
-        const sites = new Set(Array.isArray(settings[key]) ? settings[key] : []);
-        if (on) sites.add(siteId());
-        else sites.delete(siteId());
-        settings[key] = Array.from(sites);
-        writeSettings(settings);
+        updateSettings(settings => {
+            const sites = new Set(Array.isArray(settings[key]) ? settings[key] : []);
+            if (on) sites.add(siteId());
+            else sites.delete(siteId());
+            settings[key] = Array.from(sites);
+        });
     }
 
     function keysSwitchedOff() {
@@ -2837,12 +2858,14 @@
 
         if (key === currentKey) {
             startLateWatcher();
+            applyMissedRemote();
             return false;
         }
         // The previous page was saved after every change; nothing from it may be saved under the new key.
         dropUnwrittenNote();
         resetUi();
         pendingRecords = [];
+        missedRemote = false;   // the new page is read from storage anyway
         undoStack.length = 0;
         redoStack.length = 0;
         unwrapAll();
@@ -7063,6 +7086,7 @@
 
     let watchedKey = null;
     let keyListener = null;
+    let missedRemote = false;   // a change from another tab arrived while an in-page navigation was settling
 
     // Follows the storage key of the page being shown (it changes with in-page navigation).
     function watchStoredKey() {
@@ -7088,7 +7112,9 @@
     // its list lacks. (`oldRaw` is no help: Violentmonkey gives this tab's own cached value, which
     // already holds a write of its own the other tab has not seen.)
     function onStoredKeyChanged(name, oldRaw, newRaw, remote) {
-        if (!remote || !running || nav || name !== currentKey) return;
+        if (!remote || name !== currentKey) return;
+        if (!running || nav) { missedRemote = true; return; }   // read again once the page is settled
+        missedRemote = false;
         const wiped = !newRaw;   // the whole list was deleted
         const gone = tombstonesIn(newRaw);
         const incoming = byOwner(aliveRecords((parseRecords(newRaw) || []).filter(usableRecord), gone));
@@ -7151,6 +7177,15 @@
             scheduleMenuRefresh();
         }
         if (resave) saveHighlights();
+    }
+
+    // After a navigation that stayed on the same page: apply what another tab saved meanwhile.
+    function applyMissedRemote() {
+        if (!missedRemote) return;
+        missedRemote = false;
+        let raw;
+        try { raw = GM_getValue(currentKey, null); } catch (err) { storageFailed(err); return; }
+        onStoredKeyChanged(currentKey, null, raw, true);
     }
 
     // The toolbar and shortcut switches flipped in another tab apply here too.

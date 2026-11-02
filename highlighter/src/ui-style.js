@@ -328,7 +328,7 @@
         .sitemenu-handle:active { background: var(--surface-pressed); color: var(--ink); }
         @media (prefers-reduced-motion: reduce) { .sitemenu-handle { transition: none; } }
         .sitemenu-expand { display: flex; justify-content: center; }
-        .sitemenu-expand .btn { width: 14px; }   /* as wide as the handle */
+        .sitemenu-expand .btn { width: 24px; }
         .sitemenu-expand .icon { transform: rotate(-90deg); transition: transform var(--duration-normal) var(--ease-out); }
         .sitemenu-expand [aria-expanded="true"] .icon { transform: rotate(90deg); }
         @media (prefers-reduced-motion: reduce) { .sitemenu-expand .icon { transition: none; } }

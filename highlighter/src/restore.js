@@ -75,10 +75,21 @@
         // all (wrapping splits text nodes, which would make the index stale). The ranges are
         // live: wrapping one record moves the others' boundaries along with their text.
         // A record whose style no longer exists stays saved, unplaced, until the style is back.
-        const targets = records.map(record => ({
-            record,
-            located: hasOwn(STYLES, record.key) ? locateRecord(record, getIndex, isReclaimed(record)) : null
-        }));
+        // A record that throws anywhere below is treated as one that was not found: it waits in
+        // `failed` (so it stays saved), and is not retried again this visit (see isWatched).
+        const broke = (target, err) => {
+            const id = recordId(target.record);
+            if (!stubbornIds.has(id)) { stubbornIds.add(id); console.warn(`${LOG} could not restore an annotation`, err); }
+            if (target.located) dropRange(target.located.range);
+            target.located = null;
+        };
+        const targets = records.map(record => {
+            const target = { record, located: null };
+            try {
+                if (hasOwn(STYLES, record.key)) target.located = locateRecord(record, getIndex, isReclaimed(record));
+            } catch (err) { broke(target, err); }
+            return target;
+        });
         // Backgrounds are read now, while nothing has changed, so wrapping doesn't make the
         // browser recompute styles once per wrapper (see darkBehind's cache).
         targets.forEach(({ located }) => {
@@ -88,10 +99,12 @@
         // of the others that overlap it. Offsets in the block's text don't move.
         targets.forEach(t => {
             if (!t.located) return;
-            const r = t.located.range;
-            const block = getBlockParent(r.startContainer);
-            if (block !== getBlockParent(r.endContainer)) return;
-            t.spot = { block, start: computeOffsetWithinBlock(block, r.startContainer, r.startOffset), end: computeOffsetWithinBlock(block, r.endContainer, r.endOffset) };
+            try {
+                const r = t.located.range;
+                const block = getBlockParent(r.startContainer);
+                if (block !== getBlockParent(r.endContainer)) return;
+                t.spot = { block, start: computeOffsetWithinBlock(block, r.startContainer, r.startOffset), end: computeOffsetWithinBlock(block, r.endContainer, r.endOffset) };
+            } catch (err) { broke(t, err); }
         });
 
         const place = (record, located, range) => {
@@ -111,10 +124,17 @@
             if (located.relocated) relocated = true;
             if (added !== record.added) stamped = true;
         };
-        targets.forEach(({ record, located, spot }) => {
+        targets.forEach(t => {
+            const { record, located, spot } = t;
             if (!located) { failed.push(record); return; }
-            const range = (spot && rangeFromOffsets(spot.block, spot.start, spot.end)) || located.range;
-            place(record, located, range);
+            let range = null;
+            try {
+                range = (spot && rangeFromOffsets(spot.block, spot.start, spot.end)) || located.range;
+                place(record, located, range);
+            } catch (err) {
+                broke(t, err);
+                failed.push(record);
+            }
             dropRange(range);   // the others' stay live until their turn
             dropRange(located.range);
         });

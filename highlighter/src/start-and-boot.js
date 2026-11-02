@@ -146,7 +146,7 @@
             return;
         }
         if (!confirm('This deletes every Highlighter annotation saved for every site. Your per-site on/off choices are kept. Continue?')) return;
-        GM_listValues().forEach(k => { if (k !== SETTINGS_KEY) GM_deleteValue(k); });
+        GM_listValues().forEach(k => { if (k !== SETTINGS_KEY) dropValue(k); });
         if (running) {
             resetUi();
             closeEverything();

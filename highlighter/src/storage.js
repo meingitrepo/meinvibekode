@@ -262,11 +262,33 @@
     // Saves `records` under `key`, keeping the tombstones already there and adding one for each of
     // `removed` (the annotations this deletes); with nothing left the key is removed.
     function writeRecords(key, records, removed = []) {
-        const gone = tombstonesIn(GM_getValue(key, null));
+        let gone;
+        try { gone = tombstonesIn(GM_getValue(key, null)); } catch (err) { return storageFailed(err); }
         removed.forEach(owner => gone.set(owner, Date.now()));
         const list = records.concat(Array.from(gone, ([owner, at]) => ({ gone: owner, at })));
-        if (list.length) GM_setValue(key, JSON.stringify(list));
-        else GM_deleteValue(key);
+        return list.length ? storeValue(key, JSON.stringify(list)) : dropValue(key);
+    }
+
+    // Violentmonkey's storage can refuse (the extension updated under an open tab, a full quota).
+    // The user is told once, until a write goes through; callers get false, never an exception,
+    // and keep the page as it is.
+    let writeWarned = false;
+    function storageFailed(err) {
+        console.warn(`${LOG} could not use storage`, err);
+        if (!writeWarned) { writeWarned = true; showToast("Couldn't save annotations", { intent: 'warning' }); }
+        return false;
+    }
+
+    function storageWrite(write) {
+        try { write(); writeWarned = false; return true; } catch (err) { return storageFailed(err); }
+    }
+
+    const storeValue = (key, json) => storageWrite(() => GM_setValue(key, json));
+    const dropValue = key => storageWrite(() => GM_deleteValue(key));
+
+    function restoreMap(map, snapshot) {
+        map.clear();
+        snapshot.forEach((value, key) => map.set(key, value));
     }
 
     // The records of each annotation, by owner.
@@ -392,8 +414,7 @@
             if (!first.note && r.note) first.note = r.note;   // the copy kept may be the one without the note
             return false;
         });
-        writeRecords(currentKey, merged);
-        moved.forEach(k => GM_deleteValue(k));
+        if (writeRecords(currentKey, merged)) moved.forEach(k => dropValue(k));   // else they stay, and move on the next visit
         return merged;
     }
 
@@ -405,16 +426,22 @@
         // Another tab showing this page may have saved annotations this tab never loaded: they
         // are kept. An annotation this tab did load or save is this tab's to write: as it is
         // here, or gone if it was removed here.
-        const raw = GM_getValue(currentKey, null);
+        let raw;
+        try { raw = GM_getValue(currentKey, null); } catch (err) { storageFailed(err); return; }   // unread: never overwritten
         own.forEach(r => knownOwners.add(recordOwner(r)));
         const others = (parseRecords(raw) || []).filter(r => !knownOwners.has(recordOwner(r)));
+        // What this tab knows of the store only moves on once the write went through.
+        const knownBefore = new Map(ownerState);
+        const goneBefore = new Map(goneState);
         const merged = own.concat(others, stampOwners(own, raw));   // records, then the tombstones of what was deleted
-        if (merged.length === 0) {
-            if (raw !== null && raw !== undefined) GM_deleteValue(currentKey);
-            return;
-        }
         const json = JSON.stringify(merged);
-        if (json !== raw) GM_setValue(currentKey, json);
+        const written = merged.length === 0
+            ? (raw === null || raw === undefined || dropValue(currentKey))
+            : (json === raw || storeValue(currentKey, json));
+        if (!written) {
+            restoreMap(ownerState, knownBefore);
+            restoreMap(goneState, goneBefore);
+        }
     }
 
     // --- Per-site settings ---
@@ -433,7 +460,7 @@
     }
 
     function writeSettings(settings) {
-        GM_setValue(SETTINGS_KEY, JSON.stringify(settings));
+        return storeValue(SETTINGS_KEY, JSON.stringify(settings));
     }
 
     // The shortcut keys (Alt+Shift+K) and the selection toolbar (Alt+T) are per site and off until

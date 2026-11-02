@@ -122,6 +122,7 @@
         if (nav) { clearTimeout(nav.timer); nav = null; }
         clearTimeout(restoreTimer);
         clearTimeout(redrawTimer);
+        clearTimeout(nearTimer); nearTimer = 0;
         cancelAnimationFrame(redrawFrame); redrawFrame = 0;
         resetUi();
         closePanel();

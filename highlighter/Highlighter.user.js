@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.75
+// @version      9.76
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -1882,15 +1882,28 @@
     let lastFullRedraw = -Infinity;
     let redrawResized = false;
     const FULL_REDRAW_GAP_MS = 1000;
+    const NEAR_GAP_MS = 200;
+    let nearTimer = 0;
+    let lastNearRedraw = -Infinity;
     // `e` is the window's resize event when that is what calls it. With `nearOnly` (the site
     // changed a style or class, see watchPageStyle) only those near the screen are looked at:
     // the others are redrawn by visibilityObserver if they moved, once they come near.
     function scheduleRedraw(e, nearOnly) {
         if (!shownWrappers.size) return;   // nothing on the page: nothing to do, however big the page
         if (e && e.type === 'resize') redrawResized = true;
+        // A page that restyles something every frame (a carousel, a progress bar) is looked at
+        // at most once per NEAR_GAP_MS, the last change always after the wait.
+        if (nearOnly === true && !redrawResized && !redrawFrame) {
+            const wait = lastNearRedraw + NEAR_GAP_MS - performance.now();
+            if (wait > 0) {
+                if (!nearTimer) nearTimer = setTimeout(() => { nearTimer = 0; scheduleRedraw(null, true); }, wait);
+                return;
+            }
+        }
         if (!redrawFrame) {
             redrawFrame = requestAnimationFrame(() => {
                 redrawFrame = 0;
+                lastNearRedraw = performance.now();
                 const scope = redrawResized ? 'view' : 'near';
                 redrawResized = false;
                 redrawMoved(scope);
@@ -1910,6 +1923,7 @@
         const ours = n => n instanceof SVGElement || (n.matches && n.matches(WRAPPER_SELECTOR));
         const sheet = n => n.nodeName === 'STYLE' || n.nodeName === 'LINK';
         const mo = new MutationObserver(list => {
+            if (!shownWrappers.size) return;   // nothing to follow: skip the records
             let hit = false;
             for (const m of list) {
                 if (m.type === 'attributes') { if (!ours(m.target)) hit = true; continue; }
@@ -7247,6 +7261,7 @@
         if (nav) { clearTimeout(nav.timer); nav = null; }
         clearTimeout(restoreTimer);
         clearTimeout(redrawTimer);
+        clearTimeout(nearTimer); nearTimer = 0;
         cancelAnimationFrame(redrawFrame); redrawFrame = 0;
         resetUi();
         closePanel();

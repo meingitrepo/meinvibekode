@@ -65,7 +65,7 @@ const state = page => page.evaluate(() => ({
   L.check('one row: same top, increasing lefts', new Set(s.tops).size === 1 && s.lefts.every((t, i) => !i || t > s.lefts[i - 1]), s);
   const openExpand = await rectOf(page, 'menuExpand');
   const openHandle = await rectOf(page, 'menuHandle');
-  L.check('open: the collapse button stays beside the handle, before the row', Math.abs(openExpand.left - openHandle.right) <= 1 && openExpand.right <= s.lefts[0], { openHandle, openExpand, lefts: s.lefts });
+  L.check('open: the collapse button stays beside the handle, 2px off it like the other buttons, before the row', openExpand.left - openHandle.right === 2 && openExpand.right <= s.lefts[0], { openHandle, openExpand, lefts: s.lefts });
   L.check('undo and redo are disabled with nothing to undo', s.disabled.undo && s.disabled.redo, s.disabled);
   await btn(page, 'keys'); await btn(page, 'toolbar'); await page.waitForTimeout(200);
   s = await state(page);

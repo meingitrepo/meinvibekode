@@ -327,7 +327,7 @@
         .sitemenu-handle:hover { background: var(--surface-hover); color: var(--ink); }
         .sitemenu-handle:active { background: var(--surface-pressed); color: var(--ink); }
         @media (prefers-reduced-motion: reduce) { .sitemenu-handle { transition: none; } }
-        .sitemenu-expand { display: flex; justify-content: center; }
+        .sitemenu-expand { display: flex; justify-content: center; margin-left: 2px; }
         .sitemenu-expand .btn { width: 24px; }
         .sitemenu-expand .icon { transform: rotate(-90deg); transition: transform var(--duration-normal) var(--ease-out); }
         .sitemenu-expand [aria-expanded="true"] .icon { transform: rotate(90deg); }

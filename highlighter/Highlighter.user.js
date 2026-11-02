@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.72
+// @version      9.73
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3945,7 +3945,7 @@
         .toast:focus-visible { outline: 2px solid var(--focus); }
         /* The pen's bar, centred at the top of the view. */
         .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
-        /* The sticky menu: the site switch, with a row of icon buttons expanding to its left. */
+        /* The sticky menu: the site switch, with a row of icon buttons expanding to its right. */
         .sitemenu { display: flex; align-items: center; padding: 4px; width: max-content; cursor: grab; }
         .sitemenu .btn { cursor: pointer; }
         /* A grip icon, coloured and lit like the icon buttons but narrower: the icon's empty sides overflow. */
@@ -3953,7 +3953,7 @@
         .sitemenu-handle:hover { background: var(--surface-hover); color: var(--ink); }
         .sitemenu-handle:active { background: var(--surface-pressed); color: var(--ink); }
         @media (prefers-reduced-motion: reduce) { .sitemenu-handle { transition: none; } }
-        .sitemenu-expand { display: flex; justify-content: center; }
+        .sitemenu-expand { display: flex; justify-content: center; margin-left: 2px; }
         .sitemenu-expand .btn { width: 24px; }
         .sitemenu-expand .icon { transform: rotate(-90deg); transition: transform var(--duration-normal) var(--ease-out); }
         .sitemenu-expand [aria-expanded="true"] .icon { transform: rotate(90deg); }
@@ -6808,7 +6808,7 @@
     helpEl.addEventListener('mousedown', e => { if (e.target === helpEl) closeHelp(); });
 
     // =====================================================================
-    // The sticky menu: a handle, a row of tool buttons, then one expand button
+    // The sticky menu: a handle, one expand button, then a row of tool buttons
     // =====================================================================
 
     function menuHiddenHere() {
@@ -6886,9 +6886,9 @@
     }
 
     const menuTools = makeEl('div', { class: 'sitemenu-tools' }, [
-        makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons].flatMap(([id, b]) => ['panel', 'hide', 'redo'].includes(id) ? [b, toolbarDivider()] : [b]))
+        makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons].flatMap(([id, b]) => ['panel', 'hide'].includes(id) ? [b, toolbarDivider()] : [b]))
     ]);
-    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'horizontal', 'aria-label': 'Highlighter', hidden: '' }, [menuHandle, menuTools, makeEl('div', { class: 'sitemenu-expand' }, [menuExpand])]);
+    const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'horizontal', 'aria-label': 'Highlighter', hidden: '' }, [menuHandle, makeEl('div', { class: 'sitemenu-expand' }, [menuExpand]), menuTools]);
     menuRoot.append(makeEl('style', { text: UI_CSS }), menuEl, menuTip);
     ['keydown', 'keyup', 'keypress'].forEach(type => menuHost.addEventListener(type, e => e.stopPropagation()));
     menuEl.addEventListener('mousedown', e => e.preventDefault());

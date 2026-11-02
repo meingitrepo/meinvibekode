@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.74
+// @version      9.75
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3480,6 +3480,11 @@
         if (e.shiftKey && e.code === 'KeyH' && !e.repeat) {
             e.preventDefault();
             toggleHelp();
+            return;
+        }
+        if (e.shiftKey && e.code === 'KeyM' && !e.repeat) {
+            e.preventDefault();
+            toggleSiteMenu();
             return;
         }
         const code = e.code;
@@ -7004,7 +7009,7 @@
             menuEl.removeEventListener('pointermove', move);
             const settings = readSettings();
             settings.menuPos = { left: parseFloat(menuEl.style.left), top: parseFloat(menuEl.style.top) };
-            writeSettings(settings);
+            if (!writeSettings(settings)) applyMenuPos();   // not saved: back to the place that is
         }, { once: true });
     });
 
@@ -7014,13 +7019,6 @@
         renderSiteMenu();
         refreshMenu();
     }
-    window.addEventListener('keydown', e => {
-        if (e.altKey && e.shiftKey && e.code === 'KeyM' && !e.ctrlKey && !e.metaKey && !e.repeat) {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleSiteMenu();
-        }
-    }, true);
 
     // =====================================================================
     // Live sync between tabs: another tab's change to this page shows here at once

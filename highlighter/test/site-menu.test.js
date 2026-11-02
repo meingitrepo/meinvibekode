@@ -112,6 +112,30 @@ const state = page => page.evaluate(() => ({
   L.check('Alt+Shift+M hides the menu on this site', !(await state(page)).shown);
   await L.altKey(page, 'm', true); await page.waitForTimeout(300);
   L.check('Alt+Shift+M brings it back', (await state(page)).shown);
+  // Alt+Shift+M follows the same gates as the other keys: not in a field, not with the keys switched off.
+  const keyM = () => page.evaluate(() => window.__keyMPrevented);
+  await page.evaluate(() => { const i = document.createElement('input'); i.id = 'fld'; document.body.appendChild(i); window.addEventListener('keydown', e => { if (e.code === 'KeyM') window.__keyMPrevented = e.defaultPrevented; }, true); i.focus(); });
+  await L.altKey(page, 'm', true); await page.waitForTimeout(300);
+  L.check('Alt+Shift+M in a text field leaves the menu and the key alone', (await state(page)).shown && (await keyM()) === false, await keyM());
+  await page.evaluate(() => document.getElementById('fld').blur());
+  await L.altKey(page, 'k', true); await page.waitForTimeout(300);
+  await L.altKey(page, 'm', true); await page.waitForTimeout(300);
+  L.check('Alt+Shift+M does nothing while the shortcut keys are off', (await state(page)).shown);
+  await L.altKey(page, 'k', true); await page.waitForTimeout(300);
+  // A refused write: the menu stays where it was, and is not hidden as if it had been saved.
+  const failWrites = on => page.evaluate(on => {
+    if (!window.__origSet) window.__origSet = window.GM_setValue;
+    window.GM_setValue = on ? () => { throw new Error('quota'); } : window.__origSet;
+  }, on);
+  await failWrites(true);
+  await L.altKey(page, 'm', true); await page.waitForTimeout(300);
+  L.check('a refused write does not hide the menu', (await state(page)).shown);
+  const before = (await state(page)).rect;
+  const hb2 = await rectOf(page, 'menuHandle');
+  await page.mouse.move(hb2.left + hb2.width / 2, hb2.top + hb2.height / 2); await page.mouse.down(); await page.mouse.move(hb2.left - 60, hb2.top + 50, { steps: 5 }); await page.mouse.up(); await page.waitForTimeout(300);
+  const after = (await state(page)).rect;
+  L.check('a refused write puts a dragged menu back where it was saved', Math.abs(after.left - before.left) < 2 && Math.abs(after.top - before.top) < 2, { before, after });
+  await failWrites(false);
   const theme = () => page.evaluate(() => window.__hl.menuEl.getRootNode().host.getAttribute('data-theme'));
   const lightTheme = await theme();
   await page.evaluate(() => { document.documentElement.style.background = '#111'; document.body.style.background = '#111'; document.body.style.color = '#eee'; document.documentElement.classList.add('dark'); });

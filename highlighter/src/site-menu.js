@@ -148,7 +148,7 @@
             menuEl.removeEventListener('pointermove', move);
             const settings = readSettings();
             settings.menuPos = { left: parseFloat(menuEl.style.left), top: parseFloat(menuEl.style.top) };
-            writeSettings(settings);
+            if (!writeSettings(settings)) applyMenuPos();   // not saved: back to the place that is
         }, { once: true });
     });
 
@@ -158,10 +158,3 @@
         renderSiteMenu();
         refreshMenu();
     }
-    window.addEventListener('keydown', e => {
-        if (e.altKey && e.shiftKey && e.code === 'KeyM' && !e.ctrlKey && !e.metaKey && !e.repeat) {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleSiteMenu();
-        }
-    }, true);

@@ -200,6 +200,11 @@
             toggleHelp();
             return;
         }
+        if (e.shiftKey && e.code === 'KeyM' && !e.repeat) {
+            e.preventDefault();
+            toggleSiteMenu();
+            return;
+        }
         const code = e.code;
         if (!COMMAND_CODES.has(code) && (e.shiftKey || !CODE_TO_STYLE.has(code))) return;
         syncLocation();

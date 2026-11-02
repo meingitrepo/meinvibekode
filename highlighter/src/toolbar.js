@@ -120,9 +120,16 @@
         if (overlaps.length) {
             items.push(toolButton(phosphorIcon('eraser'), act ? act.removeLabel : 'Erase', act ? act.removeKey : 'Alt+D', act ? act.remove : () => runToolbarAction(removeInSelection)));
         }
+        const focusedAt = Array.from(toolbarEl.querySelectorAll('button')).indexOf(uiRoot.activeElement);   // rebuilt in place: focus stays on its button
         toolbarEl.replaceChildren(...items);
         // One Tab stop for the whole toolbar, on its first button; the arrow keys move along it.
-        toolbarEl.querySelectorAll('button').forEach((b, i) => { b.tabIndex = i ? -1 : 0; });
+        const buttons = Array.from(toolbarEl.querySelectorAll('button'));
+        buttons.forEach((b, i) => { b.tabIndex = i ? -1 : 0; });
+        if (focusedAt >= 0 && buttons[focusedAt]) {
+            buttons[0].tabIndex = -1;
+            buttons[focusedAt].tabIndex = 0;
+            buttons[focusedAt].focus({ preventScroll: true });
+        }
     }
 
     // Arrow keys, Home and End move focus between the toolbar's buttons.

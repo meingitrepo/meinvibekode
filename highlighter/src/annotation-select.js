@@ -258,6 +258,7 @@
             box.el.hidden = false;
             clipOutCovers(box.el);
         });
+        cancelAnimationFrame(selectFrame);   // a nested call (setSelectedGroups above) may have scheduled one
         selectFrame = requestAnimationFrame(followSelectBoxes);
     }
 

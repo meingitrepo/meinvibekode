@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.77
+// @version      9.78
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -4514,9 +4514,16 @@
         if (overlaps.length) {
             items.push(toolButton(phosphorIcon('eraser'), act ? act.removeLabel : 'Erase', act ? act.removeKey : 'Alt+D', act ? act.remove : () => runToolbarAction(removeInSelection)));
         }
+        const focusedAt = Array.from(toolbarEl.querySelectorAll('button')).indexOf(uiRoot.activeElement);   // rebuilt in place: focus stays on its button
         toolbarEl.replaceChildren(...items);
         // One Tab stop for the whole toolbar, on its first button; the arrow keys move along it.
-        toolbarEl.querySelectorAll('button').forEach((b, i) => { b.tabIndex = i ? -1 : 0; });
+        const buttons = Array.from(toolbarEl.querySelectorAll('button'));
+        buttons.forEach((b, i) => { b.tabIndex = i ? -1 : 0; });
+        if (focusedAt >= 0 && buttons[focusedAt]) {
+            buttons[0].tabIndex = -1;
+            buttons[focusedAt].tabIndex = 0;
+            buttons[focusedAt].focus({ preventScroll: true });
+        }
     }
 
     // Arrow keys, Home and End move focus between the toolbar's buttons.
@@ -5754,6 +5761,7 @@
             box.el.hidden = false;
             clipOutCovers(box.el);
         });
+        cancelAnimationFrame(selectFrame);   // a nested call (setSelectedGroups above) may have scheduled one
         selectFrame = requestAnimationFrame(followSelectBoxes);
     }
 

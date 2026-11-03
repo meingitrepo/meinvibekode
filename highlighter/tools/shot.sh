@@ -5,6 +5,7 @@
 #   SHOT_FIXTURE=tools/shot-fixture.json seeds saved annotations (pages and notes) for panel shots.
 #   Preset names instead of js (seed the fixture themselves): panel, panel-ticked, all, all-ticked.
 #   e.g. shot.sh /tmp/p.png dark "__hl.openPanel()"
+#   The js can use the playground's helpers: shot.sh /tmp/p.png light "pg.go(10); pg.select('#scroller p', 'schoolteacher')" (see test/playground.html, pg.*)
 set -euo pipefail
 [ $# -ge 1 ] || { echo 'usage: shot.sh <out.png> [light|dark|both] [js]'; exit 2; }
 . "$(dirname "$0")/test-env.sh"   # Playwright: /opt/node22 on the sandbox, else the repo-root .cache/playwright

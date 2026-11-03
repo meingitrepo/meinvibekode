@@ -272,6 +272,7 @@
     window.pg = {
       theme: function (on) { setDark(on === undefined ? !root.classList.contains('dark') : !!on); },
       go: function (n) { $('s' + n).scrollIntoView(); },
+      sections: Array.prototype.map.call(document.querySelectorAll('h2[id]'), function (h, j) { return { n: j + 1, id: h.id, title: h.lastChild.textContent }; }),
       late: late,
       route: route,
       fixed: function (on) { $('banner').classList.toggle('on', on === undefined ? undefined : !!on); },

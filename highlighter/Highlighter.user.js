@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.96
+// @version      9.97
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -1924,7 +1924,8 @@
         if (!shownWrappers.size) return;   // nothing on the page: nothing to do, however big the page
         if (e && e.type === 'resize') redrawResized = true;
         // A page that restyles something every frame (a carousel, a progress bar) is looked at
-        // at most once per NEAR_GAP_MS, the last change always after the wait.
+        // at most once per NEAR_GAP_MS, the last change always after the wait. The rAF merges calls
+        // within one frame but not their rate, so this path needs its own gap.
         if (nearOnly === true && !redrawResized && !redrawFrame) {
             const wait = lastNearRedraw + NEAR_GAP_MS - performance.now();
             if (wait > 0) {
@@ -2432,6 +2433,7 @@
         }
     }
 
+    // An unparseable settings value reads as empty here; updateSettings never writes over it.
     function readSettings() {
         try { return parseSettings(GM_getValue(SETTINGS_KEY, '{}')) || {}; } catch (e) { return {}; }
     }
@@ -3276,6 +3278,7 @@
     function applyState(state) {
         resetUi();
         stopLateWatcher();
+        // Past this point a throw leaves the page bare, and the next save would tombstone every annotation.
         unwrapAll();
         trackedRecords.clear();   // the state is the whole truth; renderRecords tracks what it places
         const { failed } = renderRecords(state.records.concat(state.pending), { animate: false });
@@ -3566,6 +3569,7 @@
         if (editor && isUiEvent(e)) return;   // focus is on the open note editor's buttons
         // Typing in the panel's filter box: only the panel and jump keys act.
         if (isUiEvent(e) && uiRoot.activeElement === panelFilter && !/^Key[OJK]$/.test(e.code)) return;
+        // Alt+Shift+H and M sit behind the same key gates as the other shortcuts (not in a field, not switched off).
         if (e.shiftKey && !e.repeat && (e.code === 'KeyH' || e.code === 'KeyM')) {
             e.preventDefault();
             if (e.code === 'KeyH') toggleHelp();
@@ -4372,6 +4376,7 @@
     }
 
     // Events from inside the shadow root reach page listeners retargeted to the host.
+    // The menu is not counted: treating it as script UI made its clicks skip keys and clicks everywhere.
     function isUiEvent(e) {
         return e.target === uiHost;
     }
@@ -5478,7 +5483,7 @@
         selectedGroups = [];
         previewedGroups = previewDue = '';
         if (selectPreview) hideNoteCard();
-        cancelAnimationFrame(selectFrame);
+        cancelAnimationFrame(selectFrame);   // one follow loop only: a second would move the boxes every frame
         selectFrame = 0;
         selectBoxes.forEach(({ el }, g) => { el.remove(); unmarkNoteSelect(g); });
         selectBoxes.clear();
@@ -6400,7 +6405,7 @@
             });
             const items = Array.from(byGroup.values()).map(a => {
                 const text = a.records.map(r => typeof r.text === 'string' ? r.text : '').join(' ').replace(/\s+/g, ' ').trim();
-                if (!text) return null;
+                if (!text) return null;   // a record with empty text threw here and kept Alt+Shift+O from opening
                 const directive = textDirective({ paragraphs: [text] }, '', new Map());
                 return { group: a.group, key: a.key, note: a.note, time: a.time, text, url: `${a.page}${a.page.includes('#') ? '' : '#'}:~:${directive}` };
             }).filter(Boolean);
@@ -7004,6 +7009,7 @@
         missedRemote = false;
         const wiped = !newRaw;   // the whole list was deleted
         const gone = tombstonesIn(newRaw);
+        // Records this version cannot place are not rendered here; saveHighlights keeps them in storage.
         const incoming = byOwner(aliveRecords((parseRecords(newRaw) || []).filter(usableRecord), gone));
         const here = byOwner(getCurrentRecords().concat(pendingRecords));
         const editing = editor ? editor.group : null;
@@ -7075,6 +7081,7 @@
     }
 
     // The shortcut switch flipped in another tab applies here too.
+    // The manager passes (name, oldRaw, newRaw, remote) by position, so the unused ones stay.
     function onSettingsChanged(name, oldRaw, newRaw, remote) {
         if (!remote) return;
         renderSiteMenu();

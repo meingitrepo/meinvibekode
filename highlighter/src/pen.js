@@ -36,7 +36,7 @@
         });
         // The note button always shows, grayed out until an annotation is selected.
         const noteLabel = pickedWrappers.some(w => w.getAttribute(NOTE_ATTR)) ? 'Edit note' : 'Add note';
-        const note = toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note' : 'note-blank'), noteLabel, 'Alt+N', () => picked && openNoteEditor(picked));
+        const note = toolButton(phosphorIcon('pencil-simple'), noteLabel, 'Alt+N', () => picked && openNoteEditor(picked));
         note.disabled = !pickedKey;
         note.tabIndex = -1;
         if (pickedKey) {
@@ -54,9 +54,9 @@
     }
 
     function togglePen() {
-        if (penKey) { setPen(null); showToast('Pen mode disabled', { icon: 'pencil-simple-slash' }); return; }
+        if (penKey) { setPen(null); showToast('Pen mode disabled', { icon: 'cursor' }); return; }
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
-        showToast('Pen mode enabled', { icon: 'pencil-simple' });
+        showToast('Pen mode enabled', { icon: 'cursor-text' });
     }
 
     // After a mouse selection with the pen on: the selected text gets the pen's style (or, with the

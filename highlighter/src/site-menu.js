@@ -56,7 +56,7 @@
     const menuButtons = new Map([
         ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('magnifying-glass'), () => toggleEverything())],
         ['panel',menuButton('Annotations', 'Alt+O', phosphorIcon('list-checks'), () => togglePanel())],
-        ['pen',menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple-slash'), () => togglePen())],
+        ['pen',menuButton('Pen mode', 'Alt+P', phosphorIcon('cursor'), () => togglePen())],
         ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon(keysSwitchedOff() ? 'keyboard-slash' : 'keyboard'), () => toggleKeysSwitch())],
         ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())]
     ]);
@@ -91,7 +91,7 @@
         menuButtons.forEach((b, id) => {
             if (id in pressed) b.setAttribute('aria-pressed', String(pressed[id]));
         });
-        menuButtons.get('pen').replaceChildren(phosphorIcon(penKey ? 'pencil-simple' : 'pencil-simple-slash'));
+        menuButtons.get('pen').replaceChildren(phosphorIcon(penKey ? 'cursor-text' : 'cursor'));
         // The pen bar shows with the open menu only; collapsed or hidden, the pen keeps drawing.
         const penShown = !!penKey && menuOpen;
         if (!penShown && !penEl.hidden) { hideLabelTip(); releaseFocus(penEl); }

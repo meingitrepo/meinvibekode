@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.87
+// @version      9.88
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -38,8 +38,7 @@
  *   V                     hide / show all annotations (nothing is deleted; a message says they're hidden)
  *   P                     pen on / off: every mouse selection gets the pen's style at once (it starts
  *                         with the style used last; a style key with nothing selected or pointed at
- *                         changes it). A pill at the top shows it; Esc turns it off.
- *   T                     selection toolbar off / on, on every site (the keys keep working)
+ *                         changes it). Its bar shows in the sticky menu; Esc turns it off.
  *   O                     open / close the annotations panel
  *   Shift+O               search every page's annotations and notes; a quote opens its page there
  *   J / K                 jump to the next / previous annotation (shows its note, if any)
@@ -53,13 +52,11 @@
  * adds one or takes it out again; Shift+click selects all of them from the last one selected to
  * the one clicked. While annotations are selected, the style keys, N (the first one's note) and
  * D / Delete act on all of them (D on a single one with a note deletes the note first), with or without Alt; Esc, clicking elsewhere
- * or selecting text lets it go. The selection toolbar shows over it too, its buttons acting on
- * it. A click on a link inside annotated text just follows the link.
+ * or selecting text lets it go. With the pen on, the pen bar's buttons act on it. A click on a
+ * link inside annotated text just follows the link.
  *
- * Selecting text also shows a small toolbar with the same actions, for mouse and touch use
- * (Alt+T switches it off and on for every site; ENABLE_SELECTION_TOOLBAR removes it), centered above the selection. The style the
- * selected text already has shows pressed. It is one Tab stop: the arrow keys, Home and End
- * move between its buttons. In the note editor, Tab goes round its controls. Annotations with a note have a small blue speech
+ * The pen bar shows inside the sticky menu while the pen is on (and the menu is open). It is one
+ * Tab stop: the arrow keys, Home and End move between its buttons. In the note editor, Tab goes round its controls. Annotations with a note have a small blue speech
  * bubble on their top-right corner; resting the pointer on or near one shows the note under it, with the
  * date it was added and buttons to edit or delete it. Web addresses in a note are links there.
  *
@@ -85,7 +82,7 @@
  *
  * The script is off on every site until switched on: a sticky menu (top left, draggable; Alt+Shift+M
  * hides or shows it) holds the site's switch and, once it is on, a column of buttons: undo, redo, the two panels,
- * hide annotations, pen, selection toolbar and shortcuts.
+ * hide annotations, pen (with its bar while on) and shortcuts.
  *
  * The userscript manager's menu can also open the panel, copy as Markdown, clear this page,
  * forget annotations whose text is gone (when there are some), turn the script off for the
@@ -165,10 +162,9 @@
     const THEME_CHECK_MAX_DEFER_MS = 1000;      // attribute churn may postpone a theme check this long, no longer
     const ENABLE_TRIPLE_CLICK_BLOCK_SELECT = true;   // triple-click selects the paragraph as shown, without its edge spaces
     const SNAP_SELECTION_TO_WORDS = true;       // a selection that cuts a word in two annotates the whole word
-    const ENABLE_SELECTION_TOOLBAR = true;
     const NOTE_CARD_DELAY_MS = 300;             // the pointer rests this long on or near a note badge before its note shows
     const NOTE_BADGE_REACH = 8;                 // px around the badge that count as near it
-    const TOOLBAR_IDLE_MS = 4000;               // the selection toolbar fades out after this long untouched (0 = never)
+    const SELECT_PREVIEW_MS = 4000;             // a clicked annotation's note preview closes after this long untouched (0 = never)
     const TOAST_MS = 4000;                      // how long a message stays up,
     const NOTE_STYLE_KEY = 'h';                 // style given to plain text that receives a note
     const NOTE_MAX_LENGTH = 2000;
@@ -186,18 +182,18 @@
     const SITE_PREFIX_RE = /^(www|m|mobile|amp)\./i;  // host prefixes that still count as the same site
 
     // ---- EDIT STYLES HERE --------------------------------------------------
-    //   label      name shown in the selection toolbar's tooltips
+    //   label      name shown in the pen bar's tooltips
     //   shortcut   key(s) pressed with Alt, as KeyboardEvent.code: 'KeyH', 'Digit2', 'Comma', ...
     //   color      color of the annotation drawing (any CSS color: '#FFEF6E', 'green', ...)
     //   textColor  color of the annotated text ('' = keep the page's own text color)
     //   type       'highlight', 'underline' or 'strike-through'
     //   strokeWidth  underline and strike-through only: line width in px (1 if left out)
     // A highlight is always 95% of the line's height (see "Drawing").
-    // The selection toolbar shows the styles in this order.
+    // The pen bar shows the styles in this order.
     // The style's name (h, h2, u, ...) is what gets saved with each annotation, so renaming
     // or removing a style hides the annotations made with it. They stay saved and come back
     // when the style does. `retired: true` keeps a style's saved annotations drawing but takes
-    // it out of the toolbar (give it no shortcut either).
+    // it out of the pen bar (give it no shortcut either).
     // DARK_OVERRIDES replaces any of these values for annotations on a dark background (a dark
     // page, or a dark box on a light one). Its highlights are dark enough for light text (about
     // 4.5:1 against light gray). Where a highlight leaves the page's own text color hard to read
@@ -2455,7 +2451,7 @@
         });
     }
 
-    // The shortcut keys (Alt+Shift+K) and the selection toolbar (Alt+T) are per site and off until
+    // The shortcut keys (Alt+Shift+K) are per site and off until
     // switched on. Read afresh each time, so a switch made in another tab counts here too.
     function siteListed(key) {
         const list = readSettings()[key];
@@ -2477,14 +2473,6 @@
 
     function setKeysSwitchedOff(off) {
         setSiteListed('keysOnSites', !off);
-    }
-
-    function toolbarSwitchedOff() {
-        return !siteListed('toolbarOnSites');
-    }
-
-    function setToolbarSwitchedOff(off) {
-        setSiteListed('toolbarOnSites', !off);
     }
 
     // Annotations open hidden, except on the sites where they were last shown on purpose (Alt+V and the like).
@@ -2971,7 +2959,7 @@
 
     // The range without the spaces at its edges (null when it holds nothing else), and, unless
     // `snap` is false, with a word it cuts in two taken whole (SNAP_SELECTION_TO_WORDS). What the
-    // shortcuts and the toolbar act on, so a triple-click doesn't save a paragraph's indentation
+    // shortcuts and the pen act on, so a triple-click doesn't save a paragraph's indentation
     // and a drag that starts mid-word doesn't mark half a word.
     function cleanRange(range, { snap = SNAP_SELECTION_TO_WORDS } = {}) {
         const parts = selectedParts(range).filter(p => /\S/.test(p.node.nodeValue.slice(p.from, p.to)));
@@ -3366,7 +3354,7 @@
         try { return { sel, range: sel.getRangeAt(0) }; } catch (e) { return null; }
     }
 
-    // Shared by the shortcuts and the selection toolbar. `active` is { sel, range }. A style the
+    // Shared by the shortcuts and the pen. `active` is { sel, range }. A style the
     // selected text already has (all of it) does nothing (only Alt+D erases); any other style
     // annotates it, on top of the styles it has (see applyAnnotation).
     function annotateSelection(key, { sel, range: selected }) {
@@ -3453,9 +3441,9 @@
         openNoteEditor(created[0].getAttribute(GROUP_ATTR), { step: undoStack[undoStack.length - 1] });
     }
 
-    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD', 'KeyL']);
+    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD', 'KeyL']);
     // The commands with no Shift variant: with Shift held their keys stay the page's.
-    const NO_SHIFT_CODES = new Set(['KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyJ', 'KeyK', 'KeyL']);
+    const NO_SHIFT_CODES = new Set(['KeyV', 'KeyP', 'KeyN', 'KeyJ', 'KeyK', 'KeyL']);
 
     // While our keys are on (Alt+Shift+K switches them), every Alt key outside a field is ours
     // alone: the site's own Alt shortcuts never run, whether we use the key or not. Its access
@@ -3605,12 +3593,6 @@
         if (code === 'KeyP') {
             e.preventDefault();
             togglePen();
-            return true;
-        }
-        if (code === 'KeyT') {
-            if (!ENABLE_SELECTION_TOOLBAR) return true;
-            e.preventDefault();
-            toggleToolbarSwitch();
             return true;
         }
         return false;
@@ -3772,7 +3754,7 @@
     }
 
     // =====================================================================
-    // On-page UI: selection toolbar, note card, note editor and toast.
+    // On-page UI: pen bar, note card, note editor and toast.
     //
     // Styled after Anthropic's own interfaces: warm parchment surfaces, a serif for text and a sans
     // for chrome, hairline borders instead of shadows, and one clay accent that only the primary
@@ -3939,8 +3921,8 @@
     const UI_CSS = `
         :host { all: initial; ${LIGHT_TOKENS} }
         :host([data-theme="dark"]) { ${DARK_TOKENS} }
-        .panel[data-theme="light"], .toast[data-theme="light"], .pen[data-theme="light"], .everything[data-theme="light"], .sitemenu[data-theme="light"] { ${LIGHT_TOKENS} }
-        .panel[data-theme="dark"], .toast[data-theme="dark"], .pen[data-theme="dark"], .everything[data-theme="dark"], .sitemenu[data-theme="dark"] { ${DARK_TOKENS} }
+        .panel[data-theme="light"], .toast[data-theme="light"], .everything[data-theme="light"], .sitemenu[data-theme="light"] { ${LIGHT_TOKENS} }
+        .panel[data-theme="dark"], .toast[data-theme="dark"], .everything[data-theme="dark"], .sitemenu[data-theme="dark"] { ${DARK_TOKENS} }
         [hidden]:not(.surface):not(.everything), .tip[hidden] { display: none !important; }
         /* Surfaces fade out rather than vanish: display flips last (allow-discrete), so the hidden attribute
            still takes effect at once for scripts. */
@@ -3966,7 +3948,7 @@
             animation: highlighter-enter var(--duration-normal) var(--ease-out);
         }
         /* In the page, not the window: they scroll with their text (see uiHost). */
-        .surface.toolbar, .surface.tip, .surface.card, .surface.editor { position: absolute; }
+        .surface.tip, .surface.card, .surface.editor { position: absolute; }
         .surface.card, .surface.editor, .surface.panel, .surface.everything-box { border-radius: var(--radius-card); }
         @keyframes highlighter-pin { from { border-color: var(--line-pressed); } }
         @keyframes highlighter-enter { from { opacity: 0; } }
@@ -4017,15 +3999,8 @@
         .select-box svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
         .select-box path { fill: none; stroke: currentColor; stroke-width: 1; stroke-linejoin: round; }
 
-        /* Toolbar */
-        /* Flat like the other surfaces, with longer,
-           hairline separators. */
-        /* 4px padding: with 32px buttons the toolbar is 40px high, close to Edge's (about 42px). */
-        .toolbar { display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
-        /* Idle fade-out (see TOOLBAR_IDLE_MS). Pointing at the toolbar brings it back at once. */
-        .toolbar.fading { opacity: 0; transition: opacity var(--duration-slow) var(--ease-out); }
+        /* Hairline separators between button groups (pen bar, menu). */
         .divider { flex: none; width: calc(1px / var(--dpr, 1)); height: 24px; margin: 0 round(10px, calc(1px / var(--dpr, 1))); background: var(--divider); }
-        @media (pointer: coarse) { .toolbar .btn-icon { width: 40px; height: 40px; } }
 
         /* Tooltip */
         /* One line, kept inside the view: nowrap measures the tip at its full width wherever it last
@@ -4090,7 +4065,7 @@
         .toast-text { font-weight: 400; }
         .toast:focus-visible { outline: 2px solid var(--focus); }
         /* The pen's bar, centred at the top of the view. */
-        .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
+        .sitemenu-pen { display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); }
         /* The sticky menu: the site switch, with a row of icon buttons expanding to its right. */
         .sitemenu { display: flex; align-items: center; padding: 4px; width: max-content; cursor: grab; }
         .sitemenu .btn { cursor: pointer; }
@@ -4216,7 +4191,7 @@
 
         @media (prefers-reduced-motion: reduce) {
             .surface, .everything { animation: none !important; transition: none; }
-            .btn, .field::after, .toolbar.fading { transition: none; }
+            .btn, .field::after { transition: none; }
         }
         @media (forced-colors: active) {
             .surface { border-color: CanvasText; }
@@ -4248,19 +4223,18 @@
         return b;
     }
 
-    // Placed in the page rather than the window (as selectHost below): the toolbar, note card,
+    // Placed in the page rather than the window (as selectHost below): the note card,
     // editor and tooltip are positioned in it, so they scroll with the text in the same frame
     // instead of following it a frame late. The other panels are fixed to the window. Window
     // wide, so panels get the same room to lay out as in the window.
     const uiHost = makeEl('div', { [UI_ATTR]: '' });
     uiHost.style.cssText = 'all: initial !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 0 !important; z-index: 2147483647 !important;';
     const uiRoot = uiHost.attachShadow({ mode: 'closed' });
-    // The device pixel ratio for the CSS (see .toolbar): spacing is rounded to whole device pixels.
+    // The device pixel ratio for the CSS (see .divider): spacing is rounded to whole device pixels.
     const setDpr = () => uiHost.style.setProperty('--dpr', String(window.devicePixelRatio || 1));
     setDpr();
     window.addEventListener('resize', setDpr);
 
-    const toolbarEl = makeEl('div', { class: 'surface toolbar', role: 'toolbar', 'aria-label': 'Annotate selection', hidden: '' });
     const labelTipEl = makeEl('div', { class: 'surface tip', role: 'tooltip', hidden: '' });
 
     const cardText = makeEl('div', { class: 'card-text' });
@@ -4318,8 +4292,8 @@
         panelList
     ]);
 
-    // The pen (Alt+P, see setPen): a pill at the top of the view while it is on.
-    const penEl = makeEl('div', { class: 'surface pen', role: 'toolbar', 'aria-label': 'Pen mode', hidden: '' });
+    // The pen (Alt+P, see setPen): its bar, in the sticky menu's row while it is on (see renderSiteMenu).
+    const penEl = makeEl('div', { class: 'sitemenu-pen', role: 'group', 'aria-label': 'Pen mode', hidden: '' });
 
     // Everything saved (Alt+Shift+O, see openEverything): a dialog over the dimmed page.
     const everythingCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });   // the whole title, see setPanelTitle
@@ -4356,12 +4330,11 @@
 
     // The note card and editor draw over the panel, and the tooltip goes last so it draws on top
     // of whichever panel its button is in.
-    uiRoot.append(makeEl('style', { text: UI_CSS }), panelEl, toolbarEl, noteCardEl, editorEl, toastEl, penEl, everythingEl, labelTipEl);
+    uiRoot.append(makeEl('style', { text: UI_CSS }), panelEl, noteCardEl, editorEl, toastEl, everythingEl, labelTipEl);
 
     // Keys typed in the note editor stay out of the page's own shortcut handlers.
     ['keydown', 'keyup', 'keypress'].forEach(type => uiHost.addEventListener(type, e => e.stopPropagation()));
-    // Pressing a toolbar button must not take the page's text selection away.
-    toolbarEl.addEventListener('mousedown', e => e.preventDefault());
+    // Pressing a pen bar button must not take the page's text selection away.
     penEl.addEventListener('mousedown', e => e.preventDefault());
 
     // The panels take the theme of what they open next to (`dark`), else of the page.
@@ -4378,7 +4351,7 @@
     }
 
     function panelOpen() {
-        return !toolbarEl.hidden || !noteCardEl.hidden || !!editor;
+        return !noteCardEl.hidden || !!editor;
     }
 
     // Events from inside the shadow root reach page listeners retargeted to the host.
@@ -4388,7 +4361,7 @@
 
     // Takes focus out of a panel that is about to hide, so keys stop going to a hidden control.
     function releaseFocus(panel) {
-        const active = uiRoot.activeElement;
+        const active = panel.getRootNode().activeElement;   // the pen bar lives in the menu's own root
         if (active && panel.contains(active)) active.blur();
     }
 
@@ -4472,14 +4445,10 @@
         panel.style.left = `${Math.round(at.left)}px`;
     }
 
-    // --- Selection toolbar ---
+    // --- Tool buttons (the pen bar, the note editor) and the selection they act on ---
 
     const STYLE_LABELS = { highlight: 'Highlight', underline: 'Underline', 'strike-through': 'Strikethrough' };
-    let toolbarRange = null;      // the selection the toolbar was opened for
-    let toolbarAnchor = null;     // that selection cleaned up, which the toolbar is placed by
-    let toolbarGroups = null;     // the annotations the toolbar acts on, when shown for clicked ones
-    let toolbarSide = 'above';    // which side of the selection the toolbar sits on
-    let toolbarTimer = null;
+    let selectPreviewCheckTimer = null;
     let pointerIsDown = false;
     let lastPointerType = 'mouse';
 
@@ -4507,7 +4476,7 @@
         }
     }
 
-    // --- Tooltips for icon buttons (selection toolbar, note editor) ---
+    // --- Tooltips for icon buttons (note editor, note preview) ---
 
     let labelTipTimer = null;
 
@@ -4527,7 +4496,7 @@
         if (button.dataset.shortcut) tip.appendChild(makeEl('span', { class: 'kbd', text: button.dataset.shortcut }));
     }
 
-    // preferBelow: a function, so it is read when the tip shows (the toolbar can change sides).
+    // preferBelow: a function, so it is read when the tip shows.
     function showLabelTip(button, preferBelow) {
         clearTimeout(labelTipTimer);
         labelTipTimer = setTimeout(() => {
@@ -4560,8 +4529,7 @@
     function toolButton(icon, label, shortcut, onClick, pressed = null) {
         const b = makeButton({ icon, appearance: 'subtle' });
         if (pressed !== null) b.setAttribute('aria-pressed', String(pressed));
-        // On the side of the toolbar away from the selection, so the text stays visible.
-        addLabelTip(b, label, shortcut, () => toolbarSide === 'below');
+        addLabelTip(b, label, shortcut, () => false);
         b.addEventListener('click', onClick);
         return b;
     }
@@ -4577,57 +4545,7 @@
         return makeEl('span', { class: 'divider', role: 'separator', 'aria-orientation': 'vertical' });
     }
 
-    // Style icons show the colors the annotation will get where the selection is (`dark`).
-    // `overlaps` are the annotations the selection touches (findOverlaps). The styles all of the
-    // selected text has (`current`, see selectionStyles) show pressed, and choosing one does nothing; the note
-    // button says whether the note it opens exists; the eraser shows when there is anything to erase.
-    // For an annotation selected by clicking it, `act` holds what the buttons do instead (see
-    // showGroupToolbar).
-    function buildToolbar({ overlaps, current }, dark, act = null) {
-        const items = [];
-        let lastGroup = null;
-        Object.keys(STYLES).forEach(k => {
-            if (STYLES[k].retired) return;
-            const group = STYLES[k].type === 'highlight' ? 'highlight' : 'line';
-            if (lastGroup && group !== lastGroup) items.push(toolbarDivider());
-            lastGroup = group;
-            const pressed = current.includes(k);
-            const label = styleLabel(k);
-            items.push(toolButton(styleIcon(k, dark), label, shortcutText(k), act ? () => act.style(k) : () => runToolbarAction(active => annotateSelection(k, active)), pressed));
-        });
-        items.push(toolbarDivider());
-        const noteLabel = overlaps.length && overlaps[0].note ? 'Edit note' : 'Add note';
-        items.push(toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note' : 'note-blank'), noteLabel, 'Alt+N', act ? act.note : () => runToolbarAction(noteSelection)));
-        if (overlaps.length) {
-            items.push(toolButton(phosphorIcon('eraser'), act ? act.removeLabel : 'Erase', act ? act.removeKey : 'Alt+D', act ? act.remove : () => runToolbarAction(removeInSelection)));
-        }
-        const focusedAt = Array.from(toolbarEl.querySelectorAll('button')).indexOf(uiRoot.activeElement);   // rebuilt in place: focus stays on its button
-        toolbarEl.replaceChildren(...items);
-        // One Tab stop for the whole toolbar, on its first button; the arrow keys move along it.
-        const buttons = Array.from(toolbarEl.querySelectorAll('button'));
-        buttons.forEach((b, i) => { b.tabIndex = i ? -1 : 0; });
-        if (focusedAt >= 0 && buttons[focusedAt]) {
-            buttons[0].tabIndex = -1;
-            buttons[focusedAt].tabIndex = 0;
-            buttons[focusedAt].focus({ preventScroll: true });
-        }
-    }
-
-    // Arrow keys, Home and End move focus between the toolbar's buttons.
-    toolbarEl.addEventListener('keydown', e => {
-        if (e.altKey || e.ctrlKey || e.metaKey) return;
-        const buttons = Array.from(toolbarEl.querySelectorAll('button'));
-        const i = buttons.indexOf(uiRoot.activeElement);
-        const to = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: buttons.length - 1 }[e.key];
-        if (i < 0 || to === undefined) return;
-        e.preventDefault();
-        const next = buttons[(to + buttons.length) % buttons.length];
-        buttons[i].tabIndex = -1;
-        next.tabIndex = 0;
-        next.focus();
-    });
-
-    // The selection the toolbar may act on: real page text, not a form field or editable area.
+    // The selection the pen may act on: real page text, not a form field or editable area.
     function toolbarSelection() {
         const active = getActiveRange();
         if (!active || !active.sel.toString().trim()) return null;
@@ -4638,214 +4556,39 @@
         return active.range;
     }
 
-    function updateToolbar() {
-        toolbarTimer = null;
-        if (!running || editor) return;
-        if (toolbarSwitchedOff() || penKey) { hideToolbar(); return; }   // with the pen on, its bar is the toolbar (see setPen)
-        const selected = toolbarSelection();
-        const range = selected && cleanRange(selected);   // what an action would annotate
-        const rect = range && range.getBoundingClientRect();
-        if (!rect || (!rect.width && !rect.height)) {
-            if (!(selectedGroups.length && showGroupToolbar(selectedInOrder()))) hideToolbar();
-            return;
-        }
-        toolbarGroups = null;
-        toolbarRange = selected.cloneRange();
-        toolbarAnchor = range;
-        const dark = darkBehind(range.commonAncestorContainer);
-        ensureUi(dark);
-        hideLabelTip();
-        const overlaps = findOverlaps(range);
-        buildToolbar({ overlaps, current: selectionStyles(range, overlaps) }, dark);
-        toolbarEl.hidden = false;
-        placeToolbar();
-        startToolbarIdle();
-    }
-
-    // The toolbar for annotations selected by clicking them (see setSelectedGroups), placed by
-    // their boxes (a single one; none for several). The style all of them have shows pressed and keeps them, as with a
-    // selection; the others restyle them, and they stay selected with the toolbar over them.
-    function showGroupToolbar(groups) {
-        if (groups.length > 1) return false;   // several selected: outlines only, no toolbar
-        const byGroup = wrappersOfGroups(groups);
-        const wrappers = groups.flatMap(g => byGroup.get(g) || []);
-        if (!wrappers.length || !groupRect(groups)) return false;
-        const key = wrappers[0].getAttribute(STYLE_ATTR);
-        const current = wrappers.every(w => w.getAttribute(STYLE_ATTR) === key) ? [key] : [];
-        const note = (byGroup.get(groups[0]) || []).map(w => w.getAttribute(NOTE_ATTR)).find(Boolean) || '';   // N edits the first's
-        const dark = wrappers[0].hasAttribute(DARK_ATTR);
-        // A restyle keeps the toolbar where it is and updates it at once; the others hide it.
-        const after = (fn, keep = false) => (...args) => {
-            if (!keep) hideToolbar();
-            if (!running) return;
-            syncLocation();
-            fn(...args);
-            if (keep) refreshGroupToolbar();
-            else if (selectedGroups.length && !editor) scheduleToolbar();
-        };
-        ensureUi(dark);
-        hideLabelTip();
-        buildToolbar({ overlaps: [{ group: groups[0], note }], current }, dark, {
-            style: after(k => restyleGroups(groups, k), true),
-            note: after(() => openNoteEditor(groups[0])),
-            remove: after(() => deleteGroups(groups)),
-            removeLabel: groups.length > 1 ? `Erase ${groups.length}x annotations` : 'Erase annotation',
-            removeKey: 'Alt+D'
-        });
-        toolbarGroups = groups;
-        toolbarRange = null;
-        toolbarAnchor = { getBoundingClientRect: () => groupRect(groups) || { top: 0, left: 0, bottom: 0, right: 0, width: 0, height: 0 } };
-        toolbarEl.hidden = false;
-        placeToolbar();
-        startToolbarIdle();
-        return true;
-    }
-
-    // After the selected annotations change (restyled by the toolbar or a key), their toolbar is
-    // rebuilt in the same moment, so it never blinks away while they redraw; it goes only when
-    // they do (the style all of them had removes them).
-    function refreshGroupToolbar() {
-        if (!toolbarGroups) return;   // not shown for them (text selected, faded, switched off)
-        if (!running || editor || toolbarSwitchedOff() || !selectedGroups.length || !showGroupToolbar(selectedInOrder())) hideToolbar();
-    }
-
-    // The toolbar goes centered over the selection, above its first line (below its last on a
-    // touch screen, whose own menu goes above). It flips to the other side when it doesn't fit,
-    // and stays on screen when the selection is taller than the window.
-    function placeToolbar() {
-        if (!toolbarAnchor) return;
-        const rect = toolbarAnchor.getBoundingClientRect();
-        const w = toolbarEl.offsetWidth;
-        const h = toolbarEl.offsetHeight;
-        const vw = document.documentElement.clientWidth || window.innerWidth;
-        const vh = window.innerHeight;
-        const gap = 8;
-        const above = rect.top - h - gap;
-        const below = rect.bottom + gap;
-        const left = Math.max(4, Math.min(rect.left + rect.width / 2 - w / 2, vw - w - 4));
-        const fits = top => top >= 4 && top + h <= vh - 4 && !touchesCover(left, top, w, h);
-        let side = lastPointerType === 'touch' ? 'below' : 'above';
-        const flipped = side === 'below' ? 'above' : 'below';
-        if (!fits(side === 'below' ? below : above) && fits(flipped === 'below' ? below : above)) side = flipped;
-        // On screen while the selection is; once it scrolls away, the toolbar goes with it,
-        // staying at its top or bottom edge.
-        const onScreen = Math.max(4, Math.min(side === 'below' ? below : above, vh - h - 4));
-        const top = Math.max(above, Math.min(onScreen, below));
-        placeInPage(toolbarEl, top, left);
-        // Hidden while its text is under the page's header or the like, or it has nowhere else to go.
-        toolbarEl.style.visibility = isCovered(rect) || touchesCover(left, top, w, h) ? 'hidden' : '';
-        toolbarSide = side;
-    }
-
-    function scheduleToolbar() {
-        clearTimeout(toolbarTimer);
-        // Wait for the selection to settle; while a pointer is down the user is still selecting.
-        // The note preview of a just-selected annotation (previewDue) opens in the same moment.
-        toolbarTimer = setTimeout(() => {
-            if (pointerIsDown) return;
-            if (ENABLE_SELECTION_TOOLBAR) updateToolbar();
-            else toolbarTimer = null;
-            showDuePreview();
+    // After the selection settles, the note of a just-selected annotation shows (previewDue).
+    // While a pointer is down the user is still selecting.
+    function scheduleSelectPreview() {
+        clearTimeout(selectPreviewCheckTimer);
+        selectPreviewCheckTimer = setTimeout(() => {
+            if (!pointerIsDown) showDuePreview();
         }, 200);
     }
 
-    // --- Idle fade-out: the toolbar fades away after TOOLBAR_IDLE_MS with no pointer or keyboard
-    // focus on it. A new selection shows it again. ---
-
-    let toolbarIdleTimer = null;
-    let toolbarFadeTimer = null;
-
-    function stopToolbarIdle() {
-        clearTimeout(toolbarIdleTimer);
-        clearTimeout(toolbarFadeTimer);
-        toolbarEl.classList.remove('fading');
+    function cancelSelectPreview() {
+        clearTimeout(selectPreviewCheckTimer);
     }
-
-    function startToolbarIdle() {
-        stopToolbarIdle();
-        if (!TOOLBAR_IDLE_MS || toolbarEl.hidden) return;
-        toolbarIdleTimer = setTimeout(() => {
-            // A toolbar that appeared under a still pointer never got a mouseenter.
-            if (toolbarEl.matches(':hover')) return;
-            hideLabelTip();
-            toolbarEl.classList.add('fading');
-            const fadeMs = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300;   // --duration-slow
-            toolbarFadeTimer = setTimeout(hideToolbar, fadeMs);
-        }, TOOLBAR_IDLE_MS);
-    }
-
-    // Interacting with the toolbar keeps it, even mid-fade; leaving it restarts the countdown.
-    toolbarEl.addEventListener('mouseenter', stopToolbarIdle);
-    toolbarEl.addEventListener('mouseleave', startToolbarIdle);
-    toolbarEl.addEventListener('focusin', stopToolbarIdle);
-    toolbarEl.addEventListener('focusout', e => { if (!toolbarEl.contains(e.relatedTarget)) startToolbarIdle(); });
-
-    function hideToolbar() {
-        clearTimeout(toolbarTimer);
-        stopToolbarIdle();
-        hideLabelTip();
-        releaseFocus(toolbarEl);
-        toolbarEl.hidden = true;
-        toolbarRange = null;
-        toolbarAnchor = null;
-        toolbarGroups = null;
-    }
-
-    // Alt+T, and the menu: the toolbar off or on again on this site. The keys work either way.
-    // While the pen is on the toolbar counts as off, so this turns it on and the pen off.
-    function toggleToolbarSwitch() {
-        const off = !penKey && !toolbarSwitchedOff();
-        setToolbarSwitchedOff(off);
-        if (penKey) setPen(null);
-        if (off) hideToolbar();
-        else {
-            setAnnotationsHidden(false);
-            scheduleToolbar();   // for text that is selected now
-        }
-        refreshMenu();
-        renderSiteMenu();
-        showToast(off ? 'Selection toolbar disabled' : 'Selection toolbar enabled', { icon: off ? 'cursor-text-slash' : 'cursor-text' });
-    }
-
-    // A tap on a touch screen can clear the page selection even though the toolbar cancels
-    // mousedown, so the range saved when the toolbar opened is put back first.
-    function runToolbarAction(fn) {
-        const range = toolbarRange;
-        hideToolbar();
-        if (!running) return;
-        syncLocation();
-        const sel = window.getSelection();
-        if (sel && sel.isCollapsed && range && !range.collapsed) {
-            sel.removeAllRanges();
-            sel.addRange(range);
-        }
-        const active = getActiveRange();
-        if (active) fn(active);
-    }
-
     // --- Pen (Alt+P): while it is on, every mouse selection is annotated straight away ---
 
     let penKey = null;            // the style the pen draws with while it is on, else null
     const PEN_ERASER = 'eraser';  // the pen's key when it erases instead of drawing
     let lastStyleKey = null;      // the style chosen last for some text; the pen starts with it
 
-    // Turns the pen on with style `key`, or off (null). A toolbar at the top of the view shows it.
+    // Turns the pen on with style `key`, or off (null). Its bar shows in the sticky menu (see renderSiteMenu).
     function setPen(key) {
         penKey = key === PEN_ERASER || (key && STYLES[key]) ? key : null;
         if (penKey) showAnnotationsFor('pen'); else restoreAnnotationsFor('pen');
-        renderSiteMenu();   // the menu's pen button shows the pencil or the slashed pencil
         if (!penKey) {
             if (!penEl.hidden) hideLabelTip();
             releaseFocus(penEl);
-            penEl.hidden = true;
+            renderSiteMenu();   // the pencil turns slashed and the bar goes
             return;
         }
-        // The bar has the page's theme, as the toast does.
+        // The bar has the menu's theme, which is the page's; its tooltips too.
         const dark = computeDarkMode();
         ensureUi(panelOpen() && uiDark !== null ? uiDark : dark);
-        setThemeAttr(penEl, dark);
         // One button per style: the pen's own shows pressed; clicking another changes the pen. With one
-        // annotation selected by click, the bar acts on it instead, as the selection toolbar would.
+        // annotation selected by click, the bar acts on it instead.
         const picked = selectedGroups.length === 1 && !editor ? selectedGroups[0] : null;
         const pickedWrappers = picked ? groupWrappers(picked) : [];
         const pickedKey = pickedWrappers.length ? pickedWrappers[0].getAttribute(STYLE_ATTR) : null;
@@ -4861,7 +4604,7 @@
             b.tabIndex = on ? 0 : -1;
             tools.push(b);
         });
-        // The note button always shows, grayed out until an annotation is selected, as in the selection toolbar.
+        // The note button always shows, grayed out until an annotation is selected.
         const noteLabel = pickedWrappers.some(w => w.getAttribute(NOTE_ATTR)) ? 'Edit note' : 'Add note';
         const note = toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note' : 'note-blank'), noteLabel, 'Alt+N', () => picked && openNoteEditor(picked));
         note.disabled = !pickedKey;
@@ -4877,12 +4620,11 @@
         }
         if ((pickedKey || penKey !== PEN_ERASER) && !tools.some(b => b.tabIndex === 0)) tools.find(b => b.tagName === 'BUTTON').tabIndex = 0;
         penEl.replaceChildren(...tools);
-        penEl.hidden = false;
+        renderSiteMenu();   // the pencil and, with the menu open, the bar
     }
 
     function togglePen() {
-        if (penKey) { setPen(null); scheduleToolbar(); showToast('Pen mode disabled', { icon: 'pencil-simple-slash' }); return; }
-        hideToolbar();
+        if (penKey) { setPen(null); showToast('Pen mode disabled', { icon: 'pencil-simple-slash' }); return; }
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
         showToast('Pen mode enabled', { icon: 'pencil-simple' });
     }
@@ -4900,11 +4642,11 @@
         annotateSelection(penKey, { sel, range: selected });
     }
 
-    // Arrow keys, Home and End move between the pen toolbar's buttons, as in the selection toolbar.
+    // Arrow keys, Home and End move between the pen bar's buttons.
     penEl.addEventListener('keydown', e => {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
         const buttons = Array.from(penEl.querySelectorAll('button:not(:disabled)'));
-        const i = buttons.indexOf(uiRoot.activeElement);
+        const i = buttons.indexOf(penEl.getRootNode().activeElement);
         const to = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: buttons.length - 1 }[e.key];
         if (i < 0 || to === undefined) return;
         e.preventDefault();
@@ -5011,12 +4753,12 @@
     }
 
     // Selecting one annotation that has a note shows its note, read-only, for as long as the
-    // selection toolbar stays (TOOLBAR_IDLE_MS; pointing at the card keeps it). Clearing the
+    // while (SELECT_PREVIEW_MS; pointing at the card keeps it). Clearing the
     // selection, or selecting something else, closes it.
     let selectPreview = false;
     let selectPreviewTimer = null;
     let selectShowTimer = null;
-    const SELECT_PREVIEW_DELAY_MS = 150;   // the note follows the selection toolbar a little later
+    const SELECT_PREVIEW_DELAY_MS = 150;   // the note follows the settled selection a little later
     function previewSelectedNote(groups) {
         if (selectPreview) hideNoteCard();
         clearTimeout(selectPreviewTimer);   // the pointer may have taken the last preview over, leaving its timers
@@ -5029,11 +4771,11 @@
         selectShowTimer = setTimeout(() => {
             if (selectPreview && note.isConnected && !editor && !annotationsHidden) showNoteCard(note);
         }, SELECT_PREVIEW_DELAY_MS);
-        if (!TOOLBAR_IDLE_MS) return;
+        if (!SELECT_PREVIEW_MS) return;
         selectPreviewTimer = setTimeout(function idle() {
             if (noteCardEl.matches(':hover')) { selectPreviewTimer = setTimeout(idle, 500); return; }
             if (selectPreview) hideNoteCard();
-        }, TOOLBAR_IDLE_MS);
+        }, SELECT_PREVIEW_MS);
     }
 
     function hideNoteCard() {
@@ -5297,7 +5039,7 @@
         }
         const wrappers = groupWrappers(group);
         if (!wrappers.length) return;
-        hideToolbar();
+        cancelSelectPreview();
         hideNoteCard();
         pinnedCards.forEach((card, m) => { if (m.getAttribute(GROUP_ATTR) === group) unpinNoteCard(m); });   // the editor takes its place
         ensureUi(wrappers[0].hasAttribute(DARK_ATTR));
@@ -5603,8 +5345,8 @@
     // last to the one clicked, in reading order, and no others. While annotations are selected
     // the keys act on all of them, with or without Alt: a style key restyles them (the style all
     // of them have removes them), Delete or D removes them (D on a single one with a note removes
-    // the note first), N edits the note of the first, Esc lets them go. The selection toolbar shows over them too, its buttons acting on
-    // them. Clicking elsewhere or selecting text lets them go as well. Each change is one step
+    // the note first), N edits the note of the first, Esc lets them go. With the pen on, its bar acts on a single
+    // one. Clicking elsewhere or selecting text lets them go as well. Each change is one step
     // for Undo.
     let selectedGroups = [];      // in the order they were selected; the last is Shift+click's start
     let selectFrame = 0;
@@ -5652,9 +5394,9 @@
         });
         ensureUi();
         if (!selectFrame) followSelectBoxes();
-        scheduleToolbar();   // the selection toolbar, for these annotations (see showGroupToolbar)
-        if (penKey) setPen(penKey);   // with the pen on, its bar takes the toolbar's place
-        if (selectedGroups.join() !== previewedGroups) previewDue = selectedGroups.join();   // shown with the toolbar (see scheduleToolbar)
+        scheduleSelectPreview();
+        if (penKey) setPen(penKey);   // with the pen on, its bar acts on these annotations
+        if (selectedGroups.join() !== previewedGroups) previewDue = selectedGroups.join();   // shown once the selection settles (see scheduleSelectPreview)
         previewedGroups = selectedGroups.join();
     }
     let previewedGroups = '';
@@ -5675,7 +5417,6 @@
         selectBoxes.forEach(({ el }, g) => { el.remove(); unmarkNoteSelect(g); });
         selectBoxes.clear();
         selectWrappers = null;
-        if (toolbarGroups) hideToolbar();
         if (penKey) setPen(penKey);
     }
 
@@ -5941,7 +5682,7 @@
             return false;
         } else if (e.code === 'KeyD' && groups.length === 1 && groupHasNote(groups[0])) {
             deleteGroupNote(groups[0]);   // the note first, then (D again) the annotation
-            refreshGroupToolbar();
+            if (penKey) setPen(penKey);
         } else if (e.code === 'KeyD') {
             deleteGroups(groups);
         } else if (e.code === 'KeyN') {
@@ -5949,7 +5690,7 @@
         } else if (CODE_TO_STYLE.has(e.code)) {
             syncLocation();
             restyleGroups(groups, CODE_TO_STYLE.get(e.code));
-            refreshGroupToolbar();
+            if (penKey) setPen(penKey);
         } else {
             return false;
         }
@@ -6617,7 +6358,7 @@
         if (everythingEl.hidden) {
             const focused = document.activeElement;
             everythingReturnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
-            hideToolbar();
+            cancelSelectPreview();
             hideNoteCard();
             everythingFilter.value = '';
             everythingToggled = new Set();
@@ -6930,7 +6671,6 @@
             ['Alt+Z / Alt+Y', 'Undo / redo'],
             ['Alt+V', 'Hide or show annotations'],
             ['Alt+P', 'Pen mode'],
-            ['Alt+T', 'Selection toolbar on or off'],
             ['Alt+J / Alt+K', 'Jump to the next / previous annotation'],
             ['Alt+O', 'Annotations of this page'],
             ['Alt+Shift+O', 'Search every page'],
@@ -6961,7 +6701,7 @@
         if (helpEl.hidden) {
             const focused = document.activeElement;
             helpReturnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
-            hideToolbar();
+            cancelSelectPreview();
             hideNoteCard();
         }
         helpTitle.textContent = 'Shortcuts';
@@ -7047,7 +6787,6 @@
     const menuButtons = new Map([
         ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('magnifying-glass'), () => toggleEverything())],
         ['panel',menuButton('Annotations', 'Alt+O', phosphorIcon('list-checks'), () => togglePanel())],
-        ['toolbar', menuButton('Selection toolbar', 'Alt+T', phosphorIcon(toolbarSwitchedOff() ? 'cursor-text-slash' : 'cursor-text'), () => toggleToolbarSwitch())],
         ['pen',menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple-slash'), () => togglePen())],
         ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon(keysSwitchedOff() ? 'keyboard-slash' : 'keyboard'), () => toggleKeysSwitch())],
         ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())],
@@ -7063,8 +6802,10 @@
         b.addEventListener('click', hideMenuTip);
     }
 
+    // The pen's bar (see setPen) ends the row, after a divider, while the pen is on.
+    const penDivider = toolbarDivider();
     const menuTools = makeEl('div', { class: 'sitemenu-tools' }, [
-        makeEl('div', { class: 'sitemenu-inner' }, [...menuButtons].flatMap(([id, b]) => ['panel', 'hide'].includes(id) ? [b, toolbarDivider()] : [b]))
+        makeEl('div', { class: 'sitemenu-inner' }, [...[...menuButtons].flatMap(([id, b]) => ['panel', 'hide'].includes(id) ? [b, toolbarDivider()] : [b]), penDivider, penEl])
     ]);
     const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'horizontal', 'aria-label': 'Highlighter', hidden: '' }, [menuHandle, makeEl('div', { class: 'sitemenu-expand' }, [menuExpand]), menuTools]);
     menuRoot.append(makeEl('style', { text: UI_CSS }), menuEl, menuTip);
@@ -7079,15 +6820,17 @@
         menuExpand.setAttribute('aria-label', label);
         menuEl.toggleAttribute('data-open', menuOpen);
         menuTools.toggleAttribute('inert', !menuOpen);
-        // The pen's own bar stands in for the selection toolbar, which is off while the pen is on.
-        const pressed = { pen: !!penKey, toolbar: !toolbarSwitchedOff() && !penKey, keys: !keysSwitchedOff(), panel: !panelEl.hidden, search: !everythingEl.hidden };
+        const pressed = { pen: !!penKey, keys: !keysSwitchedOff(), panel: !panelEl.hidden, search: !everythingEl.hidden };
         menuButtons.forEach((b, id) => {
             if (id in pressed) b.setAttribute('aria-pressed', String(pressed[id]));
         });
         menuButtons.get('undo').disabled = !undoStack.length;
         menuButtons.get('redo').disabled = !redoStack.length;
         menuButtons.get('pen').replaceChildren(phosphorIcon(penKey ? 'pencil-simple' : 'pencil-simple-slash'));
-        menuButtons.get('toolbar').replaceChildren(phosphorIcon(toolbarSwitchedOff() || penKey ? 'cursor-text-slash' : 'cursor-text'));
+        // The pen bar shows with the open menu only; collapsed or hidden, the pen keeps drawing.
+        const penShown = !!penKey && menuOpen;
+        if (!penShown && !penEl.hidden) { hideLabelTip(); releaseFocus(penEl); }
+        penEl.hidden = penDivider.hidden = !penShown;
         menuButtons.get('keys').replaceChildren(phosphorIcon(keysSwitchedOff() ? 'keyboard-slash' : 'keyboard'));
         const hideBtn = menuButtons.get('hide');
         hideBtn.dataset.label = annotationsHidden ? 'Show annotations' : 'Hide annotations';
@@ -7243,7 +6986,6 @@
             // Undo here would bring back what the other tab changed.
             undoStack.length = 0;
             redoStack.length = 0;
-            hideToolbar();
             removeGroups(drop);
             const { failed } = renderRecords(add.map(r => ({ ...r })));
             pendingRecords = pendingRecords.concat(failed);
@@ -7266,10 +7008,9 @@
         onStoredKeyChanged(currentKey, null, raw, true);
     }
 
-    // The toolbar and shortcut switches flipped in another tab apply here too.
+    // The shortcut switch flipped in another tab applies here too.
     function onSettingsChanged(name, oldRaw, newRaw, remote) {
         if (!remote) return;
-        if (toolbarSwitchedOff()) hideToolbar();
         renderSiteMenu();
         refreshMenu();
     }
@@ -7279,7 +7020,7 @@
         lastPointerType = e.pointerType || 'mouse';
         if (isUiEvent(e)) return;
         pointerIsDown = true;
-        hideToolbar();
+        cancelSelectPreview();
     }
 
     // A release over an iframe or outside the window never reaches this document: the window losing
@@ -7287,16 +7028,17 @@
     function releasePointerHold() {
         if (!pointerIsDown) return;
         pointerIsDown = false;
-        scheduleToolbar();
+        scheduleSelectPreview();
     }
 
     function onPointerUp(e) {
         pointerIsDown = false;
         if (isUiEvent(e)) return;
+        if (e.target === menuHost) { scheduleSelectPreview(); return; }   // a menu or pen bar click draws nothing
         // The pen draws on mouse selections; on a touch screen the selection is made with handles
-        // after the finger lifts, so there the toolbar works as usual.
+        // after the finger lifts, so there it is left alone.
         if (penKey && e.type === 'pointerup' && e.pointerType !== 'touch') setTimeout(penStroke, 0);
-        else scheduleToolbar();
+        else scheduleSelectPreview();
     }
 
     const SCROLL_LISTENER_OPTIONS = { capture: true, passive: true };   // capture: scrolling containers too
@@ -7307,7 +7049,6 @@
             uiFrame = 0;
             if (!noteCardEl.hidden) hideNoteCard();
             hideLabelTip();
-            if (!toolbarEl.hidden) placeToolbar();
             pinnedCards.forEach((card, m) => { card.style.visibility = isCovered(m.getBoundingClientRect()) ? 'hidden' : ''; });
             if (editor) followEditorAnchor();
         });
@@ -7315,7 +7056,7 @@
 
     // Closes every panel without saving (used when the page under them changes).
     function resetUi() {
-        hideToolbar();
+        cancelSelectPreview();
         hideNoteCard();
         unpinNoteCard();
         clearSelectedGroups();
@@ -7360,7 +7101,7 @@
         listen(document, 'mouseover', onMouseOver, true);
         listen(document, 'mouseout', onMouseOut, true);
         listen(document, 'mousemove', onMouseMove, { capture: true, passive: true });
-        listen(document, 'selectionchange', scheduleToolbar);
+        listen(document, 'selectionchange', scheduleSelectPreview);
         listen(document, 'selectionchange', onSelectionForGroup);
         listen(document, 'mousedown', onSelectMouseDown, true);
         listen(document, 'click', onDocumentClick, true);
@@ -7492,11 +7233,6 @@
             items.push(['Show annotations', () => { if (running) openPanel(); }]);
             items.push(['Search all pages', () => { if (running) openEverything(); }]);
             items.push(['Copy as Markdown', () => copyAnnotations()]);
-        }
-        if (ENABLE_SELECTION_TOOLBAR && shown) {
-            items.push([!canRelabel ? 'Turn toolbar on/off'
-                : toolbarSwitchedOff() ? 'Turn toolbar on' : 'Turn toolbar off',
-                () => { if (running) toggleToolbarSwitch(); }]);
         }
         if (shown) {
             items.push([!canRelabel ? 'Turn shortcut keys on/off'

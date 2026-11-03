@@ -15,7 +15,17 @@ async function follows(browser) {
   const res = /\)\s+([\d.]+)(?:dppx|x)\)/.exec(yellow);
   const dpr = await p.evaluate(() => devicePixelRatio);
   check('the cursor image is declared at the device pixel ratio', !!res && Math.abs(+res[1] - dpr) < 0.01, { res: res && res[1], dpr, yellow });
-  check('over a link too', /image\/svg\+xml/.test(await cursorOf(p, '#a')), await cursorOf(p, '#a'));
+  // Page zoom raises devicePixelRatio but not the cursor's size, so the zoom (outerWidth/innerWidth) is divided out.
+  const real = await p.evaluate(() => ({ dpr: devicePixelRatio, outer: outerWidth }));
+  await p.evaluate(() => {
+    Object.defineProperty(window, 'devicePixelRatio', { value: devicePixelRatio * 1.5, configurable: true });
+    Object.defineProperty(window, 'outerWidth', { value: innerWidth * 1.5, configurable: true });
+    dispatchEvent(new Event('resize'));
+  });
+  const zoomed = /\)\s+([\d.]+)(?:dppx|x)\)/.exec(await cursorOf(p, '#p1'));
+  check('under 150% page zoom the image stays at the display scale', !!zoomed && Math.abs(+zoomed[1] - real.dpr) < 0.01, zoomed && zoomed[1]);
+  await p.evaluate(r => { Object.defineProperty(window, 'devicePixelRatio', { value: r.dpr, configurable: true }); Object.defineProperty(window, 'outerWidth', { value: r.outer, configurable: true }); dispatchEvent(new Event('resize')); }, real);
+  check('over a link too',/image\/svg\+xml/.test(await cursorOf(p, '#a')), await cursorOf(p, '#a'));
   await L.altKey(p, 'u');
   const under = await cursorOf(p, '#p1');
   check('another style changes the cursor color', /#D32F2F/i.test(under) && !/#EFD98A/i.test(under), under);

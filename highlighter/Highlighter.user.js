@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.109
+// @version      9.110
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -4627,6 +4627,15 @@
     // Own element, not pageStyle: the cursor exists only while the pen is on.
     const penCursorStyle = document.createElement('style');
 
+    // devicePixelRatio is display scale times page zoom, but the cursor follows only the display scale. Zoom is read as
+    // outerWidth/innerWidth (the window's frame makes it slightly high) and snapped to the browser's zoom steps.
+    const ZOOM_STEPS = [0.25, 0.33, 0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5];
+    function pageZoom() {
+        const ratio = window.outerWidth / window.innerWidth;
+        if (!(ratio > 0.2 && ratio < 6)) return 1;
+        return ZOOM_STEPS.reduce((best, z) => Math.abs(Math.log(z / ratio)) < Math.abs(Math.log(best / ratio)) ? z : best);
+    }
+
     // The Windows 11 arrow (aero_arrow.cur: 12x19 px at 100%, 1px outline), filled with the pen's color (the eraser's is gray) where Windows fills it white.
     // !important beats the links' and fields' own cursors. A system cursor can't be recolored, hence the SVG.
     function updatePenCursor(dark) {
@@ -4635,8 +4644,8 @@
         const arrow = 'M0.5,0.5V16.3L4.5,12.5L7.2,18.3L9.3,17.4L6.9,11.9H11.4Z';
         const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="19" viewBox="0 0 12 19">`
             + `<path d="${arrow}" fill="${fill}" stroke="#000" stroke-width="1" stroke-linejoin="round"/></svg>`;
-        // image-set at the device pixel ratio: Windows doesn't scale its cursor with display scaling, a plain url() image is scaled up by it.
-        penCursorStyle.textContent = `html, html * { cursor: image-set(url("data:image/svg+xml,${encodeURIComponent(svg)}") ${window.devicePixelRatio}x) 0 0, default !important; }`;
+        // image-set at the display's scale: Windows doesn't scale its cursor with display scaling, a plain url() image is scaled up by it.
+        penCursorStyle.textContent = `html, html * { cursor: image-set(url("data:image/svg+xml,${encodeURIComponent(svg)}") ${window.devicePixelRatio / pageZoom()}x) 0 0, default !important; }`;
         (document.head || document.documentElement).appendChild(penCursorStyle);
     }
 

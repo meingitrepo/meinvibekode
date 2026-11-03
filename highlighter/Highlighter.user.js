@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.90
+// @version      9.91
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3828,13 +3828,17 @@
         'power': 'M122,128V48a6,6,0,0,1,12,0v80a6,6,0,0,1-12,0Zm57.28-77A6,6,0,0,0,172.72,61C196.41,76.47,210,100.88,210,128a82,82,0,0,1-164,0c0-27.12,13.59-51.53,37.28-67A6,6,0,0,0,76.72,51C49.57,68.68,34,96.75,34,128a94,94,0,0,0,188,0C222,96.75,206.43,68.68,179.28,51Z'
     };
 
+    // The note icons fill the whole grid and their fold closes into a small dark triangle, so at the
+    // same stroke they read heavier than the other icons: they sit on a padded grid, about 11% smaller.
+    const ICON_VIEWBOX = { 'note': '-16 -16 288 288', 'note-blank': '-16 -16 288 288' };
+
     // A Phosphor icon: one outline path on a 256 grid, scaled to the 20px of a button (the 16px of
     // an icon next to text, the panel's carets). `under` and `over` are extra shapes (on the same
     // 256 grid) drawn beneath or on top of it, used to paint parts of an icon in an annotation's
     // color. Weight comes from the icon's name (push-pin-fill); the icon takes the text color.
     function phosphorIcon(name, { under = [], over = [] } = {}) {
         const size = /^caret-/.test(name) ? 16 : 20;
-        const svg = svgEl('svg', { class: `icon icon-${size}`, viewBox: '0 0 256 256', 'aria-hidden': 'true', focusable: 'false' });
+        const svg = svgEl('svg', { class: `icon icon-${size}`, viewBox: ICON_VIEWBOX[name] || '0 0 256 256', 'aria-hidden': 'true', focusable: 'false' });
         under.forEach(s => svg.appendChild(s));
         svg.appendChild(svgEl('path', { d: PHOSPHOR_ICONS[name], class: 'ic' }));
         over.forEach(s => svg.appendChild(s));

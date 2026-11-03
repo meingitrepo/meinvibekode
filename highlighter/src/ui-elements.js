@@ -140,7 +140,7 @@
 
     // Events from inside the shadow root reach page listeners retargeted to the host.
     function isUiEvent(e) {
-        return e.target === uiHost || e.target === menuHost;   // the menu holds the pen bar
+        return e.target === uiHost;
     }
 
     // Takes focus out of a panel that is about to hide, so keys stop going to a hidden control.

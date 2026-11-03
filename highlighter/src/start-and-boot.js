@@ -18,6 +18,7 @@
     function onPointerUp(e) {
         pointerIsDown = false;
         if (isUiEvent(e)) return;
+        if (e.target === menuHost) { scheduleSelectPreview(); return; }   // a menu or pen bar click draws nothing
         // The pen draws on mouse selections; on a touch screen the selection is made with handles
         // after the finger lifts, so there it is left alone.
         if (penKey && e.type === 'pointerup' && e.pointerType !== 'touch') setTimeout(penStroke, 0);

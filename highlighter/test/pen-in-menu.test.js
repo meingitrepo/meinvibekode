@@ -24,11 +24,19 @@ const seen = page => page.evaluate(() => window.__hl.penEl.checkVisibility());
   // Clicking a style button keeps the page selection and changes the pen.
   await L.selStr(page, '#p', 'golf');
   const before = await page.evaluate(() => window.__hl.penKey);
+  const menuAt = await page.evaluate(() => window.__hl.menuEl.style.left + window.__hl.menuEl.style.top);
   const r = await page.evaluate(k => { const x = [...window.__hl.penEl.querySelectorAll('button[aria-pressed="false"]')].find(b => !/eraser/i.test(b.dataset.label)).getBoundingClientRect(); return { x: x.left + x.width / 2, y: x.top + x.height / 2 }; });
   await page.mouse.click(r.x, r.y); await page.waitForTimeout(200);
   L.check('style click changes the pen', await page.evaluate(k => window.__hl.penKey !== k, before), null);
   L.check('style click keeps the page selection', await page.evaluate(() => getSelection().toString()) === 'golf', await page.evaluate(() => getSelection().toString()));
+  L.check('style click annotates nothing', (await L.wr(page)).length === 0, await L.wr(page));
+  L.check('style click does not move the menu', await page.evaluate(() => window.__hl.menuEl.style.left + window.__hl.menuEl.style.top) === menuAt, null);
   await page.evaluate(() => getSelection().removeAllRanges());
+  // Esc with focus in the pen bar still turns the pen off (review I1).
+  await page.evaluate(() => [...window.__hl.penEl.querySelectorAll('button:not(:disabled)')].find(x => x.tabIndex === 0).focus());
+  await page.keyboard.press('Escape'); await page.waitForTimeout(150);
+  L.check('Esc in the pen bar turns the pen off', await page.evaluate(() => window.__hl.penKey === null), null);
+  await L.altKey(page, 'KeyP'); await L.openMenu(page);
   // Hiding the menu hides the bar; the pen still draws.
   await L.altKey(page, 'KeyM', true); await page.waitForTimeout(200);
   L.check('menu hidden: bar hidden, pen still on', !(await seen(page)) && await page.evaluate(() => !!window.__hl.penKey), null);

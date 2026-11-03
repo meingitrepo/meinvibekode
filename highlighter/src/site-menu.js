@@ -51,15 +51,14 @@
         return b;
     }
 
-    // id, label, shortcut, icon, click, in groups: the lists, the switches (modes shown pressed while on, then hide), then history.
+    // id, label, shortcut, icon, click, in groups: the lists, then the switches (modes shown pressed while on, then hide).
+    // Undo and redo have no buttons: Alt+Z / Alt+Y, and a deletion's toast carries the link.
     const menuButtons = new Map([
         ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('magnifying-glass'), () => toggleEverything())],
         ['panel',menuButton('Annotations', 'Alt+O', phosphorIcon('list-checks'), () => togglePanel())],
         ['pen',menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple-slash'), () => togglePen())],
         ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon(keysSwitchedOff() ? 'keyboard-slash' : 'keyboard'), () => toggleKeysSwitch())],
-        ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())],
-        ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
-        ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())]
+        ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())]
     ]);
     addMenuTip(menuExpand, 'Expand');
 
@@ -73,7 +72,7 @@
     // The pen's bar (see setPen) ends the row, after a divider, while the pen is on.
     const penDivider = toolbarDivider();
     const menuTools = makeEl('div', { class: 'sitemenu-tools' }, [
-        makeEl('div', { class: 'sitemenu-inner' }, [...[...menuButtons].flatMap(([id, b]) => ['panel', 'hide'].includes(id) ? [b, toolbarDivider()] : [b]), penDivider, penEl])
+        makeEl('div', { class: 'sitemenu-inner' }, [...[...menuButtons].flatMap(([id, b]) => id === 'panel' ? [b, toolbarDivider()] : [b]), penDivider, penEl])
     ]);
     const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'horizontal', 'aria-label': 'Highlighter', hidden: '' }, [menuHandle, makeEl('div', { class: 'sitemenu-expand' }, [menuExpand]), menuTools]);
     menuRoot.append(makeEl('style', { text: UI_CSS }), menuEl, menuTip);
@@ -92,8 +91,6 @@
         menuButtons.forEach((b, id) => {
             if (id in pressed) b.setAttribute('aria-pressed', String(pressed[id]));
         });
-        menuButtons.get('undo').disabled = !undoStack.length;
-        menuButtons.get('redo').disabled = !redoStack.length;
         menuButtons.get('pen').replaceChildren(phosphorIcon(penKey ? 'pencil-simple' : 'pencil-simple-slash'));
         // The pen bar shows with the open menu only; collapsed or hidden, the pen keeps drawing.
         const penShown = !!penKey && menuOpen;

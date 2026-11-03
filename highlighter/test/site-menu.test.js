@@ -24,13 +24,13 @@ const state = page => page.evaluate(() => ({
   let s = await state(page);
   L.check('the script runs on a fresh site; the menu is one button', await page.evaluate(() => window.__hl.running) && s.shown && s.expanded === 'false' && !s.open, s);
   L.check('default corner is top left', s.rect.left < 20 && s.rect.top < 20, s.rect);
-  L.check('buttons are search, panel, pen, keys, hide, undo, redo', s.ids === 'search,panel,pen,keys,hide,undo,redo', s.ids);
+  L.check('buttons are search, panel, pen, keys, hide (no undo or redo: deletion toasts carry the link)', s.ids === 'search,panel,pen,keys,hide', s.ids);
   const row = await page.evaluate(() => {
-    const m = window.__hl.menuButtons, inner = m.get('redo').parentElement, names = new Map([...m].map(([k, v]) => [v, k]));
+    const m = window.__hl.menuButtons, inner = m.get('hide').parentElement, names = new Map([...m].map(([k, v]) => [v, k]));
     const cs = getComputedStyle(inner.querySelector('[role="separator"]'));
     return { order: [...inner.children].map(c => names.get(c) || (c === window.__hl.penEl ? 'penbar' : '') || (c.getAttribute('role') === 'separator' && c.className === 'divider' ? '|' : '?')).join(' '), margin: [cs.marginLeft, cs.marginRight] };
   });
-  L.check('dividers with their usual padding split the groups; the pen bar ends the row', row.order === 'search panel | pen keys hide | undo redo | penbar' && row.margin[0] === '10px' && row.margin[1] === '10px', row);
+  L.check('dividers with their usual padding split the groups; the pen bar ends the row', row.order === 'search panel | pen keys hide | penbar' && row.margin[0] === '10px' && row.margin[1] === '10px', row);
   L.check('no power button any more', await page.evaluate(() => !window.__hl.menuEl.querySelector('[aria-label^="Turn highlighter"]')));
   const hr = await rectOf(page, 'menuHandle'), er = await rectOf(page, 'menuExpand');
   L.check('the handle is on the left, then the expand icon button', s.expandIsIconButton && hr.right <= er.left + 1 && hr.left < er.left, { hr, er });
@@ -65,18 +65,12 @@ const state = page => page.evaluate(() => ({
   const openExpand = await rectOf(page, 'menuExpand');
   const openHandle = await rectOf(page, 'menuHandle');
   L.check('open: the collapse button stays beside the handle, 2px off it like the other buttons, before the row', openExpand.left - openHandle.right === 2 && openExpand.right <= s.lefts[0], { openHandle, openExpand, lefts: s.lefts });
-  L.check('undo and redo are disabled with nothing to undo', s.disabled.undo && s.disabled.redo, s.disabled);
   await btn(page, 'keys'); await page.waitForTimeout(200);
   s = await state(page);
   L.check('keys button switches this site on, shown pressed', s.pressed.keys === 'true' && await page.evaluate(() => JSON.parse(window.__gm['rnh:settings']).keysOnSites.includes('example.test')), s.pressed);
   await L.selStr(page, '#p1', 'words to select'); await L.altKey(page, 'h'); await page.waitForTimeout(300);
   await page.hover('body'); await page.evaluate(() => window.__hl.menuEl.dispatchEvent(new Event('pointerenter')));
-  s = await state(page);
-  L.check('after a highlight, undo is enabled', !s.disabled.undo && s.disabled.redo, s.disabled);
-  await btn(page, 'undo'); await page.waitForTimeout(300);
-  L.check('undo button undoes', (await L.stored(page)).length === 0);
-  await btn(page, 'redo'); await page.waitForTimeout(300);
-  L.check('redo button redoes', (await L.stored(page)).length === 1);
+  L.check('the highlight was made', (await L.stored(page)).length === 1);
   await btn(page, 'panel'); await page.waitForTimeout(300);
   L.check('panel button opens Alt+O panel', await page.evaluate(() => !window.__hl.panelEl.hidden));
   await btn(page, 'panel'); await page.waitForTimeout(300);

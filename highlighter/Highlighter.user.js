@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.88
+// @version      9.89
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3249,6 +3249,7 @@
             pushLimited(undoStack, before);
             redoStack.length = 0;
             step = before;
+            dropToastLink();   // an older deletion's link would now undo this change
         }
         saveHighlights(after.records);
         scheduleRedraw();
@@ -3282,12 +3283,15 @@
     }
 
     // Undo moves a state from undoStack to the page and the page's state to redoStack; redo the reverse.
+    // Returns the page's state it set aside (the toast's link checks it is still on top).
     function stepHistory(from, to) {
         const state = from.pop();
-        if (!state) return;
+        if (!state) return null;
         setAnnotationsHidden(false);
-        pushLimited(to, captureState());
+        const current = captureState();
+        pushLimited(to, current);
         applyState(state);
+        return current;
     }
 
     // Each says what it did and offers the opposite, as a link.
@@ -3318,7 +3322,7 @@
             unwrapAll();
         });
         startLateWatcher();
-        if (step) offerUndo(doneText('erased', erased));
+        if (step) offerUndo(doneText('erased', erased), step);
     }
 
     // Annotations of a style that no longer exists aren't missing, only hidden, and those made on
@@ -3373,9 +3377,8 @@
     function removeInSelection({ sel, range: selected }) {
         const range = cleanRange(selected);
         const overlaps = range ? findOverlaps(range) : [];
-        if (overlaps.length && runUndoable(() => eraseOverlaps(overlaps))) {
-            offerUndo(doneText('erased', new Set(overlaps.map(o => o.wrapper.getAttribute(GROUP_ATTR))).size));
-        }
+        const step = overlaps.length && runUndoable(() => eraseOverlaps(overlaps));
+        if (step) offerUndo(doneText('erased', new Set(overlaps.map(o => o.wrapper.getAttribute(GROUP_ATTR))).size), step);
         sel.removeAllRanges();
     }
 
@@ -4063,6 +4066,8 @@
         .toast > .icon { flex: none; width: 16px; height: 16px; margin: 0 0 0 -2px; }   /* at the left end, 16px, as far in as an icon button's icon */
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 400; }
+        .toast-link { flex: none; padding: 0 4px; border: 0; background: none; color: var(--ink); font: inherit; font-weight: 500; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; border-radius: var(--radius-sm); }
+        .toast-link:focus-visible { outline: 2px solid var(--focus); }
         .toast:focus-visible { outline: 2px solid var(--focus); }
         /* The pen's bar, centred at the top of the view. */
         .sitemenu-pen { display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); }
@@ -4263,6 +4268,7 @@
 
     let toastIcon = phosphorIcon('info');   // replaced per message
     const toastText = makeEl('div', { class: 'toast-text' });
+    const toastLink = makeEl('button', { class: 'toast-link', type: 'button' });   // Undo/Redo for a deletion; in the toast only then
     const toastContent = makeEl('div', { class: 'toast-content' }, [toastText]);
     const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent]);
 
@@ -4930,7 +4936,8 @@
     function deleteGroupNote(group) {
         syncLocation();
         if (editor) cancelEditor();
-        if (runUndoable(() => setGroupNote(group, ''))) offerUndo('Note deleted');
+        const step = runUndoable(() => setGroupNote(group, ''));
+        if (step) offerUndo('Note deleted', step);
     }
 
     // --- Note editor ---
@@ -5112,9 +5119,10 @@
                 return;
             }
         }
-        if (text !== original && runUndoable(() => setGroupNote(group, text))) {
+        const saved = text !== original && runUndoable(() => setGroupNote(group, text));
+        if (saved) {
             if (text) showToast('Note saved', { icon: 'note' });
-            else offerUndo('Note deleted');
+            else offerUndo('Note deleted', saved);
         }
     }
 
@@ -5207,16 +5215,62 @@
         toastIcon = nextIcon;
         toastEl.setAttribute('data-intent', intent);
         toastText.textContent = message;
+        dropToastLink();
         toastEl.hidden = true;
         void toastEl.offsetWidth;   // restart the entrance animation
         toastEl.hidden = false;
         startToastTimer(TOAST_MS);
     }
 
-    // A message for a change just made (Alt+Z undoes it).
-    function offerUndo(message) {
+    // A deletion's toast, with one link that toggles it: Undo brings it back and turns into Redo,
+    // Redo removes it again. `step` is what runUndoable returned; the link works only while that
+    // step (or, after Undo, the state Undo set aside) is still the top of its stack.
+    let toastUndo = null;   // { message, step, undone } while the link belongs to a deletion
+    function offerUndo(message, step) {
         showToast(message, { icon: 'eraser', intent: 'success' });
+        if (!step) return;
+        toastUndo = { message, step, undone: null };
+        setToastLink('Undo');
     }
+
+    function setToastLink(label) {
+        toastLink.textContent = label;
+        if (!toastLink.isConnected) toastEl.append(toastLink);
+    }
+
+    function dropToastLink() {
+        toastUndo = null;
+        if (toastLink === uiRoot.activeElement) toastEl.focus();
+        toastLink.remove();
+    }
+
+    // The step redraws the page (which closes the toast): the toast comes back as it was,
+    // without its entrance animation, and keeps focus on the link.
+    function toggleStep(from, to) {
+        const focused = uiRoot.activeElement === toastLink;
+        const state = stepHistory(from, to);
+        toastEl.hidden = false;
+        if (focused) toastLink.focus();
+        startToastTimer(TOAST_MS);
+        return state;
+    }
+
+    toastLink.addEventListener('click', () => {
+        const u = toastUndo;
+        if (u && !u.undone && undoStack[undoStack.length - 1] === u.step) {
+            u.undone = toggleStep(undoStack, redoStack);
+            toastText.textContent = u.message.replace(/(erased|deleted)$/, 'restored');
+            setToastLink('Redo');
+        } else if (u && u.undone && redoStack[redoStack.length - 1] === u.undone) {
+            u.step = toggleStep(redoStack, undoStack);
+            u.undone = null;
+            toastText.textContent = u.message;
+            setToastLink('Undo');
+        } else {
+            dropToastLink();   // another change came between: the link would undo the wrong thing
+        }
+        refreshMenu();
+    });
 
     // The toast stays while the pointer rests on it or it has focus.
     function startToastTimer(ms) {
@@ -5665,10 +5719,11 @@
         cancelEditor();
         const live = groups.filter(g => groupWrappers(g).length);
         if (!live.length) return;
-        if (runUndoable(() => {
+        const step = runUndoable(() => {
             live.forEach(g => unwrapMany(groupWrappers(g)));
             pendingRecords = pendingRecords.filter(r => !live.includes(recordOwner(r)));
-        })) offerUndo(doneText('erased', live.length));
+        });
+        if (step) offerUndo(doneText('erased', live.length), step);
     }
 
     // The keys for the selected annotations, with or without Alt (see onKeyDown). True if used.
@@ -5907,10 +5962,11 @@
         syncLocation();
         closeNoteForPanel();
         if (!groupWrappers(group).length) return;
-        if (runUndoable(() => {
+        const step = runUndoable(() => {
             unwrapMany(groupWrappers(group));
             pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group);
-        })) offerUndo(doneText('erased', 1));
+        });
+        if (step) offerUndo(doneText('erased', 1), step);
     }
 
     function forgetAnnotation(group) {
@@ -6783,15 +6839,14 @@
         return b;
     }
 
-    // id, label, shortcut, icon, click, in groups: the lists, the switches (modes shown pressed while on, then hide), then history.
+    // id, label, shortcut, icon, click, in groups: the lists, then the switches (modes shown pressed while on, then hide).
+    // Undo and redo have no buttons: Alt+Z / Alt+Y, and a deletion's toast carries the link.
     const menuButtons = new Map([
         ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('magnifying-glass'), () => toggleEverything())],
         ['panel',menuButton('Annotations', 'Alt+O', phosphorIcon('list-checks'), () => togglePanel())],
         ['pen',menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple-slash'), () => togglePen())],
         ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon(keysSwitchedOff() ? 'keyboard-slash' : 'keyboard'), () => toggleKeysSwitch())],
-        ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())],
-        ['undo', menuButton('Undo', 'Alt+Z', phosphorIcon('arrow-u-up-left'), () => undoLastAction())],
-        ['redo', menuButton('Redo', 'Alt+Y', phosphorIcon('arrow-u-up-right'), () => redoLastAction())]
+        ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())]
     ]);
     addMenuTip(menuExpand, 'Expand');
 
@@ -6805,7 +6860,7 @@
     // The pen's bar (see setPen) ends the row, after a divider, while the pen is on.
     const penDivider = toolbarDivider();
     const menuTools = makeEl('div', { class: 'sitemenu-tools' }, [
-        makeEl('div', { class: 'sitemenu-inner' }, [...[...menuButtons].flatMap(([id, b]) => ['panel', 'hide'].includes(id) ? [b, toolbarDivider()] : [b]), penDivider, penEl])
+        makeEl('div', { class: 'sitemenu-inner' }, [...[...menuButtons].flatMap(([id, b]) => id === 'panel' ? [b, toolbarDivider()] : [b]), penDivider, penEl])
     ]);
     const menuEl = makeEl('div', { class: 'surface sitemenu', role: 'toolbar', 'aria-orientation': 'horizontal', 'aria-label': 'Highlighter', hidden: '' }, [menuHandle, makeEl('div', { class: 'sitemenu-expand' }, [menuExpand]), menuTools]);
     menuRoot.append(makeEl('style', { text: UI_CSS }), menuEl, menuTip);
@@ -6824,8 +6879,6 @@
         menuButtons.forEach((b, id) => {
             if (id in pressed) b.setAttribute('aria-pressed', String(pressed[id]));
         });
-        menuButtons.get('undo').disabled = !undoStack.length;
-        menuButtons.get('redo').disabled = !redoStack.length;
         menuButtons.get('pen').replaceChildren(phosphorIcon(penKey ? 'pencil-simple' : 'pencil-simple-slash'));
         // The pen bar shows with the open menu only; collapsed or hidden, the pen keeps drawing.
         const penShown = !!penKey && menuOpen;

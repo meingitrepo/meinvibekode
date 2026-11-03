@@ -64,7 +64,7 @@
   "site-keys.test.js": 14,
   "site-menu-clamp.test.js": 4,
   "site-menu-sync.test.js": 4,
-  "site-menu.test.js": 40,
+  "site-menu.test.js": 37,
   "site-restyle.test.js": 7,
   "sticky-cover.test.js": 6,
   "storage-failure-paths.test.js": 13,

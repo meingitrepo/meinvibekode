@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Regenerates .cache/specs/status.md (git-ignored) from main's history: one line per release, newest first.
+# Regenerates docs/specs/status.md (git-ignored) from main's history: one line per release, newest first.
 # After a compaction or in a new thread read this file instead of the specs and plans. Text you write below
 # the "<!-- notes -->" line (open items, decisions) is kept.
 # Usage: highlighter/tools/status.sh [how-many-releases=40]
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 git fetch -q origin main 2>/dev/null || true
-out=.cache/specs/status.md
-mkdir -p .cache/specs
+out=docs/specs/status.md
+mkdir -p docs/specs
 notes='<!-- notes -->'
 tail=
 [ -f "$out" ] && tail=$(sed -n "/^$notes\$/,\$p" "$out" | tr -d '\r')

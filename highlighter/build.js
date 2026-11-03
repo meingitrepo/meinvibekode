@@ -11,6 +11,7 @@ const PARTS = [
     'config.js',                    // opens the IIFE; styles, colors, timings, limits
     'page-css-and-state.js',
     'theme.js',                     // dark page detection, colors of annotated text
+    'visibility.js',                // hiding and showing the annotations (Alt+V)
     'strokes.js',                   // straight-line drawing, strike-through metrics
     'text-anchoring.js',            // blocks, XPath, text offsets, text index, loose matching
     'wrappers.js',                  // wrapper bookkeeping, wrapping and unwrapping

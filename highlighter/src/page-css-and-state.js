@@ -117,7 +117,6 @@
     const teardown = [];                   // undoes what start() set up
     let running = false;                   // false while the script is turned off for this site
     let pendingRecords = [];               // saved records not yet placed in the DOM
-    let annotationsHidden = false;
     let darkMode = null;
     let lastHref = location.href;
     let currentKey = null;                 // storage key of the page being shown

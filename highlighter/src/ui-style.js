@@ -166,8 +166,8 @@
     const UI_CSS = `
         :host { all: initial; ${LIGHT_TOKENS} }
         :host([data-theme="dark"]) { ${DARK_TOKENS} }
-        .panel[data-theme="light"], .toast[data-theme="light"], .pen[data-theme="light"], .everything[data-theme="light"], .sitemenu[data-theme="light"] { ${LIGHT_TOKENS} }
-        .panel[data-theme="dark"], .toast[data-theme="dark"], .pen[data-theme="dark"], .everything[data-theme="dark"], .sitemenu[data-theme="dark"] { ${DARK_TOKENS} }
+        .panel[data-theme="light"], .toast[data-theme="light"], .everything[data-theme="light"], .sitemenu[data-theme="light"] { ${LIGHT_TOKENS} }
+        .panel[data-theme="dark"], .toast[data-theme="dark"], .everything[data-theme="dark"], .sitemenu[data-theme="dark"] { ${DARK_TOKENS} }
         [hidden]:not(.surface):not(.everything), .tip[hidden] { display: none !important; }
         /* Surfaces fade out rather than vanish: display flips last (allow-discrete), so the hidden attribute
            still takes effect at once for scripts. */
@@ -310,7 +310,7 @@
         .toast-text { font-weight: 400; }
         .toast:focus-visible { outline: 2px solid var(--focus); }
         /* The pen's bar, centred at the top of the view. */
-        .pen { top: 12px; right: 0; margin: 0 auto; width: max-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
+        .sitemenu-pen { display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); }
         /* The sticky menu: the site switch, with a row of icon buttons expanding to its right. */
         .sitemenu { display: flex; align-items: center; padding: 4px; width: max-content; cursor: grab; }
         .sitemenu .btn { cursor: pointer; }

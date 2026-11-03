@@ -38,6 +38,7 @@ const STATES = [
     } },
     { id: 'editor', setup: openEditor, clip: ['editorEl'] },
     { id: 'menu', opts: { menu: true }, setup: async () => {}, clip: ['menuEl'] },
+    { id: 'pen', opts: { menu: true }, clip: ['menuEl'], setup: async (page, L) => { await L.altKey(page, 'p'); await L.openMenu(page); } },
     { id: 'search', setup: (page, L) => L.altKey(page, 'o', true), clip: ['everythingEl'] },
     { id: 'help', setup: (page, L) => L.altKey(page, 'h', true), clip: ['helpEl'] },
 ];

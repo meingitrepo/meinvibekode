@@ -76,8 +76,8 @@
         panelList
     ]);
 
-    // The pen (Alt+P, see setPen): a pill at the top of the view while it is on.
-    const penEl = makeEl('div', { class: 'surface pen', role: 'toolbar', 'aria-label': 'Pen mode', hidden: '' });
+    // The pen (Alt+P, see setPen): its bar, in the sticky menu's row while it is on (see renderSiteMenu).
+    const penEl = makeEl('div', { class: 'sitemenu-pen', role: 'group', 'aria-label': 'Pen mode', hidden: '' });
 
     // Everything saved (Alt+Shift+O, see openEverything): a dialog over the dimmed page.
     const everythingCount = makeEl('div', { class: 'panel-count', 'aria-live': 'polite' });   // the whole title, see setPanelTitle
@@ -114,11 +114,11 @@
 
     // The note card and editor draw over the panel, and the tooltip goes last so it draws on top
     // of whichever panel its button is in.
-    uiRoot.append(makeEl('style', { text: UI_CSS }), panelEl, noteCardEl, editorEl, toastEl, penEl, everythingEl, labelTipEl);
+    uiRoot.append(makeEl('style', { text: UI_CSS }), panelEl, noteCardEl, editorEl, toastEl, everythingEl, labelTipEl);
 
     // Keys typed in the note editor stay out of the page's own shortcut handlers.
     ['keydown', 'keyup', 'keypress'].forEach(type => uiHost.addEventListener(type, e => e.stopPropagation()));
-    // Pressing a toolbar button must not take the page's text selection away.
+    // Pressing a pen bar button must not take the page's text selection away.
     penEl.addEventListener('mousedown', e => e.preventDefault());
 
     // The panels take the theme of what they open next to (`dark`), else of the page.
@@ -140,12 +140,12 @@
 
     // Events from inside the shadow root reach page listeners retargeted to the host.
     function isUiEvent(e) {
-        return e.target === uiHost;
+        return e.target === uiHost || e.target === menuHost;   // the menu holds the pen bar
     }
 
     // Takes focus out of a panel that is about to hide, so keys stop going to a hidden control.
     function releaseFocus(panel) {
-        const active = uiRoot.activeElement;
+        const active = panel.getRootNode().activeElement;   // the pen bar lives in the menu's own root
         if (active && panel.contains(active)) active.blur();
     }
 

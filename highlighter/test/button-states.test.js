@@ -4,7 +4,7 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
 const check = L.check;
 
 async function states(browser) {
-  const { ctx, page: p } = await L.open(browser, { html: HTML });
+  const { ctx, page: p } = await L.open(browser, { html: HTML, menu: true }); await L.openMenu(p);
   await L.altKey(p, 'p');
   const info = () => p.evaluate(() => {
     const b = [...window.__hl.penEl.querySelectorAll('button')].find(x => x.dataset.label === 'Eraser');
@@ -36,7 +36,7 @@ async function states(browser) {
 async function hoverVisible(browser) {
   for (const scheme of ['light', 'dark']) {
     const html = HTML.replace('<body style="', `<body style="${scheme === 'dark' ? 'background:#121212;color:#e8e8e8;' : ''}`);
-    const { ctx, page: p } = await L.open(browser, { html, scheme });
+    const { ctx, page: p } = await L.open(browser, { html, scheme, menu: true }); await L.openMenu(p);
     await L.altKey(p, 'p'); await p.waitForTimeout(400);
     const n = await p.evaluate(() => window.__hl.penEl.querySelectorAll('button:not(:disabled)').length);
     for (let i = 0; i < n; i++) {
@@ -60,7 +60,7 @@ async function hoverVisible(browser) {
 
 // Each highlighter button in the pen bar carries its own colour, at rest and when selected.
 async function swatches(browser) {
-  const { ctx, page: p } = await L.open(browser, { html: HTML });
+  const { ctx, page: p } = await L.open(browser, { html: HTML, menu: true }); await L.openMenu(p);
   const fills = (bar) => p.evaluate(bar => [...window.__hl[bar].querySelectorAll('button')].map(b => [...b.querySelectorAll('svg > path[fill]')].map(x => x.getAttribute('fill'))[0]).filter(Boolean), bar);
   await L.altKey(p, 'p'); await p.waitForTimeout(300);
   const pen = await fills('penEl');

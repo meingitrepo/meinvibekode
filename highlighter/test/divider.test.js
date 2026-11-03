@@ -11,7 +11,7 @@ const spaces = (p, bar) => p.evaluate(b => {
 }, bar);
 (async () => {
   const browser = await L.launch();
-  const { page: p } = await L.open(browser, { html: HTML });
+  const { page: p } = await L.open(browser, { html: HTML, menu: true }); await L.openMenu(p);
   await L.altKey(p, 'p');
   await p.waitForTimeout(700);
   const pen = await spaces(p, 'penEl');

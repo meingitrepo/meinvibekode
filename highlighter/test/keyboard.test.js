@@ -8,7 +8,7 @@ const focused = p => p.evaluate(() => { const r = window.__hl; const a = r.penEl
   return a.tagName === 'TEXTAREA' ? 'input' : (a.getAttribute('aria-label') || a.tagName); });
 
 async function penBar(browser) {
-  const { ctx, page: p } = await L.open(browser, { html: HTML });
+  const { ctx, page: p } = await L.open(browser, { html: HTML, menu: true });
   await L.altKey(p, 'p'); await L.openMenu(p);
   const tabs = await p.evaluate(() => Array.from(window.__hl.penEl.querySelectorAll('button:not(:disabled)')).map(b => b.tabIndex));
   check('one Tab stop in the pen bar', tabs.filter(t => t === 0).length === 1 && tabs.length > 3, tabs);

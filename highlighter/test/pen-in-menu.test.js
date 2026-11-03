@@ -1,0 +1,43 @@
+// The pen bar lives inside the sticky menu: shown while the pen is on and the menu is open,
+// hidden with the menu (collapsed or Alt+Shift+M) while the pen keeps drawing.
+const L = require('./lib');
+const html = `<html><body style="font:16px sans-serif;margin:200px 40px">
+<p id="p">Alpha bravo charlie delta echo foxtrot golf hotel india juliet.</p></body></html>`;
+const seen = page => page.evaluate(() => window.__hl.penEl.checkVisibility());
+(async () => {
+  const b = await L.launch();
+  const { page } = await L.open(b, { html, menu: true });
+  L.check('pen off: no bar', !(await seen(page)), null);
+  await L.altKey(page, 'KeyP');
+  L.check('pen on, menu collapsed: bar hidden, pen on', !(await seen(page)) && await page.evaluate(() => !!window.__hl.penKey), null);
+  await L.openMenu(page);
+  L.check('menu open: bar shown', await seen(page), null);
+  L.check('the bar is inside the menu', await page.evaluate(() => window.__hl.menuEl.contains(window.__hl.penEl)), null);
+  L.check('the bar takes the menu theme', await page.evaluate(() => { const h = window.__hl.menuEl.getRootNode().host; return !window.__hl.penEl.hasAttribute('data-theme') || window.__hl.penEl.getAttribute('data-theme') === h.getAttribute('data-theme'); }), null);
+  // Roving focus with the arrow keys works in the menu's own root.
+  await page.evaluate(() => [...window.__hl.penEl.querySelectorAll('button:not(:disabled)')].find(x => x.tabIndex === 0).focus());
+  const at = () => page.evaluate(() => { const bs = [...window.__hl.penEl.querySelectorAll('button:not(:disabled)')]; return bs.indexOf(window.__hl.penEl.getRootNode().activeElement); });
+  const i0 = await at();
+  await page.keyboard.press('ArrowRight');
+  L.check('ArrowRight moves focus along the bar', (await at()) === i0 + 1, [i0, await at()]);
+  await page.evaluate(() => window.__hl.penEl.getRootNode().activeElement.blur());
+  // Clicking a style button keeps the page selection and changes the pen.
+  await L.selStr(page, '#p', 'golf');
+  const before = await page.evaluate(() => window.__hl.penKey);
+  const r = await page.evaluate(k => { const x = [...window.__hl.penEl.querySelectorAll('button[aria-pressed="false"]')].find(b => !/eraser/i.test(b.dataset.label)).getBoundingClientRect(); return { x: x.left + x.width / 2, y: x.top + x.height / 2 }; });
+  await page.mouse.click(r.x, r.y); await page.waitForTimeout(200);
+  L.check('style click changes the pen', await page.evaluate(k => window.__hl.penKey !== k, before), null);
+  L.check('style click keeps the page selection', await page.evaluate(() => getSelection().toString()) === 'golf', await page.evaluate(() => getSelection().toString()));
+  await page.evaluate(() => getSelection().removeAllRanges());
+  // Hiding the menu hides the bar; the pen still draws.
+  await L.altKey(page, 'KeyM', true); await page.waitForTimeout(200);
+  L.check('menu hidden: bar hidden, pen still on', !(await seen(page)) && await page.evaluate(() => !!window.__hl.penKey), null);
+  await L.drag(page, '#p', 'bravo'); await page.waitForTimeout(300);
+  L.check('pen still draws', (await L.wr(page)).some(w => w.t === 'bravo'), await L.wr(page));
+  await L.altKey(page, 'KeyM', true); await page.waitForTimeout(200);
+  L.check('menu back: bar back', await seen(page), null);
+  await L.altKey(page, 'KeyP');
+  L.check('pen off: bar gone', !(await seen(page)), null);
+  L.check('no page errors', page.__errors.length === 0, page.__errors);
+  await L.done(b);
+})();

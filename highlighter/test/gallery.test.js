@@ -50,7 +50,7 @@ const toastState = STATES.find(s => s.id === 'toast');
   const deep = await jobs.deep;
   check('a missing outDir is created', fs.existsSync(deep.file), deep.file);
 
-  const IDS = ['toast', 'panel', 'panel-ticked', 'note-card', 'editor', 'menu', 'search', 'help'];
+  const IDS = ['toast', 'panel', 'panel-ticked', 'note-card', 'editor', 'menu', 'pen', 'search', 'help'];
   const all = await jobs.all;
   const ids = [...new Set(all.tiles.map(t => t.state))];
   check('the default gallery has the state ids in order', JSON.stringify(ids) === JSON.stringify(IDS), ids);

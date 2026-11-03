@@ -10,7 +10,7 @@ const pill = p => p.evaluate(() => { const e = window.__hl.penEl; if (e.hidden) 
 const selText = p => p.evaluate(() => getSelection().toString());
 
 async function basics(browser) {
-  const { ctx, page: p } = await L.open(browser, { html: HTML });
+  const { ctx, page: p } = await L.open(browser, { html: HTML, menu: true }); await L.openMenu(p);
   await L.altKey(p, 'p');
   check('Alt+P turns the pen on with yellow and shows the pill', (await pill(p)) === 'Pen: yellow highlight', await pill(p));
   await L.drag(p, '#p1', 'several plain words');
@@ -55,7 +55,7 @@ async function basics(browser) {
 }
 
 async function startsWithLast(browser) {
-  const { ctx, page: p } = await L.open(browser, { html: HTML });
+  const { ctx, page: p } = await L.open(browser, { html: HTML, menu: true }); await L.openMenu(p);
   await L.selStr(p, '#p1', 'plain words');
   await L.altKey(p, '1');
   await L.altKey(p, 'p');
@@ -66,7 +66,7 @@ async function startsWithLast(browser) {
 }
 
 async function keyboardAndFields(browser) {
-  const { ctx, page: p } = await L.open(browser, { html: HTML });
+  const { ctx, page: p } = await L.open(browser, { html: HTML, menu: true }); await L.openMenu(p);
   await L.altKey(p, 'p');
   await L.selStr(p, '#p2', 'plain words'); await p.waitForTimeout(400);
   check('a keyboard (non-mouse) selection is not drawn on', (await L.wr(p)).length === 0, await L.wr(p));
@@ -88,7 +88,7 @@ async function keyboardAndFields(browser) {
 }
 
 async function restyleStillWorks(browser) {
-  const { ctx, page: p } = await L.open(browser, { html: HTML });
+  const { ctx, page: p } = await L.open(browser, { html: HTML, menu: true }); await L.openMenu(p);
   await L.altKey(p, 'p');
   await L.drag(p, '#p1', 'plain words');
   const r = (await L.rects(p, '#p1', 'plain words'))[0];
@@ -100,14 +100,14 @@ async function restyleStillWorks(browser) {
 }
 
 async function dark(browser) {
-  const { ctx, page: p } = await L.open(browser, { html: HTML.replace('<body style="', '<body style="background:#111;color:#eee;'), scheme: 'dark' });
+  const { ctx, page: p } = await L.open(browser, { html: HTML.replace('<body style="', '<body style="background:#111;color:#eee;'), scheme: 'dark', menu: true }); await L.openMenu(p);
   await L.altKey(p, 'p');
-  check('the pill follows a dark page', (await p.evaluate(() => window.__hl.penEl.getAttribute('data-theme'))) === 'dark', null);
+  check('the pen bar follows a dark page', (await p.evaluate(() => window.__hl.penEl.getRootNode().host.getAttribute('data-theme'))) === 'dark', null);
   await ctx.close();
 }
 
 async function staleSelectionFromPanel(browser) {
-  const { ctx, page: p } = await L.open(browser, { html: HTML });
+  const { ctx, page: p } = await L.open(browser, { html: HTML, menu: true }); await L.openMenu(p);
   await L.selStr(p, '#p1', 'plain words');
   await L.altKey(p, '1');
   await L.altKey(p, 'o');

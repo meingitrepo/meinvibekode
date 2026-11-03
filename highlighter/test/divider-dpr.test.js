@@ -4,7 +4,7 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
 const check = L.check;
 // Device-pixel columns that are painted (not the surface colour) across each divider, read back from a screenshot.
 async function widths(browser, dsf, bar) {
-  const { ctx, page: p } = await L.open(browser, { html: HTML });
+  const { ctx, page: p } = await L.open(browser, { html: HTML, menu: true }); await L.openMenu(p);
   await L.altKey(p, 'p');
   await p.waitForTimeout(700);
   const rs = await p.evaluate(b => [...window.__hl[b].querySelectorAll('.divider')].map(d => { const r = d.getBoundingClientRect(); return { x: Math.floor(r.left) - 3, y: r.top + r.height / 2, w: 8 }; }), bar);

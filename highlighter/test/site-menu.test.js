@@ -28,9 +28,9 @@ const state = page => page.evaluate(() => ({
   const row = await page.evaluate(() => {
     const m = window.__hl.menuButtons, inner = m.get('redo').parentElement, names = new Map([...m].map(([k, v]) => [v, k]));
     const cs = getComputedStyle(inner.querySelector('[role="separator"]'));
-    return { order: [...inner.children].map(c => names.get(c) || (c.getAttribute('role') === 'separator' && c.className === 'divider' ? '|' : '?')).join(' '), margin: [cs.marginLeft, cs.marginRight] };
+    return { order: [...inner.children].map(c => names.get(c) || (c === window.__hl.penEl ? 'penbar' : '') || (c.getAttribute('role') === 'separator' && c.className === 'divider' ? '|' : '?')).join(' '), margin: [cs.marginLeft, cs.marginRight] };
   });
-  L.check('toolbar dividers with their usual padding split the groups', row.order === 'search panel | pen keys hide | undo redo' && row.margin[0] === '10px' && row.margin[1] === '10px', row);
+  L.check('dividers with their usual padding split the groups; the pen bar ends the row', row.order === 'search panel | pen keys hide | undo redo | penbar' && row.margin[0] === '10px' && row.margin[1] === '10px', row);
   L.check('no power button any more', await page.evaluate(() => !window.__hl.menuEl.querySelector('[aria-label^="Turn highlighter"]')));
   const hr = await rectOf(page, 'menuHandle'), er = await rectOf(page, 'menuExpand');
   L.check('the handle is on the left, then the expand icon button', s.expandIsIconButton && hr.right <= er.left + 1 && hr.left < er.left, { hr, er });

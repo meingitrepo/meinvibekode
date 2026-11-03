@@ -4,21 +4,19 @@
     const PEN_ERASER = 'eraser';  // the pen's key when it erases instead of drawing
     let lastStyleKey = null;      // the style chosen last for some text; the pen starts with it
 
-    // Turns the pen on with style `key`, or off (null). A toolbar at the top of the view shows it.
+    // Turns the pen on with style `key`, or off (null). Its bar shows in the sticky menu (see renderSiteMenu).
     function setPen(key) {
         penKey = key === PEN_ERASER || (key && STYLES[key]) ? key : null;
         if (penKey) showAnnotationsFor('pen'); else restoreAnnotationsFor('pen');
-        renderSiteMenu();   // the menu's pen button shows the pencil or the slashed pencil
         if (!penKey) {
             if (!penEl.hidden) hideLabelTip();
             releaseFocus(penEl);
-            penEl.hidden = true;
+            renderSiteMenu();   // the pencil turns slashed and the bar goes
             return;
         }
-        // The bar has the page's theme, as the toast does.
+        // The bar has the menu's theme, which is the page's; its tooltips too.
         const dark = computeDarkMode();
         ensureUi(panelOpen() && uiDark !== null ? uiDark : dark);
-        setThemeAttr(penEl, dark);
         // One button per style: the pen's own shows pressed; clicking another changes the pen. With one
         // annotation selected by click, the bar acts on it instead.
         const picked = selectedGroups.length === 1 && !editor ? selectedGroups[0] : null;
@@ -52,7 +50,7 @@
         }
         if ((pickedKey || penKey !== PEN_ERASER) && !tools.some(b => b.tabIndex === 0)) tools.find(b => b.tagName === 'BUTTON').tabIndex = 0;
         penEl.replaceChildren(...tools);
-        penEl.hidden = false;
+        renderSiteMenu();   // the pencil and, with the menu open, the bar
     }
 
     function togglePen() {
@@ -78,7 +76,7 @@
     penEl.addEventListener('keydown', e => {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
         const buttons = Array.from(penEl.querySelectorAll('button:not(:disabled)'));
-        const i = buttons.indexOf(uiRoot.activeElement);
+        const i = buttons.indexOf(penEl.getRootNode().activeElement);
         const to = { ArrowRight: i + 1, ArrowDown: i + 1, ArrowLeft: i - 1, ArrowUp: i - 1, Home: 0, End: buttons.length - 1 }[e.key];
         if (i < 0 || to === undefined) return;
         e.preventDefault();

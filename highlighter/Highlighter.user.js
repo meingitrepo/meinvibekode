@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.101
+// @version      9.102
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -4623,9 +4623,28 @@
     const PEN_ERASER = 'eraser';  // the pen's key when it erases instead of drawing
     let lastStyleKey = null;      // the style chosen last for some text; the pen starts with it
 
+    // Own element, not pageStyle: the cursor exists only while the pen is on.
+    const penCursorStyle = document.createElement('style');
+
+    // The Phosphor duotone cursor-text icon in the pen's color; the eraser's is gray. A halo in the
+    // opposite ink keeps it visible on any page, and !important beats the links' and fields' own cursors.
+    function updatePenCursor(dark) {
+        if (!penKey) { penCursorStyle.remove(); return; }
+        const fill = penKey === PEN_ERASER ? '#87867f' : resolveStyle(penKey, dark).color;
+        const [ink, halo] = dark ? ['#faf9f5', '#141413'] : ['#141413', '#ffffff'];
+        const body = 'M176,48V208H160a32,32,0,0,1-32-32,32,32,0,0,1-32,32H80V48H96a32,32,0,0,1,32,32,32,32,0,0,1,32-32Z';
+        const line = 'M184,208a8,8,0,0,1-8,8H160a40,40,0,0,1-32-16,40,40,0,0,1-32,16H80a8,8,0,0,1,0-16H96a24,24,0,0,0,24-24V136H104a8,8,0,0,1,0-16h16V80A24,24,0,0,0,96,56H80a8,8,0,0,1,0-16H96a40,40,0,0,1,32,16,40,40,0,0,1,32-16h16a8,8,0,0,1,0,16H160a24,24,0,0,0-24,24v40h16a8,8,0,0,1,0,16H136v40a24,24,0,0,0,24,24h16A8,8,0,0,1,184,208Z';
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256">`
+            + `<path d="${line}" fill="${halo}" stroke="${halo}" stroke-width="28" stroke-linejoin="round"/>`
+            + `<path d="${body}" fill="${fill}"/><path d="${line}" fill="${ink}"/></svg>`;
+        penCursorStyle.textContent = `html, html * { cursor: url("data:image/svg+xml,${encodeURIComponent(svg)}") 16 16, text !important; }`;
+        (document.head || document.documentElement).appendChild(penCursorStyle);
+    }
+
     // Turns the pen on with style `key`, or off (null). Its bar shows in the sticky menu (see renderSiteMenu).
     function setPen(key) {
         penKey = key === PEN_ERASER || (key && STYLES[key]) ? key : null;
+        updatePenCursor(computeDarkMode());
         if (penKey) showAnnotationsFor('pen'); else restoreAnnotationsFor('pen');
         if (!penKey) {
             if (!penEl.hidden) hideLabelTip();

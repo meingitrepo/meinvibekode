@@ -45,10 +45,12 @@ const seen = page => page.evaluate(() => window.__hl.penEl.checkVisibility());
   L.check('pen still draws', (await L.wr(page)).some(w => w.t === 'bravo'), await L.wr(page));
   await L.altKey(page, 'KeyM', true); await page.waitForTimeout(200);
   L.check('menu back: bar back', await seen(page), null);
-  await page.evaluate(() => { const r = window.__hl; window.__penCss = () => ({ op: getComputedStyle(r.penEl).opacity, shown: r.penEl.checkVisibility() }); });
-  await L.altKey(page, 'KeyP');
-  const mid = await page.evaluate(() => window.__penCss());
-  L.check('pen off: the bar fades out instead of vanishing (still painted just after, then gone)', mid.shown && Number(mid.op) > 0 && !(await (async () => { await page.waitForTimeout(300); return page.evaluate(() => window.__penCss().shown); })()), mid);
+  // Key pressed without altKey's 150ms wait, which would outlast the fade.
+  await page.keyboard.down('Alt'); await page.keyboard.press('KeyP'); await page.keyboard.up('Alt');
+  await page.waitForTimeout(50);
+  const mid = await page.evaluate(() => ({ shown: window.__hl.penEl.checkVisibility(), op: Number(getComputedStyle(window.__hl.penEl).opacity) }));
+  await page.waitForTimeout(300);
+  L.check('pen off: the bar fades out instead of vanishing (still painted mid-fade, then gone)', mid.shown && mid.op > 0 && mid.op < 1 && !(await seen(page)), mid);
   L.check('no page errors', page.__errors.length === 0, page.__errors);
   await L.done(b);
 })();

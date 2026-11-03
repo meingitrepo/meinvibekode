@@ -103,10 +103,13 @@
     const SELECT_PREVIEW_DELAY_MS = 150;   // the note follows the selection toolbar a little later
     function previewSelectedNote(groups) {
         if (selectPreview) hideNoteCard();
+        clearTimeout(selectPreviewTimer);   // the pointer may have taken the last preview over, leaving its timers
+        clearTimeout(selectShowTimer);
         const note = groups.length === 1 && !editor && !annotationsHidden &&
             groupWrappers(groups[0]).filter(w => w.hasAttribute(NOTE_ATTR) && w.getClientRects().length).pop();
         if (!note || !note.getAttribute(NOTE_ATTR) || pinnedCards.has(note)) return;   // a pinned note is open already
         selectPreview = true;
+        clearTimeout(cardHideTimer);   // a hover card's hide, set as the pointer left its badge, would close this preview
         selectShowTimer = setTimeout(() => {
             if (selectPreview && note.isConnected && !editor && !annotationsHidden) showNoteCard(note);
         }, SELECT_PREVIEW_DELAY_MS);

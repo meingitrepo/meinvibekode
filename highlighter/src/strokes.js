@@ -32,7 +32,7 @@
                 metrics = { ascent: m.fontBoundingBoxAscent, descent: m.fontBoundingBoxDescent, xHeight: m.actualBoundingBoxAscent };
             }
         } catch (e) { /* older browser: fall back to the rect's middle */ }
-        fontMetricsCache.set(font, metrics);
+        if (metrics) fontMetricsCache.set(font, metrics);   // an unusable result is measured again next time
         return metrics;
     }
 

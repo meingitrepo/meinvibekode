@@ -100,8 +100,23 @@
             listen(window.navigation, 'navigatesuccess', () => setTimeout(onUrlMaybeChanged, 0));
         }
         listen(document, 'visibilitychange', onVisibilityChange);
-        const poll = setInterval(() => { onUrlMaybeChanged(); checkDetached(); pruneShown(); notePanelChanges(); }, 1000);
-        teardown.push(() => clearInterval(poll));
+        // A webfont finishing late changes the metrics measured before it.
+        if (document.fonts && document.fonts.addEventListener) {
+            listen(document.fonts, 'loadingdone', () => { fontMetricsCache.clear(); scheduleRedraw(); });
+        }
+        // The poll sleeps while the tab is hidden; shown again, it runs once at once.
+        let poll = 0;
+        const pollOnce = () => { onUrlMaybeChanged(); checkDetached(); pruneShown(); notePanelChanges(); };
+        const startPoll = () => { if (!poll) poll = setInterval(pollOnce, 1000); };
+        const stopPoll = () => { clearInterval(poll); poll = 0; };
+        listen(document, 'visibilitychange', () => {
+            if (document.hidden) { stopPoll(); return; }
+            if (!running || poll) return;
+            pollOnce();
+            startPoll();
+        });
+        if (!document.hidden) startPoll();
+        teardown.push(stopPoll);
 
         watchTheme();
         teardown.push(unwatchStoredKey);

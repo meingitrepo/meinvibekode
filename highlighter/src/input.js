@@ -176,83 +176,97 @@
         next.focus({ preventScroll: true });
     }
 
-    function ourKey(e) {
+    // Esc, Tab and everything else while the guide or everything saved is open. True: the key is dealt with.
+    function dialogKey(e) {
         // Esc closes everything saved (Alt+Shift+O) wherever focus is.
         if (e.key === 'Escape' && !everythingEl.hidden) {
             e.preventDefault();
             closeEverything();
-            return;
+            return true;
         }
         // Tab stays inside the shortcut guide (on top) or everything saved, as in a modal dialog.
-        if (e.key === 'Tab' && !helpEl.hidden) { trapTab(helpEl, e); return; }
-        if (e.key === 'Tab' && !everythingEl.hidden) { trapTab(everythingEl, e); return; }
+        if (e.key === 'Tab' && !helpEl.hidden) { trapTab(helpEl, e); return true; }
+        if (e.key === 'Tab' && !everythingEl.hidden) { trapTab(everythingEl, e); return true; }
         // The shortcut guide dialog: Esc closes it, nothing else of ours acts under it.
-        if (e.key === 'Escape' && !helpEl.hidden) { e.preventDefault(); closeHelp(); return; }
-        if (!helpEl.hidden && !(e.altKey && e.shiftKey && e.code === 'KeyH')) return;
+        if (e.key === 'Escape' && !helpEl.hidden) { e.preventDefault(); closeHelp(); return true; }
+        if (!helpEl.hidden && !(e.altKey && e.shiftKey && e.code === 'KeyH')) return true;
         // Everything saved covers the page: the page's keys wait until it closes.
-        if (!everythingEl.hidden && e.code !== 'KeyO') return;
-        // Esc closes a note pinned by clicking its badge.
-        // Esc with focus out of the note editor (it stays open on clicks outside) still discards it.
-        if (e.key === 'Escape' && editor && !isUiEvent(e) && !e.altKey) { cancelEditor(); return; }
-        if (e.key === 'Escape' && pinnedCards.size && !e.altKey) { unpinNoteCard(Array.from(pinnedCards.keys()).pop()); return; }
-        if (selectedGroupKey(e)) return;
-        // Esc turns the pen off, unless it is meant for a panel or a field.
+        return !everythingEl.hidden && e.code !== 'KeyO';
+    }
+
+    // Esc closes a note pinned by clicking its badge.
+    // Esc with focus out of the note editor (it stays open on clicks outside) still discards it.
+    function escapeCloseKey(e) {
+        if (e.key === 'Escape' && editor && !isUiEvent(e) && !e.altKey) { cancelEditor(); return true; }
+        if (e.key === 'Escape' && pinnedCards.size && !e.altKey) { unpinNoteCard(Array.from(pinnedCards.keys()).pop()); return true; }
+        return false;
+    }
+
+    // Esc turns the pen off, unless it is meant for a panel or a field.
+    function penEscapeKey(e) {
         if (e.key === 'Escape' && penKey && !editor && !isUiEvent(e) && !isEditableTarget(e)) {
             setPen(null);
-            return;
+            return true;
         }
+        return false;
+    }
+
+    function ourKey(e) {
+        if (dialogKey(e) || escapeCloseKey(e) || selectedGroupKey(e) || penEscapeKey(e)) return;
         if (!e.altKey || e.ctrlKey || e.metaKey || e.isComposing) return;
         if (isEditableTarget(e)) return;
         if (editor && isUiEvent(e)) return;   // focus is on the open note editor's buttons
         // Typing in the panel's filter box: only the panel and jump keys act.
         if (isUiEvent(e) && uiRoot.activeElement === panelFilter && !/^Key[OJK]$/.test(e.code)) return;
-        if (e.shiftKey && e.code === 'KeyH' && !e.repeat) {
+        if (e.shiftKey && !e.repeat && (e.code === 'KeyH' || e.code === 'KeyM')) {
             e.preventDefault();
-            toggleHelp();
-            return;
-        }
-        if (e.shiftKey && e.code === 'KeyM' && !e.repeat) {
-            e.preventDefault();
-            toggleSiteMenu();
+            if (e.code === 'KeyH') toggleHelp();
+            else toggleSiteMenu();
             return;
         }
         const code = e.code;
         if (!COMMAND_CODES.has(code) && (e.shiftKey || !CODE_TO_STYLE.has(code))) return;
         syncLocation();
         if (e.shiftKey && NO_SHIFT_CODES.has(code)) return;
+        if (viewKey(e, code)) return;
+        const active = getActiveRange();
+        const selected = !!active && !!active.sel.toString().trim();
+        annotationKey(e, code, active, selected);
+    }
 
+    // Undo, redo, hide, pen, toolbar switch, panel and jump: keys that need no selection.
+    function viewKey(e, code) {
         if (code === 'KeyZ' || code === 'KeyY') {
             const redo = code === 'KeyY' || e.shiftKey;
-            if (!(redo ? redoStack : undoStack).length) return;
+            if (!(redo ? redoStack : undoStack).length) return true;
             e.preventDefault();
             if (redo) redoLastAction();
             else undoLastAction();
-            return;
+            return true;
         }
-
         if (code === 'KeyV') {
-            if (!annotationsHidden && !document.querySelector(WRAPPER_SELECTOR)) return;
+            if (!annotationsHidden && !document.querySelector(WRAPPER_SELECTOR)) return true;
             e.preventDefault();
             toggleAnnotationsHidden();
-            return;
+            return true;
         }
-
         if (code === 'KeyP') {
             e.preventDefault();
             togglePen();
-            return;
+            return true;
         }
-
         if (code === 'KeyT') {
-            if (!ENABLE_SELECTION_TOOLBAR) return;
+            if (!ENABLE_SELECTION_TOOLBAR) return true;
             e.preventDefault();
             toggleToolbarSwitch();
-            return;
+            return true;
         }
+        return false;
+    }
 
-        const active = getActiveRange();
-        const selected = !!active && !!active.sel.toString().trim();
-        // With nothing selected, the keys act on the annotation pointed at (see pointedGroup).
+    // Note, pin, panel, jump, delete and the style keys: act on the selection, or with nothing
+    // selected on the annotation pointed at (see pointedGroup).
+    function annotationKey(e, code, active, selected) {
         // Annotations hidden by Alt+V can't be seen to be pointed at: only Alt+N, which changes
         // nothing by itself, still reaches them.
         const pointed = () => (annotationsHidden ? null : pointedGroup());

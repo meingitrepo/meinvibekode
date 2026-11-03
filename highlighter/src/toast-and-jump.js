@@ -9,7 +9,7 @@
         // other theme keeps its own, and opening one later doesn't switch the toast's.
         const dark = computeDarkMode();
         ensureUi(panelOpen() && uiDark !== null ? uiDark : dark);
-        toastEl.setAttribute('data-theme', dark ? 'dark' : 'light');
+        setThemeAttr(toastEl, dark);
         const nextIcon = phosphorIcon(icon);
         toastIcon.replaceWith(nextIcon);
         toastIcon = nextIcon;

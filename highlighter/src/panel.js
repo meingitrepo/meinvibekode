@@ -82,7 +82,7 @@
     const panelChecked = new Set();   // the groups ticked in the list; the eraser in the header erases them
 
     function setPanelTheme(dark) {
-        panelEl.setAttribute('data-theme', dark ? 'dark' : 'light');
+        setThemeAttr(panelEl, dark);
         schedulePanelRefresh();   // the color bars follow the theme
     }
 

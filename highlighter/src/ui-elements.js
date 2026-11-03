@@ -127,7 +127,7 @@
     let uiDark = null;
     function applyUiTheme(dark) {
         uiDark = dark;
-        uiHost.setAttribute('data-theme', dark ? 'dark' : 'light');
+        setThemeAttr(uiHost, dark);
     }
 
     function ensureUi(dark = isDarkMode()) {

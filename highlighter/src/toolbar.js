@@ -37,14 +37,29 @@
 
     let labelTipTimer = null;
 
+    // An icon button's accessible name, and the label and shortcut its tooltip shows.
+    function nameButton(button, label, shortcut) {
+        button.setAttribute('aria-label', shortcut ? `${label} (${shortcut})` : label);
+        button.dataset.label = label;
+        if (shortcut) {
+            button.dataset.shortcut = shortcut;
+            button.setAttribute('aria-keyshortcuts', shortcut);
+        }
+    }
+
+    // A tooltip's content: the button's label, then its shortcut.
+    function fillTip(tip, button) {
+        tip.replaceChildren(document.createTextNode(button.dataset.label));
+        if (button.dataset.shortcut) tip.appendChild(makeEl('span', { class: 'kbd', text: button.dataset.shortcut }));
+    }
+
     // preferBelow: a function, so it is read when the tip shows (the toolbar can change sides).
     function showLabelTip(button, preferBelow) {
         clearTimeout(labelTipTimer);
         labelTipTimer = setTimeout(() => {
             const panel = button.closest('.surface');
             if (!button.isConnected || !panel || panel.hidden) return;
-            labelTipEl.replaceChildren(document.createTextNode(button.dataset.label));
-            if (button.dataset.shortcut) labelTipEl.appendChild(makeEl('span', { class: 'kbd', text: button.dataset.shortcut }));
+            fillTip(labelTipEl, button);
             labelTipEl.hidden = false;
             placePanel(labelTipEl, button.getBoundingClientRect(), preferBelow(), 4);
         }, 250);
@@ -57,12 +72,7 @@
 
     // Gives an icon button an accessible name and a tooltip showing its label and shortcut.
     function addLabelTip(button, label, shortcut, preferBelow) {
-        button.setAttribute('aria-label', shortcut ? `${label} (${shortcut})` : label);
-        button.dataset.label = label;
-        if (shortcut) {
-            button.dataset.shortcut = shortcut;
-            button.setAttribute('aria-keyshortcuts', shortcut);
-        }
+        nameButton(button, label, shortcut);
         button.addEventListener('click', hideLabelTip);
         button.addEventListener('mouseenter', () => showLabelTip(button, preferBelow));
         button.addEventListener('mouseleave', hideLabelTip);

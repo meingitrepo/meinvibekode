@@ -25,8 +25,7 @@
         clearTimeout(menuTipTimer);
         menuTipTimer = setTimeout(() => {
             if (!button.isConnected || menuEl.hidden) return;
-            menuTip.replaceChildren(document.createTextNode(button.dataset.label));
-            if (button.dataset.shortcut) menuTip.appendChild(makeEl('span', { class: 'kbd', text: button.dataset.shortcut }));
+            fillTip(menuTip, button);
             menuTip.hidden = false;
             const r = button.getBoundingClientRect(), t = menuTip.getBoundingClientRect();
             const below = r.bottom + 8 + t.height <= window.innerHeight;
@@ -43,9 +42,7 @@
 
     function menuButton(label, shortcut, icon, onClick) {
         const b = makeButton({ icon });
-        b.setAttribute('aria-label', shortcut ? `${label} (${shortcut})` : label);
-        b.dataset.label = label;
-        if (shortcut) { b.dataset.shortcut = shortcut; b.setAttribute('aria-keyshortcuts', shortcut); }
+        nameButton(b, label, shortcut);
         b.addEventListener('click', () => { hideMenuTip(); onClick(); renderSiteMenu(); });
         b.addEventListener('mouseenter', () => showMenuTip(b));
         b.addEventListener('mouseleave', hideMenuTip);
@@ -68,9 +65,7 @@
     addMenuTip(menuExpand, 'Expand');
 
     function addMenuTip(b, label, shortcut) {
-        b.setAttribute('aria-label', shortcut ? `${label} (${shortcut})` : label);
-        b.dataset.label = label;
-        if (shortcut) b.dataset.shortcut = shortcut;
+        nameButton(b, label, shortcut);
         b.addEventListener('mouseenter', () => showMenuTip(b));
         b.addEventListener('mouseleave', hideMenuTip);
         b.addEventListener('click', hideMenuTip);
@@ -108,7 +103,7 @@
         hideBtn.setAttribute('aria-label', `${hideBtn.dataset.label} (Alt+V)`);
         hideBtn.setAttribute('aria-pressed', String(!annotationsHidden));   // lit while annotations are shown (the default)
         const dark = computeDarkMode();
-        menuHost.setAttribute('data-theme', dark ? 'dark' : 'light');
+        setThemeAttr(menuHost, dark);
         const hidden = menuHiddenHere();
         menuEl.hidden = hidden;
         if (hidden) { if (menuHost.isConnected) menuHost.remove(); return; }

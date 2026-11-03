@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.84
+// @version      9.85
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -354,7 +354,6 @@
     const teardown = [];                   // undoes what start() set up
     let running = false;                   // false while the script is turned off for this site
     let pendingRecords = [];               // saved records not yet placed in the DOM
-    let annotationsHidden = false;
     let darkMode = null;
     let lastHref = location.href;
     let currentKey = null;                 // storage key of the page being shown
@@ -516,6 +515,11 @@
     // is dark, so a dark code block on a light page gets them, and the page around it doesn't.
     // Panels match what they open next to (ensureUi); the page as a whole, for the toast, is
     // whatever is behind the middle of the view, not counting our own panels.
+    // The look (light or dark tokens) a UI surface takes.
+    function setThemeAttr(el, dark) {
+        el.setAttribute('data-theme', dark ? 'dark' : 'light');
+    }
+
     function computeDarkMode() {
         const x = window.innerWidth / 2;
         const y = window.innerHeight / 2;
@@ -536,7 +540,7 @@
         if (next !== darkMode) {
             darkMode = next;
             if (!panelOpen()) applyUiTheme(next);   // an open panel keeps the theme of what it is next to
-            if (!toastEl.hidden) toastEl.setAttribute('data-theme', next ? 'dark' : 'light');
+            if (!toastEl.hidden) setThemeAttr(toastEl, next);
             if (penKey) setPen(penKey);
             renderSiteMenu();
         }
@@ -673,6 +677,12 @@
         textColorStyle.textContent = rules.join('\n');
     }
 
+    // =====================================================================
+    // Showing and hiding the annotations (Alt+V)
+    // =====================================================================
+
+    let annotationsHidden = false;
+
     // Which feature showed the annotations on its own (so it hides them again when it ends).
     const autoShown = { panel: false, pen: false };
 
@@ -723,7 +733,6 @@
         closePanel();               // nor can the panel list what is hidden
         showToast('Annotations hidden', { icon: 'eye-slash' });
     }
-
     // =====================================================================
     // Drawing: every annotation is an SVG of straight strokes, one per line of text
     // =====================================================================
@@ -4334,7 +4343,7 @@
     let uiDark = null;
     function applyUiTheme(dark) {
         uiDark = dark;
-        uiHost.setAttribute('data-theme', dark ? 'dark' : 'light');
+        setThemeAttr(uiHost, dark);
     }
 
     function ensureUi(dark = isDarkMode()) {
@@ -4477,14 +4486,29 @@
 
     let labelTipTimer = null;
 
+    // An icon button's accessible name, and the label and shortcut its tooltip shows.
+    function nameButton(button, label, shortcut) {
+        button.setAttribute('aria-label', shortcut ? `${label} (${shortcut})` : label);
+        button.dataset.label = label;
+        if (shortcut) {
+            button.dataset.shortcut = shortcut;
+            button.setAttribute('aria-keyshortcuts', shortcut);
+        }
+    }
+
+    // A tooltip's content: the button's label, then its shortcut.
+    function fillTip(tip, button) {
+        tip.replaceChildren(document.createTextNode(button.dataset.label));
+        if (button.dataset.shortcut) tip.appendChild(makeEl('span', { class: 'kbd', text: button.dataset.shortcut }));
+    }
+
     // preferBelow: a function, so it is read when the tip shows (the toolbar can change sides).
     function showLabelTip(button, preferBelow) {
         clearTimeout(labelTipTimer);
         labelTipTimer = setTimeout(() => {
             const panel = button.closest('.surface');
             if (!button.isConnected || !panel || panel.hidden) return;
-            labelTipEl.replaceChildren(document.createTextNode(button.dataset.label));
-            if (button.dataset.shortcut) labelTipEl.appendChild(makeEl('span', { class: 'kbd', text: button.dataset.shortcut }));
+            fillTip(labelTipEl, button);
             labelTipEl.hidden = false;
             placePanel(labelTipEl, button.getBoundingClientRect(), preferBelow(), 4);
         }, 250);
@@ -4497,12 +4521,7 @@
 
     // Gives an icon button an accessible name and a tooltip showing its label and shortcut.
     function addLabelTip(button, label, shortcut, preferBelow) {
-        button.setAttribute('aria-label', shortcut ? `${label} (${shortcut})` : label);
-        button.dataset.label = label;
-        if (shortcut) {
-            button.dataset.shortcut = shortcut;
-            button.setAttribute('aria-keyshortcuts', shortcut);
-        }
+        nameButton(button, label, shortcut);
         button.addEventListener('click', hideLabelTip);
         button.addEventListener('mouseenter', () => showLabelTip(button, preferBelow));
         button.addEventListener('mouseleave', hideLabelTip);
@@ -4799,7 +4818,7 @@
         // The bar has the page's theme, as the toast does.
         const dark = computeDarkMode();
         ensureUi(panelOpen() && uiDark !== null ? uiDark : dark);
-        penEl.setAttribute('data-theme', dark ? 'dark' : 'light');
+        setThemeAttr(penEl, dark);
         // One button per style: the pen's own shows pressed; clicking another changes the pen. With one
         // annotation selected by click, the bar acts on it instead, as the selection toolbar would.
         const picked = selectedGroups.length === 1 && !editor ? selectedGroups[0] : null;
@@ -5411,7 +5430,7 @@
         // other theme keeps its own, and opening one later doesn't switch the toast's.
         const dark = computeDarkMode();
         ensureUi(panelOpen() && uiDark !== null ? uiDark : dark);
-        toastEl.setAttribute('data-theme', dark ? 'dark' : 'light');
+        setThemeAttr(toastEl, dark);
         const nextIcon = phosphorIcon(icon);
         toastIcon.replaceWith(nextIcon);
         toastIcon = nextIcon;
@@ -6188,7 +6207,7 @@
     const panelChecked = new Set();   // the groups ticked in the list; the eraser in the header erases them
 
     function setPanelTheme(dark) {
-        panelEl.setAttribute('data-theme', dark ? 'dark' : 'light');
+        setThemeAttr(panelEl, dark);
         schedulePanelRefresh();   // the color bars follow the theme
     }
 
@@ -6565,7 +6584,7 @@
         if (!running) return;
         const dark = computeDarkMode();
         ensureUi(dark);
-        everythingEl.setAttribute('data-theme', dark ? 'dark' : 'light');
+        setThemeAttr(everythingEl, dark);
         if (everythingEl.hidden) {
             const focused = document.activeElement;
             everythingReturnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
@@ -6868,24 +6887,29 @@
         }
     });
     // --- Shortcut guide (Alt+Shift+H) ---
-    const SHORTCUT_GUIDE = [
-        ['Alt+1 / Alt+2 / Alt+H', 'Highlight in cyan / magenta / yellow'],
-        ['Alt+U / Alt+S', 'Underline / strike through'],
-        ['Alt+N', 'Add or edit a note'],
-        ['Alt+L', 'Pin the note preview'],
-        ['Alt+D', 'Delete the annotation (note first)'],
-        ['Alt+Shift+D', 'Clear every annotation on the page'],
-        ['Alt+Z / Alt+Y', 'Undo / redo'],
-        ['Alt+V', 'Hide or show annotations'],
-        ['Alt+P', 'Pen mode'],
-        ['Alt+T', 'Selection toolbar on or off'],
-        ['Alt+J / Alt+K', 'Jump to the next / previous annotation'],
-        ['Alt+O', 'Annotations of this page'],
-        ['Alt+Shift+O', 'Search every page'],
-        ['Alt+Shift+M', 'Show or hide the menu'],
-        ['Alt+Shift+K', 'Shortcuts on or off'],
-        ['Alt+Shift+H', 'This guide']
-    ];
+    // The rows that follow STYLES (their keys, their color names) are built when the guide opens, so they cannot drift from it.
+    function shortcutGuide() {
+        const keys = (type) => Object.keys(STYLES).filter(k => !STYLES[k].retired && STYLES[k].shortcut && (type === 'highlight') === (STYLES[k].type === 'highlight'));
+        const highlights = keys('highlight'), lines = keys('line');
+        return [
+            [highlights.map(shortcutText).join(' / '), `Highlight in ${highlights.map(k => styleLabel(k).split(' ')[0].toLowerCase()).join(' / ')}`],
+            [lines.map(shortcutText).join(' / '), 'Underline / strike through'],
+            ['Alt+N', 'Add or edit a note'],
+            ['Alt+L', 'Pin the note preview'],
+            ['Alt+D', 'Delete the annotation (note first)'],
+            ['Alt+Shift+D', 'Clear every annotation on the page'],
+            ['Alt+Z / Alt+Y', 'Undo / redo'],
+            ['Alt+V', 'Hide or show annotations'],
+            ['Alt+P', 'Pen mode'],
+            ['Alt+T', 'Selection toolbar on or off'],
+            ['Alt+J / Alt+K', 'Jump to the next / previous annotation'],
+            ['Alt+O', 'Annotations of this page'],
+            ['Alt+Shift+O', 'Search every page'],
+            ['Alt+Shift+M', 'Show or hide the menu'],
+            ['Alt+Shift+K', 'Shortcuts on or off'],
+            ['Alt+Shift+H', 'This guide']
+        ];
+    }
 
     const helpTitle = makeEl('div', { class: 'panel-count' });
     const helpClose = makeButton({ icon: phosphorIcon('x') });
@@ -6904,7 +6928,7 @@
         if (!running) return;
         const dark = computeDarkMode();
         ensureUi(dark);
-        helpEl.setAttribute('data-theme', dark ? 'dark' : 'light');
+        setThemeAttr(helpEl, dark);
         if (helpEl.hidden) {
             const focused = document.activeElement;
             helpReturnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
@@ -6912,7 +6936,7 @@
             hideNoteCard();
         }
         helpTitle.textContent = 'Shortcuts';
-        helpBody.replaceChildren(...SHORTCUT_GUIDE.map(([a, b]) => makeEl('div', { class: 'help-row' }, [
+        helpBody.replaceChildren(...shortcutGuide().map(([a, b]) => makeEl('div', { class: 'help-row' }, [
             makeEl('span', { class: 'help-key', text: a }),
             makeEl('span', { class: 'help-text', text: b })
         ])));
@@ -6964,8 +6988,7 @@
         clearTimeout(menuTipTimer);
         menuTipTimer = setTimeout(() => {
             if (!button.isConnected || menuEl.hidden) return;
-            menuTip.replaceChildren(document.createTextNode(button.dataset.label));
-            if (button.dataset.shortcut) menuTip.appendChild(makeEl('span', { class: 'kbd', text: button.dataset.shortcut }));
+            fillTip(menuTip, button);
             menuTip.hidden = false;
             const r = button.getBoundingClientRect(), t = menuTip.getBoundingClientRect();
             const below = r.bottom + 8 + t.height <= window.innerHeight;
@@ -6982,9 +7005,7 @@
 
     function menuButton(label, shortcut, icon, onClick) {
         const b = makeButton({ icon });
-        b.setAttribute('aria-label', shortcut ? `${label} (${shortcut})` : label);
-        b.dataset.label = label;
-        if (shortcut) { b.dataset.shortcut = shortcut; b.setAttribute('aria-keyshortcuts', shortcut); }
+        nameButton(b, label, shortcut);
         b.addEventListener('click', () => { hideMenuTip(); onClick(); renderSiteMenu(); });
         b.addEventListener('mouseenter', () => showMenuTip(b));
         b.addEventListener('mouseleave', hideMenuTip);
@@ -7007,9 +7028,7 @@
     addMenuTip(menuExpand, 'Expand');
 
     function addMenuTip(b, label, shortcut) {
-        b.setAttribute('aria-label', shortcut ? `${label} (${shortcut})` : label);
-        b.dataset.label = label;
-        if (shortcut) b.dataset.shortcut = shortcut;
+        nameButton(b, label, shortcut);
         b.addEventListener('mouseenter', () => showMenuTip(b));
         b.addEventListener('mouseleave', hideMenuTip);
         b.addEventListener('click', hideMenuTip);
@@ -7047,7 +7066,7 @@
         hideBtn.setAttribute('aria-label', `${hideBtn.dataset.label} (Alt+V)`);
         hideBtn.setAttribute('aria-pressed', String(!annotationsHidden));   // lit while annotations are shown (the default)
         const dark = computeDarkMode();
-        menuHost.setAttribute('data-theme', dark ? 'dark' : 'light');
+        setThemeAttr(menuHost, dark);
         const hidden = menuHiddenHere();
         menuEl.hidden = hidden;
         if (hidden) { if (menuHost.isConnected) menuHost.remove(); return; }
@@ -7059,15 +7078,26 @@
     // The saved place (shared by every site) goes on the menu, also when another tab moved it.
     // Not while it is being dragged here: it stays under the pointer until the drop.
     let menuDragging = false;
+    // Keeps the whole menu in the window (at its current size; 40px when it is not shown).
+    function clampMenuPos(left, top) {
+        const w = menuEl.offsetWidth || 40, h = menuEl.offsetHeight || 40;
+        return {
+            left: Math.max(0, Math.min(window.innerWidth - w, left)),
+            top: Math.max(0, Math.min(window.innerHeight - h, top))
+        };
+    }
     function applyMenuPos() {
         if (menuDragging) return;
         const pos = readSettings().menuPos;
-        const left = pos && Number.isFinite(pos.left) ? Math.max(0, Math.min(window.innerWidth - 40, pos.left)) : 12;
-        const top = pos && Number.isFinite(pos.top) ? Math.max(0, Math.min(window.innerHeight - 40, pos.top)) : 12;
+        const { left, top } = clampMenuPos(pos && Number.isFinite(pos.left) ? pos.left : 12, pos && Number.isFinite(pos.top) ? pos.top : 12);
         if (menuEl.style.left !== `${left}px`) menuEl.style.left = `${left}px`;
         if (menuEl.style.top !== `${top}px`) menuEl.style.top = `${top}px`;
     }
 
+    // The window shrinking, or the menu growing (it expands), pulls it back in.
+    const keepMenuInside = () => { if (menuEl.isConnected && !menuEl.hidden) applyMenuPos(); };
+    window.addEventListener('resize', keepMenuInside);
+    if (typeof ResizeObserver === 'function') new ResizeObserver(keepMenuInside).observe(menuEl);
     menuExpand.addEventListener('click', () => { menuOpen = !menuOpen; hideMenuTip(); renderSiteMenu(); });
 
     // Dragging the menu by its handle or edge moves it; the place is kept for every site.
@@ -7076,8 +7106,9 @@
         e.preventDefault();
         const dx = parseFloat(menuEl.style.left) - e.clientX, dy = parseFloat(menuEl.style.top) - e.clientY;
         const move = m => {
-            menuEl.style.left = `${Math.max(0, Math.min(window.innerWidth - 40, m.clientX + dx))}px`;
-            menuEl.style.top = `${Math.max(0, Math.min(window.innerHeight - 40, m.clientY + dy))}px`;
+            const at = clampMenuPos(m.clientX + dx, m.clientY + dy);
+            menuEl.style.left = `${at.left}px`;
+            menuEl.style.top = `${at.top}px`;
         };
         menuEl.setPointerCapture(e.pointerId);
         menuDragging = true;

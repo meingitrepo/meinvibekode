@@ -55,7 +55,7 @@
         if (!running) return;
         const dark = computeDarkMode();
         ensureUi(dark);
-        everythingEl.setAttribute('data-theme', dark ? 'dark' : 'light');
+        setThemeAttr(everythingEl, dark);
         if (everythingEl.hidden) {
             const focused = document.activeElement;
             everythingReturnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;

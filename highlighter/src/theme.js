@@ -146,6 +146,11 @@
     // is dark, so a dark code block on a light page gets them, and the page around it doesn't.
     // Panels match what they open next to (ensureUi); the page as a whole, for the toast, is
     // whatever is behind the middle of the view, not counting our own panels.
+    // The look (light or dark tokens) a UI surface takes.
+    function setThemeAttr(el, dark) {
+        el.setAttribute('data-theme', dark ? 'dark' : 'light');
+    }
+
     function computeDarkMode() {
         const x = window.innerWidth / 2;
         const y = window.innerHeight / 2;
@@ -166,7 +171,7 @@
         if (next !== darkMode) {
             darkMode = next;
             if (!panelOpen()) applyUiTheme(next);   // an open panel keeps the theme of what it is next to
-            if (!toastEl.hidden) toastEl.setAttribute('data-theme', next ? 'dark' : 'light');
+            if (!toastEl.hidden) setThemeAttr(toastEl, next);
             if (penKey) setPen(penKey);
             renderSiteMenu();
         }

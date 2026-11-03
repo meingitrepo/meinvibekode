@@ -18,7 +18,7 @@
         // The bar has the page's theme, as the toast does.
         const dark = computeDarkMode();
         ensureUi(panelOpen() && uiDark !== null ? uiDark : dark);
-        penEl.setAttribute('data-theme', dark ? 'dark' : 'light');
+        setThemeAttr(penEl, dark);
         // One button per style: the pen's own shows pressed; clicking another changes the pen. With one
         // annotation selected by click, the bar acts on it instead, as the selection toolbar would.
         const picked = selectedGroups.length === 1 && !editor ? selectedGroups[0] : null;

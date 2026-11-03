@@ -8,6 +8,7 @@ const info = page => page.evaluate(() => { const t = window.__hl.toastEl; return
 (async () => {
   const browser = await L.launch();
   const { page } = await L.open(browser, { html: HTML });
+  await L.openMenu(page);   // the pen bar shows only in the open menu; collapsed, the pen still draws
   await L.altKey(page, 'p'); await page.waitForTimeout(300);
   const penOn = await L.toast(page);
   L.check('pen on: a toast, and the bar shows it', penOn !== null && await page.evaluate(() => !window.__hl.penEl.hidden), penOn);

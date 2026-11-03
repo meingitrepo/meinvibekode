@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.108
+// @version      9.109
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -4635,9 +4635,12 @@
         const arrow = 'M0.5,0.5V16.3L4.5,12.5L7.2,18.3L9.3,17.4L6.9,11.9H11.4Z';
         const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="19" viewBox="0 0 12 19">`
             + `<path d="${arrow}" fill="${fill}" stroke="#000" stroke-width="1" stroke-linejoin="round"/></svg>`;
-        penCursorStyle.textContent = `html, html * { cursor: url("data:image/svg+xml,${encodeURIComponent(svg)}") 0 0, default !important; }`;
+        // image-set at the device pixel ratio: Windows doesn't scale its cursor with display scaling, a plain url() image is scaled up by it.
+        penCursorStyle.textContent = `html, html * { cursor: image-set(url("data:image/svg+xml,${encodeURIComponent(svg)}") ${window.devicePixelRatio}x) 0 0, default !important; }`;
         (document.head || document.documentElement).appendChild(penCursorStyle);
     }
+
+    window.addEventListener('resize', () => { if (penKey) updatePenCursor(computeDarkMode()); });   // page zoom changes the ratio
 
     // Turns the pen on with style `key`, or off (null). Its bar shows in the sticky menu (see renderSiteMenu).
     function setPen(key) {

@@ -11,6 +11,10 @@ async function follows(browser) {
   await L.altKey(p, 'p');
   const yellow = await cursorOf(p, '#p1');
   check('the pen on shows an SVG cursor in the style color', /image\/svg\+xml/.test(yellow) && /#EFD98A/i.test(yellow), yellow);
+  // The system arrow is not scaled by Windows display scaling, so the image must map one image pixel to one device pixel.
+  const res = /\)\s+([\d.]+)(?:dppx|x)\)/.exec(yellow);
+  const dpr = await p.evaluate(() => devicePixelRatio);
+  check('the cursor image is declared at the device pixel ratio', !!res && Math.abs(+res[1] - dpr) < 0.01, { res: res && res[1], dpr, yellow });
   check('over a link too', /image\/svg\+xml/.test(await cursorOf(p, '#a')), await cursorOf(p, '#a'));
   await L.altKey(p, 'u');
   const under = await cursorOf(p, '#p1');

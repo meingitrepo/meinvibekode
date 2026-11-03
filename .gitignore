@@ -1,6 +1,7 @@
 node_modules/
 .cache/
-.claude/worktrees/
+.claude/
+CLAUDE.md
 test-results/
 playwright-report/
 *.log

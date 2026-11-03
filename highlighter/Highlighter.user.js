@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.89
+// @version      9.90
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -4071,6 +4071,11 @@
         .toast:focus-visible { outline: 2px solid var(--focus); }
         /* The pen's bar, centred at the top of the view. */
         .sitemenu-pen { display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); }
+        /* Turning the pen on reveals the bar (and its divider): a short fade, sliding in from the menu. */
+        @keyframes highlighter-pen-in { from { opacity: 0; transform: translateX(-6px); } }
+        .sitemenu-pen:not([hidden]) { animation: highlighter-pen-in var(--duration-normal) var(--ease-out); }
+        .sitemenu-inner > .divider:has(+ .sitemenu-pen:not([hidden])) { animation: highlighter-pen-in var(--duration-normal) var(--ease-out); }
+        @media (prefers-reduced-motion: reduce) { .sitemenu-pen, .sitemenu-inner > .divider { animation: none !important; } }
         /* The sticky menu: the site switch, with a row of icon buttons expanding to its right. */
         .sitemenu { display: flex; align-items: center; padding: 4px; width: max-content; cursor: grab; }
         .sitemenu .btn { cursor: pointer; }

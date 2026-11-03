@@ -12,6 +12,7 @@ const seen = page => page.evaluate(() => window.__hl.penEl.checkVisibility());
   L.check('pen on, menu collapsed: bar hidden, pen on', !(await seen(page)) && await page.evaluate(() => !!window.__hl.penKey), null);
   await L.openMenu(page);
   L.check('menu open: bar shown', await seen(page), null);
+  L.check('the bar eases in when it is revealed (animation on the bar and its divider)', await page.evaluate(() => { const r = window.__hl; return getComputedStyle(r.penEl).animationName === 'highlighter-pen-in' && getComputedStyle(r.penEl.previousElementSibling).animationName === 'highlighter-pen-in'; }), await page.evaluate(() => getComputedStyle(window.__hl.penEl).animationName));
   L.check('the bar is inside the menu', await page.evaluate(() => window.__hl.menuEl.contains(window.__hl.penEl)), null);
   L.check('the bar takes the menu theme', await page.evaluate(() => { const h = window.__hl.menuEl.getRootNode().host; return !window.__hl.penEl.hasAttribute('data-theme') || window.__hl.penEl.getAttribute('data-theme') === h.getAttribute('data-theme'); }), null);
   // Roving focus with the arrow keys works in the menu's own root.

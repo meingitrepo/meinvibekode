@@ -73,12 +73,12 @@
     // larger than the magnifying glass and some smaller. [scale, dx, dy] resizes the icon's ink box about
     // its centre and moves that centre to 128,128 (measured by tools/icon-optics.js --ref magnifying-glass).
     // Done in the viewBox, not a wrapping <g>: tests and CSS address `svg > path.ic`, and under/over follow.
-    // Left out on purpose: the carets and dots-six-vertical are small by design, and
-    // icons that swap in place share one entry (eye/eye-slash, keyboard/keyboard-slash, push-pin/-fill)
-    // so the swap does not jump in size.
+    // Left out on purpose: the carets and dots-six-vertical are small by design; highlighter, text-underline and
+    // text-strikethrough look wrong scaled (sparse or narrow ink box, and scaling thickens the stroke under the
+    // colored shape). Icons that swap in place share one entry (eye/eye-slash, keyboard/keyboard-slash,
+    // push-pin/-fill) so the swap does not jump in size.
     const PIN_FIT = [1, -8, 8], EYE_FIT = [1.066, 0, 0], KEYBOARD_FIT = [1.104, 0, 0];
     const ICON_FIT = {
-        'highlighter': [0.914, -8, 12], 'text-underline': [1.288, 0, -12], 'text-strikethrough': [1.137, 0, 0],
         'check': [1.235, -4, -8], 'x': [1.15, 0, 0], 'note': [1.088, 0, 0], 'pencil-simple': [1.043, -4, 4],
         'eraser': [1.044, 0, 0], 'trash': [1.044, 0, 8], 'check-square': [1.088, 0, 0], 'square': [1.088, 0, 0],
         'copy': [1.088, 0, 0], 'list-checks': [1.137, 0, 0], 'warning': [0.985, 0, 4], 'power': [1.112, 0, -4],

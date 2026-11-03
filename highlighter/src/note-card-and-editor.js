@@ -205,6 +205,7 @@
     }
 
     function onMouseMove(e) {
+        if (pointerIsDown && e.buttons === 0 && lastPointerType === 'mouse') releasePointerHold();
         if (isUiEvent(e)) return;
         pointer = { x: e.clientX, y: e.clientY };
         if (selectPreview && markNear(e.clientX, e.clientY)) selectPreview = false;   // the pointer takes over

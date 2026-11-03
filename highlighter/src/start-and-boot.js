@@ -7,6 +7,14 @@
         hideToolbar();
     }
 
+    // A release over an iframe or outside the window never reaches this document: the window losing
+    // focus, or the mouse moving with no button down, ends the hold.
+    function releasePointerHold() {
+        if (!pointerIsDown) return;
+        pointerIsDown = false;
+        scheduleToolbar();
+    }
+
     function onPointerUp(e) {
         pointerIsDown = false;
         if (isUiEvent(e)) return;
@@ -70,6 +78,8 @@
         listen(window, 'keyup', onKeyUpOrPress, true);
         listen(window, 'keypress', onKeyUpOrPress, true);
         listen(window, 'blur', releaseAccessKeys);
+        listen(window, 'blur', releasePointerHold);
+        listen(window, 'blur', () => swallowedCodes.clear());
         teardown.push(releaseAccessKeys);
         listen(document, 'mousedown', onMouseDown);
         listen(document, 'mouseover', onMouseOver, true);

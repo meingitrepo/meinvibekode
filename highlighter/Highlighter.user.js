@@ -3482,6 +3482,7 @@
         return e.altKey && !e.ctrlKey && !e.metaKey && !isUiEvent(e) && !isEditableTarget(e);
     }
 
+    const swallowedCodes = new Set();   // keys whose keydown was kept from the site, for their keyup and keypress
     function toggleKeysSwitch() {
         const off = !keysSwitchedOff();
         setKeysSwitchedOff(off);
@@ -3495,19 +3496,36 @@
         if (e.altKey && e.shiftKey && e.code === 'KeyK' && !e.ctrlKey && !e.metaKey && !e.repeat) {
             e.preventDefault();
             e.stopPropagation();
+            swallowedCodes.add(e.code);
             toggleKeysSwitch();
             return;
         }
         if (e.altKey && keysSwitchedOff()) return;
         if (e.key === 'Alt' && !e.ctrlKey && !e.metaKey) holdAccessKeys();
+        const wasPrevented = e.defaultPrevented;
         ourKey(e);
-        if (isSiteAltKey(e)) e.stopImmediatePropagation();
+        // An Alt key we acted on (or that a dialog of ours covers) is not the site's; any other still is.
+        if (isSiteAltKey(e) && (!helpEl.hidden || !everythingEl.hidden || (e.defaultPrevented && !wasPrevented))) {
+            swallowedCodes.add(e.code);
+            e.stopImmediatePropagation();
+        }
     }
 
-    // The rest of an Alt key press stays away from the site too.
+    // The rest of that Alt key press stays away from the site too.
     function onKeyUpOrPress(e) {
         if (e.type === 'keyup' && e.key === 'Alt') releaseAccessKeys();
-        if (isSiteAltKey(e) && !keysSwitchedOff()) e.stopImmediatePropagation();
+        if (!swallowedCodes.has(e.code)) return;
+        if (e.type === 'keyup') swallowedCodes.delete(e.code);
+        e.stopImmediatePropagation();
+    }
+
+    function trapTab(panel, e) {
+        const stops = Array.from(panel.querySelectorAll('button, input, [tabindex]')).filter(el => !el.disabled && !el.hidden && el.tabIndex >= 0 && el.getClientRects().length);
+        e.preventDefault();
+        if (!stops.length) return;
+        const at = stops.indexOf(uiRoot.activeElement);
+        const next = e.shiftKey ? (at <= 0 ? stops[stops.length - 1] : stops[at - 1]) : (at < 0 || at === stops.length - 1 ? stops[0] : stops[at + 1]);
+        next.focus({ preventScroll: true });
     }
 
     function ourKey(e) {
@@ -3517,16 +3535,9 @@
             closeEverything();
             return;
         }
-        // Tab stays inside everything saved, as in a modal dialog.
-        if (e.key === 'Tab' && !everythingEl.hidden) {
-            const stops = Array.from(everythingEl.querySelectorAll('button, input, [tabindex]')).filter(el => !el.disabled && !el.hidden && el.tabIndex >= 0 && el.getClientRects().length);
-            if (!stops.length) { e.preventDefault(); return; }
-            const at = stops.indexOf(uiRoot.activeElement);
-            const next = e.shiftKey ? (at <= 0 ? stops[stops.length - 1] : stops[at - 1]) : (at < 0 || at === stops.length - 1 ? stops[0] : stops[at + 1]);
-            e.preventDefault();
-            next.focus({ preventScroll: true });
-            return;
-        }
+        // Tab stays inside the shortcut guide (on top) or everything saved, as in a modal dialog.
+        if (e.key === 'Tab' && !helpEl.hidden) { trapTab(helpEl, e); return; }
+        if (e.key === 'Tab' && !everythingEl.hidden) { trapTab(everythingEl, e); return; }
         // The shortcut guide dialog: Esc closes it, nothing else of ours acts under it.
         if (e.key === 'Escape' && !helpEl.hidden) { e.preventDefault(); closeHelp(); return; }
         if (!helpEl.hidden && !(e.altKey && e.shiftKey && e.code === 'KeyH')) return;
@@ -5096,6 +5107,7 @@
     }
 
     function onMouseMove(e) {
+        if (pointerIsDown && e.buttons === 0 && lastPointerType === 'mouse') releasePointerHold();
         if (isUiEvent(e)) return;
         pointer = { x: e.clientX, y: e.clientY };
         if (selectPreview && markNear(e.clientX, e.clientY)) selectPreview = false;   // the pointer takes over
@@ -7256,6 +7268,14 @@
         hideToolbar();
     }
 
+    // A release over an iframe or outside the window never reaches this document: the window losing
+    // focus, or the mouse moving with no button down, ends the hold.
+    function releasePointerHold() {
+        if (!pointerIsDown) return;
+        pointerIsDown = false;
+        scheduleToolbar();
+    }
+
     function onPointerUp(e) {
         pointerIsDown = false;
         if (isUiEvent(e)) return;
@@ -7319,6 +7339,8 @@
         listen(window, 'keyup', onKeyUpOrPress, true);
         listen(window, 'keypress', onKeyUpOrPress, true);
         listen(window, 'blur', releaseAccessKeys);
+        listen(window, 'blur', releasePointerHold);
+        listen(window, 'blur', () => swallowedCodes.clear());
         teardown.push(releaseAccessKeys);
         listen(document, 'mousedown', onMouseDown);
         listen(document, 'mouseover', onMouseOver, true);

@@ -34,8 +34,9 @@ async function run(browser) {
   await alt(p, 'h');
   await alt(p, 'n');
   await alt(p, 'd', true);
+  check('keys on: no site access key or Alt handler runs for a key we act on', (await site(p)).length === 0 && (await L.wr(p)).length === 0, null);
   await alt(p, 'u');
-  check('keys on: no site Alt key runs, used by us or not', (await site(p)).length === 0 && (await L.wr(p)).length === 0, null);
+  check('an Alt key we do nothing with still reaches the site (input-keys)', JSON.stringify(await site(p)) === '["js U"]', null);
   await alt(p, 'f');
   check('nor a field\'s access key', await p.evaluate(() => document.activeElement.id) !== 'f', null);
   check('the access keys are back after Alt is let go', await p.evaluate(() => document.querySelectorAll('[accesskey]').length) === 6, null);

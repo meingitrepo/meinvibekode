@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const L = require('./lib');
-const html = fs.readFileSync(path.join(__dirname, 'playground.html'), 'utf8').replace('<p>The quick brown fox', '<p id="fox">The quick brown fox');
+const html = fs.readFileSync(path.join(__dirname, 'playground.html'), 'utf8');
 (async () => {
   const b = await L.launch();
   const { page } = await L.open(b, { html });

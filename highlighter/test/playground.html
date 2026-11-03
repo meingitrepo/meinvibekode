@@ -5,47 +5,67 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Highlighter playground</title>
 <style>
-  :root { --bg: #ffffff; --fg: #1d1d1f; --muted: #666; --line: #ddd; --box: #f6f6f8; --link: #0b57d0; }
-  html.dark { --bg: #16171a; --fg: #e6e6e6; --muted: #9a9a9a; --line: #333; --box: #202226; --link: #8ab4f8; }
-  html { background: var(--bg); color: var(--fg); }
-  body { font: 17px/1.6 Georgia, "Times New Roman", serif; max-width: 760px; margin: 0 auto; padding: 24px 16px 120px; }
-  h1 { font: 600 26px system-ui, sans-serif; margin: 0 0 4px; }
-  h2 { font: 600 19px system-ui, sans-serif; margin: 48px 0 8px; padding-top: 12px; border-top: 2px solid var(--line); scroll-margin-top: 48px; }
-  h2 .n { display: inline-block; min-width: 2.2em; padding: 0 6px; margin-right: 8px; border-radius: 6px; background: var(--fg); color: var(--bg); text-align: center; }
-  h3 { font: 600 15px system-ui, sans-serif; margin: 20px 0 4px; color: var(--muted); }
-  .hint { font: 13px/1.45 system-ui, sans-serif; color: var(--muted); margin: 0 0 10px; }
+  :root { --ink: #141413; --ink-soft: #6b6a63; --surface: #faf9f5; --surface-2: #f0eee6; --line: #dcdad0; --accent: #c96442; --link: #1f5fbf; }
+  html.dark { --ink: #f2f0e8; --ink-soft: #a09e94; --surface: #1f1e1d; --surface-2: #2b2a28; --line: #3d3b37; --accent: #e08a68; --link: #8ab4f8; }
+  html { background: var(--surface); color: var(--ink); }
+  body { font: 17px/1.6 Georgia, "Times New Roman", serif; max-width: 760px; margin: 0 auto; padding: 24px 16px 160px; }
+  h1, h2, h3, .hint, .bar { font-family: system-ui, sans-serif; }
+  h1 { font-size: 26px; font-weight: 600; margin: 0 0 4px; }
+  h2 { font-size: 19px; font-weight: 600; margin: 48px 0 8px; padding-top: 12px; border-top: 1px solid var(--line); scroll-margin-top: 56px; }
+  h2 .n { display: inline-block; min-width: 2.4em; padding: 0 6px; margin-right: 8px; border-radius: 6px; background: var(--ink); color: var(--surface); text-align: center; }
+  h3 { font-size: 15px; font-weight: 600; margin: 20px 0 4px; color: var(--ink-soft); }
+  .hint { font-size: 13px; line-height: 1.45; color: var(--ink-soft); margin: 0 0 10px; }
   a { color: var(--link); }
-  .bar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 0; background: var(--bg); border-bottom: 1px solid var(--line); font: 13px system-ui, sans-serif; }
-  .bar button { font: inherit; padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--box); color: var(--fg); cursor: pointer; }
+  .bar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 0; background: var(--surface); border-bottom: 1px solid var(--line); font-size: 13px; }
+  button { font: 13px system-ui, sans-serif; padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); color: var(--ink); cursor: pointer; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .bar nav a { margin-right: 6px; }
-  .box { background: var(--box); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; }
+  .box { background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; }
   .darkbox { background: #1b1d22; color: #e8e8e8; border-radius: 8px; padding: 8px 14px; }
   .darkbox a { color: #8ab4f8; }
   .lightbox { background: #fffdf5; color: #222; border-radius: 8px; padding: 8px 14px; }
   .wide { white-space: nowrap; overflow-x: auto; }
   .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 600px) { .cols { grid-template-columns: 1fr; } }
+  .multi { column-count: 2; column-gap: 24px; }
+  @media (max-width: 600px) { .cols { grid-template-columns: 1fr; } .multi { column-count: 1; } }
   table { border-collapse: collapse; width: 100%; font-size: 15px; }
   td, th { border: 1px solid var(--line); padding: 4px 8px; text-align: left; }
-  code { font: 14px ui-monospace, Menlo, Consolas, monospace; background: var(--box); padding: 1px 4px; border-radius: 4px; }
+  code, pre { font: 14px ui-monospace, Menlo, Consolas, monospace; background: var(--surface-2); border-radius: 4px; }
+  code { padding: 1px 4px; }
+  pre { padding: 8px 14px; margin: 0; overflow-x: auto; }
+  blockquote { margin: 8px 0; padding-left: 14px; border-left: 3px solid var(--accent); }
   .scroller { height: 160px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; padding: 0 14px; }
+  .scroller h4 { position: sticky; top: 0; margin: 0; padding: 4px 0; background: var(--surface); font: 600 13px system-ui, sans-serif; }
+  .float { float: left; width: 72px; height: 72px; margin: 4px 14px 4px 0; border-radius: 8px; background: var(--accent); }
+  .drop::first-letter { float: left; font-size: 3em; line-height: 0.9; padding-right: 6px; }
+  .upper { text-transform: uppercase; letter-spacing: 0.04em; }
+  .rot { transform: rotate(-2deg); }
+  .scaled { transform: scale(1.15); transform-origin: left top; margin-bottom: 24px; }
+  .zoomed { zoom: 1.4; }
+  .gap { clear: both; }
+  .pad { padding: 8px 14px; border: 1px dashed var(--line); border-radius: 8px; }
+  iframe { width: 100%; height: 90px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+  textarea, input { font: 15px system-ui, sans-serif; width: 100%; box-sizing: border-box; padding: 6px 8px; margin-top: 6px; }
+  [contenteditable] { min-height: 1.6em; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; }
+  #banner { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 4; padding: 10px 16px; background: var(--ink); color: var(--surface); font: 14px system-ui, sans-serif; text-align: center; }
+  #banner.on { display: block; }
 </style>
 </head>
 <body>
 <h1>Highlighter playground</h1>
-<p class="hint">Each section has a number. When you send a screenshot, say the section number and what you did (for example: "S5, Alt+H on the first two lines, then Alt+U on the word <em>harvest</em>"). Annotations are saved for this file's address, so they come back after a reload; Alt+Shift+Backspace clears them all.</p>
+<p class="hint">Each section has a number. When you send a screenshot, say the section number and what you did (for example: "S5, Alt+H on the first two lines, then Alt+U on the word <em>harvest</em>"). Annotations are saved for this file's address, so they come back after a reload; Alt+Shift+Backspace clears them all. From scripts: <code>pg.select('#fox', 'quick brown')</code>, <code>pg.go(5)</code>, <code>pg.theme(true)</code>.</p>
 
 <div class="bar">
   <button id="theme" type="button">Dark page</button>
   <button id="add" type="button">Add a late paragraph to S11</button>
   <span id="info"></span>
-  <nav>Jump: <a href="#s1">1</a><a href="#s2">2</a><a href="#s3">3</a><a href="#s4">4</a><a href="#s5">5</a><a href="#s6">6</a><a href="#s7">7</a><a href="#s8">8</a><a href="#s9">9</a><a href="#s10">10</a><a href="#s11">11</a><a href="#s12">12</a><a href="#s13">13</a></nav>
+  <nav id="jump">Jump: </nav>
 </div>
 
 <h2 id="s1"><span class="n">S1</span>Short text</h2>
 <p class="hint">One word, one sentence, a few words. Basic highlight, underline, strike, note.</p>
 <p>Apple. Banana. Cherry.</p>
-<p>The quick brown fox jumps over the lazy dog.</p>
+<p id="fox">The quick brown fox jumps over the lazy dog.</p>
 <p>Select <b>just these four words</b> and try each style.</p>
 
 <h2 id="s2"><span class="n">S2</span>Paragraphs</h2>
@@ -66,52 +86,12 @@
 
 <h2 id="s5"><span class="n">S5</span>Very long text</h2>
 <p class="hint">30 paragraphs. Select from Part 1 down to Part 10 (drag with scrolling, or click then Shift+click). Watch for lag while dragging and for parts of the drawing vanishing under the selection.</p>
-<h3>Part 1</h3>
-<p>The river had been rising for three days before anyone in the village thought to move the boats. By then the water lapped at the steps of the mill, and the miller's children were floating paper ships down the lane where the carts usually ran.</p>
-<p>Old Teodor said he had seen it worse, in the winter of the long frost, when the ice broke all at once and carried a whole barn past the church. Nobody believed him, but nobody argued either, because Teodor kept the only working pump.</p>
-<p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
-<h3>Part 2</h3>
-<p>Old Teodor said he had seen it worse, in the winter of the long frost, when the ice broke all at once and carried a whole barn past the church. Nobody believed him, but nobody argued either, because Teodor kept the only working pump.</p>
-<p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
-<p>When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.</p>
-<h3>Part 3</h3>
-<p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
-<p>When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.</p>
-<p>The mayor proposed a dam. The baker proposed a festival. In the end they did both, though the dam was smaller than promised and the festival was larger, and only one of them is still remembered fondly.</p>
-<h3>Part 4</h3>
-<p>When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.</p>
-<p>The mayor proposed a dam. The baker proposed a festival. In the end they did both, though the dam was smaller than promised and the festival was larger, and only one of them is still remembered fondly.</p>
-<p>Letters came from the city asking for photographs of the flood line. The postmistress sent back a drawing instead, because the only camera in the village belonged to the priest, and he used it exclusively for weddings.</p>
-<h3>Part 5</h3>
-<p>The mayor proposed a dam. The baker proposed a festival. In the end they did both, though the dam was smaller than promised and the festival was larger, and only one of them is still remembered fondly.</p>
-<p>Letters came from the city asking for photographs of the flood line. The postmistress sent back a drawing instead, because the only camera in the village belonged to the priest, and he used it exclusively for weddings.</p>
-<p>The river had been rising for three days before anyone in the village thought to move the boats. By then the water lapped at the steps of the mill, and the miller's children were floating paper ships down the lane where the carts usually ran.</p>
-<h3>Part 6</h3>
-<p>Letters came from the city asking for photographs of the flood line. The postmistress sent back a drawing instead, because the only camera in the village belonged to the priest, and he used it exclusively for weddings.</p>
-<p>The river had been rising for three days before anyone in the village thought to move the boats. By then the water lapped at the steps of the mill, and the miller's children were floating paper ships down the lane where the carts usually ran.</p>
-<p>Old Teodor said he had seen it worse, in the winter of the long frost, when the ice broke all at once and carried a whole barn past the church. Nobody believed him, but nobody argued either, because Teodor kept the only working pump.</p>
-<h3>Part 7</h3>
-<p>The river had been rising for three days before anyone in the village thought to move the boats. By then the water lapped at the steps of the mill, and the miller's children were floating paper ships down the lane where the carts usually ran.</p>
-<p>Old Teodor said he had seen it worse, in the winter of the long frost, when the ice broke all at once and carried a whole barn past the church. Nobody believed him, but nobody argued either, because Teodor kept the only working pump.</p>
-<p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
-<h3>Part 8</h3>
-<p>Old Teodor said he had seen it worse, in the winter of the long frost, when the ice broke all at once and carried a whole barn past the church. Nobody believed him, but nobody argued either, because Teodor kept the only working pump.</p>
-<p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
-<p>When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.</p>
-<h3>Part 9</h3>
-<p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
-<p>When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.</p>
-<p>The mayor proposed a dam. The baker proposed a festival. In the end they did both, though the dam was smaller than promised and the festival was larger, and only one of them is still remembered fondly.</p>
-<h3>Part 10</h3>
-<p>When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.</p>
-<p>The mayor proposed a dam. The baker proposed a festival. In the end they did both, though the dam was smaller than promised and the festival was larger, and only one of them is still remembered fondly.</p>
-<p>Letters came from the city asking for photographs of the flood line. The postmistress sent back a drawing instead, because the only camera in the village belonged to the priest, and he used it exclusively for weddings.</p>
+<div id="long"></div>
 
 <h2 id="s6"><span class="n">S6</span>Long lines (zoom and resize)</h2>
-<p class="hint">Annotate inside these, then zoom (Ctrl + / Ctrl -) and resize the window. The drawing should follow the text each frame.</p>
-<p>This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths;</p>
-<div class="box wide">This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths; This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths;</div>
-<p class="hint">The box above does not wrap; it scrolls sideways.</p>
+<p class="hint">Annotate inside these, then zoom (Ctrl + / Ctrl -) and resize the window. The drawing should follow the text each frame. The box does not wrap; it scrolls sideways.</p>
+<p data-rep="6">This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths;</p>
+<div class="box wide" data-rep="6">This line is deliberately long and has no breaks so that zooming and resizing the window reflow it across many widths;</div>
 
 <h2 id="s7"><span class="n">S7</span>Dark and light boxes</h2>
 <p class="hint">A dark box on a light page and a light box on a dark page (use the "Dark page" button at the top). Colors should suit what is behind each annotation.</p>
@@ -139,11 +119,14 @@
 </div>
 
 <h2 id="s10"><span class="n">S10</span>Scrolling box</h2>
-<p class="hint">Annotate inside, then scroll the box. The drawing should move with the text and be clipped at the box's edge.</p>
-<div class="scroller"><p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
-<p>When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.</p>
-<p>The mayor proposed a dam. The baker proposed a festival. In the end they did both, though the dam was smaller than promised and the festival was larger, and only one of them is still remembered fondly.</p>
-<p>Letters came from the city asking for photographs of the flood line. The postmistress sent back a drawing instead, because the only camera in the village belonged to the priest, and he used it exclusively for weddings.</p></div>
+<p class="hint">Annotate inside, then scroll the box. The drawing should move with the text and be clipped at the box's edge. The grey heading sticks to the top.</p>
+<div class="scroller" id="scroller">
+  <h4>Sticky heading</h4>
+  <p>In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.</p>
+  <p>When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.</p>
+  <p>The mayor proposed a dam. The baker proposed a festival. In the end they did both, though the dam was smaller than promised and the festival was larger, and only one of them is still remembered fondly.</p>
+  <p>Letters came from the city asking for photographs of the flood line. The postmistress sent back a drawing instead, because the only camera in the village belonged to the priest, and he used it exclusively for weddings.</p>
+</div>
 
 <h2 id="s11"><span class="n">S11</span>Text that loads late</h2>
 <p class="hint">Annotate a paragraph added by the button, reload, then press the button again: the annotation should come back when the text arrives.</p>
@@ -160,26 +143,155 @@
 <p dir="rtl" lang="ar">هذا نص عربي قصير لتجربة الاتجاه من اليمين إلى اليسار.</p>
 <p>Hyphen-ated words, «quotes», “curly quotes”, and a very­long­word­with­soft­hyphens.</p>
 
+<h2 id="s14"><span class="n">S14</span>Page changes without a reload</h2>
+<p class="hint">Single-page apps swap the text and the address without loading a page. Annotate view 1, switch views, go Back: each view keeps its own annotations.</p>
+<p><button type="button" data-route="1">View 1</button> <button type="button" data-route="2">View 2</button> <button type="button" data-route="3">View 3</button> <span id="where"></span></p>
+<div id="view" class="pad"></div>
+
+<h2 id="s15"><span class="n">S15</span>Shadow DOM</h2>
+<p class="hint">Text inside an open shadow root. Selecting it should do nothing harmful.</p>
+<div id="shadow-host"></div>
+
+<h2 id="s16"><span class="n">S16</span>Frame</h2>
+<p class="hint">A same-origin iframe. The highlighter does not reach into it; the text around it must still work.</p>
+<p>Text just before the frame.</p>
+<iframe id="frame" title="Frame" srcdoc="<body style='font:16px Georgia;margin:12px'><p>Text inside the frame.</p></body>"></iframe>
+<p>Text just after the frame.</p>
+
+<h2 id="s17"><span class="n">S17</span>Editable fields</h2>
+<p class="hint">Typing and selecting in fields must never be treated as annotating. Alt+H inside them should leave the text alone.</p>
+<div id="edit" contenteditable="true">Editable paragraph. Click and type here.</div>
+<textarea id="area" rows="2">Text in a textarea.</textarea>
+<input id="field" value="Text in an input">
+
+<h2 id="s18"><span class="n">S18</span>Other scripts</h2>
+<p class="hint">Text with no spaces between words, and marks that combine with the letter before them.</p>
+<p lang="ja">吾輩は猫である。名前はまだ無い。どこで生れたかとんと見当がつかぬ。</p>
+<p lang="zh">天下大事，必作于细。千里之行，始于足下。</p>
+<p dir="rtl" lang="he">זהו משפט קצר בעברית כדי לבדוק כיוון כתיבה.</p>
+<p lang="th">ภาษาไทยเขียนติดกันโดยไม่มีช่องว่างระหว่างคำ</p>
+<p>Combining marks: e&#x301; (e + acute), n&#x303; (n + tilde), a&#x308;&#x304; (two marks), and Z&#x366;&#x34f;a&#x34f;l&#x34f;g&#x34f;o&#x34f;.</p>
+
+<h2 id="s19"><span class="n">S19</span>Floats, code and columns</h2>
+<p class="hint">A range that wraps around a float, spans a code block, or breaks across CSS columns has several rectangles.</p>
+<p class="drop"><span class="float"></span>Text wraps around the square on the left, and this paragraph starts with a drop cap. Select from the second line to the end to cover lines that begin at different offsets from the left edge.</p>
+<div class="gap"></div>
+<blockquote>A block quote, with its own left rule and a second sentence to select.</blockquote>
+<pre>function add(a, b) {
+  return a + b;   // indented code
+}</pre>
+<p class="upper">Text shown in capitals by CSS, but typed in lower case.</p>
+<p class="multi">This paragraph is set in two CSS columns, so one selection can break across the bottom of the first column and the top of the second. The river had been rising for three days before anyone in the village thought to move the boats, and by then the water lapped at the steps of the mill.</p>
+<p><ruby>漢<rt>kan</rt>字<rt>ji</rt></ruby> uses ruby annotations above the text.</p>
+
+<h2 id="s20"><span class="n">S20</span>Collapsed and hidden text</h2>
+<p class="hint">Annotate inside the closed section after opening it, close it, reload. The button reveals a paragraph that was hidden with display:none.</p>
+<details id="details"><summary>Closed section (click to open)</summary><p>Text inside a details element that starts closed.</p></details>
+<p><button id="reveal" type="button">Show hidden paragraph</button></p>
+<p id="hidden" hidden>This paragraph is hidden until the button is pressed.</p>
+
+<h2 id="s21"><span class="n">S21</span>Transformed and zoomed boxes</h2>
+<p class="hint">Annotate inside each, then compare with an annotation in plain text: the drawing must sit exactly on the words.</p>
+<div class="pad rot" id="rot"><p>This box is rotated by two degrees.</p></div>
+<div class="pad scaled" id="scaled"><p>This box is scaled up to 115 percent from its top left corner.</p></div>
+<div class="pad zoomed" id="zoomed"><p>This box uses the CSS zoom property at 140 percent.</p></div>
+
+<h2 id="s22"><span class="n">S22</span>Fixed banner</h2>
+<p class="hint">Shows a bar fixed to the bottom of the window. Annotated text scrolled under it must not be drawn over it.</p>
+<p><button id="banner-btn" type="button">Show or hide the banner</button></p>
+<div id="banner">Fixed banner: stays put while the page scrolls.</div>
+
 <script>
   (function () {
-    var root = document.documentElement, btn = document.getElementById('theme');
+    var root = document.documentElement, $ = function (id) { return document.getElementById(id); };
+    var LONG = [
+      "The river had been rising for three days before anyone in the village thought to move the boats. By then the water lapped at the steps of the mill, and the miller's children were floating paper ships down the lane where the carts usually ran.",
+      "Old Teodor said he had seen it worse, in the winter of the long frost, when the ice broke all at once and carried a whole barn past the church. Nobody believed him, but nobody argued either, because Teodor kept the only working pump.",
+      "In the evenings the schoolteacher read aloud from a book about distant cities: places with towers of glass, trains under the ground, and markets that never closed. The children listened with their boots drying by the stove.",
+      "When the water finally fell, it left a line of silt on every wall at exactly the same height, as if someone had drawn it with a ruler. For years afterwards people measured things against it: a child's growth, a dog's back, a good harvest.",
+      "The mayor proposed a dam. The baker proposed a festival. In the end they did both, though the dam was smaller than promised and the festival was larger, and only one of them is still remembered fondly.",
+      "Letters came from the city asking for photographs of the flood line. The postmistress sent back a drawing instead, because the only camera in the village belonged to the priest, and he used it exclusively for weddings."
+    ];
+    // Built here, before the userscript restores, so the text exists at document-end like the static sections.
+    var long = $('long');
+    for (var i = 0; i < 10; i++) {
+      var h = document.createElement('h3'); h.textContent = 'Part ' + (i + 1); long.appendChild(h);
+      for (var k = 0; k < 3; k++) { var p = document.createElement('p'); p.textContent = LONG[(i + k) % 6]; long.appendChild(p); }
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-rep]'), function (el) {
+      var t = el.textContent + ' '; el.textContent = new Array(+el.dataset.rep + 1).join(t);
+    });
+
+    var jump = $('jump');
+    Array.prototype.forEach.call(document.querySelectorAll('h2[id]'), function (h, j) {
+      var a = document.createElement('a'); a.href = '#' + h.id; a.textContent = j + 1; jump.appendChild(a);
+    });
+
     function setDark(on) {
       root.classList.toggle('dark', on);
-      btn.textContent = on ? 'Light page' : 'Dark page';
-      try { localStorage.setItem('playground-dark', on ? '1' : ''); } catch (e) {}
+      $('theme').textContent = on ? 'Light page' : 'Dark page';
+      try { localStorage.setItem('playground-dark', on ? '1' : ''); } catch (e) { /* storage blocked: the theme just won't persist */ }
     }
-    var saved = ''; try { saved = localStorage.getItem('playground-dark') || ''; } catch (e) {}
+    var saved = ''; try { saved = localStorage.getItem('playground-dark') || ''; } catch (e) { /* storage blocked */ }
     setDark(!!saved);
-    btn.addEventListener('click', function () { setDark(!root.classList.contains('dark')); });
-    var n = 0;
-    document.getElementById('add').addEventListener('click', function () {
-      n++;
+    $('theme').addEventListener('click', function () { setDark(!root.classList.contains('dark')); });
+
+    var lateN = 0;
+    function late() {
+      lateN++;
       var p = document.createElement('p');
-      p.textContent = 'Late paragraph ' + n + ': this text was added after the page loaded, like comments or "load more".';
-      document.getElementById('late').appendChild(p);
+      p.textContent = 'Late paragraph ' + lateN + ': this text was added after the page loaded, like comments or "load more".';
+      $('late').appendChild(p);
+    }
+    $('add').addEventListener('click', late);
+
+    var VIEWS = { 1: 'View one: the first page of a small single-page app.', 2: 'View two: different text under a different address.', 3: 'View three: the last of the three.' };
+    function show(n) {
+      $('view').textContent = VIEWS[n] || VIEWS[1];
+      $('where').textContent = location.search || '(no query)';
+      document.title = 'Highlighter playground' + (VIEWS[n] ? ' - view ' + n : '');
+    }
+    function viewOf() { var m = /view=(\d)/.exec(location.search); return m ? +m[1] : 1; }
+    function route(n) { history.pushState(null, '', '?view=' + n); show(n); }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-route]'), function (b) {
+      b.addEventListener('click', function () { route(+b.dataset.route); });
     });
-    function info() { document.getElementById('info').textContent = 'Window ' + innerWidth + ' x ' + innerHeight + ' px, pixel ratio ' + Math.round(devicePixelRatio * 100) / 100; }
+    addEventListener('popstate', function () { show(viewOf()); });
+    show(viewOf());
+
+    var host = $('shadow-host').attachShadow({ mode: 'open' });
+    host.innerHTML = '<p style="margin:0">Text inside an open shadow root.</p>';
+
+    $('reveal').addEventListener('click', function () { $('hidden').hidden = !$('hidden').hidden; });
+    $('banner-btn').addEventListener('click', function () { $('banner').classList.toggle('on'); });
+
+    function info() { $('info').textContent = 'Window ' + innerWidth + ' x ' + innerHeight + ' px, pixel ratio ' + Math.round(devicePixelRatio * 100) / 100; }
     info(); addEventListener('resize', info);
+
+    // Handles for scripted runs (shot.sh, film.sh, tests): the same actions as the buttons, plus a text selector.
+    window.pg = {
+      theme: function (on) { setDark(on === undefined ? !root.classList.contains('dark') : !!on); },
+      go: function (n) { $('s' + n).scrollIntoView(); },
+      late: late,
+      route: route,
+      fixed: function (on) { $('banner').classList.toggle('on', on === undefined ? undefined : !!on); },
+      // Selects the first occurrence of `text` inside the element matching `css`, like dragging over it.
+      select: function (css, text) {
+        var el = document.querySelector(css), w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), nodes = [], all = '', n;
+        while ((n = w.nextNode())) { nodes.push([n, all.length]); all += n.nodeValue; }
+        var a = all.indexOf(text);
+        if (a < 0) throw new Error('pg.select: "' + text + '" not found in ' + css);
+        function at(pos, end) {
+          for (var i = 0; i < nodes.length; i++) {
+            var from = nodes[i][1], len = nodes[i][0].nodeValue.length;
+            if (end ? pos <= from + len : pos < from + len) return [nodes[i][0], pos - from];
+          }
+        }
+        var s = at(a, false), e = at(a + text.length, true), r = document.createRange(), g = getSelection();
+        r.setStart(s[0], s[1]); r.setEnd(e[0], e[1]);
+        g.removeAllRanges(); g.addRange(r);
+      }
+    };
   })();
 </script>
 </body>

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.93
+// @version      9.94
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3984,12 +3984,16 @@
         .btn-subtle:hover:active .icon, .btn-subtle:active:focus-visible .icon { color: var(--ink); }
         /* Focus: a 2px ring with a 2px gap (it also shows in forced colors). */
         .btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; z-index: 1; }
-        /* The one primary action, the note editor's Save: inverted ink (paper on dark), fully rounded like every
-           other button (8px). Disabled while there is nothing to save, then as quiet as a subtle one. */
-        .btn-primary { background: var(--ink); color: var(--on-ink); border-radius: var(--radius-button); }
-        .btn-primary:hover { background: var(--ink-2); }
-        .btn-primary:hover:active, .btn-primary:active:focus-visible { background: var(--ink-pressed); }
-        .btn-primary:disabled, .btn-primary:disabled:hover, .btn-primary:disabled:active { background: transparent; color: var(--ink-disabled); cursor: not-allowed; }
+        /* The one primary action, the note editor's Save: a quiet warm tint with ink text (a solid ink fill was too
+           heavy next to the note field), rounded like every other button (8px). Disabled while there is nothing to
+           save, then a grey fill with muted text. */
+        .btn-primary { background: var(--surface-selected); color: var(--ink); border-radius: var(--radius-button); transition-property: background-color, border-color, color, transform; }
+        .btn-primary:hover { background: var(--surface-hover); }
+        /* Pressed steps to --surface-pressed and sinks 2%, so a click shows without a dark fill. */
+        .btn-primary:hover:active, .btn-primary:active:focus-visible { background: var(--surface-pressed); transform: scale(0.98); }
+        .btn-primary:focus-visible { outline-color: var(--accent); }
+        /* Disabled keeps a filled hairline-grey body so it still reads as a button. */
+        .btn-primary:disabled, .btn-primary:disabled:hover, .btn-primary:disabled:active { background: var(--line); color: var(--ink-disabled); cursor: not-allowed; transform: none; }
         /* The disabled subtle button: */
         .btn-subtle:disabled, .btn-subtle:disabled:hover, .btn-subtle:disabled:active { background: transparent; color: var(--ink-disabled); cursor: not-allowed; }
         .btn-subtle:disabled .icon, .btn-subtle:disabled:hover .icon, .btn-subtle:disabled:active .icon { color: var(--ink-disabled); }
@@ -4001,7 +4005,7 @@
         .select-box svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
         .select-box path { fill: none; stroke: currentColor; stroke-width: 1; stroke-linejoin: round; }
 
-        /* Hairline separators between button groups (pen bar, menu). */
+        /* Hairline separators between button groups (pen bar, menu). 1px is divided by the DPR so dividers paint the same width at fractional zoom. */
         .divider { flex: none; width: calc(1px / var(--dpr, 1)); height: 24px; margin: 0 round(10px, calc(1px / var(--dpr, 1))); background: var(--divider); }
 
         /* Tooltip */
@@ -4118,6 +4122,7 @@
         /* Annotations panel: a panel along the right edge, above the page. */
         .panel {
             top: 8px; left: auto; right: 8px; display: flex; flex-direction: column;
+            /* 400px wide so the selected count is not cut off in the header. */
             width: min(400px, calc(100vw - 16px)); max-height: calc(100vh - 16px); padding: 12px 0 0;
         }
         .panel-header { display: flex; align-items: center; gap: 8px; min-height: 32px; margin: -8px 8px 4px 12px; }   /* 12px left, 8px right: the icon buttons carry their own padding */

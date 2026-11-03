@@ -44,10 +44,10 @@ const state = page => page.evaluate(() => ({
   });
   let hl = await handleLook();
   L.check('the handle is a six-dot grip icon coloured like the buttons, in a narrow slot', hl.dots === 6 && hl.size === '20px' && hl.width === '14px' && hl.fill === hl.ink2 && hl.before === 'none', hl);
-  L.check('the handle fades with the calm ease-out motion', /background-color/.test(hl.transition) && !/cubic-bezier\(0\.33/.test(hl.transition), hl.transition);
+  L.check('the handle has no transition: it has no hover or pressed state', !/background-color|color/.test(hl.transition), hl.transition);
   const hdr = await rectOf(page, 'menuHandle'); await page.mouse.move(hdr.left + hdr.width / 2, hdr.top + hdr.height / 2); await page.waitForTimeout(300);
   hl = await handleLook();
-  L.check('hovering the handle lights it like a button', hl.bg === hl.hover && hl.fill === hl.ink, hl);
+  L.check('hovering the handle changes nothing', hl.bg !== hl.hover && hl.fill === hl.ink2, hl);
   await page.mouse.move(600, 600); await page.waitForTimeout(300);
   await page.emulateMedia({ forcedColors: 'active' }); await page.waitForTimeout(300);
   hl = await handleLook();

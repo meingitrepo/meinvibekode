@@ -326,10 +326,7 @@
         .sitemenu { display: flex; align-items: center; padding: 4px; width: max-content; cursor: grab; }
         .sitemenu .btn { cursor: pointer; }
         /* A grip icon, coloured and lit like the icon buttons but narrower: the icon's empty sides overflow. */
-        .sitemenu-handle { display: flex; align-items: center; justify-content: center; align-self: stretch; width: 14px; overflow: hidden; border-radius: var(--radius-button); color: var(--ink-2); cursor: grab; transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); }
-        .sitemenu-handle:hover { background: var(--surface-hover); color: var(--ink); }
-        .sitemenu-handle:active { background: var(--surface-pressed); color: var(--ink); }
-        @media (prefers-reduced-motion: reduce) { .sitemenu-handle { transition: none; } }
+        .sitemenu-handle { display: flex; align-items: center; justify-content: center; align-self: stretch; width: 14px; overflow: hidden; border-radius: var(--radius-button); color: var(--ink-2); cursor: grab; }
         .sitemenu-expand { display: flex; justify-content: center; margin-left: 2px; }
         .sitemenu-expand .btn { width: 24px; }
         .sitemenu-expand .icon { transform: rotate(-90deg); transition: transform var(--duration-normal) var(--ease-out); }

@@ -213,6 +213,7 @@
             pushLimited(undoStack, before);
             redoStack.length = 0;
             step = before;
+            dropToastLink();   // an older deletion's link would now undo this change
         }
         saveHighlights(after.records);
         scheduleRedraw();
@@ -246,12 +247,15 @@
     }
 
     // Undo moves a state from undoStack to the page and the page's state to redoStack; redo the reverse.
+    // Returns the page's state it set aside (the toast's link checks it is still on top).
     function stepHistory(from, to) {
         const state = from.pop();
-        if (!state) return;
+        if (!state) return null;
         setAnnotationsHidden(false);
-        pushLimited(to, captureState());
+        const current = captureState();
+        pushLimited(to, current);
         applyState(state);
+        return current;
     }
 
     // Each says what it did and offers the opposite, as a link.
@@ -282,7 +286,7 @@
             unwrapAll();
         });
         startLateWatcher();
-        if (step) offerUndo(doneText('erased', erased));
+        if (step) offerUndo(doneText('erased', erased), step);
     }
 
     // Annotations of a style that no longer exists aren't missing, only hidden, and those made on

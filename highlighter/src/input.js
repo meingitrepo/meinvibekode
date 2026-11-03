@@ -33,9 +33,8 @@
     function removeInSelection({ sel, range: selected }) {
         const range = cleanRange(selected);
         const overlaps = range ? findOverlaps(range) : [];
-        if (overlaps.length && runUndoable(() => eraseOverlaps(overlaps))) {
-            offerUndo(doneText('erased', new Set(overlaps.map(o => o.wrapper.getAttribute(GROUP_ATTR))).size));
-        }
+        const step = overlaps.length && runUndoable(() => eraseOverlaps(overlaps));
+        if (step) offerUndo(doneText('erased', new Set(overlaps.map(o => o.wrapper.getAttribute(GROUP_ATTR))).size), step);
         sel.removeAllRanges();
     }
 

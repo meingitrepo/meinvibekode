@@ -9,7 +9,7 @@ const BOOT = '    start();\n    renderSiteMenu();\n    refreshMenu();';
 function instrument(src) {
   src = src.replace(/\r\n/g, '\n');
   if (!src.includes(BOOT)) throw new Error('boot anchor missing');
-  const names = ['panelEl', 'panelList', 'panelFilter', 'panelCount', 'panelCopy', 'panelErase', 'panelSelectAll', 'toastEl', 'toastText', 'noteCardEl', 'cardHint', 'cardText', 'cardPin',
+  const names = ['panelEl', 'panelList', 'panelFilter', 'panelCount', 'panelCopy', 'panelErase', 'panelSelectAll', 'toastEl', 'toastText', 'toastLink', 'noteCardEl', 'cardHint', 'cardText', 'cardPin',
     'editorEl', 'noteInput', 'uiRoot', 'uiHost', 'undoStack', 'redoStack', 'labelTipEl', 'lateWatcher', 'currentKey', 'menuIds', 'running', 'darkMode', 'hoveredWrapper', 'annotationsHidden', 'cardWrapper', 'penEl', 'penKey', 'lastStyleKey', 'everythingEl', 'everythingFilter', 'everythingList', 'everythingCount', 'everythingSelectAll', 'everythingCopy', 'everythingForget', 'everythingClose', 'selectBoxesEl', 'selectedGroups', 'shownWrappers', 'menuEl', 'menuExpand', 'menuHandle', 'menuButtons', 'menuClose', 'helpEl', 'STYLES', 'helpClose', 'pointerIsDown'];
   const get = n => `get ${n}() { try { return ${n}; } catch (e) { return undefined; } }`;
   return src.replace(BOOT, `    window.__hl = { ${names.map(get).join(', ')}, get editor() { return editor; }, get pending() { return pendingRecords; }, get jumpGroup() { return jumpGroup; },

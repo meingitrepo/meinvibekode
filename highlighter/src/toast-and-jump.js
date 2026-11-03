@@ -15,16 +15,62 @@
         toastIcon = nextIcon;
         toastEl.setAttribute('data-intent', intent);
         toastText.textContent = message;
+        dropToastLink();
         toastEl.hidden = true;
         void toastEl.offsetWidth;   // restart the entrance animation
         toastEl.hidden = false;
         startToastTimer(TOAST_MS);
     }
 
-    // A message for a change just made (Alt+Z undoes it).
-    function offerUndo(message) {
+    // A deletion's toast, with one link that toggles it: Undo brings it back and turns into Redo,
+    // Redo removes it again. `step` is what runUndoable returned; the link works only while that
+    // step (or, after Undo, the state Undo set aside) is still the top of its stack.
+    let toastUndo = null;   // { message, step, undone } while the link belongs to a deletion
+    function offerUndo(message, step) {
         showToast(message, { icon: 'eraser', intent: 'success' });
+        if (!step) return;
+        toastUndo = { message, step, undone: null };
+        setToastLink('Undo');
     }
+
+    function setToastLink(label) {
+        toastLink.textContent = label;
+        if (!toastLink.isConnected) toastEl.append(toastLink);
+    }
+
+    function dropToastLink() {
+        toastUndo = null;
+        if (toastLink === uiRoot.activeElement) toastEl.focus();
+        toastLink.remove();
+    }
+
+    // The step redraws the page (which closes the toast): the toast comes back as it was,
+    // without its entrance animation, and keeps focus on the link.
+    function toggleStep(from, to) {
+        const focused = uiRoot.activeElement === toastLink;
+        const state = stepHistory(from, to);
+        toastEl.hidden = false;
+        if (focused) toastLink.focus();
+        startToastTimer(TOAST_MS);
+        return state;
+    }
+
+    toastLink.addEventListener('click', () => {
+        const u = toastUndo;
+        if (u && !u.undone && undoStack[undoStack.length - 1] === u.step) {
+            u.undone = toggleStep(undoStack, redoStack);
+            toastText.textContent = u.message.replace(/(erased|deleted)$/, 'restored');
+            setToastLink('Redo');
+        } else if (u && u.undone && redoStack[redoStack.length - 1] === u.undone) {
+            u.step = toggleStep(redoStack, undoStack);
+            u.undone = null;
+            toastText.textContent = u.message;
+            setToastLink('Undo');
+        } else {
+            dropToastLink();   // another change came between: the link would undo the wrong thing
+        }
+        refreshMenu();
+    });
 
     // The toast stays while the pointer rests on it or it has focus.
     function startToastTimer(ms) {

@@ -47,6 +47,7 @@
 
     let toastIcon = phosphorIcon('info');   // replaced per message
     const toastText = makeEl('div', { class: 'toast-text' });
+    const toastLink = makeEl('button', { class: 'toast-link', type: 'button' });   // Undo/Redo for a deletion; in the toast only then
     const toastContent = makeEl('div', { class: 'toast-content' }, [toastText]);
     const toastEl = makeEl('div', { class: 'surface toast', role: 'status', tabindex: '-1', hidden: '' }, [toastIcon, toastContent]);
 

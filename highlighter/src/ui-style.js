@@ -308,6 +308,8 @@
         .toast > .icon { flex: none; width: 16px; height: 16px; margin: 0 0 0 -2px; }   /* at the left end, 16px, as far in as an icon button's icon */
         .toast-content { flex: 1; min-width: 0; }
         .toast-text { font-weight: 400; }
+        .toast-link { flex: none; padding: 0 4px; border: 0; background: none; color: var(--ink); font: inherit; font-weight: 500; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; border-radius: var(--radius-sm); }
+        .toast-link:focus-visible { outline: 2px solid var(--focus); }
         .toast:focus-visible { outline: 2px solid var(--focus); }
         /* The pen's bar, centred at the top of the view. */
         .sitemenu-pen { display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); }

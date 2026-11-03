@@ -12,10 +12,11 @@
         syncLocation();
         closeNoteForPanel();
         if (!groupWrappers(group).length) return;
-        if (runUndoable(() => {
+        const step = runUndoable(() => {
             unwrapMany(groupWrappers(group));
             pendingRecords = pendingRecords.filter(r => recordOwner(r) !== group);
-        })) offerUndo(doneText('erased', 1));
+        });
+        if (step) offerUndo(doneText('erased', 1), step);
     }
 
     function forgetAnnotation(group) {

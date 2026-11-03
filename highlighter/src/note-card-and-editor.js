@@ -272,7 +272,8 @@
     function deleteGroupNote(group) {
         syncLocation();
         if (editor) cancelEditor();
-        if (runUndoable(() => setGroupNote(group, ''))) offerUndo('Note deleted');
+        const step = runUndoable(() => setGroupNote(group, ''));
+        if (step) offerUndo('Note deleted', step);
     }
 
     // --- Note editor ---
@@ -454,9 +455,10 @@
                 return;
             }
         }
-        if (text !== original && runUndoable(() => setGroupNote(group, text))) {
+        const saved = text !== original && runUndoable(() => setGroupNote(group, text));
+        if (saved) {
             if (text) showToast('Note saved', { icon: 'note' });
-            else offerUndo('Note deleted');
+            else offerUndo('Note deleted', saved);
         }
     }
 

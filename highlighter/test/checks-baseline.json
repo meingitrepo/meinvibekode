@@ -74,6 +74,7 @@
   "tab-panel-reattach.test.js": 2,
   "theme-guard.test.js": 5,
   "toast-cleanup.test.js": 8,
+  "toast-undo-link.test.js": 14,
   "tooltip-focus.test.js": 2,
   "trusted-types-fixes.test.js": 13,
   "typecheck.test.js": 8,

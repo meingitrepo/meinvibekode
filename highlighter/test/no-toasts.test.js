@@ -37,7 +37,8 @@ const icon = page => page.evaluate(() => window.__hl.panelCopy.querySelector('sv
   await L.selStr(page, '#p1', 'words to select'); await page.waitForTimeout(300);
   await L.altKey(page, 'd'); await page.waitForTimeout(300);
   const noLinks = async name => L.check(name + ': no button on the toast', await page.evaluate(() => !window.__hl.toastEl.querySelector('button')), null);
-  await says('erase', '1 annotation erased'); await noLinks('erase');
+  await says('erase', '1 annotation erased');
+  L.check('erase: the toast has an Undo link', await page.evaluate(() => { const b = window.__hl.toastLink; return !!b && window.__hl.toastEl.contains(b) && b.textContent === 'Undo'; }), null);
   await L.altKey(page, 'z'); await page.waitForTimeout(300);
   L.check('Alt+Z brings the annotation back', (await L.wr(page)).length === 1, await L.wr(page));
   await says('Alt+Z', 'Undo'); await noLinks('undo');

@@ -120,15 +120,26 @@
     // The saved place (shared by every site) goes on the menu, also when another tab moved it.
     // Not while it is being dragged here: it stays under the pointer until the drop.
     let menuDragging = false;
+    // Keeps the whole menu in the window (at its current size; 40px when it is not shown).
+    function clampMenuPos(left, top) {
+        const w = menuEl.offsetWidth || 40, h = menuEl.offsetHeight || 40;
+        return {
+            left: Math.max(0, Math.min(window.innerWidth - w, left)),
+            top: Math.max(0, Math.min(window.innerHeight - h, top))
+        };
+    }
     function applyMenuPos() {
         if (menuDragging) return;
         const pos = readSettings().menuPos;
-        const left = pos && Number.isFinite(pos.left) ? Math.max(0, Math.min(window.innerWidth - 40, pos.left)) : 12;
-        const top = pos && Number.isFinite(pos.top) ? Math.max(0, Math.min(window.innerHeight - 40, pos.top)) : 12;
+        const { left, top } = clampMenuPos(pos && Number.isFinite(pos.left) ? pos.left : 12, pos && Number.isFinite(pos.top) ? pos.top : 12);
         if (menuEl.style.left !== `${left}px`) menuEl.style.left = `${left}px`;
         if (menuEl.style.top !== `${top}px`) menuEl.style.top = `${top}px`;
     }
 
+    // The window shrinking, or the menu growing (it expands), pulls it back in.
+    const keepMenuInside = () => { if (menuEl.isConnected && !menuEl.hidden) applyMenuPos(); };
+    window.addEventListener('resize', keepMenuInside);
+    if (typeof ResizeObserver === 'function') new ResizeObserver(keepMenuInside).observe(menuEl);
     menuExpand.addEventListener('click', () => { menuOpen = !menuOpen; hideMenuTip(); renderSiteMenu(); });
 
     // Dragging the menu by its handle or edge moves it; the place is kept for every site.
@@ -137,8 +148,9 @@
         e.preventDefault();
         const dx = parseFloat(menuEl.style.left) - e.clientX, dy = parseFloat(menuEl.style.top) - e.clientY;
         const move = m => {
-            menuEl.style.left = `${Math.max(0, Math.min(window.innerWidth - 40, m.clientX + dx))}px`;
-            menuEl.style.top = `${Math.max(0, Math.min(window.innerHeight - 40, m.clientY + dy))}px`;
+            const at = clampMenuPos(m.clientX + dx, m.clientY + dy);
+            menuEl.style.left = `${at.left}px`;
+            menuEl.style.top = `${at.top}px`;
         };
         menuEl.setPointerCapture(e.pointerId);
         menuDragging = true;

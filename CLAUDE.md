@@ -23,7 +23,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Any bug, visual or not, any tier: reproduce it first, at the trigger named in the brief (e.g. device pixel ratio, zoom, dark mode, high contrast); the first test captures it. If the first attempt does not reproduce it, stop and ask in one short question; don't loop.
 
 ## Guardrails (before every commit)
-- Scan the diff for a lowered bar: new suppressions, skipped/deleted/loosened assertions, stubs, edited thresholds. Report it; never hide it.
+- Scan the diff for a lowered bar: new suppressions, skipped/deleted/loosened assertions, stubs, edited thresholds. Run `bar-check.sh` (exit 1 = lowered; REVIEW lines are for you to read). Report it; never hide it.
 - A red test means the code is wrong until proven otherwise; a test never seen failing proves nothing.
 - Stop signs: "too simple to test", "tests after", "just this once", "the test is wrong".
 
@@ -31,8 +31,9 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - Superpowers: follow `superpowers:using-superpowers`; Tiers set the depth. Overrides: `superpowers:subagent-driven-development` only for large plans, `superpowers:requesting-code-review` only where Tiers allow a review. Never invoke `superpowers:finishing-a-development-branch` (it conflicts with the no-branches rule below). `superpowers:using-git-worktrees` only for T3 or parallel threads touching the same files: the worktree is local, never pushed, and lands on main only through `release.sh`.
 - `agent-skills` fills gaps only (Superpowers stays primary; never use its `using-agent-skills`, workflow, git or CI skills): `security-and-hardening` for page content, storage or injected HTML; `performance-optimization` for page-wide listeners or restore-on-load; `deprecation-and-migration` for any stored-data shape change; `code-simplification` on big changes before PUSH; `constraint-driven-development` only once the User names a measurable target (speed, size, contrast); every threshold it writes to CONSTRAINTS.md is checked by a script or test, never measured by hand. Until then the bar is the tests plus the Guardrails.
 - Ask the User for any missing detail in one short batched question. Do only what is asked, nothing extra.
-- Never push, open PRs or make branches on your own. Finish, commit locally, show the result, ask "Reply PUSH to push it to main." Only the word PUSH authorises a push. Never force-push main.
+- Never push, open PRs or make branches on your own. Finish, commit locally, show the result, ask "Reply PUSH to push it to main." Only the word PUSH authorises a push. Never force-push main. Enforced: `release.sh` and a pre-push hook (`install-hooks.sh`, once per clone) refuse without the flag; on the User's PUSH the orchestrator runs `push-guard.sh allow [worktree-path]` (one-shot, 30 min, one worktree). Sessions never run it; a refusal means ask for PUSH.
 - After PUSH run ONE Bash call: `highlighter/tools/release.sh "Theme" "What's in it" "Commit message"`. Never bump @version or commit the built file by hand. On conflict: keep BOTH sides, rerun related tests, rerun the script, mention the merged-in change. After pushing, reply only with the script's output, copied verbatim as plain text, not a code block (the PUSHED line, then the diffstat).
+- Sessions: write the brief with `brief.sh` (task, tier, files, done; `--readonly` for reading/measuring, and run those on a cheaper model). Every session ends with `report.sh write`; the orchestrator reads `report.sh show` and `sessions-status.sh`, not transcripts or event logs. After a compaction or in a new thread read `docs/specs/status.md` (`status.sh`), not the specs.
 - One task per thread; new thread per follow-up/revert. Open-ended "find problems" asks: one ranking thread that fixes nothing, then one short thread per item the User picks.
 - Searches stay inside the repo: never `find`/`grep -r`/`ls -R` from `/`, `C:\`, `~` or any drive root. Look in the project, `.cache/` or a named package folder, with `timeout 20` on any `find`. A command that hits the 120s timeout and goes to the background must be stopped (TaskStop) in the same turn, never left running.
 - Economy: fewer turns is the main saving. Chain build, test and diffstat in one Bash call (`tools/verify.sh <keyword>`), batch independent commands, status updates at milestones only.
@@ -42,7 +43,8 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - `highlighter/tools/test-env.sh <word>` runs the suites (same arguments as `node highlighter/test/run.js`). Playwright 1.56.1 + Chromium come from the main checkout's git-ignored `.cache/playwright/` (shared by worktrees, installed on first use); on Linux/cloud it uses `/opt/node22`.
 - Never edit a test afterwards just to match the code. Report pre-existing failures; never silently rewrite them.
 - Run only suites related to the change; no full run before PUSH (exception: tasks about the tests themselves).
-- A suite that reports 0 checks crashed. Report it even if untouched.
+- A suite that reports 0 checks crashed. Report it even if untouched. `test/checks-baseline.json` is each suite's floor: a run with fewer checks fails. Remove checks for retired behaviour on purpose with `HL_UPDATE_COUNTS=1` (the lowered number shows in the diff and `bar-check.sh`); new suites get a line the same way.
+- `flaky.sh <suite-word> [runs]` tells a flaky check from a real failure; `verify-all.sh` is the one-line full run (tests-about-tests, merged main, or when the User asks).
 - Before asking PUSH on a behaviour change, grep `highlighter/test` for the changed feature/keys/colors; update tests expecting old behaviour; remove checks for retired behaviour rather than skipping.
 
 ## UI / Anthropic style
@@ -56,6 +58,7 @@ Product: Violentmonkey userscript `highlighter/Highlighter.user.js`. Windows onl
 - `verify.sh <keyword...>` build, typecheck, matching suites, diffstat in one call; `shot.sh <out.png> [light|dark|both] [js]` playground screenshot; component presets (panel, all) crop to the element at 2x, other shots: `SHOT_CLIP=<selector|__hl.name>` (+`SHOT_PAD`)
 - `typecheck.sh [--update]` tsc on the built file, errors mapped to `src/` lines, fails only on errors beyond `tools/typecheck-baseline.txt` (17 at start); fix errors, never add to the baseline; `--update` only lowers it
 - `gallery.sh [--only id,id] [--variants file.json] [--watch]` renders every UI state, light and dark, into `.cache/gallery/index.html` (one offline page; a failed state is a red tile, exit 1; `--variants` adds side-by-side tiles for one state, see the header of gallery.js; `--watch` re-renders when src/ changes)
+- `bar-check.sh [base]` lowered-bar scan; `push-guard.sh` / `install-hooks.sh` PUSH flag and hook; `verify-all.sh` full run in one line; `flaky.sh` rerun a suite N times; `brief.sh`, `report.sh`, `sessions-status.sh` session briefs, reports and an idle/dirty/ahead table per worktree; `status.sh` regenerates `docs/specs/status.md` from main's releases; `release.sh` also takes a lock so concurrent releases queue
 - Git's LF/CRLF warnings on commit and release are harmless; ignore them.
 
 ## Automation candidates

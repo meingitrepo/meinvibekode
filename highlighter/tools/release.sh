@@ -6,6 +6,20 @@
 # Don't bump @version or commit the built file yourself; this does it.
 set -euo pipefail
 
+# Only after the User's PUSH (push-guard.sh allow); checked before anything is committed.
+guard="$(cd "$(dirname "$0")" && pwd)/push-guard.sh"
+bash "$guard" check || exit 1
+
+# One release at a time: concurrent sessions queue here instead of racing for the push and rebasing again.
+lock="$(git rev-parse --git-common-dir)/hl-release.lock"
+locked=
+for _ in $(seq 1 60); do
+    if mkdir "$lock" 2>/dev/null; then locked=1; trap 'rmdir "$lock" 2>/dev/null || true' EXIT; break; fi
+    if [ -n "$(find "$lock" -maxdepth 0 -mmin +15 2>/dev/null)" ]; then rmdir "$lock" 2>/dev/null || true; fi   # left by a crashed release
+    sleep 5
+done
+[ -n "$locked" ] || { echo 'could not take the release lock in 5 minutes'; exit 1; }
+
 # Prints the diffstat of a release as one line: files, insertions, deletions.
 # Usage: show_diffstat <from> <to>
 show_diffstat() {
@@ -33,7 +47,7 @@ if [ "${1:-}" = --files ]; then
         git fetch -q origin main
         git rebase -q origin/main || { echo 'REBASE CONFLICT: resolve keeping BOTH changes, git rebase --continue, rerun'; exit 1; }
         if git push -q origin HEAD:main; then
-            clean_shots
+            clean_shots; bash "$guard" consume
             echo "PUSHED cfg ($(git rev-parse --short HEAD)) to main"
             exit 0
         fi
@@ -65,7 +79,7 @@ for _ in 1 2 3; do
     git add $H/src/header.js $H/Highlighter.user.js
     git commit -q --amend -m "$ver: $msg"
     if git push -q origin HEAD:main; then
-        clean_shots
+        clean_shots; bash "$guard" consume
         echo "PUSHED $ver ($(git rev-parse --short HEAD)) to main"
         exit 0
     fi

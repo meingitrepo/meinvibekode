@@ -7,6 +7,8 @@
 //   HL_SCRIPT=other.user.js     test another build
 //   HL_JOBS=3                   files run at once (default 6)
 //   HL_CPU=6                    pages run 6x slower (finds checks that rely on a fast machine)
+//   HL_UPDATE_COUNTS=1          after an all-green run, write each file's check count to checks-baseline.json
+// A file with fewer checks than checks-baseline.json fails the run: a lost check is never silent.
 // Needs Playwright with Chromium (npm install playwright && npx playwright install chromium).
 'use strict';
 const { spawn, execFileSync } = require('child_process');
@@ -25,6 +27,11 @@ const filters = process.argv.slice(2);
 const files = fs.readdirSync(dir).filter(f => f.endsWith('.test.js'))
     .filter(f => !filters.length || filters.some(w => f.includes(w))).sort();
 if (!files.length) { console.error('no test files match'); process.exit(1); }
+
+// Floor for each file's check count (one line per file); a run below it fails, so dropping a check is a deliberate, visible edit.
+const COUNTS = path.join(dir, 'checks-baseline.json');
+const readCounts = () => { try { return JSON.parse(fs.readFileSync(COUNTS, 'utf8')); } catch (e) { return {}; } };
+const writeCounts = map => fs.writeFileSync(COUNTS, '{\n' + Object.keys(map).sort().map(k => `  "${k}": ${map[k]}`).join(',\n') + '\n}\n');
 
 let failed = 0;
 if (!process.env.HL_SCRIPT) {
@@ -65,6 +72,16 @@ function runFile(file) {
     });
     await Promise.all(workers);
     failed += results.filter(r => !r.ok).length;
+    const known = readCounts();
+    const drops = results.filter(r => r.ok && known[r.file] !== undefined && r.passes < known[r.file]);
+    drops.forEach(r => console.log(`FAIL checks: ${r.file} ran ${r.passes}, baseline ${known[r.file]} (HL_UPDATE_COUNTS=1 only if the removal is deliberate)`));
+    failed += drops.length;
+    if (process.env.HL_UPDATE_COUNTS && !failed) {
+        results.forEach(r => { known[r.file] = r.passes; });
+        if (!filters.length) Object.keys(known).forEach(k => { if (!fs.existsSync(path.join(dir, k))) delete known[k]; });
+        writeCounts(known);
+        console.log(`checks-baseline.json updated (${Object.keys(known).length} files)`);
+    }
     const checks = results.reduce((n, r) => n + r.passes, 0);
     console.log(failed ? `\n${failed} of ${files.length} files failed` : `\nall ${files.length} files passed (${checks} checks)`);
     process.exit(failed ? 1 : 0);

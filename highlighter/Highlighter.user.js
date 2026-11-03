@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.103
+// @version      9.104
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -4636,7 +4636,7 @@
         const line = 'M184,208a8,8,0,0,1-8,8H160a40,40,0,0,1-32-16,40,40,0,0,1-32,16H80a8,8,0,0,1,0-16H96a24,24,0,0,0,24-24V136H104a8,8,0,0,1,0-16h16V80A24,24,0,0,0,96,56H80a8,8,0,0,1,0-16H96a40,40,0,0,1,32,16,40,40,0,0,1,32-16h16a8,8,0,0,1,0,16H160a24,24,0,0,0-24,24v40h16a8,8,0,0,1,0,16H136v40a24,24,0,0,0,24,24h16A8,8,0,0,1,184,208Z';
         const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256">`
             + `<path d="${line}" fill="${halo}" stroke="${halo}" stroke-width="28" stroke-linejoin="round"/>`
-            + `<path d="${body}" fill="${fill}"/><path d="${line}" fill="${ink}"/></svg>`;
+            + `<path d="${body}" fill="${fill}" fill-opacity=".5"/><path d="${line}" fill="${ink}"/></svg>`;
         penCursorStyle.textContent = `html, html * { cursor: url("data:image/svg+xml,${encodeURIComponent(svg)}") 10 10, text !important; }`;
         (document.head || document.documentElement).appendChild(penCursorStyle);
     }

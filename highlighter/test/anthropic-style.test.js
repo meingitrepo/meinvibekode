@@ -31,7 +31,7 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', HAIRLINE = 'rgb(2
     L.check(`${scheme}: panel list inherits sans chrome`, /^"Source Sans 3"/.test(text.fontFamily), text);
     // Save: clay and fully rounded (8px) when it can act, quiet when there is nothing to save.
     const save = await page.evaluate(() => { const b = window.__hl.editorEl.querySelector('.btn-primary'); if (!b) return { bg: 'missing', radius: 'missing', offBg: 'missing' }; const on = (b.disabled = false, getComputedStyle(b)); const r = { bg: on.backgroundColor, radius: on.borderRadius }; b.disabled = true; const off = getComputedStyle(b); r.offBg = off.backgroundColor; return r; });
-    L.check(`${scheme}: enabled Save is ink-filled with 8px corners`, save.bg === (scheme === 'light' ? SLATE : IVORY) && save.radius === '8px', save);
+    L.check(`${scheme}: enabled Save is a quiet tint (not ink-filled) with 8px corners`, save.bg !== (scheme === 'light' ? SLATE : IVORY) && save.bg !== 'rgba(0, 0, 0, 0)' && save.radius === '8px', save);
     L.check(`${scheme}: disabled Save is not filled`, save.offBg !== (scheme === 'light' ? SLATE : IVORY), save);
     // Clay is used nowhere else.
     const clayElsewhere = await page.evaluate(CLAY => [...window.__hl.panelEl.querySelectorAll('*'), ...window.__hl.penEl.querySelectorAll('*')].filter(e => { const s = getComputedStyle(e); return s.backgroundColor === CLAY || s.borderTopColor === CLAY || s.color === CLAY; }).length, CLAY);

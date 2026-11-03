@@ -155,6 +155,7 @@
         const title = (document.title || '').replace(/\s+/g, ' ').trim() || location.hostname || url;
         const pageText = (document.body ? document.body.textContent : '').replace(/\s+/g, ' ');
         const blockText = new Map();
+        // The title is escaped like quoted text: Markdown characters in it would otherwise format the heading.
         const out = [`## [${markdownText(title)}](${markdownUrl(url)})`];
         items.forEach(a => {
             if (!a.paragraphs.length) return;

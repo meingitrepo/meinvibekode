@@ -16,7 +16,7 @@
     // line-through too.
 
     let metricsCtx = null;
-    const fontMetricsCache = new Map();
+    const fontMetricsCache = new Map();   // keyed by computed font; dropped when a web font loads so an early measurement does not stick
 
     // { ascent, descent, xHeight } in px for an element's font, or null if unmeasurable.
     function fontMetrics(element) {
@@ -185,7 +185,7 @@
         const starts = new Map();    // group -> when its next piece starts
         let delay = 0;
         anns.forEach((a, i) => {
-            if (innerToRedraw.has(a.element)) innerToRedraw.delete(a.element);   // drawn now (see redrawInner)
+            if (innerToRedraw.has(a.element)) innerToRedraw.delete(a.element);   // drawn now (see redrawInner); the queued redraw would cancel its draw-in animation
             if (!measured[i]) return;
             const animate = !a.drawn && a.animate && !still;
             const group = groupOf(a);

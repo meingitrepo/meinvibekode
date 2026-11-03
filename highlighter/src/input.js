@@ -147,6 +147,7 @@
             toggleKeysSwitch();
             return;
         }
+        // With the shortcuts off, the site gets its Alt keys back and nothing below runs.
         if (e.altKey && keysSwitchedOff()) return;
         if (e.key === 'Alt' && !e.ctrlKey && !e.metaKey) holdAccessKeys();
         const wasPrevented = e.defaultPrevented;
@@ -160,6 +161,7 @@
 
     // The rest of that Alt key press stays away from the site too.
     function onKeyUpOrPress(e) {
+        // Access keys come back when Alt is let go, not when the key was used.
         if (e.type === 'keyup' && e.key === 'Alt') releaseAccessKeys();
         if (!swallowedCodes.has(e.code)) return;
         if (e.type === 'keyup') swallowedCodes.delete(e.code);

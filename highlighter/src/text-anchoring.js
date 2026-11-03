@@ -163,6 +163,7 @@
         const r = rangeFromOffsets(block, start, start + length);
         const matches = !!r && r.toString() === expected;
         dropRange(r);
+        // Text this long at its saved offset needs no context check; shorter text must also match its surroundings.
         if (!matches || expected.length >= OFFSET_TRUST_LENGTH) return matches;
         const full = block.textContent;
         const prefix = record.prefix || '';
@@ -203,6 +204,7 @@
         }
         const idx = full.indexOf(context);
         if (idx !== -1) return { startOffset: idx + prefix.length, length: record.text.length };
+        // Under three characters, a word like "the" would silently highlight the wrong occurrence.
         if (record.text.length >= 3) {
             const first = full.indexOf(record.text);
             if (first !== -1 && full.indexOf(record.text, first + 1) === -1) {
@@ -268,7 +270,7 @@
             if (hits.length === 1) start = hits[0] + prefix.length;
         } else if (at !== -1) {
             start = at + prefix.length;
-        } else if (record.text.length >= 3) {
+        } else if (record.text.length >= 3) {   // a short whole-block text is not placed on its text alone
             const first = index.text.indexOf(record.text);
             if (first !== -1 && index.text.indexOf(record.text, first + 1) === -1) start = first;
         }
@@ -342,7 +344,7 @@
         let second = 0;
         let places = 0;
         for (let i = full.indexOf(record.text); i !== -1; i = full.indexOf(record.text, i + 1)) {
-            if (++places > LOOSE_MATCH_MAX_PLACES) return -1;
+            if (++places > LOOSE_MATCH_MAX_PLACES) return -1;   // too common to place by its surroundings: give up
             const score = contextScore(full, i, record.text.length, want);
             if (score > bestScore) { second = bestScore; bestScore = score; best = i; }
             else if (score > second) second = score;

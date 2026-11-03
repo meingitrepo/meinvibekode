@@ -219,6 +219,7 @@
             clearTimeout(cardShowTimer);
             if (cardWrapper && !selectPreview) {
                 clearTimeout(cardHideTimer);
+                // A new selection's preview clears this timer, so an old hover hide does not close it.
                 cardHideTimer = setTimeout(hideNoteCard, 250);
             }
         }

@@ -386,6 +386,7 @@
         if (meta.added) wrapper.setAttribute(ADDED_ATTR, String(meta.added));
         if (typeof meta.page === 'string') wrapper.setAttribute(PAGE_ATTR, meta.page);
         try {
+            // The text leaves the page before the insert, so putBack must return it if the insert throws.
             wrapper.appendChild(range.extractContents());
             range.insertNode(wrapper);
             wrapperEpoch++;

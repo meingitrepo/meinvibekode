@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.94
+// @version      9.95
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -747,7 +747,7 @@
     // line-through too.
 
     let metricsCtx = null;
-    const fontMetricsCache = new Map();
+    const fontMetricsCache = new Map();   // keyed by computed font; dropped when a web font loads so an early measurement does not stick
 
     // { ascent, descent, xHeight } in px for an element's font, or null if unmeasurable.
     function fontMetrics(element) {
@@ -916,7 +916,7 @@
         const starts = new Map();    // group -> when its next piece starts
         let delay = 0;
         anns.forEach((a, i) => {
-            if (innerToRedraw.has(a.element)) innerToRedraw.delete(a.element);   // drawn now (see redrawInner)
+            if (innerToRedraw.has(a.element)) innerToRedraw.delete(a.element);   // drawn now (see redrawInner); the queued redraw would cancel its draw-in animation
             if (!measured[i]) return;
             const animate = !a.drawn && a.animate && !still;
             const group = groupOf(a);
@@ -1098,6 +1098,7 @@
         const r = rangeFromOffsets(block, start, start + length);
         const matches = !!r && r.toString() === expected;
         dropRange(r);
+        // Text this long at its saved offset needs no context check; shorter text must also match its surroundings.
         if (!matches || expected.length >= OFFSET_TRUST_LENGTH) return matches;
         const full = block.textContent;
         const prefix = record.prefix || '';
@@ -1138,6 +1139,7 @@
         }
         const idx = full.indexOf(context);
         if (idx !== -1) return { startOffset: idx + prefix.length, length: record.text.length };
+        // Under three characters, a word like "the" would silently highlight the wrong occurrence.
         if (record.text.length >= 3) {
             const first = full.indexOf(record.text);
             if (first !== -1 && full.indexOf(record.text, first + 1) === -1) {
@@ -1203,7 +1205,7 @@
             if (hits.length === 1) start = hits[0] + prefix.length;
         } else if (at !== -1) {
             start = at + prefix.length;
-        } else if (record.text.length >= 3) {
+        } else if (record.text.length >= 3) {   // a short whole-block text is not placed on its text alone
             const first = index.text.indexOf(record.text);
             if (first !== -1 && index.text.indexOf(record.text, first + 1) === -1) start = first;
         }
@@ -1277,7 +1279,7 @@
         let second = 0;
         let places = 0;
         for (let i = full.indexOf(record.text); i !== -1; i = full.indexOf(record.text, i + 1)) {
-            if (++places > LOOSE_MATCH_MAX_PLACES) return -1;
+            if (++places > LOOSE_MATCH_MAX_PLACES) return -1;   // too common to place by its surroundings: give up
             const score = contextScore(full, i, record.text.length, want);
             if (score > bestScore) { second = bestScore; bestScore = score; best = i; }
             else if (score > second) second = score;
@@ -1673,6 +1675,7 @@
         if (meta.added) wrapper.setAttribute(ADDED_ATTR, String(meta.added));
         if (typeof meta.page === 'string') wrapper.setAttribute(PAGE_ATTR, meta.page);
         try {
+            // The text leaves the page before the insert, so putBack must return it if the insert throws.
             wrapper.appendChild(range.extractContents());
             range.insertNode(wrapper);
             wrapperEpoch++;
@@ -3491,6 +3494,7 @@
             toggleKeysSwitch();
             return;
         }
+        // With the shortcuts off, the site gets its Alt keys back and nothing below runs.
         if (e.altKey && keysSwitchedOff()) return;
         if (e.key === 'Alt' && !e.ctrlKey && !e.metaKey) holdAccessKeys();
         const wasPrevented = e.defaultPrevented;
@@ -3504,6 +3508,7 @@
 
     // The rest of that Alt key press stays away from the site too.
     function onKeyUpOrPress(e) {
+        // Access keys come back when Alt is let go, not when the key was used.
         if (e.type === 'keyup' && e.key === 'Alt') releaseAccessKeys();
         if (!swallowedCodes.has(e.code)) return;
         if (e.type === 'keyup') swallowedCodes.delete(e.code);
@@ -4889,6 +4894,7 @@
             clearTimeout(cardShowTimer);
             if (cardWrapper && !selectPreview) {
                 clearTimeout(cardHideTimer);
+                // A new selection's preview clears this timer, so an old hover hide does not close it.
                 cardHideTimer = setTimeout(hideNoteCard, 250);
             }
         }
@@ -5916,6 +5922,7 @@
         const title = (document.title || '').replace(/\s+/g, ' ').trim() || location.hostname || url;
         const pageText = (document.body ? document.body.textContent : '').replace(/\s+/g, ' ');
         const blockText = new Map();
+        // The title is escaped like quoted text: Markdown characters in it would otherwise format the heading.
         const out = [`## [${markdownText(title)}](${markdownUrl(url)})`];
         items.forEach(a => {
             if (!a.paragraphs.length) return;
@@ -7154,7 +7161,7 @@
         listen(window, 'keypress', onKeyUpOrPress, true);
         listen(window, 'blur', releaseAccessKeys);
         listen(window, 'blur', releasePointerHold);
-        listen(window, 'blur', () => swallowedCodes.clear());
+        listen(window, 'blur', () => swallowedCodes.clear());   // losing focus ends any Alt key we kept from the site
         teardown.push(releaseAccessKeys);
         listen(document, 'mousedown', onMouseDown);
         listen(document, 'mouseover', onMouseOver, true);
@@ -7171,7 +7178,7 @@
         listen(window, 'resize', onScrollOrResize);
         listen(window, 'resize', scheduleRedraw);
         listen(window, 'load', scheduleRedraw);
-        if (document.fonts && document.fonts.ready) {
+        if (document.fonts && document.fonts.ready) {   // a font load changes text metrics, so marks are redrawn once it is ready
             document.fonts.ready.then(() => { if (running) scheduleRedraw(); }).catch(() => {});
         }
         const ro = new ResizeObserver(scheduleRedraw);
@@ -7324,6 +7331,7 @@
     // =====================================================================
 
     if (typeof GM_addValueChangeListener === 'function') GM_addValueChangeListener(SETTINGS_KEY, onSettingsChanged);
+    // start() first: refreshMenu reads `running`.
     start();
     renderSiteMenu();
     refreshMenu();

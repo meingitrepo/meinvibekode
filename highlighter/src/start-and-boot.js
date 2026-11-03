@@ -79,7 +79,7 @@
         listen(window, 'keypress', onKeyUpOrPress, true);
         listen(window, 'blur', releaseAccessKeys);
         listen(window, 'blur', releasePointerHold);
-        listen(window, 'blur', () => swallowedCodes.clear());
+        listen(window, 'blur', () => swallowedCodes.clear());   // losing focus ends any Alt key we kept from the site
         teardown.push(releaseAccessKeys);
         listen(document, 'mousedown', onMouseDown);
         listen(document, 'mouseover', onMouseOver, true);
@@ -96,7 +96,7 @@
         listen(window, 'resize', onScrollOrResize);
         listen(window, 'resize', scheduleRedraw);
         listen(window, 'load', scheduleRedraw);
-        if (document.fonts && document.fonts.ready) {
+        if (document.fonts && document.fonts.ready) {   // a font load changes text metrics, so marks are redrawn once it is ready
             document.fonts.ready.then(() => { if (running) scheduleRedraw(); }).catch(() => {});
         }
         const ro = new ResizeObserver(scheduleRedraw);
@@ -249,6 +249,7 @@
     // =====================================================================
 
     if (typeof GM_addValueChangeListener === 'function') GM_addValueChangeListener(SETTINGS_KEY, onSettingsChanged);
+    // start() first: refreshMenu reads `running`.
     start();
     renderSiteMenu();
     refreshMenu();

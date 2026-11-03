@@ -73,7 +73,7 @@
     // larger than the magnifying glass and some smaller. [scale, dx, dy] resizes the icon's ink box about
     // its centre and moves that centre to 128,128 (measured by tools/icon-optics.js --ref magnifying-glass).
     // Done in the viewBox, not a wrapping <g>: tests and CSS address `svg > path.ic`, and under/over follow.
-    // Left out on purpose: carets, dots-six-vertical and cursor/cursor-text are small by design, and
+    // Left out on purpose: the carets and dots-six-vertical are small by design, and
     // icons that swap in place share one entry (eye/eye-slash, keyboard/keyboard-slash, push-pin/-fill)
     // so the swap does not jump in size.
     const PIN_FIT = [1, -8, 8], EYE_FIT = [1.066, 0, 0], KEYBOARD_FIT = [1.104, 0, 0];
@@ -84,7 +84,8 @@
         'copy': [1.088, 0, 0], 'list-checks': [1.137, 0, 0], 'warning': [0.985, 0, 4], 'power': [1.112, 0, -4],
         'arrow-u-up-left': [1.092, 0, 8], 'arrow-u-up-right': [1.092, 0, 8], 'arrow-counter-clockwise': [1.044, 8, 0],
         'push-pin': PIN_FIT, 'push-pin-fill': PIN_FIT, 'eye': EYE_FIT, 'eye-slash': EYE_FIT,
-        'keyboard': KEYBOARD_FIT, 'keyboard-slash': KEYBOARD_FIT
+        'keyboard': KEYBOARD_FIT, 'keyboard-slash': KEYBOARD_FIT,
+        'cursor-text': [1.09, 0, 0]   // matches the height of cursor, which it swaps with
     };
     function iconViewBox(name) {
         const [s, dx, dy] = ICON_FIT[name] || [1, 0, 0], half = 128 / s;

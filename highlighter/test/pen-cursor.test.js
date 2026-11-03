@@ -1,4 +1,4 @@
-// The mouse cursor over the page follows the pen: the Phosphor cursor-text icon in the pen style's color.
+// The mouse cursor over the page follows the pen: the Windows arrow in the pen style's color.
 const L = require('./lib');
 const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title></head><body style="font:18px/1.6 serif;margin:40px;max-width:700px">
 <p id="p1">Some plain words a reader might mark.</p><a id="a" href="#x">a link</a></body></html>`;

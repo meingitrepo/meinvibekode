@@ -15,10 +15,10 @@
         const [ink, halo] = dark ? ['#faf9f5', '#141413'] : ['#141413', '#ffffff'];
         const body = 'M176,48V208H160a32,32,0,0,1-32-32,32,32,0,0,1-32,32H80V48H96a32,32,0,0,1,32,32,32,32,0,0,1,32-32Z';
         const line = 'M184,208a8,8,0,0,1-8,8H160a40,40,0,0,1-32-16,40,40,0,0,1-32,16H80a8,8,0,0,1,0-16H96a24,24,0,0,0,24-24V136H104a8,8,0,0,1,0-16h16V80A24,24,0,0,0,96,56H80a8,8,0,0,1,0-16H96a40,40,0,0,1,32,16,40,40,0,0,1,32-16h16a8,8,0,0,1,0,16H160a24,24,0,0,0-24,24v40h16a8,8,0,0,1,0,16H136v40a24,24,0,0,0,24,24h16A8,8,0,0,1,184,208Z';
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256">`
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256">`
             + `<path d="${line}" fill="${halo}" stroke="${halo}" stroke-width="28" stroke-linejoin="round"/>`
             + `<path d="${body}" fill="${fill}"/><path d="${line}" fill="${ink}"/></svg>`;
-        penCursorStyle.textContent = `html, html * { cursor: url("data:image/svg+xml,${encodeURIComponent(svg)}") 16 16, text !important; }`;
+        penCursorStyle.textContent = `html, html * { cursor: url("data:image/svg+xml,${encodeURIComponent(svg)}") 10 10, text !important; }`;
         (document.head || document.documentElement).appendChild(penCursorStyle);
     }
 

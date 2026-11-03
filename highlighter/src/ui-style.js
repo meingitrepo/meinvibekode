@@ -259,7 +259,7 @@
         .btn-primary:hover:active, .btn-primary:active:focus-visible { background: var(--surface-pressed); transform: scale(0.98); }
         .btn-primary:focus-visible { outline-color: var(--accent); }
         /* Disabled keeps a filled hairline-grey body so it still reads as a button. */
-        .btn-primary:disabled, .btn-primary:disabled:hover, .btn-primary:disabled:active { background: var(--line); color: var(--ink-disabled); cursor: not-allowed; transform: none; }
+        .btn-primary:disabled, .btn-primary:disabled:hover, .btn-primary:disabled:active { background: transparent; color: var(--ink-disabled); cursor: not-allowed; transform: none; }
         /* The disabled subtle button: */
         .btn-subtle:disabled, .btn-subtle:disabled:hover, .btn-subtle:disabled:active { background: transparent; color: var(--ink-disabled); cursor: not-allowed; }
         .btn-subtle:disabled .icon, .btn-subtle:disabled:hover .icon, .btn-subtle:disabled:active .icon { color: var(--ink-disabled); }

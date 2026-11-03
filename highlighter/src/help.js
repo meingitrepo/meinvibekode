@@ -1,22 +1,27 @@
     // --- Shortcut guide (Alt+Shift+H) ---
-    const SHORTCUT_GUIDE = [
-        ['Alt+1 / Alt+2 / Alt+H', 'Highlight in cyan / magenta / yellow'],
-        ['Alt+U / Alt+S', 'Underline / strike through'],
-        ['Alt+N', 'Add or edit a note'],
-        ['Alt+L', 'Pin the note preview'],
-        ['Alt+D', 'Delete the annotation (note first)'],
-        ['Alt+Shift+D', 'Clear every annotation on the page'],
-        ['Alt+Z / Alt+Y', 'Undo / redo'],
-        ['Alt+V', 'Hide or show annotations'],
-        ['Alt+P', 'Pen mode'],
-        ['Alt+T', 'Selection toolbar on or off'],
-        ['Alt+J / Alt+K', 'Jump to the next / previous annotation'],
-        ['Alt+O', 'Annotations of this page'],
-        ['Alt+Shift+O', 'Search every page'],
-        ['Alt+Shift+M', 'Show or hide the menu'],
-        ['Alt+Shift+K', 'Shortcuts on or off'],
-        ['Alt+Shift+H', 'This guide']
-    ];
+    // The rows that follow STYLES (their keys, their color names) are built when the guide opens, so they cannot drift from it.
+    function shortcutGuide() {
+        const keys = (type) => Object.keys(STYLES).filter(k => !STYLES[k].retired && STYLES[k].shortcut && (type === 'highlight') === (STYLES[k].type === 'highlight'));
+        const highlights = keys('highlight'), lines = keys('line');
+        return [
+            [highlights.map(shortcutText).join(' / '), `Highlight in ${highlights.map(k => styleLabel(k).split(' ')[0].toLowerCase()).join(' / ')}`],
+            [lines.map(shortcutText).join(' / '), 'Underline / strike through'],
+            ['Alt+N', 'Add or edit a note'],
+            ['Alt+L', 'Pin the note preview'],
+            ['Alt+D', 'Delete the annotation (note first)'],
+            ['Alt+Shift+D', 'Clear every annotation on the page'],
+            ['Alt+Z / Alt+Y', 'Undo / redo'],
+            ['Alt+V', 'Hide or show annotations'],
+            ['Alt+P', 'Pen mode'],
+            ['Alt+T', 'Selection toolbar on or off'],
+            ['Alt+J / Alt+K', 'Jump to the next / previous annotation'],
+            ['Alt+O', 'Annotations of this page'],
+            ['Alt+Shift+O', 'Search every page'],
+            ['Alt+Shift+M', 'Show or hide the menu'],
+            ['Alt+Shift+K', 'Shortcuts on or off'],
+            ['Alt+Shift+H', 'This guide']
+        ];
+    }
 
     const helpTitle = makeEl('div', { class: 'panel-count' });
     const helpClose = makeButton({ icon: phosphorIcon('x') });
@@ -43,7 +48,7 @@
             hideNoteCard();
         }
         helpTitle.textContent = 'Shortcuts';
-        helpBody.replaceChildren(...SHORTCUT_GUIDE.map(([a, b]) => makeEl('div', { class: 'help-row' }, [
+        helpBody.replaceChildren(...shortcutGuide().map(([a, b]) => makeEl('div', { class: 'help-row' }, [
             makeEl('span', { class: 'help-key', text: a }),
             makeEl('span', { class: 'help-text', text: b })
         ])));

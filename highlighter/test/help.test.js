@@ -10,6 +10,13 @@ const state = p => p.evaluate(() => { const h = window.__hl.helpEl; return h.hid
   let s = await state(p);
   check('Alt+Shift+H opens the shortcut guide', !!s && /Shortcuts/.test(s.title), JSON.stringify(s));
   check('the guide lists Alt+Shift+O and Alt+Shift+H but no longer Alt+Shift+W', !!s && ['Alt+Shift+O', 'Alt+Shift+H', 'Alt+Z'].every(k => s.text.includes(k)) && !s.text.includes('Alt+Shift+W'), s && s.text);
+  check('the style rows read the shortcuts and colors off STYLES', !!s && s.text.includes('Alt+1 / Alt+2 / Alt+HHighlight in cyan / magenta / yellow') && s.text.includes('Alt+U / Alt+SUnderline'), s && s.text);
+  await L.altKey(p, 'h', true);
+  // The guide follows STYLES: change one and the guide changes with it (it must not be a second copy).
+  await p.evaluate(() => { window.__hl.STYLES.s.shortcut = 'KeyX'; window.__hl.STYLES.h2.label = 'Teal highlight'; });
+  await L.altKey(p, 'h', true);
+  s = await state(p);
+  check('a changed style shortcut and color name show in the guide', !!s && s.text.includes('Alt+U / Alt+XUnderline') && s.text.includes('Highlight in teal / magenta') && !s.text.includes('Alt+U / Alt+S'), s && s.text);
   await L.altKey(p, 'h', true);
   check('Alt+Shift+H again closes it', await state(p) === null, null);
   await L.altKey(p, 'h', true);

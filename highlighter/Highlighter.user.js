@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.85
+// @version      9.86
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -767,7 +767,7 @@
                 metrics = { ascent: m.fontBoundingBoxAscent, descent: m.fontBoundingBoxDescent, xHeight: m.actualBoundingBoxAscent };
             }
         } catch (e) { /* older browser: fall back to the rect's middle */ }
-        fontMetricsCache.set(font, metrics);
+        if (metrics) fontMetricsCache.set(font, metrics);   // an unusable result is measured again next time
         return metrics;
     }
 
@@ -4994,10 +4994,13 @@
     const SELECT_PREVIEW_DELAY_MS = 150;   // the note follows the selection toolbar a little later
     function previewSelectedNote(groups) {
         if (selectPreview) hideNoteCard();
+        clearTimeout(selectPreviewTimer);   // the pointer may have taken the last preview over, leaving its timers
+        clearTimeout(selectShowTimer);
         const note = groups.length === 1 && !editor && !annotationsHidden &&
             groupWrappers(groups[0]).filter(w => w.hasAttribute(NOTE_ATTR) && w.getClientRects().length).pop();
         if (!note || !note.getAttribute(NOTE_ATTR) || pinnedCards.has(note)) return;   // a pinned note is open already
         selectPreview = true;
+        clearTimeout(cardHideTimer);   // a hover card's hide, set as the pointer left its badge, would close this preview
         selectShowTimer = setTimeout(() => {
             if (selectPreview && note.isConnected && !editor && !annotationsHidden) showNoteCard(note);
         }, SELECT_PREVIEW_DELAY_MS);
@@ -7345,9 +7348,24 @@
         if (window.navigation && typeof window.navigation.addEventListener === 'function') {
             listen(window.navigation, 'navigatesuccess', () => setTimeout(onUrlMaybeChanged, 0));
         }
-        listen(document, 'visibilitychange', onVisibilityChange);
-        const poll = setInterval(() => { onUrlMaybeChanged(); checkDetached(); pruneShown(); notePanelChanges(); }, 1000);
-        teardown.push(() => clearInterval(poll));
+        // A webfont finishing late changes the metrics measured before it.
+        if (document.fonts && document.fonts.addEventListener) {
+            listen(document.fonts, 'loadingdone', () => { fontMetricsCache.clear(); scheduleRedraw(); });
+        }
+        // The poll sleeps while the tab is hidden; shown again, it runs once at once.
+        let poll = 0;
+        const pollOnce = () => { onUrlMaybeChanged(); checkDetached(); pruneShown(); notePanelChanges(); };
+        const startPoll = () => { if (!poll) poll = setInterval(pollOnce, 1000); };
+        const stopPoll = () => { clearInterval(poll); poll = 0; };
+        listen(document, 'visibilitychange', () => {
+            if (document.hidden) { stopPoll(); return; }
+            if (!running || poll) return;
+            startPoll();
+            pollOnce();
+        });
+        listen(document, 'visibilitychange', onVisibilityChange);   // after the poll's, which learns of a URL change first
+        if (!document.hidden) startPoll();
+        teardown.push(stopPoll);
 
         watchTheme();
         teardown.push(unwatchStoredKey);

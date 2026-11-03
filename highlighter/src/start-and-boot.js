@@ -99,7 +99,6 @@
         if (window.navigation && typeof window.navigation.addEventListener === 'function') {
             listen(window.navigation, 'navigatesuccess', () => setTimeout(onUrlMaybeChanged, 0));
         }
-        listen(document, 'visibilitychange', onVisibilityChange);
         // A webfont finishing late changes the metrics measured before it.
         if (document.fonts && document.fonts.addEventListener) {
             listen(document.fonts, 'loadingdone', () => { fontMetricsCache.clear(); scheduleRedraw(); });
@@ -112,9 +111,10 @@
         listen(document, 'visibilitychange', () => {
             if (document.hidden) { stopPoll(); return; }
             if (!running || poll) return;
-            pollOnce();
             startPoll();
+            pollOnce();
         });
+        listen(document, 'visibilitychange', onVisibilityChange);   // after the poll's, which learns of a URL change first
         if (!document.hidden) startPoll();
         teardown.push(stopPoll);
 

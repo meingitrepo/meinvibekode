@@ -41,7 +41,7 @@
         'push-pin': 'M233.91,82.79,173.22,22.1a14,14,0,0,0-19.81,0L98.93,76.77c-9.52-3.25-34-8.34-59.71,12.41A14,14,0,0,0,38.1,110l49.71,49.71-44.05,44a6,6,0,1,0,8.48,8.48l44.05-44.05L146,217.89a14,14,0,0,0,9.9,4.11q.49,0,1,0a14,14,0,0,0,10.19-5.54c19.72-26.21,17.15-47.23,12.46-59.3l54.37-54.55A14,14,0,0,0,233.91,82.79ZM225.42,94.1h0l-57.27,57.46a6,6,0,0,0-1.11,6.92c9.94,19.88-1.71,40.32-9.54,50.72a2,2,0,0,1-3,.2L46.58,101.51a2,2,0,0,1,.18-3c12.5-10.09,24.5-12.76,33.7-12.76a42.13,42.13,0,0,1,17.25,3.41A6,6,0,0,0,104.64,88L161.9,30.59a2,2,0,0,1,2.83,0l60.69,60.68A2,2,0,0,1,225.42,94.1Z',
         'push-pin-fill': 'M235.33,104l-53.47,53.65c4.56,12.67,6.45,33.89-13.19,60A15.93,15.93,0,0,1,157,224c-.38,0-.75,0-1.13,0a16,16,0,0,1-11.32-4.69L96.29,171,53.66,213.66a8,8,0,0,1-11.32-11.32L85,159.71l-48.3-48.3A16,16,0,0,1,38,87.63c25.42-20.51,49.75-16.48,60.4-13.14L152,20.7a16,16,0,0,1,22.63,0l60.69,60.68A16,16,0,0,1,235.33,104Z',
         'note': 'M90,96a6,6,0,0,1,6-6h64a6,6,0,0,1,0,12H96A6,6,0,0,1,90,96Zm6,38h64a6,6,0,0,0,0-12H96a6,6,0,0,0,0,12Zm32,20H96a6,6,0,0,0,0,12h32a6,6,0,0,0,0-12ZM222,48V156.69a13.94,13.94,0,0,1-4.1,9.9L166.59,217.9a13.94,13.94,0,0,1-9.9,4.1H48a14,14,0,0,1-14-14V48A14,14,0,0,1,48,34H208A14,14,0,0,1,222,48ZM48,210H154V160a6,6,0,0,1,6-6h50V48a2,2,0,0,0-2-2H48a2,2,0,0,0-2,2V208A2,2,0,0,0,48,210Zm153.52-44H166v35.52Z',
-        'pencil-simple': 'M225.9,74.78,181.21,30.09a14,14,0,0,0-19.8,0L38.1,153.41a13.94,13.94,0,0,0-4.1,9.9V208a14,14,0,0,0,14,14H92.69a13.94,13.94,0,0,0,9.9-4.1L225.9,94.58a14,14,0,0,0,0-19.8ZM94.1,209.41a2,2,0,0,1-1.41.59H48a2,2,0,0,1-2-2V163.31a2,2,0,0,1,.59-1.41L136,72.48,183.51,120ZM217.41,86.1,192,111.51,144.49,64,169.9,38.58a2,2,0,0,1,2.83,0l44.68,44.69a2,2,0,0,1,0,2.83Z',
+        'pencil-simple-line': 'M225.91,74.79,181.22,30.1a14,14,0,0,0-19.8,0L38.1,153.41a13.94,13.94,0,0,0-4.1,9.9V208a14,14,0,0,0,14,14H216a6,6,0,0,0,0-12H110.49L225.91,94.59A14,14,0,0,0,225.91,74.79ZM93.52,210H48a2,2,0,0,1-2-2V163.31a2,2,0,0,1,.59-1.41L136,72.49,183.52,120ZM217.42,86.1,192,111.52,144.49,64,169.9,38.59a2,2,0,0,1,2.83,0l44.69,44.68A2,2,0,0,1,217.42,86.1Z',
         'eraser': 'M223.57,81.81,182.19,40.43a22,22,0,0,0-31.12,0L32.43,159.07a22,22,0,0,0,0,31.11L62.5,220.24A6,6,0,0,0,66.74,222H216a6,6,0,0,0,0-12H126.49l97.08-97.08A22,22,0,0,0,223.57,81.81ZM109.51,210H69.22l-28.3-28.3a10,10,0,0,1,0-14.15L96,112.48,151.52,168ZM215.08,104.44,160,159.51,104.48,104l55.08-55.07a10,10,0,0,1,14.14,0l41.38,41.37A10,10,0,0,1,215.08,104.44Z',
         'trash': 'M216,50H174V40a22,22,0,0,0-22-22H104A22,22,0,0,0,82,40V50H40a6,6,0,0,0,0,12H50V208a14,14,0,0,0,14,14H192a14,14,0,0,0,14-14V62h10a6,6,0,0,0,0-12ZM94,40a10,10,0,0,1,10-10h48a10,10,0,0,1,10,10V50H94ZM194,208a2,2,0,0,1-2,2H64a2,2,0,0,1-2-2V62H194ZM110,104v64a6,6,0,0,1-12,0V104a6,6,0,0,1,12,0Zm48,0v64a6,6,0,0,1-12,0V104a6,6,0,0,1,12,0Z',
         'check-square': 'M172.24,99.76a6,6,0,0,1,0,8.48l-56,56a6,6,0,0,1-8.48,0l-24-24a6,6,0,0,1,8.48-8.48L112,151.51l51.76-51.75A6,6,0,0,1,172.24,99.76ZM222,48V208a14,14,0,0,1-14,14H48a14,14,0,0,1-14-14V48A14,14,0,0,1,48,34H208A14,14,0,0,1,222,48Zm-12,0a2,2,0,0,0-2-2H48a2,2,0,0,0-2,2V208a2,2,0,0,0,2,2H208a2,2,0,0,0,2-2Z',
@@ -79,7 +79,7 @@
     // push-pin/-fill) so the swap does not jump in size.
     const PIN_FIT = [1, -8, 8], EYE_FIT = [1.066, 0, 0], KEYBOARD_FIT = [1.104, 0, 0];
     const ICON_FIT = {
-        'check': [1.235, -4, -8], 'x': [1.15, 0, 0], 'note': [1.088, 0, 0], 'pencil-simple': [1.043, -4, 4],
+        'check': [1.235, -4, -8], 'x': [1.15, 0, 0], 'note': [1.088, 0, 0], 'pencil-simple-line': [1.043, -4, 4],
         'eraser': [1.044, 0, 0], 'trash': [1.044, 0, 8], 'check-square': [1.088, 0, 0], 'square': [1.088, 0, 0],
         'copy': [1.088, 0, 0], 'list-checks': [1.137, 0, 0], 'warning': [0.985, 0, 4], 'power': [1.112, 0, -4],
         'arrow-u-up-left': [1.092, 0, 8], 'arrow-u-up-right': [1.092, 0, 8], 'arrow-counter-clockwise': [1.044, 8, 0],
@@ -191,7 +191,7 @@
         :host([data-theme="dark"]) { ${DARK_TOKENS} }
         .panel[data-theme="light"], .toast[data-theme="light"], .everything[data-theme="light"], .sitemenu[data-theme="light"] { ${LIGHT_TOKENS} }
         .panel[data-theme="dark"], .toast[data-theme="dark"], .everything[data-theme="dark"], .sitemenu[data-theme="dark"] { ${DARK_TOKENS} }
-        [hidden]:not(.surface):not(.everything), .tip[hidden] { display: none !important; }
+        [hidden]:not(.surface):not(.everything):not(.sitemenu-pen):not(.sitemenu-inner > .divider), .tip[hidden] { display: none !important; }
         /* Surfaces fade out rather than vanish: display flips last (allow-discrete), so the hidden attribute
            still takes effect at once for scripts. */
         .surface:not(.tip) { transition: opacity var(--duration-normal) var(--ease-out), display var(--duration-normal) allow-discrete; }
@@ -344,7 +344,10 @@
         @keyframes highlighter-pen-in { from { opacity: 0; transform: translateX(-6px); } }
         .sitemenu-pen:not([hidden]) { animation: highlighter-pen-in var(--duration-normal) var(--ease-out); }
         .sitemenu-inner > .divider:has(+ .sitemenu-pen:not([hidden])) { animation: highlighter-pen-in var(--duration-normal) var(--ease-out); }
-        @media (prefers-reduced-motion: reduce) { .sitemenu-pen, .sitemenu-inner > .divider { animation: none !important; } }
+        /* Turning it off runs the same slide backwards: display is discrete, so it flips at the end of the fade. */
+        .sitemenu-pen, .sitemenu-inner > .divider { transition: opacity var(--duration-normal) var(--ease-out), transform var(--duration-normal) var(--ease-out), display var(--duration-normal) allow-discrete; }
+        .sitemenu-pen[hidden], .sitemenu-inner > .divider[hidden] { display: none; opacity: 0; transform: translateX(-6px); pointer-events: none; }
+        @media (prefers-reduced-motion: reduce) { .sitemenu-pen, .sitemenu-inner > .divider { animation: none !important; transition: none; } }
         /* The sticky menu: the site switch, with a row of icon buttons expanding to its right. */
         .sitemenu { display: flex; align-items: center; padding: 4px; width: max-content; cursor: grab; }
         .sitemenu .btn { cursor: pointer; }

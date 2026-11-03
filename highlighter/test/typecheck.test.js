@@ -40,11 +40,15 @@ function copy(edit) {
   const u1 = update({ root: typo, baselineFile: keep });
   check('update refuses while there are new errors and leaves the baseline alone', u1.updated === false && fs.readFileSync(keep, 'utf8') === fs.readFileSync(REAL_BASELINE, 'utf8'), u1);
 
+  const crlf = path.join(tmp, 'crlf.txt'); fs.writeFileSync(crlf, fs.readFileSync(REAL_BASELINE, 'utf8').replace(/\r?\n/g, '\r\n'));
+  const c = typecheck({ root: HL, baselineFile: crlf });
+  check('a baseline with CRLF line endings (Windows checkout) matches like an LF one', c.fresh.length === 0 && c.fixed.length === 0, { fresh: c.fresh.length, fixed: c.fixed.length });
+
   const stale = path.join(tmp, 'stale.txt'); fs.writeFileSync(stale, fs.readFileSync(REAL_BASELINE, 'utf8') + `${FILE}: TS9999: an error that was fixed\n`);
   const f = typecheck({ root: HL, baselineFile: stale });
   check('an error fixed since the baseline is reported as fixed, not as new', f.fresh.length === 0 && f.fixed.length === 1, f.fixed);
   const u2 = update({ root: HL, baselineFile: stale });
-  check('update shrinks the baseline to the current errors', u2.updated === true && fs.readFileSync(stale, 'utf8') === fs.readFileSync(REAL_BASELINE, 'utf8'), u2);
+  check('update shrinks the baseline to the current errors', u2.updated === true && fs.readFileSync(stale, 'utf8') === fs.readFileSync(REAL_BASELINE, 'utf8').replace(/\r\n/g, '\n'), u2);
 
   fs.rmSync(tmp, { recursive: true, force: true });
   await L.done();

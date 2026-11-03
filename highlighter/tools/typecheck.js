@@ -65,7 +65,7 @@ function typecheck({ root = HL, baselineFile = BASELINE } = {}) {
     }
     if (r.status !== 0 && !errors.length) throw new Error(`tsc failed: ${r.stderr || r.stdout}`);
     const left = new Map();
-    if (fs.existsSync(baselineFile)) for (const l of fs.readFileSync(baselineFile, 'utf8').split('\n').filter(Boolean)) left.set(l, (left.get(l) || 0) + 1);
+    if (fs.existsSync(baselineFile)) for (const l of fs.readFileSync(baselineFile, 'utf8').split(/\r?\n/).filter(Boolean)) left.set(l, (left.get(l) || 0) + 1);
     const fresh = errors.filter(e => { const n = left.get(e.fingerprint) || 0; if (n) left.set(e.fingerprint, n - 1); return !n; });
     const fixed = [...left].flatMap(([l, n]) => Array(n).fill(l));
     return { errors, fresh, fixed };

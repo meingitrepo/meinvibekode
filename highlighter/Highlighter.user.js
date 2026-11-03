@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.112
+// @version      9.113
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -4636,25 +4636,25 @@
         return ZOOM_STEPS.reduce((best, z) => Math.abs(Math.log(z / ratio)) < Math.abs(Math.log(best / ratio)) ? z : best);
     }
 
-    // The Windows 11 arrow (aero_arrow.cur: 12x19 px at 100% in a 32x32 canvas, 1px outline, light on dark pages where a black one vanishes), filled with the pen's color (the eraser's is gray) where Windows fills it white.
+    // The Windows 11 arrow (aero_arrow.cur: 12x19 px at 100% in a 32x32 canvas, 1px outline), filled with the pen's color (the eraser's is gray) where Windows fills it white.
     // !important beats the links' and fields' own cursors. A system cursor can't be recolored, hence the SVG.
-    function updatePenCursor(dark) {
+    function updatePenCursor() {
         if (!penKey) { penCursorStyle.remove(); return; }
-        const fill = penKey === PEN_ERASER ? '#87867f' : resolveStyle(penKey, dark).color;
+        const fill = penKey === PEN_ERASER ? '#87867f' : resolveStyle(penKey, false).color;   // always the light-theme color: the outline is black on any page
         const arrow = 'M0.5,0.5V16.3L4.5,12.5L7.2,18.3L9.3,17.4L6.9,11.9H11.4Z';
         const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">`
-            + `<path d="${arrow}" fill="${fill}" stroke="${dark ? '#fff' : '#000'}" stroke-width="1" stroke-linejoin="round"/></svg>`;
+            + `<path d="${arrow}" fill="${fill}" stroke="#000" stroke-width="1" stroke-linejoin="round"/></svg>`;
         // image-set at the display's scale: Windows doesn't scale its cursor with display scaling, a plain url() image is scaled up by it.
         penCursorStyle.textContent = `html, html * { cursor: image-set(url("data:image/svg+xml,${encodeURIComponent(svg)}") ${window.devicePixelRatio / pageZoom()}x) 0 0, default !important; }`;
         (document.head || document.documentElement).appendChild(penCursorStyle);
     }
 
-    window.addEventListener('resize', () => { if (penKey) updatePenCursor(computeDarkMode()); });   // page zoom changes the ratio
+    window.addEventListener('resize', () => { if (penKey) updatePenCursor(); });   // page zoom changes the ratio
 
     // Turns the pen on with style `key`, or off (null). Its bar shows in the sticky menu (see renderSiteMenu).
     function setPen(key) {
         penKey = key === PEN_ERASER || (key && STYLES[key]) ? key : null;
-        updatePenCursor(computeDarkMode());
+        updatePenCursor();
         if (penKey) showAnnotationsFor('pen'); else restoreAnnotationsFor('pen');
         if (!penKey) {
             if (!penEl.hidden) hideLabelTip();

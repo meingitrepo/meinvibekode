@@ -43,7 +43,8 @@ async function darkPage(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML.replace('<body style="', '<body style="background:#111;color:#eee;'), scheme: 'dark', menu: true }); await L.openMenu(p);
   await L.altKey(p, 'p');
   const c = await cursorOf(p, '#p1');
-  check('on a dark page the arrow has a light outline', /stroke="#fff"/.test(c) && !/stroke="#000"/.test(c), c);
+  check('on a dark page the arrow keeps the light-theme color', /#EFD98A/i.test(c) && !/#6F5614/i.test(c), c);
+  check('on a dark page the arrow keeps the black outline', /stroke="#000"/.test(c) && !/stroke="#fff"/.test(c), c);
   await ctx.close();
 }
 

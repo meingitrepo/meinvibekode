@@ -69,13 +69,36 @@
         'power': 'M122,128V48a6,6,0,0,1,12,0v80a6,6,0,0,1-12,0Zm57.28-77A6,6,0,0,0,172.72,61C196.41,76.47,210,100.88,210,128a82,82,0,0,1-164,0c0-27.12,13.59-51.53,37.28-67A6,6,0,0,0,76.72,51C49.57,68.68,34,96.75,34,128a94,94,0,0,0,188,0C222,96.75,206.43,68.68,179.28,51Z'
     };
 
+    // Optical size: Phosphor draws every icon on the same 256 grid but fills it differently, so some read
+    // larger than the magnifying glass and some smaller. [scale, dx, dy] resizes the icon's ink box about
+    // its centre and moves that centre to 128,128 (measured by tools/icon-optics.js --ref magnifying-glass).
+    // Done in the viewBox, not a wrapping <g>: tests and CSS address `svg > path.ic`, and under/over follow.
+    // Left out on purpose: carets, dots-six-vertical and cursor/cursor-text are small by design, and
+    // icons that swap in place share one entry (eye/eye-slash, keyboard/keyboard-slash, push-pin/-fill)
+    // so the swap does not jump in size.
+    const PIN_FIT = [1, -8, 8], EYE_FIT = [1.066, 0, 0], KEYBOARD_FIT = [1.104, 0, 0];
+    const ICON_FIT = {
+        'highlighter': [0.914, -8, 12], 'text-underline': [1.288, 0, -12], 'text-strikethrough': [1.137, 0, 0],
+        'check': [1.235, -4, -8], 'x': [1.15, 0, 0], 'note': [1.088, 0, 0], 'pencil-simple': [1.043, -4, 4],
+        'eraser': [1.044, 0, 0], 'trash': [1.044, 0, 8], 'check-square': [1.088, 0, 0], 'square': [1.088, 0, 0],
+        'copy': [1.088, 0, 0], 'list-checks': [1.137, 0, 0], 'warning': [0.985, 0, 4], 'power': [1.112, 0, -4],
+        'arrow-u-up-left': [1.092, 0, 8], 'arrow-u-up-right': [1.092, 0, 8], 'arrow-counter-clockwise': [1.044, 8, 0],
+        'push-pin': PIN_FIT, 'push-pin-fill': PIN_FIT, 'eye': EYE_FIT, 'eye-slash': EYE_FIT,
+        'keyboard': KEYBOARD_FIT, 'keyboard-slash': KEYBOARD_FIT
+    };
+    function iconViewBox(name) {
+        const [s, dx, dy] = ICON_FIT[name] || [1, 0, 0], half = 128 / s;
+        const r = n => +n.toFixed(2);
+        return `${r(128 - dx - half)} ${r(128 - dy - half)} ${r(2 * half)} ${r(2 * half)}`;
+    }
+
     // A Phosphor icon: one outline path on a 256 grid, scaled to the 20px of a button (the 16px of
     // an icon next to text, the panel's carets). `under` and `over` are extra shapes (on the same
     // 256 grid) drawn beneath or on top of it, used to paint parts of an icon in an annotation's
     // color. Weight comes from the icon's name (push-pin-fill); the icon takes the text color.
     function phosphorIcon(name, { under = [], over = [] } = {}) {
         const size = /^caret-/.test(name) ? 16 : 20;
-        const svg = svgEl('svg', { class: `icon icon-${size}`, viewBox: '0 0 256 256', 'aria-hidden': 'true', focusable: 'false' });
+        const svg = svgEl('svg', { class: `icon icon-${size}`, viewBox: iconViewBox(name), 'aria-hidden': 'true', focusable: 'false' });
         under.forEach(s => svg.appendChild(s));
         svg.appendChild(svgEl('path', { d: PHOSPHOR_ICONS[name], class: 'ic' }));
         over.forEach(s => svg.appendChild(s));

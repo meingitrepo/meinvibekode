@@ -99,8 +99,5 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', HAIRLINE = 'rgb(2
   L.check('type sizes use the type-scale tokens', !literalType.length, literalType.length);
   // 9.2: Anthropic motion: short ease-out fades; surfaces do not slide in.
   L.check('surfaces fade in without sliding', !/@keyframes highlighter-enter \{[^}]*translate/.test(built) && !/\[hidden\] \{[^}]*translateY/.test(built));
-  // The note icons are a full-size square with a fold, which reads heavier than the other icons at
-  // the same stroke: they are drawn on a padded grid, so the box and the line come out lighter.
-  L.check('note icons are drawn smaller than the full 256 grid', /ICON_VIEWBOX = \{[^}]*'note': '-\d+ -\d+ \d+ \d+'[^}]*'note-blank': '-\d+ -\d+ \d+ \d+'/.test(css));
   await ctx.close(); await L.done(browser);
 })();

@@ -364,6 +364,16 @@
         return edgeClean(range.startContainer) && edgeClean(range.endContainer);
     }
 
+    // The wrapper never made it into the page, so the text it took out goes back where the range
+    // collapsed to (the range is intact: it is the insert that failed).
+    function putBack(range, wrapper) {
+        try {
+            const rest = document.createDocumentFragment();
+            while (wrapper.firstChild) rest.appendChild(wrapper.firstChild);
+            range.insertNode(rest);
+        } catch (e) { console.warn(`${LOG} could not put the text back`, e); }
+    }
+
     // meta: { group, note, added } shared by every piece of one annotation (added: see groupTime).
     function createWrapper(range, key, meta) {
         if (!hasOwn(STYLES, key) || !range.toString().trim()) return null;
@@ -388,7 +398,8 @@
         } catch (err) {
             console.warn(`${LOG} failed to wrap text`, err);
             annotationMap.delete(wrapper);
-            unwrapDom(wrapper);
+            if (wrapper.parentNode) unwrapDom(wrapper);
+            else putBack(range, wrapper);
             return null;
         }
     }

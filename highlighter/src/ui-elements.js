@@ -140,6 +140,7 @@
     }
 
     // Events from inside the shadow root reach page listeners retargeted to the host.
+    // The menu is not counted: treating it as script UI made its clicks skip keys and clicks everywhere.
     function isUiEvent(e) {
         return e.target === uiHost;
     }

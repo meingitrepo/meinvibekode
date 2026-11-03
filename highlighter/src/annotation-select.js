@@ -74,7 +74,7 @@
         selectedGroups = [];
         previewedGroups = previewDue = '';
         if (selectPreview) hideNoteCard();
-        cancelAnimationFrame(selectFrame);
+        cancelAnimationFrame(selectFrame);   // one follow loop only: a second would move the boxes every frame
         selectFrame = 0;
         selectBoxes.forEach(({ el }, g) => { el.remove(); unmarkNoteSelect(g); });
         selectBoxes.clear();

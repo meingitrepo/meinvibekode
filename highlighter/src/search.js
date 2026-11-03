@@ -32,7 +32,7 @@
             });
             const items = Array.from(byGroup.values()).map(a => {
                 const text = a.records.map(r => typeof r.text === 'string' ? r.text : '').join(' ').replace(/\s+/g, ' ').trim();
-                if (!text) return null;
+                if (!text) return null;   // a record with empty text threw here and kept Alt+Shift+O from opening
                 const directive = textDirective({ paragraphs: [text] }, '', new Map());
                 return { group: a.group, key: a.key, note: a.note, time: a.time, text, url: `${a.page}${a.page.includes('#') ? '' : '#'}:~:${directive}` };
             }).filter(Boolean);

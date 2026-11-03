@@ -36,6 +36,7 @@
         missedRemote = false;
         const wiped = !newRaw;   // the whole list was deleted
         const gone = tombstonesIn(newRaw);
+        // Records this version cannot place are not rendered here; saveHighlights keeps them in storage.
         const incoming = byOwner(aliveRecords((parseRecords(newRaw) || []).filter(usableRecord), gone));
         const here = byOwner(getCurrentRecords().concat(pendingRecords));
         const editing = editor ? editor.group : null;
@@ -107,6 +108,7 @@
     }
 
     // The shortcut switch flipped in another tab applies here too.
+    // The manager passes (name, oldRaw, newRaw, remote) by position, so the unused ones stay.
     function onSettingsChanged(name, oldRaw, newRaw, remote) {
         if (!remote) return;
         renderSiteMenu();

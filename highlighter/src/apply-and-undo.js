@@ -237,6 +237,7 @@
     function applyState(state) {
         resetUi();
         stopLateWatcher();
+        // Past this point a throw leaves the page bare, and the next save would tombstone every annotation.
         unwrapAll();
         trackedRecords.clear();   // the state is the whole truth; renderRecords tracks what it places
         const { failed } = renderRecords(state.records.concat(state.pending), { animate: false });

@@ -219,6 +219,7 @@
         if (editor && isUiEvent(e)) return;   // focus is on the open note editor's buttons
         // Typing in the panel's filter box: only the panel and jump keys act.
         if (isUiEvent(e) && uiRoot.activeElement === panelFilter && !/^Key[OJK]$/.test(e.code)) return;
+        // Alt+Shift+H and M sit behind the same key gates as the other shortcuts (not in a field, not switched off).
         if (e.shiftKey && !e.repeat && (e.code === 'KeyH' || e.code === 'KeyM')) {
             e.preventDefault();
             if (e.code === 'KeyH') toggleHelp();

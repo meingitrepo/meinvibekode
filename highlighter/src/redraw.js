@@ -112,7 +112,8 @@
         if (!shownWrappers.size) return;   // nothing on the page: nothing to do, however big the page
         if (e && e.type === 'resize') redrawResized = true;
         // A page that restyles something every frame (a carousel, a progress bar) is looked at
-        // at most once per NEAR_GAP_MS, the last change always after the wait.
+        // at most once per NEAR_GAP_MS, the last change always after the wait. The rAF merges calls
+        // within one frame but not their rate, so this path needs its own gap.
         if (nearOnly === true && !redrawResized && !redrawFrame) {
             const wait = lastNearRedraw + NEAR_GAP_MS - performance.now();
             if (wait > 0) {

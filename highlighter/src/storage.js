@@ -462,6 +462,7 @@
         }
     }
 
+    // An unparseable settings value reads as empty here; updateSettings never writes over it.
     function readSettings() {
         try { return parseSettings(GM_getValue(SETTINGS_KEY, '{}')) || {}; } catch (e) { return {}; }
     }

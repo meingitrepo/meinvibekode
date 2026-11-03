@@ -25,6 +25,7 @@ async function follows(browser) {
   const zoomed = /\)\s+([\d.]+)(?:dppx|x)\)/.exec(await cursorOf(p, '#p1'));
   check('under 150% page zoom the image stays at the display scale', !!zoomed && Math.abs(+zoomed[1] - real.dpr) < 0.01, zoomed && zoomed[1]);
   await p.evaluate(r => { Object.defineProperty(window, 'devicePixelRatio', { value: r.dpr, configurable: true }); Object.defineProperty(window, 'outerWidth', { value: r.outer, configurable: true }); dispatchEvent(new Event('resize')); }, real);
+  check('the arrow sits in a 32x32 canvas like Windows cursors', /width="32" height="32"/.test(yellow), yellow);
   check('over a link too',/image\/svg\+xml/.test(await cursorOf(p, '#a')), await cursorOf(p, '#a'));
   await L.altKey(p, 'u');
   const under = await cursorOf(p, '#p1');

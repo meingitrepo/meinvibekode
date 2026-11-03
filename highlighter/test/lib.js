@@ -10,7 +10,7 @@ function instrument(src) {
   src = src.replace(/\r\n/g, '\n');
   if (!src.includes(BOOT)) throw new Error('boot anchor missing');
   const names = ['panelEl', 'panelList', 'panelFilter', 'panelCount', 'panelCopy', 'panelErase', 'panelSelectAll', 'toastEl', 'toastText', 'noteCardEl', 'cardHint', 'cardText', 'cardPin',
-    'editorEl', 'noteInput', 'uiRoot', 'uiHost', 'undoStack', 'redoStack', 'toolbarEl', 'labelTipEl', 'lateWatcher', 'currentKey', 'menuIds', 'running', 'darkMode', 'hoveredWrapper', 'annotationsHidden', 'cardWrapper', 'penEl', 'penKey', 'lastStyleKey', 'everythingEl', 'everythingFilter', 'everythingList', 'everythingCount', 'everythingSelectAll', 'everythingCopy', 'everythingForget', 'everythingClose', 'selectBoxesEl', 'selectedGroups', 'shownWrappers', 'menuEl', 'menuExpand', 'menuHandle', 'menuButtons', 'menuClose', 'helpEl', 'STYLES', 'helpClose', 'pointerIsDown'];
+    'editorEl', 'noteInput', 'uiRoot', 'uiHost', 'undoStack', 'redoStack', 'labelTipEl', 'lateWatcher', 'currentKey', 'menuIds', 'running', 'darkMode', 'hoveredWrapper', 'annotationsHidden', 'cardWrapper', 'penEl', 'penKey', 'lastStyleKey', 'everythingEl', 'everythingFilter', 'everythingList', 'everythingCount', 'everythingSelectAll', 'everythingCopy', 'everythingForget', 'everythingClose', 'selectBoxesEl', 'selectedGroups', 'shownWrappers', 'menuEl', 'menuExpand', 'menuHandle', 'menuButtons', 'menuClose', 'helpEl', 'STYLES', 'helpClose', 'pointerIsDown'];
   const get = n => `get ${n}() { try { return ${n}; } catch (e) { return undefined; } }`;
   return src.replace(BOOT, `    window.__hl = { ${names.map(get).join(', ')}, get editor() { return editor; }, get pending() { return pendingRecords; }, get jumpGroup() { return jumpGroup; },
       iconName: el => { const p = el && el.querySelector('path.ic'), d = p && p.getAttribute('d'); return Object.keys(PHOSPHOR_ICONS).find(n => PHOSPHOR_ICONS[n] === d) || null; }, NOTE_BADGE_PATH,
@@ -53,7 +53,7 @@ async function open(browser, opts) {
   // The toolbar and the shortcuts are off on every site until switched on: the pages under test start with both on, unless the test sets opts.defaults.
   const seeded = Object.assign({}, store);
   let cfg = {}; try { cfg = JSON.parse(seeded['rnh:settings'] || '{}'); } catch (e) { /* kept as is */ }
-  if (!opts.defaults && !('toolbarOnSites' in cfg) && !('keysOnSites' in cfg)) seeded['rnh:settings'] = JSON.stringify(Object.assign(cfg, { toolbarOnSites: [new URL(url).hostname], keysOnSites: [new URL(url).hostname] }));
+  if (!opts.defaults && !('keysOnSites' in cfg)) seeded['rnh:settings'] = JSON.stringify(Object.assign(cfg, { keysOnSites: [new URL(url).hostname] }));
   // The sticky menu sits top left over the pages' text: hidden here unless the test is about it (opts.menu).
   if (!opts.menu && !/menuHiddenSites/.test(seeded['rnh:settings'] || '')) seeded['rnh:settings'] = JSON.stringify(Object.assign(JSON.parse(seeded['rnh:settings'] || '{}'), { menuHiddenSites: [new URL(url).hostname] }));
   await page.addInitScript(s => { window.__gm = JSON.parse(s); }, JSON.stringify(seeded));
@@ -101,9 +101,8 @@ const wr = page => page.evaluate(() => window.__hl.allWrappers().map(w => {
   const n = w.getAttribute('data-highlighter-note'); if (n) o.n = n; return o; }));
 // The page's stored annotation records. The stored list also holds tombstones ({ gone, at }) for deleted annotations; `all` keeps them.
 const stored = (page, key = 'https://example.test/a', all = false) => page.evaluate(([k, all]) => JSON.parse(window.__gm[k] || '[]').filter(r => all || !('gone' in r)), [key, all]);
-const toolbar = page => page.evaluate(() => { const t = window.__hl.toolbarEl; if (t.hidden) return null; const r = t.getBoundingClientRect();
-  return { rect: { top: r.top, left: r.left, bottom: r.bottom, right: r.right, width: r.width, height: r.height },
-    buttons: Array.from(t.querySelectorAll('button')).map(b => ({ label: b.dataset.label, pressed: b.getAttribute('aria-pressed'), bg: getComputedStyle(b).backgroundColor })) }; });
+// Expands the sticky menu (where the pen bar shows) unless it is open already.
+const openMenu = async page => { await page.evaluate(() => { const b = window.__hl.menuExpand; if (b.getAttribute('aria-expanded') !== 'true') b.click(); }); await page.waitForTimeout(100); };
 let fails = 0;
 function check(name, ok, info) { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${ok ? '' : ' :: ' + JSON.stringify(info)}`); if (!ok) fails++; }
 // launch(dsf) starts the browser itself at that device scale factor, so layout and painting snap to real device
@@ -145,7 +144,7 @@ async function ensureTheme(page, scheme) {
   }
   await assertTheme(page, scheme);
 }
-module.exports = { ensureTheme, assertTheme, until, scrolled, items, done, setHidden, menu, launch, open, selStr, altKey, toast, wr, stored, toolbar, check, get fails() { return fails; } };
+module.exports = { ensureTheme, assertTheme, until, scrolled, items, done, setHidden, menu, launch, open, selStr, altKey, toast, wr, stored, openMenu, check, get fails() { return fails; } };
 // 7.32: the viewport rectangles of `str` inside `sel` (one per line), for real mouse input.
 module.exports.rects = (page, sel, str) => page.evaluate(([sel, str]) => {
   const el = document.querySelector(sel); const a = el.textContent.indexOf(str);

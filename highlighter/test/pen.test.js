@@ -16,7 +16,7 @@ async function basics(browser) {
   await L.drag(p, '#p1', 'several plain words');
   let w = await L.wr(p);
   check('a mouse selection is highlighted at once', w.length === 1 && w[0].k === 'h' && w[0].t === 'several plain words', w);
-  check('and the selection is gone, with no toolbar', (await selText(p)) === '' && (await L.toolbar(p)) === null, { s: await selText(p), t: await L.toolbar(p) });
+  check('and the selection is gone', (await selText(p)) === '', { s: await selText(p) });
   await L.drag(p, '#p1', 'several plain words');
   w = await L.wr(p);
   check('selecting the same text again keeps it (the pen only adds)', w.length === 1 && w[0].k === 'h', w);
@@ -49,7 +49,7 @@ async function basics(browser) {
   const before = (await L.wr(p)).length;
   await L.drag(p, '#p4', 'plain words');
   await p.waitForTimeout(300);
-  check('with the pen off a selection stays a selection, with the toolbar', (await L.wr(p)).length === before && (await selText(p)) === 'plain words' && (await L.toolbar(p)) !== null, { s: await selText(p) });
+  check('with the pen off a selection stays a selection', (await L.wr(p)).length === before && (await selText(p)) === 'plain words', { s: await selText(p) });
   check('no page errors', p.__errors.length === 0, p.__errors);
   await ctx.close();
 }
@@ -69,7 +69,7 @@ async function keyboardAndFields(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML });
   await L.altKey(p, 'p');
   await L.selStr(p, '#p2', 'plain words'); await p.waitForTimeout(400);
-  check('a keyboard (non-mouse) selection is not drawn on: no toolbar either (the pen bar is the toolbar)', (await L.wr(p)).length === 0 && (await L.toolbar(p)) === null, await L.wr(p));
+  check('a keyboard (non-mouse) selection is not drawn on', (await L.wr(p)).length === 0, await L.wr(p));
   await p.evaluate(() => getSelection().removeAllRanges());
   const f = await p.$('#f'); const b = await f.boundingBox();
   await p.mouse.move(b.x + 3, b.y + b.height / 2); await p.mouse.down(); await p.mouse.move(b.x + b.width - 3, b.y + b.height / 2, { steps: 4 }); await p.mouse.up(); await p.waitForTimeout(300);

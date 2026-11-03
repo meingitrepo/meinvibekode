@@ -13,7 +13,7 @@ const PRESETS = {
 };
 // Component presets crop to their element by default; SHOT_CLIP=<css selector | __hl.name> overrides, SHOT_CLIP=none takes the whole window.
 // Custom js with no SHOT_CLIP crops to the union of whichever of these highlighter UI elements is visible after the js ran (whole window if none is).
-const AUTO = ['panelEl', 'everythingEl', 'toolbarEl', 'toastEl', 'noteCardEl', 'editorEl', 'penEl', 'menuEl', 'labelTipEl'];
+const AUTO = ['panelEl', 'everythingEl', 'toastEl', 'noteCardEl', 'editorEl', 'penEl', 'menuEl', 'labelTipEl'];
 const CLIPS = { panel: '__hl.panelEl', 'panel-ticked': '__hl.panelEl', all: '__hl.everythingEl', 'all-ticked': '__hl.everythingEl' };
 (async () => {
   const [out, scheme = 'light', arg] = process.argv.slice(2);

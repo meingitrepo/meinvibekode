@@ -32,19 +32,19 @@ async function states(browser) {
   await ctx.close();
 }
 
-// Hovered or pressed, every toolbar icon keeps a visible outline (Regular) that contrasts with the hover background.
+// Hovered or pressed, every pen bar icon keeps a visible outline (Regular) that contrasts with the hover background.
 async function hoverVisible(browser) {
   for (const scheme of ['light', 'dark']) {
     const html = HTML.replace('<body style="', `<body style="${scheme === 'dark' ? 'background:#121212;color:#e8e8e8;' : ''}`);
     const { ctx, page: p } = await L.open(browser, { html, scheme });
-    await L.selStr(p, '#p1', 'plain words'); await p.waitForTimeout(400);
-    const n = await p.evaluate(() => window.__hl.toolbarEl.querySelectorAll('button').length);
+    await L.altKey(p, 'p'); await p.waitForTimeout(400);
+    const n = await p.evaluate(() => window.__hl.penEl.querySelectorAll('button:not(:disabled)').length);
     for (let i = 0; i < n; i++) {
       for (const press of [false, true]) {
-        const box = await p.evaluate(i => { const r = [...window.__hl.toolbarEl.querySelectorAll('button')][i].getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }, i);
+        const box = await p.evaluate(i => { const r = [...window.__hl.penEl.querySelectorAll('button:not(:disabled)')][i].getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; }, i);
         await p.mouse.move(box.x, box.y); if (press) await p.mouse.down(); await p.waitForTimeout(250);
         const r = await p.evaluate(i => {
-          const b = [...window.__hl.toolbarEl.querySelectorAll('button')][i];
+          const b = [...window.__hl.penEl.querySelectorAll('button:not(:disabled)')][i];
           const shown = [...b.querySelectorAll('svg > path.ic')].filter(x => getComputedStyle(x).display !== 'none');
           const lum = c => { const v = c.match(/[\d.]+/g).slice(0, 3).map(x => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
           const a = lum(getComputedStyle(b.querySelector('.icon')).color), g = lum(getComputedStyle(b).backgroundColor);
@@ -58,14 +58,10 @@ async function hoverVisible(browser) {
   }
 }
 
-// Each highlighter button carries its own colour, at rest and when selected (toolbar and pen bar).
+// Each highlighter button in the pen bar carries its own colour, at rest and when selected.
 async function swatches(browser) {
   const { ctx, page: p } = await L.open(browser, { html: HTML });
   const fills = (bar) => p.evaluate(bar => [...window.__hl[bar].querySelectorAll('button')].map(b => [...b.querySelectorAll('svg > path[fill]')].map(x => x.getAttribute('fill'))[0]).filter(Boolean), bar);
-  await L.selStr(p, '#p1', 'plain words'); await p.waitForTimeout(400);
-  const tb = await fills('toolbarEl');
-  check('toolbar: every highlighter button shows its own distinct colour', tb.length >= 3 && new Set(tb).size === tb.length, tb);
-  await p.mouse.click(5, 5);
   await L.altKey(p, 'p'); await p.waitForTimeout(300);
   const pen = await fills('penEl');
   check('pen bar: every highlighter button shows its own distinct colour', pen.length >= 3 && new Set(pen).size === pen.length, pen);

@@ -23,17 +23,15 @@ const html = `<html><body style="font:16px sans-serif;margin:40px;padding-top:12
   L.check('no text selection from shift+click', await page.evaluate(() => getSelection().isCollapsed), await page.evaluate(() => getSelection().toString()));
   await click('echo', 'Shift');
   L.check('shift+click again from the anchor (hotel), just that span', JSON.stringify(await sel()) === '["echo","hotel"]', await sel());
-  let t = await L.toolbar(page);
-  L.check('no toolbar for several', !t, t && t.buttons.map(x => x.label));
   await page.keyboard.press('Digit1'); await page.waitForTimeout(200);
   let w = await L.wr(page);
   L.check('2 restyles all selected', ['echo', 'hotel'].every(s => w.find(x => x.t === s).k === 'h2') && w.find(x => x.t === 'kilo').k === 'h', w);
   await L.altKey(page, 'KeyZ');
   w = await L.wr(page);
   L.check('one undo restores all styles', ['echo', 'hotel', 'kilo'].every(s => w.find(x => x.t === s).k === 'h'), w);
-  // reselect two, then one: the toolbar is back only for a single selection
+  // reselect two
   await click('echo'); await click('kilo', 'Control'); await page.waitForTimeout(350);
-  L.check('no toolbar after Ctrl+click adds a second', !(await L.toolbar(page)) && (await boxes()) === 2, await L.toolbar(page));
+  L.check('Ctrl+click adds a second', (await boxes()) === 2, await boxes());
   await L.altKey(page, 'd'); await page.waitForTimeout(300);
   w = await L.wr(page);
   L.check('Alt+D removes both', !w.some(x => x.t === 'echo' || x.t === 'kilo') && w.length === 3, w);

@@ -14,7 +14,7 @@ const html = fs.readFileSync(path.join(__dirname, 'playground.html'), 'utf8').re
   L.check('outlined', await page.evaluate(() => !!window.__hl.selectBoxesEl.querySelector('.select-box:not([hidden])')), null);
   // The outline scrolls with the page in the same frame: right after a scroll, before the
   // script's next frame, it is still where the text is.
-  // The same for the toolbar (8.36), and below for the note editor.
+  // The same below for the note editor.
   const lag = el => page.evaluate(sel => {
     const box = sel === 'box' ? window.__hl.selectBoxesEl.querySelector('.select-box') : window.__hl[sel];
     const gap = () => box.getBoundingClientRect().top - window.__hl.allWrappers()[0].getBoundingClientRect().top;
@@ -23,9 +23,6 @@ const html = fs.readFileSync(path.join(__dirname, 'playground.html'), 'utf8').re
   }, el);
   let l = await lag('box');
   L.check('scrolls with the text, no lag', Math.abs(l.now - l.was) < 0.5, l);
-  await L.until(page, () => !window.__hl.toolbarEl.hidden);
-  l = await lag('toolbarEl');
-  L.check('toolbar scrolls with the text, no lag', Math.abs(l.now - l.was) < 0.5, l);
   await L.altKey(page, 'KeyN');
   await L.until(page, () => !window.__hl.editorEl.hidden);
   l = await lag('editorEl');

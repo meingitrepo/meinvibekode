@@ -20,7 +20,7 @@
         ensureUi(panelOpen() && uiDark !== null ? uiDark : dark);
         setThemeAttr(penEl, dark);
         // One button per style: the pen's own shows pressed; clicking another changes the pen. With one
-        // annotation selected by click, the bar acts on it instead, as the selection toolbar would.
+        // annotation selected by click, the bar acts on it instead.
         const picked = selectedGroups.length === 1 && !editor ? selectedGroups[0] : null;
         const pickedWrappers = picked ? groupWrappers(picked) : [];
         const pickedKey = pickedWrappers.length ? pickedWrappers[0].getAttribute(STYLE_ATTR) : null;
@@ -36,7 +36,7 @@
             b.tabIndex = on ? 0 : -1;
             tools.push(b);
         });
-        // The note button always shows, grayed out until an annotation is selected, as in the selection toolbar.
+        // The note button always shows, grayed out until an annotation is selected.
         const noteLabel = pickedWrappers.some(w => w.getAttribute(NOTE_ATTR)) ? 'Edit note' : 'Add note';
         const note = toolButton(phosphorIcon(noteLabel === 'Edit note' ? 'note' : 'note-blank'), noteLabel, 'Alt+N', () => picked && openNoteEditor(picked));
         note.disabled = !pickedKey;
@@ -56,8 +56,7 @@
     }
 
     function togglePen() {
-        if (penKey) { setPen(null); scheduleToolbar(); showToast('Pen mode disabled', { icon: 'pencil-simple-slash' }); return; }
-        hideToolbar();
+        if (penKey) { setPen(null); showToast('Pen mode disabled', { icon: 'pencil-simple-slash' }); return; }
         setPen(STYLES[lastStyleKey] ? lastStyleKey : NOTE_STYLE_KEY);
         showToast('Pen mode enabled', { icon: 'pencil-simple' });
     }
@@ -75,7 +74,7 @@
         annotateSelection(penKey, { sel, range: selected });
     }
 
-    // Arrow keys, Home and End move between the pen toolbar's buttons, as in the selection toolbar.
+    // Arrow keys, Home and End move between the pen bar's buttons.
     penEl.addEventListener('keydown', e => {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
         const buttons = Array.from(penEl.querySelectorAll('button:not(:disabled)'));

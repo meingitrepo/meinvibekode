@@ -4,7 +4,7 @@
         lastPointerType = e.pointerType || 'mouse';
         if (isUiEvent(e)) return;
         pointerIsDown = true;
-        hideToolbar();
+        cancelSelectPreview();
     }
 
     // A release over an iframe or outside the window never reaches this document: the window losing
@@ -12,16 +12,16 @@
     function releasePointerHold() {
         if (!pointerIsDown) return;
         pointerIsDown = false;
-        scheduleToolbar();
+        scheduleSelectPreview();
     }
 
     function onPointerUp(e) {
         pointerIsDown = false;
         if (isUiEvent(e)) return;
         // The pen draws on mouse selections; on a touch screen the selection is made with handles
-        // after the finger lifts, so there the toolbar works as usual.
+        // after the finger lifts, so there it is left alone.
         if (penKey && e.type === 'pointerup' && e.pointerType !== 'touch') setTimeout(penStroke, 0);
-        else scheduleToolbar();
+        else scheduleSelectPreview();
     }
 
     const SCROLL_LISTENER_OPTIONS = { capture: true, passive: true };   // capture: scrolling containers too
@@ -32,7 +32,6 @@
             uiFrame = 0;
             if (!noteCardEl.hidden) hideNoteCard();
             hideLabelTip();
-            if (!toolbarEl.hidden) placeToolbar();
             pinnedCards.forEach((card, m) => { card.style.visibility = isCovered(m.getBoundingClientRect()) ? 'hidden' : ''; });
             if (editor) followEditorAnchor();
         });
@@ -40,7 +39,7 @@
 
     // Closes every panel without saving (used when the page under them changes).
     function resetUi() {
-        hideToolbar();
+        cancelSelectPreview();
         hideNoteCard();
         unpinNoteCard();
         clearSelectedGroups();
@@ -85,7 +84,7 @@
         listen(document, 'mouseover', onMouseOver, true);
         listen(document, 'mouseout', onMouseOut, true);
         listen(document, 'mousemove', onMouseMove, { capture: true, passive: true });
-        listen(document, 'selectionchange', scheduleToolbar);
+        listen(document, 'selectionchange', scheduleSelectPreview);
         listen(document, 'selectionchange', onSelectionForGroup);
         listen(document, 'mousedown', onSelectMouseDown, true);
         listen(document, 'click', onDocumentClick, true);
@@ -217,11 +216,6 @@
             items.push(['Show annotations', () => { if (running) openPanel(); }]);
             items.push(['Search all pages', () => { if (running) openEverything(); }]);
             items.push(['Copy as Markdown', () => copyAnnotations()]);
-        }
-        if (ENABLE_SELECTION_TOOLBAR && shown) {
-            items.push([!canRelabel ? 'Turn toolbar on/off'
-                : toolbarSwitchedOff() ? 'Turn toolbar on' : 'Turn toolbar off',
-                () => { if (running) toggleToolbarSwitch(); }]);
         }
         if (shown) {
             items.push([!canRelabel ? 'Turn shortcut keys on/off'

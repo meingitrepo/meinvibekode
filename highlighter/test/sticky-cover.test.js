@@ -1,4 +1,4 @@
-// Our layers (dashed outline, selection toolbar, pinned note cards) stay out from over a page's sticky header.
+// Our layers (dashed outline, pinned note cards) stay out from over a page's sticky header.
 const L = require('./lib');
 const HTML = `<!doctype html><html><body style="font: 16px/1.5 sans-serif; margin: 0">
 <div id="hdr" style="position: sticky; top: 0; z-index: 5; height: 60px; background: #eee">Header</div>
@@ -29,14 +29,6 @@ ${Array.from({ length: 40 }, (_, i) => `<p>Filler paragraph number ${i} with som
   L.check('pinned card hidden while its text is under the header', await pinned() === 'hidden', await pinned());
   await scrollTo(top - 150);
   L.check('pinned card back', await pinned() === 'visible', await pinned());
-  // toolbar for a text selection
-  await page.mouse.click(5, 300); await page.keyboard.press('Escape');
-  await L.selStr(page, '#p1', 'alpha'.replace('a', 'A')); await page.waitForTimeout(400);
-  await scrollTo(top - 5);
-  const tb = () => page.evaluate(() => getComputedStyle(window.__hl.toolbarEl).visibility);
-  L.check('toolbar hidden while its text is under the header', await tb() === 'hidden', await tb());
-  await scrollTo(top - 150);
-  L.check('toolbar back', await tb() === 'visible', await tb());
   await browser.close();
   process.exit(L.fails ? 1 : 0);
 })();

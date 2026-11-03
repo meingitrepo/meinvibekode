@@ -7,8 +7,8 @@
     // last to the one clicked, in reading order, and no others. While annotations are selected
     // the keys act on all of them, with or without Alt: a style key restyles them (the style all
     // of them have removes them), Delete or D removes them (D on a single one with a note removes
-    // the note first), N edits the note of the first, Esc lets them go. The selection toolbar shows over them too, its buttons acting on
-    // them. Clicking elsewhere or selecting text lets them go as well. Each change is one step
+    // the note first), N edits the note of the first, Esc lets them go. With the pen on, its bar acts on a single
+    // one. Clicking elsewhere or selecting text lets them go as well. Each change is one step
     // for Undo.
     let selectedGroups = [];      // in the order they were selected; the last is Shift+click's start
     let selectFrame = 0;
@@ -56,9 +56,9 @@
         });
         ensureUi();
         if (!selectFrame) followSelectBoxes();
-        scheduleToolbar();   // the selection toolbar, for these annotations (see showGroupToolbar)
-        if (penKey) setPen(penKey);   // with the pen on, its bar takes the toolbar's place
-        if (selectedGroups.join() !== previewedGroups) previewDue = selectedGroups.join();   // shown with the toolbar (see scheduleToolbar)
+        scheduleSelectPreview();
+        if (penKey) setPen(penKey);   // with the pen on, its bar acts on these annotations
+        if (selectedGroups.join() !== previewedGroups) previewDue = selectedGroups.join();   // shown once the selection settles (see scheduleSelectPreview)
         previewedGroups = selectedGroups.join();
     }
     let previewedGroups = '';
@@ -79,7 +79,6 @@
         selectBoxes.forEach(({ el }, g) => { el.remove(); unmarkNoteSelect(g); });
         selectBoxes.clear();
         selectWrappers = null;
-        if (toolbarGroups) hideToolbar();
         if (penKey) setPen(penKey);
     }
 
@@ -345,7 +344,7 @@
             return false;
         } else if (e.code === 'KeyD' && groups.length === 1 && groupHasNote(groups[0])) {
             deleteGroupNote(groups[0]);   // the note first, then (D again) the annotation
-            refreshGroupToolbar();
+            if (penKey) setPen(penKey);
         } else if (e.code === 'KeyD') {
             deleteGroups(groups);
         } else if (e.code === 'KeyN') {
@@ -353,7 +352,7 @@
         } else if (CODE_TO_STYLE.has(e.code)) {
             syncLocation();
             restyleGroups(groups, CODE_TO_STYLE.get(e.code));
-            refreshGroupToolbar();
+            if (penKey) setPen(penKey);
         } else {
             return false;
         }

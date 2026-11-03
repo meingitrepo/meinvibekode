@@ -38,8 +38,7 @@
  *   V                     hide / show all annotations (nothing is deleted; a message says they're hidden)
  *   P                     pen on / off: every mouse selection gets the pen's style at once (it starts
  *                         with the style used last; a style key with nothing selected or pointed at
- *                         changes it). A pill at the top shows it; Esc turns it off.
- *   T                     selection toolbar off / on, on every site (the keys keep working)
+ *                         changes it). Its bar shows in the sticky menu; Esc turns it off.
  *   O                     open / close the annotations panel
  *   Shift+O               search every page's annotations and notes; a quote opens its page there
  *   J / K                 jump to the next / previous annotation (shows its note, if any)
@@ -53,13 +52,11 @@
  * adds one or takes it out again; Shift+click selects all of them from the last one selected to
  * the one clicked. While annotations are selected, the style keys, N (the first one's note) and
  * D / Delete act on all of them (D on a single one with a note deletes the note first), with or without Alt; Esc, clicking elsewhere
- * or selecting text lets it go. The selection toolbar shows over it too, its buttons acting on
- * it. A click on a link inside annotated text just follows the link.
+ * or selecting text lets it go. With the pen on, the pen bar's buttons act on it. A click on a
+ * link inside annotated text just follows the link.
  *
- * Selecting text also shows a small toolbar with the same actions, for mouse and touch use
- * (Alt+T switches it off and on for every site; ENABLE_SELECTION_TOOLBAR removes it), centered above the selection. The style the
- * selected text already has shows pressed. It is one Tab stop: the arrow keys, Home and End
- * move between its buttons. In the note editor, Tab goes round its controls. Annotations with a note have a small blue speech
+ * The pen bar shows inside the sticky menu while the pen is on (and the menu is open). It is one
+ * Tab stop: the arrow keys, Home and End move between its buttons. In the note editor, Tab goes round its controls. Annotations with a note have a small blue speech
  * bubble on their top-right corner; resting the pointer on or near one shows the note under it, with the
  * date it was added and buttons to edit or delete it. Web addresses in a note are links there.
  *
@@ -85,7 +82,7 @@
  *
  * The script is off on every site until switched on: a sticky menu (top left, draggable; Alt+Shift+M
  * hides or shows it) holds the site's switch and, once it is on, a column of buttons: undo, redo, the two panels,
- * hide annotations, pen, selection toolbar and shortcuts.
+ * hide annotations, pen (with its bar while on) and shortcuts.
  *
  * The userscript manager's menu can also open the panel, copy as Markdown, clear this page,
  * forget annotations whose text is gone (when there are some), turn the script off for the

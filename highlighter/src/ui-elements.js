@@ -7,19 +7,18 @@
         return b;
     }
 
-    // Placed in the page rather than the window (as selectHost below): the toolbar, note card,
+    // Placed in the page rather than the window (as selectHost below): the note card,
     // editor and tooltip are positioned in it, so they scroll with the text in the same frame
     // instead of following it a frame late. The other panels are fixed to the window. Window
     // wide, so panels get the same room to lay out as in the window.
     const uiHost = makeEl('div', { [UI_ATTR]: '' });
     uiHost.style.cssText = 'all: initial !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 0 !important; z-index: 2147483647 !important;';
     const uiRoot = uiHost.attachShadow({ mode: 'closed' });
-    // The device pixel ratio for the CSS (see .toolbar): spacing is rounded to whole device pixels.
+    // The device pixel ratio for the CSS (see .divider): spacing is rounded to whole device pixels.
     const setDpr = () => uiHost.style.setProperty('--dpr', String(window.devicePixelRatio || 1));
     setDpr();
     window.addEventListener('resize', setDpr);
 
-    const toolbarEl = makeEl('div', { class: 'surface toolbar', role: 'toolbar', 'aria-label': 'Annotate selection', hidden: '' });
     const labelTipEl = makeEl('div', { class: 'surface tip', role: 'tooltip', hidden: '' });
 
     const cardText = makeEl('div', { class: 'card-text' });
@@ -115,12 +114,11 @@
 
     // The note card and editor draw over the panel, and the tooltip goes last so it draws on top
     // of whichever panel its button is in.
-    uiRoot.append(makeEl('style', { text: UI_CSS }), panelEl, toolbarEl, noteCardEl, editorEl, toastEl, penEl, everythingEl, labelTipEl);
+    uiRoot.append(makeEl('style', { text: UI_CSS }), panelEl, noteCardEl, editorEl, toastEl, penEl, everythingEl, labelTipEl);
 
     // Keys typed in the note editor stay out of the page's own shortcut handlers.
     ['keydown', 'keyup', 'keypress'].forEach(type => uiHost.addEventListener(type, e => e.stopPropagation()));
     // Pressing a toolbar button must not take the page's text selection away.
-    toolbarEl.addEventListener('mousedown', e => e.preventDefault());
     penEl.addEventListener('mousedown', e => e.preventDefault());
 
     // The panels take the theme of what they open next to (`dark`), else of the page.
@@ -137,7 +135,7 @@
     }
 
     function panelOpen() {
-        return !toolbarEl.hidden || !noteCardEl.hidden || !!editor;
+        return !noteCardEl.hidden || !!editor;
     }
 
     // Events from inside the shadow root reach page listeners retargeted to the host.

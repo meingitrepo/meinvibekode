@@ -50,8 +50,8 @@ const html = `<html><body style="font:16px sans-serif;margin:40px">
   L.check('clear in A empties B', wb.length === 0, wb);
 
   const menu = (p, re) => p.evaluate(src => { const re = new RegExp(src); Object.keys(window.__menu).forEach(k => { if (re.test(k)) window.__menu[k](); }); }, re);
-  await menu(A, '^Turn toolbar off'); await settle();
-  L.check('toolbar switched off in A shows as off in the menu of B', await B.evaluate(() => Object.keys(window.__menu).some(k => /^Turn toolbar on/.test(k))), await B.evaluate(() => Object.keys(window.__menu)));
+  await menu(A, '^Turn shortcut keys off'); await settle();
+  L.check('shortcuts switched off in A show as off in the menu of B', await B.evaluate(() => Object.keys(window.__menu).some(k => /^Turn shortcut keys on/.test(k))), await B.evaluate(() => Object.keys(window.__menu)));
   for (const p of pages) if (p.__errors.filter(e => !e.startsWith('DIALOG')).length) L.check('no page errors', false, p.__errors);
   await b.close();
   console.log(L.fails ? `${L.fails} FAILED` : 'all passed');

@@ -1,5 +1,5 @@
     // =====================================================================
-    // On-page UI: selection toolbar, note card, note editor and toast.
+    // On-page UI: pen bar, note card, note editor and toast.
     //
     // Styled after Anthropic's own interfaces: warm parchment surfaces, a serif for text and a sans
     // for chrome, hairline borders instead of shadows, and one clay accent that only the primary
@@ -193,7 +193,7 @@
             animation: highlighter-enter var(--duration-normal) var(--ease-out);
         }
         /* In the page, not the window: they scroll with their text (see uiHost). */
-        .surface.toolbar, .surface.tip, .surface.card, .surface.editor { position: absolute; }
+        .surface.tip, .surface.card, .surface.editor { position: absolute; }
         .surface.card, .surface.editor, .surface.panel, .surface.everything-box { border-radius: var(--radius-card); }
         @keyframes highlighter-pin { from { border-color: var(--line-pressed); } }
         @keyframes highlighter-enter { from { opacity: 0; } }
@@ -244,15 +244,8 @@
         .select-box svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
         .select-box path { fill: none; stroke: currentColor; stroke-width: 1; stroke-linejoin: round; }
 
-        /* Toolbar */
-        /* Flat like the other surfaces, with longer,
-           hairline separators. */
-        /* 4px padding: with 32px buttons the toolbar is 40px high, close to Edge's (about 42px). */
-        .toolbar { display: flex; align-items: center; gap: round(2px, calc(1px / var(--dpr, 1))); padding: 4px 8px; }
-        /* Idle fade-out (see TOOLBAR_IDLE_MS). Pointing at the toolbar brings it back at once. */
-        .toolbar.fading { opacity: 0; transition: opacity var(--duration-slow) var(--ease-out); }
+        /* Hairline separators between button groups (pen bar, menu). */
         .divider { flex: none; width: calc(1px / var(--dpr, 1)); height: 24px; margin: 0 round(10px, calc(1px / var(--dpr, 1))); background: var(--divider); }
-        @media (pointer: coarse) { .toolbar .btn-icon { width: 40px; height: 40px; } }
 
         /* Tooltip */
         /* One line, kept inside the view: nowrap measures the tip at its full width wherever it last
@@ -443,7 +436,7 @@
 
         @media (prefers-reduced-motion: reduce) {
             .surface, .everything { animation: none !important; transition: none; }
-            .btn, .field::after, .toolbar.fading { transition: none; }
+            .btn, .field::after { transition: none; }
         }
         @media (forced-colors: active) {
             .surface { border-color: CanvasText; }

@@ -135,7 +135,7 @@
 
     // The range without the spaces at its edges (null when it holds nothing else), and, unless
     // `snap` is false, with a word it cuts in two taken whole (SNAP_SELECTION_TO_WORDS). What the
-    // shortcuts and the toolbar act on, so a triple-click doesn't save a paragraph's indentation
+    // shortcuts and the pen act on, so a triple-click doesn't save a paragraph's indentation
     // and a drag that starts mid-word doesn't mark half a word.
     function cleanRange(range, { snap = SNAP_SELECTION_TO_WORDS } = {}) {
         const parts = selectedParts(range).filter(p => /\S/.test(p.node.nodeValue.slice(p.from, p.to)));

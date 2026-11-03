@@ -63,7 +63,6 @@ const html = `<html><body style="font:16px sans-serif;margin:40px">
     await L.selStr(page, '#q', 'kilo'); await page.waitForTimeout(100);
     L.check(`${scheme} text selection clears`, !(await box()), null);
     await page.evaluate(() => getSelection().removeAllRanges());
-    await L.until(page, () => window.__hl.toolbarEl.hidden);   // the selection's toolbar may still cover the link
     // link inside wins
     const lp = await page.evaluate(() => { const r = document.getElementById('lnk').getBoundingClientRect(); return { x: r.left + 5, y: r.top + r.height / 2 }; });
     await page.mouse.click(lp.x, lp.y); await L.until(page, () => location.hash === '#jumped', null, 2000);

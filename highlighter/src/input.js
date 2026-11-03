@@ -14,7 +14,7 @@
         try { return { sel, range: sel.getRangeAt(0) }; } catch (e) { return null; }
     }
 
-    // Shared by the shortcuts and the selection toolbar. `active` is { sel, range }. A style the
+    // Shared by the shortcuts and the pen. `active` is { sel, range }. A style the
     // selected text already has (all of it) does nothing (only Alt+D erases); any other style
     // annotates it, on top of the styles it has (see applyAnnotation).
     function annotateSelection(key, { sel, range: selected }) {
@@ -101,9 +101,9 @@
         openNoteEditor(created[0].getAttribute(GROUP_ATTR), { step: undoStack[undoStack.length - 1] });
     }
 
-    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD', 'KeyL']);
+    const COMMAND_CODES = new Set(['KeyZ', 'KeyY', 'KeyV', 'KeyP', 'KeyN', 'KeyO', 'KeyJ', 'KeyK', 'KeyD', 'KeyL']);
     // The commands with no Shift variant: with Shift held their keys stay the page's.
-    const NO_SHIFT_CODES = new Set(['KeyV', 'KeyP', 'KeyT', 'KeyN', 'KeyJ', 'KeyK', 'KeyL']);
+    const NO_SHIFT_CODES = new Set(['KeyV', 'KeyP', 'KeyN', 'KeyJ', 'KeyK', 'KeyL']);
 
     // While our keys are on (Alt+Shift+K switches them), every Alt key outside a field is ours
     // alone: the site's own Alt shortcuts never run, whether we use the key or not. Its access
@@ -253,12 +253,6 @@
         if (code === 'KeyP') {
             e.preventDefault();
             togglePen();
-            return true;
-        }
-        if (code === 'KeyT') {
-            if (!ENABLE_SELECTION_TOOLBAR) return true;
-            e.preventDefault();
-            toggleToolbarSwitch();
             return true;
         }
         return false;

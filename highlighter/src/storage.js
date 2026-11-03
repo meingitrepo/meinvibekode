@@ -484,7 +484,7 @@
         });
     }
 
-    // The shortcut keys (Alt+Shift+K) and the selection toolbar (Alt+T) are per site and off until
+    // The shortcut keys (Alt+Shift+K) are per site and off until
     // switched on. Read afresh each time, so a switch made in another tab counts here too.
     function siteListed(key) {
         const list = readSettings()[key];
@@ -506,14 +506,6 @@
 
     function setKeysSwitchedOff(off) {
         setSiteListed('keysOnSites', !off);
-    }
-
-    function toolbarSwitchedOff() {
-        return !siteListed('toolbarOnSites');
-    }
-
-    function setToolbarSwitchedOff(off) {
-        setSiteListed('toolbarOnSites', !off);
     }
 
     // Annotations open hidden, except on the sites where they were last shown on purpose (Alt+V and the like).

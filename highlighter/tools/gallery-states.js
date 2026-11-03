@@ -18,8 +18,6 @@ const STORE = { [KEY]: JSON.stringify([rec('//*[@id="p1"]', P1, 'alpha note', 'g
 ['https://other.test/blog/post-one', 'https://third.test/old'].forEach((url, i) => {
     STORE[url] = JSON.stringify([rec('//*[@id="p1"]', P1, 'alpha note', 'gO' + i, 'Another page')]);
 });
-// A mouse selection shows the toolbar, as it does for a person.
-const selectText = (page, L) => L.drag(page, '#p2', 'plain words');
 // Rests the pointer on an annotation and presses Alt+N: the note editor opens.
 const openEditor = async (page, L) => {
     const r = (await L.rects(page, '#p1', 'alpha note'))[0];
@@ -29,14 +27,6 @@ const openEditor = async (page, L) => {
 };
 const STATES = [
     { id: 'toast', setup: page => page.evaluate(() => window.__hl.showToast('Annotations hidden')), clip: ['toastEl'] },
-    { id: 'toolbar', setup: selectText, clip: ['toolbarEl'] },
-    { id: 'toolbar-tooltip', clip: ['toolbarEl', 'labelTipEl'], setup: async (page, L) => {
-        await selectText(page, L);
-        // The toolbar appears a moment after the selection; the tooltip a moment after the pointer rests (gallery.js waits for it).
-        if (!await L.until(page, () => !window.__hl.toolbarEl.hidden && !!window.__hl.toolbarEl.querySelector('button'), null, 5000)) throw new Error('toolbarEl not visible');
-        const at = await page.evaluate(() => { const r = window.__hl.toolbarEl.querySelector('button').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
-        await page.mouse.move(at[0], at[1]);
-    } },
     { id: 'panel', setup: page => page.evaluate(() => window.__hl.openPanel()), clip: ['panelEl'] },
     { id: 'panel-ticked', clip: ['panelEl'], setup: page => page.evaluate(() => {
         window.__hl.openPanel();

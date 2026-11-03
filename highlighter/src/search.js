@@ -59,7 +59,7 @@
         if (everythingEl.hidden) {
             const focused = document.activeElement;
             everythingReturnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
-            hideToolbar();
+            cancelSelectPreview();
             hideNoteCard();
             everythingFilter.value = '';
             everythingToggled = new Set();

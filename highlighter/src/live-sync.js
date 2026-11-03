@@ -84,7 +84,6 @@
             // Undo here would bring back what the other tab changed.
             undoStack.length = 0;
             redoStack.length = 0;
-            hideToolbar();
             removeGroups(drop);
             const { failed } = renderRecords(add.map(r => ({ ...r })));
             pendingRecords = pendingRecords.concat(failed);
@@ -107,10 +106,9 @@
         onStoredKeyChanged(currentKey, null, raw, true);
     }
 
-    // The toolbar and shortcut switches flipped in another tab apply here too.
+    // The shortcut switch flipped in another tab applies here too.
     function onSettingsChanged(name, oldRaw, newRaw, remote) {
         if (!remote) return;
-        if (toolbarSwitchedOff()) hideToolbar();
         renderSiteMenu();
         refreshMenu();
     }

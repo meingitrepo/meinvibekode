@@ -27,11 +27,7 @@ const recs = s => s.map(r => `${r.key}:${r.text}`).sort();
     L.check(`${scheme} green nested part is a half band`, gIn && gOut && Math.abs(gIn.sw * 2 - gOut.sw) < 1.5 && Math.abs(y.sw - gOut.sw) < 1.5, s);
     let st = await L.stored(page);
     L.check(`${scheme} stored 3 annotations`, new Set(st.map(r => r.group)).size === 3, recs(st));
-    // toolbar shows both pressed over "charlie"
     await L.selStr(page, '#p', 'charlie'); await page.waitForTimeout(500);
-    const tb = await L.toolbar(page);
-    const pressed = tb ? tb.buttons.filter(x => x.pressed === 'true').map(x => x.label) : null;
-    L.check(`${scheme} toolbar shows three pressed`, pressed && pressed.length === 3, pressed);
     // Yellow again changes nothing
     await L.altKey(page, 'KeyH');
     w = await L.wr(page);

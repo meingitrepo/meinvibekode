@@ -51,10 +51,9 @@
     const THEME_CHECK_MAX_DEFER_MS = 1000;      // attribute churn may postpone a theme check this long, no longer
     const ENABLE_TRIPLE_CLICK_BLOCK_SELECT = true;   // triple-click selects the paragraph as shown, without its edge spaces
     const SNAP_SELECTION_TO_WORDS = true;       // a selection that cuts a word in two annotates the whole word
-    const ENABLE_SELECTION_TOOLBAR = true;
     const NOTE_CARD_DELAY_MS = 300;             // the pointer rests this long on or near a note badge before its note shows
     const NOTE_BADGE_REACH = 8;                 // px around the badge that count as near it
-    const TOOLBAR_IDLE_MS = 4000;               // the selection toolbar fades out after this long untouched (0 = never)
+    const SELECT_PREVIEW_MS = 4000;             // a clicked annotation's note preview closes after this long untouched (0 = never)
     const TOAST_MS = 4000;                      // how long a message stays up,
     const NOTE_STYLE_KEY = 'h';                 // style given to plain text that receives a note
     const NOTE_MAX_LENGTH = 2000;
@@ -72,18 +71,18 @@
     const SITE_PREFIX_RE = /^(www|m|mobile|amp)\./i;  // host prefixes that still count as the same site
 
     // ---- EDIT STYLES HERE --------------------------------------------------
-    //   label      name shown in the selection toolbar's tooltips
+    //   label      name shown in the pen bar's tooltips
     //   shortcut   key(s) pressed with Alt, as KeyboardEvent.code: 'KeyH', 'Digit2', 'Comma', ...
     //   color      color of the annotation drawing (any CSS color: '#FFEF6E', 'green', ...)
     //   textColor  color of the annotated text ('' = keep the page's own text color)
     //   type       'highlight', 'underline' or 'strike-through'
     //   strokeWidth  underline and strike-through only: line width in px (1 if left out)
     // A highlight is always 95% of the line's height (see "Drawing").
-    // The selection toolbar shows the styles in this order.
+    // The pen bar shows the styles in this order.
     // The style's name (h, h2, u, ...) is what gets saved with each annotation, so renaming
     // or removing a style hides the annotations made with it. They stay saved and come back
     // when the style does. `retired: true` keeps a style's saved annotations drawing but takes
-    // it out of the toolbar (give it no shortcut either).
+    // it out of the pen bar (give it no shortcut either).
     // DARK_OVERRIDES replaces any of these values for annotations on a dark background (a dark
     // page, or a dark box on a light one). Its highlights are dark enough for light text (about
     // 4.5:1 against light gray). Where a highlight leaves the page's own text color hard to read

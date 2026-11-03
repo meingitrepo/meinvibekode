@@ -13,7 +13,6 @@ const bar = (page, fn, arg) => page.evaluate(([f, a]) => { const bs = [...window
   const pen0 = await page.evaluate(() => window.__hl.penKey);
   const pt = await page.evaluate(() => { const r = window.__hl.allWrappers()[0].getClientRects()[0]; return { x: r.left + 5, y: r.top + r.height / 2 }; });
   await page.mouse.click(pt.x, pt.y); await page.waitForTimeout(500);
-  L.check('no floating toolbar with pen on', await page.evaluate(() => window.__hl.toolbarEl.hidden), null);
   L.check('bar has a note button', await bar(page, "bs.some(x => /note/i.test(x.dataset.label))"), null);
   const style = await page.evaluate(() => window.__hl.allWrappers()[0].getAttribute('data-style-key'));
   L.check('annotation style shown pressed', await bar(page, "bs.filter(x => x.getAttribute('aria-pressed') === 'true').length === 1"), null);

@@ -1,4 +1,4 @@
-// Selecting an annotation with a note shows the note, closing with the selection toolbar's idle time.
+// Selecting an annotation with a note shows the note, closing after SELECT_PREVIEW_MS idle.
 const L = require('./lib');
 const CTX = 24;
 const KEY = 'https://example.test/a';
@@ -15,19 +15,16 @@ const store = { [KEY]: JSON.stringify([rec('//*[@id="p1"]', P1, 'alpha note', 'g
   const click = async sel => { const r = (await L.rects(page, sel[0], sel[1]))[0]; await page.mouse.click(r.left + 4, (r.top + r.bottom) / 2); await page.mouse.move(r.left + 4, r.bottom + 60); };
   await click(['#p1', 'alpha note']); await page.waitForTimeout(450);
   L.check('selecting an annotation with a note shows its note', (await shown()) === 'Note A', await shown());
-  L.check('the toolbar is up with it', !!(await L.toolbar(page)), null);
   await page.keyboard.press('Escape'); await page.waitForTimeout(300);
-  // The preview opens a little after the toolbar.
-  await page.evaluate(() => { const h = window.__hl; window.__t = {}; (function f() { const n = performance.now(); if (!h.noteCardEl.hidden && !window.__t.card) window.__t.card = n; if (!h.toolbarEl.hidden && !window.__t.bar) window.__t.bar = n; if (!(window.__t.card && window.__t.bar)) requestAnimationFrame(f); })(); });
-  await click(['#p1', 'alpha note']); await page.waitForTimeout(450);
+  // The preview opens a little after the click (the selection settles in 200ms, then ~150ms).
+  await page.evaluate(() => { const h = window.__hl; window.__t = {}; document.addEventListener('pointerup', () => { window.__t.up = performance.now(); }, { once: true, capture: true }); (function f() { if (!h.noteCardEl.hidden && !window.__t.card) window.__t.card = performance.now(); if (!window.__t.card) requestAnimationFrame(f); })(); });
+  await click(['#p1', 'alpha note']); await page.waitForTimeout(600);
   const t = await page.evaluate(() => window.__t);
-  L.check('the preview appears a little after the toolbar (~150ms)', !!t.card && !!t.bar && t.card - t.bar >= 100 && t.card - t.bar <= 300, t);
+  L.check('the preview appears a little after the click (~350ms)', !!t.card && !!t.up && t.card - t.up >= 300 && t.card - t.up <= 550, t);
   await page.mouse.move(300, 400); await page.mouse.move(310, 410); await page.waitForTimeout(500);
   L.check('moving the pointer elsewhere keeps it', (await shown()) === 'Note A', await shown());
   await page.waitForTimeout(3300);
   L.check('it hides after the idle time', (await shown()) === false, await shown());
-  await page.waitForTimeout(600);
-  L.check('the toolbar is gone by then too', !(await L.toolbar(page)), null);
   await click(['#p1', 'alpha note']); await page.waitForTimeout(450);
   await click(['#p3', 'beta plain']); await page.waitForTimeout(450);
   L.check('selecting an annotation without a note shows nothing', (await shown()) === false, await shown());

@@ -55,7 +55,6 @@
     const menuButtons = new Map([
         ['search', menuButton('Search all pages', 'Alt+Shift+O', phosphorIcon('magnifying-glass'), () => toggleEverything())],
         ['panel',menuButton('Annotations', 'Alt+O', phosphorIcon('list-checks'), () => togglePanel())],
-        ['toolbar', menuButton('Selection toolbar', 'Alt+T', phosphorIcon(toolbarSwitchedOff() ? 'cursor-text-slash' : 'cursor-text'), () => toggleToolbarSwitch())],
         ['pen',menuButton('Pen mode', 'Alt+P', phosphorIcon('pencil-simple-slash'), () => togglePen())],
         ['keys', menuButton('Shortcuts', 'Alt+Shift+K', phosphorIcon(keysSwitchedOff() ? 'keyboard-slash' : 'keyboard'), () => toggleKeysSwitch())],
         ['hide', menuButton('Hide annotations', 'Alt+V', phosphorIcon('eye'), () => toggleAnnotationsHidden())],
@@ -87,15 +86,13 @@
         menuExpand.setAttribute('aria-label', label);
         menuEl.toggleAttribute('data-open', menuOpen);
         menuTools.toggleAttribute('inert', !menuOpen);
-        // The pen's own bar stands in for the selection toolbar, which is off while the pen is on.
-        const pressed = { pen: !!penKey, toolbar: !toolbarSwitchedOff() && !penKey, keys: !keysSwitchedOff(), panel: !panelEl.hidden, search: !everythingEl.hidden };
+        const pressed = { pen: !!penKey, keys: !keysSwitchedOff(), panel: !panelEl.hidden, search: !everythingEl.hidden };
         menuButtons.forEach((b, id) => {
             if (id in pressed) b.setAttribute('aria-pressed', String(pressed[id]));
         });
         menuButtons.get('undo').disabled = !undoStack.length;
         menuButtons.get('redo').disabled = !redoStack.length;
         menuButtons.get('pen').replaceChildren(phosphorIcon(penKey ? 'pencil-simple' : 'pencil-simple-slash'));
-        menuButtons.get('toolbar').replaceChildren(phosphorIcon(toolbarSwitchedOff() || penKey ? 'cursor-text-slash' : 'cursor-text'));
         menuButtons.get('keys').replaceChildren(phosphorIcon(keysSwitchedOff() ? 'keyboard-slash' : 'keyboard'));
         const hideBtn = menuButtons.get('hide');
         hideBtn.dataset.label = annotationsHidden ? 'Show annotations' : 'Hide annotations';

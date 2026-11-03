@@ -13,7 +13,6 @@
             ['Alt+Z / Alt+Y', 'Undo / redo'],
             ['Alt+V', 'Hide or show annotations'],
             ['Alt+P', 'Pen mode'],
-            ['Alt+T', 'Selection toolbar on or off'],
             ['Alt+J / Alt+K', 'Jump to the next / previous annotation'],
             ['Alt+O', 'Annotations of this page'],
             ['Alt+Shift+O', 'Search every page'],
@@ -44,7 +43,7 @@
         if (helpEl.hidden) {
             const focused = document.activeElement;
             helpReturnFocus = focused && focused !== document.body && focused !== uiHost ? focused : null;
-            hideToolbar();
+            cancelSelectPreview();
             hideNoteCard();
         }
         helpTitle.textContent = 'Shortcuts';

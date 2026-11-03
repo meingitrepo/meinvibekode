@@ -15,7 +15,7 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', HAIRLINE = 'rgb(2
     await page.evaluate(() => { window.__hl.showToast('Hello'); window.__hl.openPanel(); });
     await page.waitForTimeout(300);
     const css = (get, props) => page.evaluate(([get, props]) => { const s = getComputedStyle(eval(get)); return Object.assign({}, ...props.map(p => ({ [p]: s[p] }))); }, [get, props]);
-    const surfaces = [['toolbar', 'window.__hl.toolbarEl'], ['card', 'window.__hl.noteCardEl'], ['editor', 'window.__hl.editorEl'], ['panel', 'window.__hl.panelEl'], ['toast', 'window.__hl.toastEl'], ['dialog', 'window.__hl.everythingEl.firstElementChild']];
+    const surfaces = [['card', 'window.__hl.noteCardEl'], ['editor', 'window.__hl.editorEl'], ['panel', 'window.__hl.panelEl'], ['toast', 'window.__hl.toastEl'], ['dialog', 'window.__hl.everythingEl.firstElementChild']];
     for (const [name, get] of surfaces) {
       const s = await css(get, ['backgroundColor', 'color', 'boxShadow', 'borderTopColor', 'borderTopWidth', 'fontFamily']);
       L.check(`${scheme} ${name}: flat, no shadow`, s.boxShadow === 'none', s);
@@ -34,8 +34,8 @@ const SLATE = 'rgb(20, 20, 19)', IVORY = 'rgb(250, 249, 245)', HAIRLINE = 'rgb(2
     L.check(`${scheme}: enabled Save is ink-filled with 8px corners`, save.bg === (scheme === 'light' ? SLATE : IVORY) && save.radius === '8px', save);
     L.check(`${scheme}: disabled Save is not filled`, save.offBg !== (scheme === 'light' ? SLATE : IVORY), save);
     // Clay is used nowhere else.
-    const clayElsewhere = await page.evaluate(CLAY => [...window.__hl.panelEl.querySelectorAll('*'), ...window.__hl.toolbarEl.querySelectorAll('*')].filter(e => { const s = getComputedStyle(e); return s.backgroundColor === CLAY || s.borderTopColor === CLAY || s.color === CLAY; }).length, CLAY);
-    L.check(`${scheme}: clay not used in panel or toolbar`, clayElsewhere === 0, clayElsewhere);
+    const clayElsewhere = await page.evaluate(CLAY => [...window.__hl.panelEl.querySelectorAll('*'), ...window.__hl.penEl.querySelectorAll('*')].filter(e => { const s = getComputedStyle(e); return s.backgroundColor === CLAY || s.borderTopColor === CLAY || s.color === CLAY; }).length, CLAY);
+    L.check(`${scheme}: clay not used in panel or pen bar`, clayElsewhere === 0, clayElsewhere);
     // Buttons weight 500, dialog titles sans 500, small UI text tracked +0.01em.
     const type = await page.evaluate(() => {
       const get = (cls, root) => { const t = document.createElement('div'); t.className = cls; root.appendChild(t); const c = getComputedStyle(t); const r = { w: c.fontWeight, ls: c.letterSpacing }; t.remove(); return r; };

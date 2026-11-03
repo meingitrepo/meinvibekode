@@ -5,7 +5,7 @@ const check = L.check;
 // Device-pixel columns that are painted (not the surface colour) across each divider, read back from a screenshot.
 async function widths(browser, dsf, bar) {
   const { ctx, page: p } = await L.open(browser, { html: HTML });
-  if (bar === 'penEl') await L.altKey(p, 'p'); else await L.drag(p, '#p1', 'plain words');
+  await L.altKey(p, 'p');
   await p.waitForTimeout(700);
   const rs = await p.evaluate(b => [...window.__hl[b].querySelectorAll('.divider')].map(d => { const r = d.getBoundingClientRect(); return { x: Math.floor(r.left) - 3, y: r.top + r.height / 2, w: 8 }; }), bar);
   const pg = await ctx.newPage();
@@ -26,8 +26,8 @@ async function widths(browser, dsf, bar) {
 }
 (async () => {
   const runs = [];
-  for (const bar of ['penEl', 'toolbarEl']) for (const dsf of [1, 1.25, 1.5, 1.75]) runs.push({ bar, dsf });
-  // The eight runs are independent, so they run at once; the checks are reported in order.
+  for (const bar of ['penEl']) for (const dsf of [1, 1.25, 1.5, 1.75]) runs.push({ bar, dsf });
+  // The runs are independent, so they run at once; the checks are reported in order.
   const widthsOf = await Promise.all(runs.map(async ({ bar, dsf }) => {
     const browser = await L.launch(dsf);   // a real device scale factor, not an emulated one
     try { return await widths(browser, dsf, bar); } finally { await browser.close(); }

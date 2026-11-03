@@ -95,12 +95,12 @@
     }
 
     // Selecting one annotation that has a note shows its note, read-only, for as long as the
-    // selection toolbar stays (TOOLBAR_IDLE_MS; pointing at the card keeps it). Clearing the
+    // while (SELECT_PREVIEW_MS; pointing at the card keeps it). Clearing the
     // selection, or selecting something else, closes it.
     let selectPreview = false;
     let selectPreviewTimer = null;
     let selectShowTimer = null;
-    const SELECT_PREVIEW_DELAY_MS = 150;   // the note follows the selection toolbar a little later
+    const SELECT_PREVIEW_DELAY_MS = 150;   // the note follows the settled selection a little later
     function previewSelectedNote(groups) {
         if (selectPreview) hideNoteCard();
         clearTimeout(selectPreviewTimer);   // the pointer may have taken the last preview over, leaving its timers
@@ -113,11 +113,11 @@
         selectShowTimer = setTimeout(() => {
             if (selectPreview && note.isConnected && !editor && !annotationsHidden) showNoteCard(note);
         }, SELECT_PREVIEW_DELAY_MS);
-        if (!TOOLBAR_IDLE_MS) return;
+        if (!SELECT_PREVIEW_MS) return;
         selectPreviewTimer = setTimeout(function idle() {
             if (noteCardEl.matches(':hover')) { selectPreviewTimer = setTimeout(idle, 500); return; }
             if (selectPreview) hideNoteCard();
-        }, TOOLBAR_IDLE_MS);
+        }, SELECT_PREVIEW_MS);
     }
 
     function hideNoteCard() {
@@ -381,7 +381,7 @@
         }
         const wrappers = groupWrappers(group);
         if (!wrappers.length) return;
-        hideToolbar();
+        cancelSelectPreview();
         hideNoteCard();
         pinnedCards.forEach((card, m) => { if (m.getAttribute(GROUP_ATTR) === group) unpinNoteCard(m); });   // the editor takes its place
         ensureUi(wrappers[0].hasAttribute(DARK_ATTR));

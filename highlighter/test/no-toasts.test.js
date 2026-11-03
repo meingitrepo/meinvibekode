@@ -18,14 +18,10 @@ const icon = page => page.evaluate(() => window.__hl.panelCopy.querySelector('sv
   const menuIcon = (page, id) => page.evaluate(i => window.__hl.iconName(window.__hl.menuButtons.get(i)), id);
   L.check('menu: Shortcuts uses the keyboard icon', (await menuIcon(page, 'keys')) === 'keyboard', await menuIcon(page, 'keys'));
   L.check('menu: Annotations uses the list-checks icon', (await menuIcon(page, 'panel')) === 'list-checks', await menuIcon(page, 'panel'));
-  L.check('menu: Selection toolbar uses the cursor-text icon', (await menuIcon(page, 'toolbar')) === 'cursor-text', await menuIcon(page, 'toolbar'));
   L.check('menu: Search all pages uses the magnifying-glass icon', (await menuIcon(page, 'search')) === 'magnifying-glass', await menuIcon(page, 'search'));
   await L.altKey(page, 'k', true); await says('shortcut keys off', 'Shortcuts disabled');
   L.check('Shortcuts toast carries the keyboard icon', await toastIs(page, 'keys'), null);
   await L.altKey(page, 'k', true); await says('shortcut keys on', 'Shortcuts enabled');
-  await L.altKey(page, 't'); await says('selection toolbar off', 'Selection toolbar disabled');
-  L.check('toolbar toast carries the highlighter icon', await toastIs(page, 'toolbar'), null);
-  await L.altKey(page, 't'); await says('selection toolbar on', 'Selection toolbar enabled');
   await L.altKey(page, 'p'); await says('pen on', 'Pen mode enabled');
   L.check('pen toast carries the pencil icon', await toastIs(page, 'pen'), null);
   // The icon sits at the left end, 20px, with the text after it.

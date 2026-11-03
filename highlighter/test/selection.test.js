@@ -18,13 +18,6 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
   // --- same style again: whole annotation, from a word inside ---
   await L.selStr(page, '#p1', 'quick brown fox jumps'); await L.altKey(page, 'h');
   await L.selStr(page, '#p1', 'brown');
-  await page.mouse.move(5, 5); await page.evaluate(() => document.dispatchEvent(new Event('selectionchange')));
-  await page.waitForTimeout(400);
-  let tb = await L.toolbar(page);
-  const yb = tb && tb.buttons.find(b => /yellow/i.test(b.label));
-  L.check('toolbar shows yellow pressed', yb && yb.pressed === 'true' && yb.label === 'Yellow highlight' && tb.buttons.filter(b => b.pressed === 'true').length === 1, tb);
-  L.check('pressed button has a background', yb && yb.bg !== 'rgba(0, 0, 0, 0)', yb);
-  L.check('note button says Add note', tb && tb.buttons.some(b => b.label === 'Add note'), tb && tb.buttons.map(b => b.label));
   await L.altKey(page, 'h');
   let w = await L.wr(page);
   L.check('Alt+H on a word inside changes nothing', w.length === 1 && w[0].t === 'quick brown fox jumps', w);
@@ -43,9 +36,6 @@ const HTML = `<!doctype html><html><head><meta charset="utf-8"><title>t</title><
   await L.selStr(page, '#p3', 'two three four five'); await L.altKey(page, '2');
   await L.selStr(page, '#p3', 'three'); await L.altKey(page, 'n'); await page.keyboard.type('Numbers note'); await page.keyboard.press('Enter'); await page.waitForTimeout(150);
   await L.selStr(page, '#p3', 'four');
-  await page.waitForTimeout(400);
-  tb = await L.toolbar(page);
-  L.check('note button says Edit note on an annotation with a note', tb && tb.buttons.some(b => b.label === 'Edit note'), tb && tb.buttons.map(b => b.label));
   await L.altKey(page, 'd');
   w = await L.wr(page).then(a => a.filter(x => x.k === 'h4'));
   L.check('eraser keeps the rest with its note, minus the spaces at the cut', w.map(x => x.t).join('|') === 'two three|five' && w.every(x => x.n === 'Numbers note') && new Set(w.map(x => x.g)).size === 1, w);

@@ -39,8 +39,16 @@ async function follows(browser) {
   await ctx.close();
 }
 
+async function darkPage(browser) {
+  const { ctx, page: p } = await L.open(browser, { html: HTML.replace('<body style="', '<body style="background:#111;color:#eee;'), scheme: 'dark', menu: true }); await L.openMenu(p);
+  await L.altKey(p, 'p');
+  const c = await cursorOf(p, '#p1');
+  check('on a dark page the arrow has a light outline', /stroke="#fff"/.test(c) && !/stroke="#000"/.test(c), c);
+  await ctx.close();
+}
+
 (async () => {
   const browser = await L.launch();
-  await follows(browser).catch(e => check('follows crashed', false, e.stack));
+  await Promise.all([follows, darkPage].map(f => f(browser).catch(e => check(`${f.name} crashed`, false, e.stack))));
   await L.done(browser);
 })();

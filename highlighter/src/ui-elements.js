@@ -1,6 +1,6 @@
-    // A button in the Anthropic style. appearance: 'subtle' and size: 'medium' are the only ones the UI uses.
-    function makeButton({ text = '', icon = null, appearance = 'subtle', size = 'medium', label = '' }) {
-        const b = makeEl('button', { type: 'button', class: `btn btn-${appearance} btn-${size}${text ? '' : ' btn-icon'}` });
+    // A button in the Anthropic style. appearance: 'subtle' (default) or 'primary'.
+    function makeButton({ text = '', icon = null, appearance = 'subtle', label = '' }) {
+        const b = makeEl('button', { type: 'button', class: `btn btn-${appearance}${text ? '' : ' btn-icon'}` });
         if (icon) b.appendChild(icon);
         if (text) b.appendChild(makeEl('span', { text }));
         if (label) b.setAttribute('aria-label', label);

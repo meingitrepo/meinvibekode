@@ -21,16 +21,13 @@
     function styleIcon(key, dark) {
         const { type, color } = resolveStyle(key, dark);
         switch (type) {
-            case 'highlight':
-                // The highlighter's cap and tip (its accent layer) in the highlight color.
-                return phosphorIcon('highlighter', { under: [svgEl('path', { d: 'M88,136.5L127.5,176L94.4,209.1L35.1,189.4Z', fill: color })] });
             case 'underline':
                 // The icon's own underline bar (x 58-198, y 218-230 on the 256 grid), repainted in the style's color.
                 return phosphorIcon('text-underline', { over: [svgEl('rect', { x: 58, y: 218, width: 140, height: 12, rx: 6, fill: color })] });
             case 'strike-through':
                 // The icon's own strike bar (x 34-222, y 122-134 on the 256 grid), repainted in the style's color.
                 return phosphorIcon('text-strikethrough', { over: [svgEl('rect', { x: 34, y: 122, width: 188, height: 12, rx: 6, fill: color })] });
-            default:
+            default:   // 'highlight'
                 // The highlighter's cap and tip (its accent layer) in the highlight color.
                 return phosphorIcon('highlighter', { under: [svgEl('path', { d: 'M88,136.5L127.5,176L94.4,209.1L35.1,189.4Z', fill: color })] });
         }

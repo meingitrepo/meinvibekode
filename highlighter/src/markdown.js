@@ -99,9 +99,9 @@
         return /\S$/.test(text) ? /^\S*/.exec(full.slice(end))[0] : '';
     }
 
-    // Up to `n` whole words of the text right before (side 'before') or after a wrapper, or '' when
+    // Up to 3 whole words of the text right before (side 'before') or after a wrapper, or '' when
     // the annotation starts or ends inside a word, where a text fragment can't anchor to them.
-    function contextWords(wrapper, side, blockText, n = 3) {
+    function contextWords(wrapper, side, blockText) {
         const block = getBlockParent(wrapper);
         if (!blockText.has(block)) blockText.set(block, block.textContent);
         const full = blockText.get(block);
@@ -111,13 +111,13 @@
             if (!text || /\S$/.test(text) && /^\S/.test(wrapper.textContent)) return '';
             const words = text.trim().split(/\s+/).filter(Boolean);
             if (start > CONTEXT_LENGTH * 2) words.shift();   // may be cut
-            return words.slice(-n).join(' ');
+            return words.slice(-3).join(' ');
         }
         const text = full.slice(end, end + CONTEXT_LENGTH * 2);
         if (!text || /^\S/.test(text) && /\S$/.test(wrapper.textContent)) return '';
         const words = text.trim().split(/\s+/).filter(Boolean);
         if (end + CONTEXT_LENGTH * 2 < full.length) words.pop();
-        return words.slice(0, n).join(' ');
+        return words.slice(0, 3).join(' ');
     }
 
     // The text directive that opens the page at this annotation: its whole text, or for a long

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.82
+// @version      9.83
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -3790,7 +3790,6 @@
         'arrow-u-up-left': 'M230,144a62.07,62.07,0,0,1-62,62H80a6,6,0,0,1,0-12h88a50,50,0,0,0,0-100H46.49l37.75,37.76a6,6,0,1,1-8.48,8.48l-48-48a6,6,0,0,1,0-8.48l48-48a6,6,0,0,1,8.48,8.48L46.49,82H168A62.07,62.07,0,0,1,230,144Z',
         'arrow-u-up-right': 'M171.76,131.76,209.51,94H88a50,50,0,0,0,0,100h88a6,6,0,0,1,0,12H88A62,62,0,0,1,88,82H209.51L171.76,44.24a6,6,0,0,1,8.48-8.48l48,48a6,6,0,0,1,0,8.48l-48,48a6,6,0,0,1-8.48-8.48Z',
         'arrow-counter-clockwise': 'M222,128a94,94,0,0,1-92.74,94H128a93.43,93.43,0,0,1-64.5-25.65,6,6,0,1,1,8.24-8.72A82,82,0,1,0,70,70l-.19.19L39.44,98H72a6,6,0,0,1,0,12H24a6,6,0,0,1-6-6V56a6,6,0,0,1,12,0V90.34L61.63,61.4A94,94,0,0,1,222,128Z',
-        'magnifying-glass': 'M228.24,219.76l-51.38-51.38a86.15,86.15,0,1,0-8.48,8.48l51.38,51.38a6,6,0,0,0,8.48-8.48ZM38,112a74,74,0,1,1,74,74A74.09,74.09,0,0,1,38,112Z',
         'list-checks': 'M222,128a6,6,0,0,1-6,6H128a6,6,0,0,1,0-12h88A6,6,0,0,1,222,128ZM128,70h88a6,6,0,0,0,0-12H128a6,6,0,0,0,0,12Zm88,116H128a6,6,0,0,0,0,12h88a6,6,0,0,0,0-12ZM83.76,43.76,56,71.51,44.24,59.76a6,6,0,0,0-8.48,8.48l16,16a6,6,0,0,0,8.48,0l32-32a6,6,0,0,0-8.48-8.48Zm0,64L56,135.51,44.24,123.76a6,6,0,1,0-8.48,8.48l16,16a6,6,0,0,0,8.48,0l32-32a6,6,0,0,0-8.48-8.48Zm0,64L56,199.51,44.24,187.76a6,6,0,0,0-8.48,8.48l16,16a6,6,0,0,0,8.48,0l32-32a6,6,0,0,0-8.48-8.48Z',
         'cursor-text': 'M182,208a6,6,0,0,1-6,6H160a38,38,0,0,1-32-17.55A38,38,0,0,1,96,214H80a6,6,0,0,1,0-12H96a26,26,0,0,0,26-26V134H104a6,6,0,0,1,0-12h18V80A26,26,0,0,0,96,54H80a6,6,0,0,1,0-12H96a38,38,0,0,1,32,17.55A38,38,0,0,1,160,42h16a6,6,0,0,1,0,12H160a26,26,0,0,0-26,26v42h18a6,6,0,0,1,0,12H134v42a26,26,0,0,0,26,26h16A6,6,0,0,1,182,208Z',
         'cursor-text-slash': 'M90.7,42H96a38,38,0,0,1,32,17.55A38,38,0,0,1,160,42h16a6,6,0,0,1,0,12H160a26,26,0,0,0-26,26V92.3a6,6,0,0,1-12,0V80A26,26,0,0,0,96,54H90.7a6,6,0,0,1,0-12ZM104,122h18.5L134,134.6V176a26,26,0,0,0,26,26h5a6,6,0,0,1,0,12h-5a38,38,0,0,1-32-17.55A38,38,0,0,1,96,214H80a6,6,0,0,1,0-12H96a26,26,0,0,0,26-26V134H104a6,6,0,0,1,0-12ZM52.44,36L212.45,211.92A6,6,0,0,1,203.57,220L43.56,44A6,6,0,0,1,52.44,36Z',
@@ -4195,9 +4194,9 @@
         }
     `;
 
-    // A button in the Anthropic style. appearance: 'subtle' and size: 'medium' are the only ones the UI uses.
-    function makeButton({ text = '', icon = null, appearance = 'subtle', size = 'medium', label = '' }) {
-        const b = makeEl('button', { type: 'button', class: `btn btn-${appearance} btn-${size}${text ? '' : ' btn-icon'}` });
+    // A button in the Anthropic style. appearance: 'subtle' (default) or 'primary'.
+    function makeButton({ text = '', icon = null, appearance = 'subtle', label = '' }) {
+        const b = makeEl('button', { type: 'button', class: `btn btn-${appearance}${text ? '' : ' btn-icon'}` });
         if (icon) b.appendChild(icon);
         if (text) b.appendChild(makeEl('span', { text }));
         if (label) b.setAttribute('aria-label', label);
@@ -4451,16 +4450,13 @@
     function styleIcon(key, dark) {
         const { type, color } = resolveStyle(key, dark);
         switch (type) {
-            case 'highlight':
-                // The highlighter's cap and tip (its accent layer) in the highlight color.
-                return phosphorIcon('highlighter', { under: [svgEl('path', { d: 'M88,136.5L127.5,176L94.4,209.1L35.1,189.4Z', fill: color })] });
             case 'underline':
                 // The icon's own underline bar (x 58-198, y 218-230 on the 256 grid), repainted in the style's color.
                 return phosphorIcon('text-underline', { over: [svgEl('rect', { x: 58, y: 218, width: 140, height: 12, rx: 6, fill: color })] });
             case 'strike-through':
                 // The icon's own strike bar (x 34-222, y 122-134 on the 256 grid), repainted in the style's color.
                 return phosphorIcon('text-strikethrough', { over: [svgEl('rect', { x: 34, y: 122, width: 188, height: 12, rx: 6, fill: color })] });
-            default:
+            default:   // 'highlight'
                 // The highlighter's cap and tip (its accent layer) in the highlight color.
                 return phosphorIcon('highlighter', { under: [svgEl('path', { d: 'M88,136.5L127.5,176L94.4,209.1L35.1,189.4Z', fill: color })] });
         }
@@ -6003,9 +5999,9 @@
         return /\S$/.test(text) ? /^\S*/.exec(full.slice(end))[0] : '';
     }
 
-    // Up to `n` whole words of the text right before (side 'before') or after a wrapper, or '' when
+    // Up to 3 whole words of the text right before (side 'before') or after a wrapper, or '' when
     // the annotation starts or ends inside a word, where a text fragment can't anchor to them.
-    function contextWords(wrapper, side, blockText, n = 3) {
+    function contextWords(wrapper, side, blockText) {
         const block = getBlockParent(wrapper);
         if (!blockText.has(block)) blockText.set(block, block.textContent);
         const full = blockText.get(block);
@@ -6015,13 +6011,13 @@
             if (!text || /\S$/.test(text) && /^\S/.test(wrapper.textContent)) return '';
             const words = text.trim().split(/\s+/).filter(Boolean);
             if (start > CONTEXT_LENGTH * 2) words.shift();   // may be cut
-            return words.slice(-n).join(' ');
+            return words.slice(-3).join(' ');
         }
         const text = full.slice(end, end + CONTEXT_LENGTH * 2);
         if (!text || /^\S/.test(text) && /\S$/.test(wrapper.textContent)) return '';
         const words = text.trim().split(/\s+/).filter(Boolean);
         if (end + CONTEXT_LENGTH * 2 < full.length) words.pop();
-        return words.slice(0, n).join(' ');
+        return words.slice(0, 3).join(' ');
     }
 
     // The text directive that opens the page at this annotation: its whole text, or for a long

@@ -14,4 +14,3 @@ start-and-boot.js: TS2551: Property 'navigation' does not exist on type 'Window 
 start-and-boot.js: TS2551: Property 'navigation' does not exist on type 'Window & typeof globalThis'. Did you mean 'navigator'?
 theme.js: TS2339: Property 'content' does not exist on type 'Element'.
 toolbar.js: TS2339: Property 'isContentEditable' does not exist on type 'Element'.
-ui-style.js: TS1117: An object literal cannot have multiple properties with the same name.

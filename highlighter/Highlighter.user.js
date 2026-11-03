@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Highlighter
 // @namespace    Violentmonkey Scripts
-// @version      9.106
+// @version      9.107
 // @description  Highlight, underline, strike through and add notes to the text of any web page; saved per page
 // @author       Mhmd & Claude
 // @match        *://*/*
@@ -4628,14 +4628,12 @@
     const penCursorStyle = document.createElement('style');
 
     // The Windows arrow, filled with the pen's color (the eraser's is gray) where Windows fills it white.
-    // Black outline inside a white halo so it reads on light and dark pages; !important beats the links'
-    // and fields' own cursors. A system cursor can't be recolored, hence the SVG.
+    // !important beats the links' and fields' own cursors. A system cursor can't be recolored, hence the SVG.
     function updatePenCursor(dark) {
         if (!penKey) { penCursorStyle.remove(); return; }
         const fill = penKey === PEN_ERASER ? '#87867f' : resolveStyle(penKey, dark).color;
         const arrow = 'M1.5,1.5V17.2L5.4,13.5L8.1,19.6L10.7,18.4L8,12.5H13.4Z';
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="24" viewBox="0 0 20 24">`
-            + `<path d="${arrow}" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>`
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="22" viewBox="0 0 20 24">`
             + `<path d="${arrow}" fill="${fill}" stroke="#000" stroke-width="1" stroke-linejoin="round"/></svg>`;
         penCursorStyle.textContent = `html, html * { cursor: url("data:image/svg+xml,${encodeURIComponent(svg)}") 1 1, default !important; }`;
         (document.head || document.documentElement).appendChild(penCursorStyle);

@@ -16,7 +16,10 @@ const PRESETS = {
 const AUTO = ['panelEl', 'everythingEl', 'toastEl', 'noteCardEl', 'editorEl', 'penEl', 'menuEl', 'labelTipEl'];
 const CLIPS = { panel: '__hl.panelEl', 'panel-ticked': '__hl.panelEl', all: '__hl.everythingEl', 'all-ticked': '__hl.everythingEl' };
 (async () => {
-  const [out, scheme = 'light', arg] = process.argv.slice(2);
+  const [out0, scheme = 'light', arg] = process.argv.slice(2);
+  // a relative .cache/ path means the repo-root .cache, even when run from highlighter/ (which must not grow its own .cache)
+  const out = /^\.?[\\/]?\.cache[\\/]/.test(out0) ? path.resolve(__dirname, '../..', out0) : out0;
+  fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
   const js = PRESETS[arg] || arg;
   if (PRESETS[arg] && !process.env.SHOT_FIXTURE) process.env.SHOT_FIXTURE = path.resolve(__dirname, 'shot-fixture.json');
   const clipSel = process.env.SHOT_CLIP || CLIPS[arg] || (js ? 'auto' : '');
